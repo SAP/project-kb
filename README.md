@@ -2,9 +2,9 @@
 
 # Open-source vulnerability assessment knowledge base [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-The open-source **vulnerability assessment knowledge base** aggregates public information about security vulnerabilities in open source projects. This information is the fuel required to run the [vulnerability assessment tool](https://github.com/SAP/vulnerability-assessment-tool).
+The open-source **vulnerability assessment knowledge base** aggregates public information about security vulnerabilities in open source projects, the fuel required to run the [vulnerability assessment tool](https://github.com/SAP/vulnerability-assessment-tool).
 
-The entire knowledge base in contained in file [`dataset.csv`](dataset.csv), whereby each line comprises
+The entire knowledge base is contained in file [`dataset.csv`](dataset.csv), whereby each line comprises
 
   * A vulnerability identifier, typically a CVE
   * The URL of the source code repository of the affected open source project, typically one hosted on GitHub
