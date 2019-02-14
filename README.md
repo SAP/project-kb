@@ -2,17 +2,17 @@
 
 # Open-source vulnerability assessment knowledge base [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-The open-source **vulnerability assessment knowledge base** aggregates public information about security vulnerabilities in open source components. This information is the fuel required to run the [vulnerability assessment tool](https://github.com/SAP/vulnerability-assessment-tool).
+The open-source **vulnerability assessment knowledge base** aggregates public information about security vulnerabilities in open source projects. This information is the fuel required to run the [vulnerability assessment tool](https://github.com/SAP/vulnerability-assessment-tool).
 
-For each security vulnerability, the knowledge base comprises the following information:
+The file `kb.csv` contains the entire dataset, whereby each line comprises
 
   * A vulnerability identifier, typically a CVE
-  * The URL of the source code repository of the affected open source component, typically one hosted on GitHub
-  * One or more commits fixing the respective vulnerability (the so-called fix commit)
+  * The URL of the source code repository of the affected open source project, typically one hosted on GitHub
+  * A commit fixing the respective vulnerability (the so-called fix commit)
+  
+How-to import the knowledge base into the vulnerability assessment tool is described in a [tutorial](https://sap.github.io/vulnerability-assessment-tool/vuln_db/tutorials/vuln_db_tutorial/) and in the [manual](https://sap.github.io/vulnerability-assessment-tool/vuln_db/) of the vulnerability assessment tool.
 
-Using the `patch-analyzer`, one of the components of the vulnerability assessment tool, this information is processed and eventually imported into a PostgrSQL database used for the actual analysis of Java and Python applications. Please refer to the [tutorial](https://sap.github.io/vulnerability-assessment-tool/vuln_db/tutorials/vuln_db_tutorial/) and [manual](https://sap.github.io/vulnerability-assessment-tool/vuln_db/) of the vulnerability assessment tool explaining how to perform the import. 
-
-A description of the dataset and its possible applications (in addition to fueling the vulerability assessment tool) can be found in: 
+A more comprehensive description of the dataset and its possible applications (in addition to fueling the vulerability assessment tool) can be found in: 
 
   - Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric Dangremont, [A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software](http://arxiv.org/abs/1902.02595) (currently under review at MSR 2019)
 
