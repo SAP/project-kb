@@ -4,7 +4,7 @@
 
 The open-source **vulnerability assessment knowledge base** aggregates public information about security vulnerabilities in open source projects. This information is the fuel required to run the [vulnerability assessment tool](https://github.com/SAP/vulnerability-assessment-tool).
 
-The file `kb.csv` contains the entire dataset, whereby each line comprises
+The entire knowledge base in contained in file [`dataset.csv`](dataset.csv), whereby each line comprises
 
   * A vulnerability identifier, typically a CVE
   * The URL of the source code repository of the affected open source project, typically one hosted on GitHub
