@@ -55,23 +55,19 @@ Furthermore, you need the **[Java 8 JRE](https://www.oracle.com/technetwork/java
 
 <p align="center"><img src="images/components-2.png" height="200"/></p>
 
-## Configuration
-
-Not applicable
-
 ## Limitations
 
 As of today, this knowledge base only contains information about vulnerabilities in Java and Python open source components. Even though the vulnerability assessment tool has been designed with extensibility in mind, other programming languages are not yet supported.
 
 ## Known Issues
 
-The list of current issues is available [here](https://github.com/SAP/vulnerability-assessment-kb/issues)
+The list of current issues is available [here](https://github.com/SAP/vulnerability-assessment-kb/issues).
 
 ## How to obtain support
 
 Use the following link to [Stack Overflow](https://stackoverflow.com/questions/tagged/vulas) to search for FAQs or to request help.
 
-Bug reports shall be submitted as GitHub issues, please refer to the next section for more details.
+Bug reports shall be submitted as [GitHub issues](https://github.com/SAP/vulnerability-assessment-kb/issues).
 
 ## Contributing
 
