@@ -41,7 +41,7 @@ Eventually, we hope that this knowledge base will be maintained in a collaborati
 
 ## Credits
 
-Note that 3rd party information from NVD and MITRE has been used input for compiling this knowledge base. See MITRE's [Terms of Use](http://cve.mitre.org/about/termsofuse.html) for more information.
+Note that 3rd party information from NVD and MITRE has been used as input for compiling this knowledge base. See MITRE's [Terms of Use](http://cve.mitre.org/about/termsofuse.html) for more information.
 
 ## Features
 
