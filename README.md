@@ -19,12 +19,14 @@ A more comprehensive description of the dataset and its possible applications (i
 If you use the dataset for your research work, please cite it as:
 
 ```
-@MISC{ponta2019dataset,
-  author={Serena E. Ponta and Henrik Plate and Antonino Sabetta and Michele Bezzi and C\'edric Dangremont},
-  url={https://arxiv.org/pdf/1902.02595.pdf},
-  title={A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software},
-  year={2019},
-  month={February},
+@inproceedings{ponta2019msr,
+    author={Serena E. Ponta and Henrik Plate and Antonino Sabetta and Michele Bezzi and
+    C´edric Dangremont},
+    url={https://arxiv.org/pdf/1902.02595.pdf},
+    title={A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software},
+    booktitle={Proceedings of the 16th International Conference on Mining Software Repositories}, 
+    year=2019,
+    month=May,
 }
 ```
 
