@@ -2,7 +2,7 @@
 
 A description of the dataset and its possible applications (on top of fueling the vulerability assessment tool) can be found in 
 
-*Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric Dangremont, [A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software](http://arxiv.org/abs/1902.02595)* *(currently under review)*
+*Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric Dangremont, [A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software](http://arxiv.org/abs/1902.02595)*
 
 If you use this dataset, please cite it as:
 
