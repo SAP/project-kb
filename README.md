@@ -4,13 +4,13 @@
 
 The open-source **vulnerability assessment knowledge base** aggregates public information about security vulnerabilities in open source projects, the fuel required to run the [vulnerability assessment tool](https://github.com/SAP/vulnerability-assessment-tool).
 
-The entire knowledge base is contained in file [`dataset.csv`](dataset.csv), whereby each line comprises
+The entire knowledge base is contained in file [`dataset.csv`](dataset.csv). Each line of the file contains:
 
-  * A vulnerability identifier, typically a CVE
-  * The URL of the source code repository of the affected open source project, typically one hosted on GitHub
-  * A commit fixing the respective vulnerability (the so-called fix commit)
+  * A vulnerability identifier (typically a CVE)
+  * The URL of the source code repository of the affected open source project
+  * A commit fixing the respective vulnerability (which we call *fix commit*)
   
-How-to import the knowledge base into the vulnerability assessment tool is described in a [tutorial](https://sap.github.io/vulnerability-assessment-tool/vuln_db/tutorials/vuln_db_tutorial/) and in the [manual](https://sap.github.io/vulnerability-assessment-tool/vuln_db/) of the vulnerability assessment tool.
+The steps that are required to import the knowledge base into the vulnerability assessment tool are described in [this tutorial](https://sap.github.io/vulnerability-assessment-tool/vuln_db/tutorials/vuln_db_tutorial/). Further information can be found [in the manual](https://sap.github.io/vulnerability-assessment-tool/vuln_db/) of the vulnerability assessment tool.
 
 A more comprehensive description of the dataset and its possible applications (in addition to fueling the vulerability assessment tool) can be found in: 
 
