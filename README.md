@@ -14,7 +14,7 @@ How-to import the knowledge base into the vulnerability assessment tool is descr
 
 A more comprehensive description of the dataset and its possible applications (in addition to fueling the vulerability assessment tool) can be found in: 
 
-  - Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric Dangremont, [A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software](http://arxiv.org/abs/1902.02595) (currently under review at MSR 2019)
+  - Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric Dangremont, [A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software](http://arxiv.org/abs/1902.02595) (accepted at MSR 2019)
 
 If you use the dataset for your research work, please cite it as:
 
