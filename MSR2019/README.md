@@ -1,4 +1,4 @@
-# MSR 2019 Data Showcase submission
+# MSR 2019 Data Showcase
 
 A description of the dataset and its possible applications (on top of fueling the vulerability assessment tool) can be found in 
 
