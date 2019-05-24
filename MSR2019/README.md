@@ -20,7 +20,9 @@ If you use this dataset, please cite it as:
 
 The Jupyter notebook used to analyze the dataset and to produce the statistics and the plots shown in the paper can be found [here](notebooks).
 
-## Sample application: automated classification of security-relevant commits in open-source repositories
+## Sample applications
+
+### Automated classification of security-relevant commits in open-source repositories
 
 The paper [A Practical Approach to the Automatic Classification of Security-Relevant Commits](https://arxiv.org/abs/1807.02458)
 uses this dataset to train a classifier that detects security-relevant commits (i.e., that are likely to fix a vulnerability). 
