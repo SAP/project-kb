@@ -36,7 +36,7 @@ other sources.
 
 ### Installing the `kaybee` tool
 
-There is nothing to install actually, just download the binary compatible with
+There is nothing to install actually, just [download a binary](releases) compatible with
 your operating system, make sure it has execution permissions if applicable, and
 then run it.
 
