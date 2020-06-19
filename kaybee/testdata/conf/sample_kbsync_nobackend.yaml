@@ -1,0 +1,14 @@
+apiVersion: v1
+
+export_denylist:
+  bugid:
+    - "CVE.*"
+    - "az"
+
+import_denylist:
+  description:
+    - apzoeirpoiapeori
+
+sources:
+  1: https://github.com/ichbinfrog/test_2
+  2: https://github.com/ichbinfrog/test_1

@@ -1,0 +1,10 @@
+apiVersion: v1
+backend: "restbackend-service:8080"
+
+export_denylist:
+  bugid:
+    - "[[:alpha:]"
+
+sources:
+  1: https://github.com/ichbinfrog/test_2
+  2: https://github.com/ichbinfrog/test_1

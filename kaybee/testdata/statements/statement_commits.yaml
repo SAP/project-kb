@@ -1,0 +1,26 @@
+vulnerability_id: CVE-2019-0191
+aliases: []
+fixes:
+- id: "4.1"
+  commits:
+  - id: e36a7a66fa08eb5eb253b2b0cec262ffbdef072
+    repository: https://github.com/apache/karaf/
+
+- id: "4.2"
+  commits:
+  - id: fef9a618f11a670dc040d903a4b0f9bbc9f3e9c
+    repository: https://github.com/apache/karaf/
+
+notes:
+- links:
+  - https://issues.apache.org/jira/browse/KARAF-6090
+  - https://lists.apache.org/thread.html/6856aa7ed7dd805eaf65d0e5e95027dda3b2307aacd1ab4a838c5cd1@%3Cuser.karaf.apache.org%3E
+  text: Apache Karaf kar deployer reads .kar archives and extracts the paths from
+    the "repository/" and "resources/" entries in the zip file. It then writes out
+    the content of these paths to the Karaf repo and resources directories. However,
+    it doesn't do any validation on the paths in the zip file. This means that a malicious
+    user could craft a .kar file with ".." directory names and break out of the directories
+    to write arbitrary content to the filesystem. This is the "Zip-slip" vulnerability
+    - https://snyk.io/research/zip-slip-vulnerability. This vulnerability is low if
+    the Karaf process user has limited permission on the filesystem. Any Apache Karaf
+    releases prior 4.2.3 is impacted.

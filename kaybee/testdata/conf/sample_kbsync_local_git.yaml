@@ -1,0 +1,27 @@
+apiVersion: "v1"
+# backend: "https://1.test.vulas.c.eu-de-2.cloud.sap/"
+backend: "https://vulas.tools.sap/"
+
+export_denylist:
+  bugid:
+    - "CVE.*"
+    - "az"
+#
+# import_denylist:
+#   description:
+#     - apzoeirpoiapeori
+
+sources:
+  - repo: file:///home/i064196/devel/sample-statement-repo
+    branch: master
+    signed: true
+    rank: 3
+  - repo: file:///home/i064196/devel/sample-statement-repo
+    branch: some_branch
+    rank : 1
+
+policies:
+  1: soft
+  2: priority
+  3: latest
+  4: oldest
