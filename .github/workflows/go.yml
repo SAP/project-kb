@@ -22,8 +22,11 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 
+    - name: Install golint
+      run: go get -u golang.org/x/lint/golint
+      
     - name: Vet and test
-      run: make check
+      run: make -C kaybee check
 
     - name: Build
-      run: make build-win build-linux build-macos
+      run: make -C kaybee build-win build-linux build-macos
