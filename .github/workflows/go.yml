@@ -23,7 +23,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Vet and test
-      run: make check
+      run: make -C kaybee check
 
     - name: Build
-      run: make build-win build-linux build-macos
+      run: make -C kaybee build-win build-linux build-macos
