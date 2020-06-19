@@ -13,13 +13,13 @@ BINARY_UNIX=$(BINARY_NAME)-$(VERSION)_linux-amd64
 BINARY_WINDOWS=$(BINARY_NAME)-$(VERSION)_win-amd64
 BINARY_MACOS=$(BINARY_NAME)-$(VERSION)_darwin-amd64
 
-all: lint vet test build #ui
+all: lint vet test build ui
 
 build: fmt
 	$(GOBUILD) -ldflags='-X "github.com/sap/project-kb/kaybee/cmd.buildDate=$(NOW)" -X "github.com/sap/project-kb/kaybee/cmd.buildCommitID=$(GIT_COMMIT)" -X "github.com/sap/project-kb/kaybee/cmd.version=$(VERSION)"' -o $(BINARY_NAME) -v
 
-# ui:
-# 	$(MAKE) --directory=ui
+ui:
+	$(MAKE) --directory=ui
 
 check: lint vet test
 
@@ -31,10 +31,11 @@ coverage: test
 
 clean:
 	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_UNIX)
-	rm -f $(BINARY_MACOS)
-	rm coverage.out
+	-@rm -f $(BINARY_NAME) 2>/dev/null || true
+	-@rm -f $(BINARY_UNIX) 2>/dev/null || true
+	-@rm -f $(BINARY_MACOS) 2>/dev/null || true
+	-@rm -fr dist 2>/dev/null || true
+	-@rm coverage.out 2>/dev/null || true
 
 run:
 	$(GOBUILD) -o $(BINARY_NAME) -v ./...

@@ -1,0 +1,10 @@
+h2 {
+    font-size: 2rem;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.data-reactroot{
+    margin: 0 auto;
+    width: 800px;
+}
