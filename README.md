@@ -1,20 +1,76 @@
-<p align="center"><img height="64" src="images/vulas.png"></p>
+# project "KB" [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-# Open-source vulnerability assessment knowledge base [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-The open-source **vulnerability assessment knowledge base** aggregates public information about security vulnerabilities in open source projects, the fuel required to run the [vulnerability assessment tool](https://github.com/SAP/vulnerability-assessment-tool).
+The goal of project `KB` is to support to the creation, management and aggregation of a distributed, collaborative knowledge base of vulnerabilities that affect open-source software.
 
-The entire knowledge base is contained in file [`dataset.csv`](dataset.csv). Each line of the file contains:
+This repository contains both a [tool](kaybee) and [vulnerability data](vulnerability-data).
 
-  * A vulnerability identifier (typically a CVE)
-  * The URL of the source code repository of the affected open source project
-  * A commit fixing the respective vulnerability (which we call *fix commit*)
-  
-The steps that are required to import the knowledge base into the vulnerability assessment tool are described in [this tutorial](https://sap.github.io/vulnerability-assessment-tool/vuln_db/tutorials/vuln_db_tutorial/). Further information can be found [in the manual](https://sap.github.io/vulnerability-assessment-tool/vuln_db/) of the vulnerability assessment tool.
+Additionally, the [MSR2019](MSR2019) folder contains the package associated with
+the paper we published at the Mining Software Repository conference in 2019 (see
+below).
 
-A more comprehensive description of the dataset and its possible applications (in addition to fueling the vulerability assessment tool) can be found in: 
+## Motivation
 
-  - Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric Dangremont, [A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software](http://arxiv.org/abs/1902.02595) (accepted at MSR 2019)
+In order to feed our tool Eclipse Steady with fresh data, we have spent a
+considerable amount of time, in the past few years, mining and curating a
+knowledge base of vulnerabilities that affect open-source components.
+We know that other parties have been doing the same, in academia as well as in
+the industry. From this experience, we have learnt that with the growing size of
+open source ecosystems and the pace at which new vulnerabilities are discovered,
+the _old approach_ cannot scale. We are also more and more convinced that
+vulnerability knowledge-bases about open-source should be open-source themselves
+and adopt the same community-oriented model that governs the rest of the
+open-source ecosystem. 
+
+These considerations have pushed us to first release our vulnerability knowledge
+base in early 2019. In June 2020, we made a further step releasing tool support
+to make the creation, aggregation, and consumption of vulnerability data much
+easier.
+
+We hope this will encourage more contributors to join our efforts to build a
+collaborative, comprehensive knowledge base where each party remains in control
+of the data they produce and of how they aggregate and consume data from the
+other sources.
+
+## Getting started
+
+### Installing the `kaybee` tool
+
+There is nothing to install actually, just download the binary compatible with
+your operating system, make sure it has execution permissions if applicable, and
+then run it.
+
+Optionally, for your convenience, you may want to make sure that the binary is in your `$PATH`.
+
+For example, in Linux you would put the following line in your `.bashrc` file:
+
+    export PATH=$PATH:/usr/local/bin/kaybee
+
+(please, make sure you adjust the path to the `kaybee` binary as necessary)
+
+Alternatively, you can clone this repository and build it yourself (you will need `go` and `make`).
+You can do so with the `make` command; inspecting the Makefile first is a good idea.
+
+### Usage
+
+Once you have downloaded or built the binary, you can see the list of supported commands with:
+
+`kaybee --help`
+
+## Documentation
+
+Coming soon.
+
+### Importing vulnerability data in Eclipse Steady
+
+The steps that are required to import the knowledge base in [Eclipse Steady](https://github.com/eclipse/steady/) are described in [this tutorial](https://eclipse.github.io/steady/vuln_db/tutorials/vuln_db_tutorial/).
+Further information can be found [here](https://eclipse.github.io/steady/vuln_db/).
+
+## Publications
+
+In early 2019, a snapshot of the knowlege base from project "KB" was described in:
+
+  - Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric Dangremont, [A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software](http://arxiv.org/abs/1902.02595), MSR, 2019
 
 If you use the dataset for your research work, please cite it as:
 
@@ -31,55 +87,63 @@ If you use the dataset for your research work, please cite it as:
 
 **MSR 2019 DATA SHOWCASE SUBMISSION**: please find [here the data and the scripts described in that paper](MSR2019)
 
-## Motivation
-
-The motivation to open source this dataset is two-fold:
-
-  * First, researchers have access to a manually curated dataset of high quality in order to conduct further research in the areas of software security and software engineering.
-  * Second, users of open source components can use this dataset to update and maintain their local instance of the vulnerability assessment tool as to check whether their Java and Python applications are affected by open source vulnerabilities.
-  
-Eventually, we hope that this knowledge base will be maintained in a collaborative manner.
-
 ## Credits
 
-Note that 3rd party information from NVD and MITRE has been used as input for compiling this knowledge base. See MITRE's [Terms of Use](http://cve.mitre.org/about/termsofuse.html) for more information.
+Note that 3rd party information from NVD and MITRE might have been used as input
+for compiling this knowledge base. See MITRE's [Terms of
+Use](http://cve.mitre.org/about/termsofuse.html) for more information.
 
 ## Features
 
-See [here](https://github.com/sap/vulnerability-assessment-tool/#features) to learn about features of the vulnerability assessment tool that become possible due to the dataset available in this knowledge base.
+- Creation of vulnerability statements
+- Retrieval and reconciliation of statement from multiple repositories, based on user-specified policies
 
 ## Requirements
 
-To process the information of the knowledge base, one has to have a running local instance of the vulnerability assessment tool.
-
-Furthermore, you need the **[Java 8 JRE](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)** in order to run the `patch-analyzer` that processes commit information, uploads the analysis results to the `rest-backend`, which eventually stores the data in `PostgreSQL` database. The following image provides an overview about all the involved components. 
-
-<p align="center"><img src="images/components-2.png" height="200"/></p>
+None, the `kaybee` binary is self-contained. Binary versions for Windows, Linux, MacOS are available for [download](https://github.com/SAP/project-kb/releases).
 
 ## Limitations
 
-As of today, this knowledge base only contains information about vulnerabilities in Java and Python open source components. Even though the vulnerability assessment tool has been designed with extensibility in mind, other programming languages are not yet supported.
+This project is work-in-progress. The vulnerability knowledge base only contains
+information about vulnerabilities in Java and Python open source components.
 
 ## Known Issues
 
-The list of current issues is available [here](https://github.com/SAP/vulnerability-assessment-kb/issues).
+The list of current issues is available
+[here](https://github.com/SAP/project-kb/issues).
+
+Feel free to open a new issue if you think you found a bug or if you have a feature
+request.
 
 ## How to obtain support
 
-Use the following link to [Stack Overflow](https://stackoverflow.com/questions/tagged/vulas) to search for FAQs or to request help.
+For the time being, please use [GitHub
+issues](https://github.com/SAP/project-kb/issues) both to report bugs and to
+request help. Documentation and better support channels will come soon.
 
-Bug reports shall be submitted as [GitHub issues](https://github.com/SAP/vulnerability-assessment-kb/issues).
+## Contributing 
 
-## Contributing
+### Vulnerability data
 
-Until we have defined a structured process to share the maintenance of the knowledge base, we invite you to just create informal pull requests in order to submit new open source vulnerabilities. Such pull requests should contain a vulnerability identifier, the URL of the source code repository of the affected component and one or more identifiers of the commits used to fix the vulnerability.
+A structured process to create and share vulnerability data is work in progress.
+Until it is defined, we invite you to just create pull requests in order to
+submit new vulnerability data. Such pull requests should contain a vulnerability
+identifier, the URL of the source code repository of the affected component and
+one or more identifiers of the commits used to fix the vulnerability.
 
-## To-Do (upcoming changes)
+### Contributing code
 
-Process description and tooling to support the shared maintenance of the knowledge base, and to support the automated synchronization of local instances with this GitHub repository.
+Pull requests are welcome. Please make sure you provide tests for your code,
+that you can successfully execute `make check` with no errors and that you
+include adequate documentation in your contribution.
+
+### Other non-code contributions
+
+Non-code contributions such as documentation, bug reports, etc. are also most
+appreciated.
 
 ## License
 
-Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved.
+Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved.
 
 This project is licensed under the Apache Software License, v.2 except as noted otherwise in the [LICENSE file](LICENSE.txt).
