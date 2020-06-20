@@ -14,12 +14,6 @@ sources:
   - repo: https://github.com/copernico/oss-vulnerabilities
     branch: master
     rank: 20
-#  - repo: https://github.com/ichbinfrog/test
-#    branch: master
-#    rank: 1
-#  - repo: file:///home/i064196/devel/vulnerability_statements
-#    branch: master
-#    rank : 1
 
 policies:
   - strict
