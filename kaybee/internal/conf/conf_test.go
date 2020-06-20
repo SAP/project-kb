@@ -29,7 +29,7 @@ func TestParser(t *testing.T) {
 	// isValid := c.Validate()
 	fmt.Printf("\nVersion: %s\n", c.Version())
 
-	assert.Equal(t, len(c.Sources()), 3, "Found wrong number of sources")
+	assert.Equal(t, len(c.Sources()), 2, "Found wrong number of sources")
 }
 
 func TestParserNoVersion(t *testing.T) {

@@ -1,6 +1,5 @@
 apiVersion: "v1"
-# backend: "https://1.test.vulas.c.eu-de-2.cloud.sap/"
-backend: "https://vulas.tools.sap/"
+backend: "https://your.steady.server.here"
 
 
 #
@@ -9,16 +8,12 @@ backend: "https://vulas.tools.sap/"
 #     - apzoeirpoiapeori
 
 sources:
-  - repo: file:///home/i064196/devel/sample-statement-repo
+  - repo: https://github.com/sap/project-kb
     branch: master
-    signed: true
-    rank: 3
-  - repo: file:///home/i064196/devel/sample-statement-repo
-    branch: some_branch
-    rank: 31
+    rank: 10
   - repo: https://github.com/copernico/oss-vulnerabilities
     branch: master
-    rank: 1
+    rank: 20
 #  - repo: https://github.com/ichbinfrog/test
 #    branch: master
 #    rank: 1
