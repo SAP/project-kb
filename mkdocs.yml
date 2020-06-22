@@ -1,0 +1,68 @@
+site_name: KayBee
+nav:
+  - Home: index.md
+  - Getting started: getting_started.md
+  - User guide: user_guide.md
+  - Developer docs: dev_docs.md
+  - FAQ: faq.md
+  - Team: team.md
+
+# Repository
+repo_name: 'sap/project-kb'
+repo_url: 'https://github.com/sap/project-kb'
+
+# Copyright
+copyright: 'Copyright &copy; 2020 - SAP'
+
+# Extensions
+markdown_extensions:
+  - markdown.extensions.admonition
+  - markdown.extensions.codehilite:
+      guess_lang: false
+  - markdown.extensions.def_list
+  - markdown.extensions.footnotes
+  - markdown.extensions.meta
+  - markdown.extensions.toc:
+      permalink: true
+      # title: 'List of questions'
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+
+# Customization
+extra:
+  social:
+    - type: 'github'
+      link: 'https://github.wdf.sap.corp/vulas/kaybee'
+    # - type: 'twitter'
+    #   link: 'https://twitter.com/antoninosabetta'
+    # - type: 'linkedin'
+    #   link: 'https://linkedin.com/in/squidfunk'
+
+theme:
+  name: 'material'
+  palette:
+    primary: 'green'
+    accent: 'green'
+  logo:
+    icon: 'cloud'
+  feature:
+    tabs: false
+
+extra_css:
+  - css/faq.css
