@@ -1,7 +1,7 @@
 # project "KB" 
 
 ![Go](https://github.com/sap/project-kb/workflows/Go/badge.svg)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/sap/project-kb/LICENSE.txt)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/SAP/project-kb/blob/master/LICENSE.txt)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sap/project-kb/#contributing)
 ![GitHub All Releases](https://img.shields.io/github/downloads/SAP/PROJECT-KB/total)
 
@@ -10,9 +10,9 @@ Project `KB` supports to the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities that affect
 open-source software.
 
-This repository contains both a [tool](kaybee) and [vulnerability data](vulnerability-data).
+This repository contains both a [tool](kaybee) and [vulnerability data](https://github.com/SAP/project-kb/tree/master/vulnerability-data).
 
-Additionally, the [MSR2019](MSR2019) folder contains the package associated with
+Additionally, the [MSR2019](https://github.com/SAP/project-kb/tree/master/MSR2019) folder contains the package associated with
 the paper we published at the Mining Software Repository conference in 2019 (see
 below).
 
@@ -61,7 +61,7 @@ The **knowledge base**, offers a set of vulnerability statements that can be con
 
 ### Installing the `kaybee` tool
 
-There is nothing to install actually, just [download a binary](releases) compatible with
+There is nothing to install actually, just [download a binary](https://github.com/SAP/project-kb/releases) compatible with
 your operating system, make sure it has execution permissions if applicable, and
 then run it.
 
@@ -181,4 +181,4 @@ appreciated.
 Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved.
 
 This project is licensed under the Apache Software License, v.2 except as noted
-otherwise in the [LICENSE file](LICENSE.txt).
+otherwise in the [LICENSE file](https://github.com/SAP/project-kb/blob/master/LICENSE.txt).
