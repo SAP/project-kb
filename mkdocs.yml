@@ -1,4 +1,4 @@
-site_name: KayBee
+site_name: project "KB"
 nav:
   - Home: index.md
   - Getting started: getting_started.md
@@ -48,7 +48,7 @@ markdown_extensions:
 extra:
   social:
     - type: 'github'
-      link: 'https://github.wdf.sap.corp/vulas/kaybee'
+      link: 'https://github.com/sap/project-kb'
     # - type: 'twitter'
     #   link: 'https://twitter.com/antoninosabetta'
     # - type: 'linkedin'
