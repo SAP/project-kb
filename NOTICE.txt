@@ -1,4 +1,0 @@
-Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved.
-
-3rd party information from NVD and MITRE has been used as input for compiling this
-knowledge base (http://cve.mitre.org/about/termsofuse.html).
