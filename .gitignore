@@ -12,3 +12,4 @@ kaybee/kaybee.code-workspace
 .vscode/task.code-snippets
 kaybee/coverage.out
 kaybee/kaybee
+kaybee/internal/.kaybee/**/*
