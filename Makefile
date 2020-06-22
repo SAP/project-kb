@@ -23,6 +23,11 @@
 
 .PHONY: docs
 
+deploy-docs:
+	mkdocs gh-deploy
+
 docs:
 	mkdocs serve
 
+check:
+	muffet http://localhost:8000
