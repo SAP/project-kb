@@ -1,6 +1,9 @@
 # project "KB" 
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+![Go](https://github.com/sap/project-kb/workflows/Go/badge.svg)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/sap/project-kb/LICENSE.txt)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sap/project-kb/#contributing)
+![GitHub All Releases](https://img.shields.io/github/downloads/SAP/PROJECT-KB/total)
 
 
 Project `KB` supports to the creation, management and aggregation of a
