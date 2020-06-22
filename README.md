@@ -80,7 +80,7 @@ commands with:
 
 ## Documentation
 
-Coming soon.
+Please check out the [project "KB" home page](https://sap.github.io/project-kb/).
 
 ### Importing vulnerability data in Eclipse Steady
 
