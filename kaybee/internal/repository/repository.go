@@ -21,7 +21,7 @@ import (
 
 	"github.com/sap/project-kb/kaybee/internal/errors"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 
 	"io/ioutil"
 )
