@@ -2,7 +2,7 @@ apiVersion: "v1"
 backend: "https://your.steady.server.here"
 
 sources:
-  - repo: https://github.com/sap/project-bk/vulnerability-data
+  - repo: https://github.com/sap/project-kb/vulnerability-data
     branch: master
     rank: 10
 
