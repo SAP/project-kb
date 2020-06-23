@@ -87,6 +87,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#user-guide" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -249,10 +253,62 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        User guide
+      </label>
     
     <a href="./" title="User guide" class="md-nav__link md-nav__link--active">
       User guide
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    Goals
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statements" class="md-nav__link">
+    Statements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contribution" class="md-nav__link">
+    Contribution
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumption" class="md-nav__link">
+    Consumption
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -300,6 +356,58 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    Goals
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statements" class="md-nav__link">
+    Statements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contribution" class="md-nav__link">
+    Contribution
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumption" class="md-nav__link">
+    Consumption
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
@@ -308,9 +416,189 @@
                   <a href="https://github.com/sap/project-kb/edit/master/docs/user_guide.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                  <h1>User guide</h1>
-                
-                <p>Coming soon...</p>
+                <h1 id="user-guide">User guide<a class="headerlink" href="#user-guide" title="Permanent link">&para;</a></h1>
+<h2 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link">&para;</a></h2>
+<p>The goal of project "KB" is promote and enable a community-driven approach to the 
+creation and consumption of information on vulnerabilities affecting open-source software.
+This goal is pursued by developing a tool (<code>kaybee</code>) and by maintaining a knowledge base
+that can be used as the starting point of a larger, global, collaborative knowledge base
+maintained by distinct independent parties (develpers of open-source or commercial projects,  security researchers).</p>
+<p>The data from this emerging knowledge base can be aggregated by each consumer based
+on their preferences (e.g., which sources to trust, how to reconcile conflicting
+data about the same vulnerability).</p>
+<p>This distributed management model is realized by building on the functionality
+provided by source code repository version control (git) and is described in the following.</p>
+<p>In particular, this document covers:</p>
+<ul>
+<li><em>Statements</em>: how vulnerability data is captured in a format that is human-readable and machine-readable at the same time</li>
+<li><em>Contribution</em>: how one can contribute with new statements or with incremental updates to existing statements</li>
+<li><em>Consumption</em>: how one can aggregate and reconcile vulnerability data</li>
+</ul>
+<h2 id="statements">Statements<a class="headerlink" href="#statements" title="Permanent link">&para;</a></h2>
+<p>A statement can contain two types of variables:</p>
+<ul>
+<li><strong>exclusive</strong>: if two statements have a different exclusive variable, it will be considered as conflicting.</li>
+<li><strong>cumulative</strong>: if two statements have a different cumulative variable, it can be soft merged without major issues.</li>
+</ul>
+<p>A statement can have the following structure:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># version of the document store (required)</span>
+<span class="c1"># the apiVersion allows for different implementation/data structure</span>
+<span class="c1"># to coexist in the document store</span>
+<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+
+<span class="c1"># textual vulnerability description (optional)</span>
+<span class="nt">references</span><span class="p">:</span>
+  <span class="c1"># list of links and the appropriate description to comprehensive vulnerability information (optional)</span>
+  <span class="c1"># [cumulative]</span>
+  <span class="c1"># </span>
+  <span class="c1"># Note that a description has to be linked to a reference </span>
+  <span class="p p-Indicator">-</span> <span class="nt">reference</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">bug_reference_1</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">description</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">bug_description_1</span> <span class="p p-Indicator">}}</span>
+
+<span class="c1"># list of affected libraries and their corresponding fix commit</span>
+<span class="c1"># [cumulative] if different repositories</span>
+<span class="c1"># [exclusive] if same repositories but different fix_commit</span>
+<span class="nt">fix</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">repo</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">source_code_repository</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">branch</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">branch_code_repository</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">commit</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">commit_addressing_CVE</span> <span class="p p-Indicator">}}</span>
+</code></pre></div>
+
+<h2 id="contribution">Contribution<a class="headerlink" href="#contribution" title="Permanent link">&para;</a></h2>
+<p>Each contributor maintain their own distinct repository in which they issue
+statements regarding a CVE affecting certain libraries. The repository structure
+is the following:</p>
+<div class="codehilite"><pre><span></span><code><span class="go">  ├── data</span>
+<span class="go">  │   ├── cve_id1</span>
+<span class="go">  │   │   └── statement.yaml</span>
+<span class="go">  │   └── cve_id2</span>
+<span class="go">  │       └── statement.yaml</span>
+<span class="go">  ├── README.md</span>
+<span class="go">  └── signature</span>
+<span class="go">      └── pub_gpg_key_1.asc</span>
+<span class="go">      └── pub_gpg_key_2.asc</span>
+</code></pre></div>
+
+<p>Every statement is nested under the <code>data</code> directory and their separate folder
+defined by their cve id (lower cased). In each repo, a statement can be declared
+using a file named <code>statement.yaml</code>. The repository can also be signed by
+publishing the public signature in the <code>signature</code> directory, in which case,
+every commit regarding a particular statement must also be signed.</p>
+<p><img alt="kbsync_contribution" src="https://user-images.githubusercontent.com/20737845/70895281-ef8e9d80-1fee-11ea-9ba7-0a0488326f70.png" /></p>
+<p>Once this repository structure is respected, the actors can chose two modes of contribution:</p>
+<ul>
+<li><strong>Manual</strong>: manually add a statement to the version control and sign if required</li>
+<li><strong>Automatic</strong>: using a content export software, periodically update the repository from an export of the current running database. The vulnerabilities can then be filtered using a series of user defined policy to exclude certain bugs (for instance internal ones).</li>
+</ul>
+<p>The automatic export configuration can be defined using the following <code>yaml</code> structure:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># rest-backend url (hostname of the component that&#39;s meant</span>
+<span class="c1"># to interface with the database). It is not recommended</span>
+<span class="c1"># to define it here but in the environment variable VULAS_BACKEND</span>
+<span class="c1"># in order to not publish the internal backend URL</span>
+<span class="nt">backend</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">rest-backend url</span> <span class="p p-Indicator">}}</span>
+
+<span class="c1"># use a list of different regexes to filter bugs based on their parameters</span>
+<span class="c1"># if two parameters are in the same item, it is considered as an AND</span>
+<span class="c1"># each parameters in the exclude list is considered as an OR</span>
+<span class="c1"># denylist of bugs to be published</span>
+<span class="nt">export_denylist</span><span class="p">:</span>
+  <span class="c1"># attribute being in { description, references, cve_id, contributor }</span>
+  <span class="p p-Indicator">{</span> <span class="nv">attribute</span> <span class="p p-Indicator">}:</span>
+    <span class="c1"># list of regex that should be excluded from the database export</span>
+    <span class="p p-Indicator">-</span> <span class="s">&quot;.*&quot;</span>
+</code></pre></div>
+
+<h2 id="consumption">Consumption<a class="headerlink" href="#consumption" title="Permanent link">&para;</a></h2>
+<p>Consuming the document store can be summarize by the schema below:</p>
+<p><img alt="kbsync_consumption" src="https://user-images.githubusercontent.com/20737845/70893444-6aee5000-1feb-11ea-934d-5f447af969f1.png" /></p>
+<p>Multiple repositories (which in this case is a database) can contribute to the source consumption. Each of this repository will be cloned locally and kept up to date with their remote periodically. Then, through aggregated through a content consumption software in order to be loaded into the vulnerability database.</p>
+<p>In order to allow users to define which vulnerability they would like to load into the database, a set of cumulative policies can be defined:</p>
+<ul>
+<li><strong>Ordered list of trusted repositories</strong>: assign a priority for each of the source repositories. If conflict were to occur, the merge operation will prioritize the one with higher prio.</li>
+<li><strong>Timestamp based</strong>: prioritize latest bug statements</li>
+<li><strong>Maturity</strong>: prioritize signed commits</li>
+<li><strong>Denylist</strong>: ignore statements regarding certain bugs</li>
+</ul>
+<p>This can be defined using the following <code>yaml</code> file structure:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">sources</span><span class="p">:</span>
+  <span class="c1"># the order of this list defines the ordered list of trusted repos</span>
+  <span class="nt">1</span><span class="p">:</span> 
+    <span class="nt">repo</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">repository_1 url</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">branch</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">branch_1</span> <span class="p p-Indicator">}}</span>
+    <span class="c1"># if signed set to true, ignores all unsigned commits</span>
+    <span class="c1"># defaults to false if not set</span>
+    <span class="nt">signed</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+
+  <span class="nt">2</span><span class="p">:</span>    
+    <span class="nt">repo</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">repository_2 url</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">branch</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">branch_2</span> <span class="p p-Indicator">}}</span>
+
+  <span class="nt">3</span><span class="p">:</span> 
+    <span class="c1"># multiple vulnerability databases can coexist within the same repo</span>
+    <span class="c1"># therefore the branch indicator is required</span>
+    <span class="nt">repo</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">repository_1 url</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">branch</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">branch_2</span> <span class="p p-Indicator">}}</span>
+
+<span class="c1"># denylist of bugs to be imported</span>
+<span class="nt">import_denylist</span><span class="p">:</span>
+  <span class="c1"># attribute being in { description, references, cve_id, contributor }</span>
+  <span class="p p-Indicator">{</span> <span class="nv">attribute</span> <span class="p p-Indicator">}:</span>
+    <span class="c1"># list of regex that should be included in the database</span>
+    <span class="c1"># defaults to only the vulnerability-assessment-tool team contributors</span>
+    <span class="p p-Indicator">-</span> <span class="s">&quot;.*&quot;</span>
+
+<span class="nt">policies</span><span class="p">:</span>
+  <span class="c1"># Defines the series of policies to be applied sequentially</span>
+  <span class="c1"># merge strategies if conflicting statements</span>
+  <span class="c1"># available are:</span>
+  <span class="c1"># - soft: attempt soft merge of cumulative declarations</span>
+  <span class="c1"># - priority: if conflict, take the most trusted</span>
+  <span class="c1"># - internal: if conflict, always take own statement</span>
+  <span class="c1"># - latest: if conflict, take the latest statement</span>
+  <span class="c1">#</span>
+  <span class="c1"># merge strategies are applied sequentially, so if the first</span>
+  <span class="c1"># cannot decide, the second one gets applied and so on.</span>
+  <span class="c1">#</span>
+  <span class="c1"># A soft merge of cumulative attributes is always applied first</span>
+  <span class="nt">1</span><span class="p">:</span> <span class="s">&quot;priority&quot;</span>
+  <span class="nt">2</span><span class="p">:</span> <span class="s">&quot;latest&quot;</span> <span class="c1"># prioritize latest statements</span>
+</code></pre></div>
+
+<p>Before the data is loaded into the vulnerability database, a "transaction log"
+(the result of the merge operation between different statements) is stored in a
+cache directory (most likely <code>$HOME/.kbsync</code>). Its structure is strictly similar
+to a statement but with informations regarding authors behind the commit:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># version of the document store (required)</span>
+<span class="c1"># the apiVersion allows for different implementation/data structure</span>
+<span class="c1"># to coexist in the document store</span>
+<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+
+<span class="c1"># textual vulnerability description (optional)</span>
+<span class="nt">references</span><span class="p">:</span>
+  <span class="c1"># list of links and the appropriate description to comprehensive vulnerability information (optional)</span>
+  <span class="c1"># [cumulative]</span>
+  <span class="c1"># </span>
+  <span class="c1"># Note that a description has to be linked to a reference </span>
+  <span class="p p-Indicator">-</span> <span class="nt">reference</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">bug_reference_1</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">description</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">bug_description_1</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">metadata</span><span class="p">:</span>
+      <span class="nt">repository</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">source_repository</span> <span class="p p-Indicator">}}</span>
+      <span class="nt">branch</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">source_repository_branch</span> <span class="p p-Indicator">}}</span>
+      <span class="nt">commit</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">commit_id of the change</span> <span class="p p-Indicator">}}</span>
+      <span class="nt">key</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">public_key_1</span> <span class="p p-Indicator">}}</span> <span class="c1"># truncated hash of the pgp key    </span>
+
+<span class="c1"># list of affected libraries and their corresponding fix commit</span>
+<span class="c1"># [cumulative] if different repositories</span>
+<span class="c1"># [exclusive] if same repositories but different fix_commit</span>
+<span class="nt">fix</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">repo</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">source_code_repository</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">commit</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">commit_addressing_CVE</span> <span class="p p-Indicator">}}</span>
+    <span class="nt">metadata</span><span class="p">:</span>
+      <span class="nt">repository</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">source_repository</span> <span class="p p-Indicator">}}</span>
+      <span class="nt">branch</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">source_repository_branch</span> <span class="p p-Indicator">}}</span>
+      <span class="nt">commit</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">commit_id of the change</span> <span class="p p-Indicator">}}</span>
+      <span class="nt">key</span><span class="p">:</span> <span class="p p-Indicator">{{</span> <span class="nv">public_key_1</span> <span class="p p-Indicator">}}</span> <span class="c1"># truncated hash of the pgp key   </span>
+</code></pre></div>
                 
                   
                 
