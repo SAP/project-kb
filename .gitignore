@@ -13,3 +13,4 @@ kaybee/kaybee.code-workspace
 kaybee/coverage.out
 kaybee/kaybee
 kaybee/internal/.kaybee/**/*
+kaybee/dist/**
