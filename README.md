@@ -56,7 +56,7 @@ The **knowledge base**, offers a set of vulnerability statements that can be con
 
 ### Installing the `kaybee` tool
 
-There is nothing to install actually, just [download a binary](releases) compatible with
+There is nothing to install actually, just [download a binary](https://github.com/SAP/project-kb/releases/latest) compatible with
 your operating system, make sure it has execution permissions if applicable, and
 then run it.
 
