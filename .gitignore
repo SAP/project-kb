@@ -14,3 +14,5 @@ kaybee/coverage.out
 kaybee/kaybee
 kaybee/internal/.kaybee/**/*
 kaybee/dist/**
+kaybee/kaybeeconf.yaml
+kaybee/myconfig.yml
