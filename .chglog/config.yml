@@ -1,0 +1,32 @@
+style: github
+template: CHANGELOG.tpl.md
+info:
+  title: CHANGELOG
+  repository_url: https://github.com/SAP/project-kb
+options:
+  commits:
+    filters:
+      Type:
+        - "new"
+        - "fix"
+        - "perf"
+        - "doc"
+        - "refactor"
+        # - "misc"
+  commit_groups:
+    title_maps:
+      new: New
+      fix: Bug Fixes
+      perf: Performance Improvements
+      refactor: Code Refactoring
+      doc: Documentation changes
+      # misc: Other Changes
+  header:
+    pattern: "^((\\w+)\\s.*)$"
+    pattern_maps:
+      - Subject
+      - Type
+  notes:
+    keywords:
+      - BREAKING CHANGE
+      - NOTE

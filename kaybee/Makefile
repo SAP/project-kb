@@ -61,3 +61,7 @@ build-win:
 
 build-macos:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) -o dist/$(BINARY_MACOS) -v
+
+changelog:
+	$(eval TAG = v$(shell cat VERSION.md))
+	git-chglog $(TAG)
