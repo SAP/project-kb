@@ -61,31 +61,7 @@ The **knowledge base**, offers a set of vulnerability statements that can be con
 
 ### Installing the `kaybee` tool
 
-There is nothing to install actually, just [download a binary](https://github.com/SAP/project-kb/releases) compatible with
-your operating system, make sure it has execution permissions if applicable, and
-then run it.
 
-Optionally, for your convenience, you may want to make sure that the binary is in your `$PATH`.
-
-For example, in Linux you would put the following line in your `.bashrc` file:
-
-    export PATH=$PATH:/usr/local/bin/kaybee
-
-(please, make sure you adjust the path to the `kaybee` binary as necessary)
-
-Alternatively, you can clone this repository and build it yourself (you will need `go` and `make`).
-You can do so with the `make` command; inspecting the Makefile first is a good idea.
-
-### Usage
-
-Once you have downloaded or built the binary, you can see the list of supported
-commands with:
-
-`kaybee --help`
-
-## Documentation
-
-Coming soon.
 
 ### Importing vulnerability data in Eclipse Steady
 
@@ -155,26 +131,6 @@ For the time being, please use [GitHub
 issues](https://github.com/SAP/project-kb/issues) both to report bugs and to
 request help. Documentation and better support channels will come soon.
 
-## Contributing 
-
-### Vulnerability data
-
-A structured process to create and share vulnerability data is work in progress.
-Until it is defined, we invite you to just create pull requests in order to
-submit new vulnerability data. Such pull requests should contain a vulnerability
-identifier, the URL of the source code repository of the affected component and
-one or more identifiers of the commits used to fix the vulnerability.
-
-### Contributing code
-
-Pull requests are welcome. Please make sure you provide tests for your code,
-that you can successfully execute `make check` with no errors and that you
-include adequate documentation in your contribution.
-
-### Other non-code contributions
-
-Non-code contributions such as documentation, bug reports, etc. are also most
-appreciated.
 
 ## License
 
