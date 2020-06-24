@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/gobuffalo/packr"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 )
 
@@ -45,7 +46,7 @@ func (t *SetupTask) Execute() (success bool) {
 
 	t.validate()
 
-	const path string = "./myconfig.yml"
+	const path string = "./kaybeeconf.yaml"
 
 	// check if file exists
 	if filesystem.FileExists(path) {
@@ -90,42 +91,11 @@ func (t *SetupTask) Execute() (success bool) {
 }
 
 func getDefaultConfig() string {
-	return `apiVersion: "v1"
-backend: "https://vulas.tools.sap/"
+	box := packr.NewBox("./data")
 
-# 
-# order of sources does not matter
-#
-sources:
-	1:
-	repo: https://github.com/ichbinfrog/test_2
-	branch: master
-	signed: true
-	2:
-	repo: https://github.com/ichbinfrog/test
-	branch: master
-
-#
-# the statement merge policies below will be applied in the specified order
-#
-policies:
-	- soft
-	- priority
-	- latest
-	- oldest
-
-# the vulnerabilities whose identifier matches these patterns (regex)
-# will be ignored when exporting
-export_denylist:
-	bugid:
-	- "CVE.*"
-	- "az.*"
-
-# the vulnerabilities whose identifier matches these patterns (regex)
-# will be ignored when importing
-export_denylist:
-	bugid:
-	- "SAP.*"
-	- "INTERNAL.*"
-`
+	s, err := box.FindString("default_config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return s
 }

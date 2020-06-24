@@ -10,7 +10,9 @@ import (
 	// homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/sap/project-kb/kaybee/internal/conf"
+	"github.com/sap/project-kb/kaybee/internal/filesystem"
 	"github.com/spf13/cobra"
+	// "gopkg.in/src-d/go-git.v4/storage/filesystem"
 )
 
 var (
@@ -50,12 +52,18 @@ func Execute() {
 func init() {
 	// OnInitialize sets the passed functions to be run when each command's Execute method is called.
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.kaybee.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "config file (default is $HOME/.kaybee.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose mode")
 }
 
 func initConfig() {
 	// fmt.Println("CONFIG: " + cfgFile)
+
+	if !filesystem.IsFile(cfgFile) {
+		configuration = conf.Configuration{}
+		return
+	}
+
 	p, err := conf.NewParser(cfgFile)
 	if err != nil {
 		log.Fatal("Error parsing configuration")
