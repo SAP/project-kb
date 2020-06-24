@@ -1,5 +1,11 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.5.3"></a>
+## [v0.5.3](https://github.com/SAP/project-kb/compare/v0.5.2...v0.5.3) (2020-06-24)
+
+* fix: setup command does not require a config file to exist
+* new: initial documentation
+
 <a name="v0.5.2"></a>
 ## [v0.5.2](https://github.com/SAP/project-kb/compare/v0.5.1...v0.5.2) (2020-06-24)
 

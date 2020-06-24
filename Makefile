@@ -37,3 +37,7 @@ build-docs:
 
 serve-docs:
 	mkdocs serve
+
+changelog:
+	$(eval TAG = $(shell cat kaybee/VERSION))
+	git-chglog "v$(TAG)"

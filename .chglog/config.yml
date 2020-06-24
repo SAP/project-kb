@@ -10,9 +10,9 @@ options:
         - "new"
         - "fix"
         - "perf"
-        - "doc"
+        - "docs"
         - "refactor"
-        # - "misc"
+        - "chore"
   commit_groups:
     title_maps:
       new: New
@@ -20,7 +20,7 @@ options:
       perf: Performance Improvements
       refactor: Code Refactoring
       doc: Documentation changes
-      # misc: Other Changes
+      chore: Other Changes
   header:
     pattern: "^((\\w+)\\s.*)$"
     pattern_maps:
