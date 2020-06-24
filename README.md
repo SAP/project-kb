@@ -119,12 +119,14 @@ scripts described in that paper](MSR2019)
 Note that 3rd party information from NVD and MITRE might have been used as input
 for compiling this knowledge base. See MITRE's [Terms of
 Use](http://cve.mitre.org/about/termsofuse.html) for more information.
+See also [this notice](NOTICE.txt).
 
 ## Features
 
 - Creation of vulnerability statements
 - Retrieval and reconciliation of statement from multiple repositories, based on
   user-specified policies
+- Export to arbitrary formats with the built-in templating engine
 
 ## Requirements
 
@@ -152,24 +154,7 @@ request help. Documentation and better support channels will come soon.
 
 ## Contributing 
 
-### Vulnerability data
-
-A structured process to create and share vulnerability data is work in progress.
-Until it is defined, we invite you to just create pull requests in order to
-submit new vulnerability data. Such pull requests should contain a vulnerability
-identifier, the URL of the source code repository of the affected component and
-one or more identifiers of the commits used to fix the vulnerability.
-
-### Contributing code
-
-Pull requests are welcome. Please make sure you provide tests for your code,
-that you can successfully execute `make check` with no errors and that you
-include adequate documentation in your contribution.
-
-### Other non-code contributions
-
-Non-code contributions such as documentation, bug reports, etc. are also most
-appreciated.
+See [here](CONTRIBUTING.md).
 
 ## License
 
@@ -177,3 +162,5 @@ Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved.
 
 This project is licensed under the Apache Software License, v.2 except as noted
 otherwise in the [LICENSE file](LICENSE.txt).
+
+
