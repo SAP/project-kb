@@ -42,6 +42,11 @@ func init() {
 }
 
 func doImport(cmd *cobra.Command, args []string) {
+
+	if backend == "" {
+		backend = configuration.Backend()
+	}
+
 	t := tasks.NewImportTask().
 		WithBackend(backend).
 		WithConcurrency(concurrency).
