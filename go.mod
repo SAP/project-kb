@@ -1,4 +1,4 @@
-module github.com/sap/project-kb/kaybee
+module github.com/sap/project-kb
 
 go 1.13
 
@@ -13,7 +13,7 @@ require (
 	github.com/schollz/progressbar/v2 v2.15.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
 )
