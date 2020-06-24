@@ -21,13 +21,19 @@
 # # ui:
 # # 	$(MAKE) --directory=ui
 
-.PHONY: docs
+SUBDIRS := kaybee
+
+.PHONY: all $(SUBDIRS)
+
+all: $(SUBDIRS) build-docs
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 deploy-docs:
 	mkdocs gh-deploy
 
-docs:
-	mkdocs serve
+build-docs:
+	mkdocs build
 
-check:
-	muffet http://localhost:8000
+serve-docs:
+	mkdocs serve
