@@ -286,26 +286,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
-    Usage
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    Documentation
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#importing-vulnerability-data-in-eclipse-steady" class="md-nav__link">
     Importing vulnerability data in Eclipse Steady
   </a>
@@ -367,40 +347,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#contributing" class="md-nav__link">
-    Contributing
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#vulnerability-data" class="md-nav__link">
-    Vulnerability data
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#contributing-code" class="md-nav__link">
-    Contributing code
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#other-non-code-contributions" class="md-nav__link">
-    Other non-code contributions
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#license" class="md-nav__link">
     License
   </a>
@@ -436,8 +382,8 @@
 
 
   <li class="md-nav__item">
-    <a href="user_guide/" title="User guide" class="md-nav__link">
-      User guide
+    <a href="contributing/" title="Contributing" class="md-nav__link">
+      Contributing
     </a>
   </li>
 
@@ -534,26 +480,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
-    Usage
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    Documentation
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#importing-vulnerability-data-in-eclipse-steady" class="md-nav__link">
     Importing vulnerability data in Eclipse Steady
   </a>
@@ -611,40 +537,6 @@
   <a href="#how-to-obtain-support" class="md-nav__link">
     How to obtain support
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributing" class="md-nav__link">
-    Contributing
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#vulnerability-data" class="md-nav__link">
-    Vulnerability data
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#contributing-code" class="md-nav__link">
-    Contributing code
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#other-non-code-contributions" class="md-nav__link">
-    Other non-code contributions
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -721,24 +613,6 @@ other sources.</p>
 <p>The <strong>knowledge base</strong>, offers a set of vulnerability statements that can be consumed using the <code>kaybee</code> tool.</p>
 <h2 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
 <h3 id="installing-the-kaybee-tool">Installing the <code>kaybee</code> tool<a class="headerlink" href="#installing-the-kaybee-tool" title="Permanent link">&para;</a></h3>
-<p>There is nothing to install actually, just <a href="https://github.com/SAP/project-kb/releases">download a binary</a> compatible with
-your operating system, make sure it has execution permissions if applicable, and
-then run it.</p>
-<p>Optionally, for your convenience, you may want to make sure that the binary is in your <code>$PATH</code>.</p>
-<p>For example, in Linux you would put the following line in your <code>.bashrc</code> file:</p>
-<div class="codehilite"><pre><span></span><code>export PATH=$PATH:/usr/local/bin/kaybee
-</code></pre></div>
-
-
-<p>(please, make sure you adjust the path to the <code>kaybee</code> binary as necessary)</p>
-<p>Alternatively, you can clone this repository and build it yourself (you will need <code>go</code> and <code>make</code>).
-You can do so with the <code>make</code> command; inspecting the Makefile first is a good idea.</p>
-<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
-<p>Once you have downloaded or built the binary, you can see the list of supported
-commands with:</p>
-<p><code>kaybee --help</code></p>
-<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
-<p>Coming soon.</p>
 <h3 id="importing-vulnerability-data-in-eclipse-steady">Importing vulnerability data in Eclipse Steady<a class="headerlink" href="#importing-vulnerability-data-in-eclipse-steady" title="Permanent link">&para;</a></h3>
 <p>The steps that are required to import the knowledge base in <a href="https://github.com/eclipse/steady/">Eclipse
 Steady</a> are described in <a href="https://eclipse.github.io/steady/vuln_db/tutorials/vuln_db_tutorial/">this
@@ -790,20 +664,6 @@ feature request.</p>
 <p>For the time being, please use <a href="https://github.com/SAP/project-kb/issues">GitHub
 issues</a> both to report bugs and to
 request help. Documentation and better support channels will come soon.</p>
-<h2 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h2>
-<h3 id="vulnerability-data">Vulnerability data<a class="headerlink" href="#vulnerability-data" title="Permanent link">&para;</a></h3>
-<p>A structured process to create and share vulnerability data is work in progress.
-Until it is defined, we invite you to just create pull requests in order to
-submit new vulnerability data. Such pull requests should contain a vulnerability
-identifier, the URL of the source code repository of the affected component and
-one or more identifiers of the commits used to fix the vulnerability.</p>
-<h3 id="contributing-code">Contributing code<a class="headerlink" href="#contributing-code" title="Permanent link">&para;</a></h3>
-<p>Pull requests are welcome. Please make sure you provide tests for your code,
-that you can successfully execute <code>make check</code> with no errors and that you
-include adequate documentation in your contribution.</p>
-<h3 id="other-non-code-contributions">Other non-code contributions<a class="headerlink" href="#other-non-code-contributions" title="Permanent link">&para;</a></h3>
-<p>Non-code contributions such as documentation, bug reports, etc. are also most
-appreciated.</p>
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>Copyright &copy; 2020 SAP SE or an SAP affiliate company. All rights reserved.</p>
 <p>This project is licensed under the Apache Software License, v.2 except as noted

@@ -87,6 +87,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#getting-started-with-project-kb" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -237,10 +241,76 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Getting started
+      </label>
     
     <a href="./" title="Getting started" class="md-nav__link md-nav__link--active">
       Getting started
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieving-vulnerability-data" class="md-nav__link">
+    Retrieving vulnerability data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merging-vulnerability-data" class="md-nav__link">
+    Merging  vulnerability data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exporting-vulnerability-data" class="md-nav__link">
+    Exporting vulnerability data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publishing-vulnerability-data" class="md-nav__link">
+    Publishing  vulnerability data
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -251,8 +321,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../user_guide/" title="User guide" class="md-nav__link">
-      User guide
+    <a href="../contributing/" title="Contributing" class="md-nav__link">
+      Contributing
     </a>
   </li>
 
@@ -300,6 +370,72 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieving-vulnerability-data" class="md-nav__link">
+    Retrieving vulnerability data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merging-vulnerability-data" class="md-nav__link">
+    Merging  vulnerability data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exporting-vulnerability-data" class="md-nav__link">
+    Exporting vulnerability data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publishing-vulnerability-data" class="md-nav__link">
+    Publishing  vulnerability data
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
@@ -308,9 +444,125 @@
                   <a href="https://github.com/sap/project-kb/edit/master/docs/getting_started.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                  <h1>Getting started</h1>
-                
-                <p>Coming soon...</p>
+                <h1 id="getting-started-with-project-kb">Getting started with project "KB"<a class="headerlink" href="#getting-started-with-project-kb" title="Permanent link">&para;</a></h1>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>The installation of the <code>kaybee</code> tool consists in just downloading the appropriate
+<a href="https://github.com/SAP/project-kb/releases">binary for your operating system</a>.
+Make sure it is executable; you might want to also ensure that it is in the <code>$PATH</code>, for your convenience.</p>
+<p>For example, in Linux you would put the following line in your <code>.bashrc</code> file:</p>
+<div class="codehilite"><pre><span></span><code>export PATH=$PATH:/usr/local/bin/kaybee
+</code></pre></div>
+
+
+<p>(please, make sure you adjust the path to the <code>kaybee</code> binary as necessary)</p>
+<p>Alternatively, you can clone this repository and build it yourself (you will need <code>go</code> and <code>make</code>).
+You can do so with the <code>make</code> command; inspecting the Makefile first is a good idea.</p>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p>The operation of the <code>kaybee</code> command is controlled via a configuration file and with
+command flags and switches (these take priority over the configuration).
+The configuration file, by default, is called <code>kaybeeconf.yaml</code> and is searched for
+in the current directory and, if it is not there, in your home.</p>
+<p>You can put the file in another location (and give it a different name), and
+instruct <code>kaybee</code> to use it with the global flag <code>-c</code>. For example:</p>
+<div class="codehilite"><pre><span></span><code>kaybee -c /path/to/your/configfile.yaml &lt;command here...&gt;
+</code></pre></div>
+
+
+<p>Editing such a configuration file is necessary because that's were you can specify the list
+of sources from which you intend to retrieve vulnerability data from and
+a few other things, the most important of which are covered in the following.</p>
+<p>If you have just downloaded the tool, the easiest way to start configuring
+it is to run:</p>
+<div class="codehilite"><pre><span></span><code>kaybee setup
+</code></pre></div>
+
+
+<p>which will create a template configuration file in the current folder. You
+will need to edit it to tailor it to your needs (it contains extensive comments
+to guide you). At the very least, you will need to configure one or more sources,
+as in this example:</p>
+<div class="codehilite"><pre><span></span><code>sources:
+- repo: https://github.com/sap/project-kb
+  branch: master
+  rank: 10
+</code></pre></div>
+
+
+<h2 id="retrieving-vulnerability-data">Retrieving vulnerability data<a class="headerlink" href="#retrieving-vulnerability-data" title="Permanent link">&para;</a></h2>
+<p>This is achieved with the command:</p>
+<div class="codehilite"><pre><span></span><code>kaybee pull
+</code></pre></div>
+
+
+<p>The result will be a local clone of each of the sources. You can
+manually inspect their content and interact with them as with any
+other cloned git repository (that is what they are after all).</p>
+<p>Unless you only consume data from one source, this is not very useful
+per se: things get more interesting when you use <code>kaybee</code> to merge
+the content of different sources, which is covered next.</p>
+<h2 id="merging-vulnerability-data">Merging  vulnerability data<a class="headerlink" href="#merging-vulnerability-data" title="Permanent link">&para;</a></h2>
+<p>The idea underlying project "KB" is to allow multiple independent
+parties to maintain their own vulnerability data repository, and then
+to allow users to define how the data from these sources is to be aggregated
+and reconciled.</p>
+<p>This is achieved with the command:</p>
+<div class="codehilite"><pre><span></span><code>kaybee merge
+</code></pre></div>
+
+
+<p>Unless instructed otherwise, the <code>kaybee</code> command will apply a conservative
+policy (called <code>strict</code>) which will not attempt to reconcile statements
+that refer to the same vulnerability. This is still useful in practice if
+the vulnerabilities covered by different sources are mostly distinct; also,
+because this policy is very conservative, it is suitable for unattended
+executions of the tool (say, in a cron job that pulls and merges vulnerability
+data on a regular basis). Other policies are possible, and at the time of writing
+(June 2020), an experimental <code>soft</code> policy is under development: this policy
+will allow statements to be reconciled and their contents to be merged automatically
+(under certain conditions).</p>
+<p>The tool can be instructed to use a particular policy by setting the corresponding
+option in the configuration file, or via the command line flag <code>-p</code>, as in:</p>
+<div class="codehilite"><pre><span></span><code>kaybee merge -p strict
+kaybee merge -p soft
+</code></pre></div>
+
+
+<h2 id="exporting-vulnerability-data">Exporting vulnerability data<a class="headerlink" href="#exporting-vulnerability-data" title="Permanent link">&para;</a></h2>
+<p>The <code>kaybee export</code> command can be used to export statements to a number of formats.
+For example, this command:</p>
+<div class="codehilite"><pre><span></span><code>kaybee export -t xml
+</code></pre></div>
+
+
+<p>or the equivalent:</p>
+<div class="codehilite"><pre><span></span><code>kaybee export --target xml
+</code></pre></div>
+
+
+<p>examines the content of the directory <code>.kaybee/merged</code>, which contains the results of
+the last run of <code>kaybee merge</code> and exports the statements contained there to XML.</p>
+<p>It is important to stress that the export capabilities of <code>kaybee</code> are very generic, and
+allow users to write their own exporters to arbitrary text-based formats (called export <code>targets</code>, hence
+the <code>-t</code> flag).</p>
+<p>An example of a completely different export target is <code>steady</code>:</p>
+<div class="codehilite"><pre><span></span><code>kaybee export -t steady
+</code></pre></div>
+
+
+<p>or equivavalently:</p>
+<div class="codehilite"><pre><span></span><code>kaybee export --target steady
+</code></pre></div>
+
+
+<p>The result this time is a script (<code>steady.sh</code>) that can be executed to import
+vulnerability data to an Eclipse Steady server.</p>
+<p>To export a folder other than the default, one can use the <code>--from</code> option, like so:</p>
+<div class="codehilite"><pre><span></span><code>kaybee export --target steady --from /path/to/the/statements/you/wish/to/export
+</code></pre></div>
+
+
+<h2 id="publishing-vulnerability-data">Publishing  vulnerability data<a class="headerlink" href="#publishing-vulnerability-data" title="Permanent link">&para;</a></h2>
+<p><em>To be written....</em></p>
                 
                   
                 
@@ -347,13 +599,13 @@
           </a>
         
         
-          <a href="../user_guide/" title="User guide" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../contributing/" title="Contributing" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                User guide
+                Contributing
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
