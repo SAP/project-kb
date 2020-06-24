@@ -16,3 +16,4 @@ kaybee/internal/.kaybee/**/*
 kaybee/dist/**
 kaybee/kaybeeconf.yaml
 kaybee/myconfig.yml
+kaybee/.kaybee/
