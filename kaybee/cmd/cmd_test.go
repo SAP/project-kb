@@ -13,11 +13,10 @@ import (
 )
 
 // TestExport checks if the export cmd works
-// TODO handle config file
-// func TestExport(t *testing.T) {
-// 	exportCmd.SetArgs([]string{"-t", "steady"})
-// 	exportCmd.Execute()
-// }
+func TestExport(t *testing.T) {
+	exportCmd.SetArgs([]string{"-t", "steady"})
+	exportCmd.Execute()
+}
 
 func TestImport(t *testing.T) {
 
@@ -41,7 +40,7 @@ func TestImport(t *testing.T) {
 	fmt.Println(srv.URL)
 
 	task := tasks.NewImportTask().
-		WithBackend(srv.URL + "/").
+		WithBackend(srv.URL).
 		WithOutputPath("/tmp/kaybee-test/").
 		WithConcurrency(4).
 		WithLimit(5)
