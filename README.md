@@ -1,7 +1,7 @@
 # project "KB" [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 
-Project `KB` supports to the creation, management and aggregation of a
+Project `KB` supports the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities that affect
 open-source software.
 

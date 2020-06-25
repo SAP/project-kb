@@ -30,6 +30,3 @@ jobs:
 
     - name: Build
       run: make -C kaybee build-win build-linux build-macos
-
-    - name: Build documentation
-      run: pip install mkdocs && make build-docs
