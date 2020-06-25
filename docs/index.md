@@ -6,7 +6,7 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/SAP/PROJECT-KB/total)
 
 
-Project `KB` supports to the creation, management and aggregation of a
+Project `KB` supports the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities that affect
 open-source software.
 
