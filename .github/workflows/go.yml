@@ -24,6 +24,9 @@ jobs:
 
     - name: Install golint
       run: go get -u golang.org/x/lint/golint
+
+    - name: Install packr
+      run:  go get -u github.com/gobuffalo/packr/packr
       
     - name: Vet and test
       run: make -C kaybee check
