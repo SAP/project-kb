@@ -3,8 +3,6 @@
 <a name="v0.6.0.1"></a>
 ## [v0.6.0.1](https://github.com/SAP/project-kb/compare/v0.6.0...v0.6.0.1) (2020-06-26)
 
-### Bug Fixes
-
 * fix: (setup) force creation of config file with -f flag
 * fix: GH build step, install packr
 
