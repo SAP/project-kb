@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/blang/semver/v4"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"github.com/spf13/cobra"
 )
@@ -29,19 +30,28 @@ func init() {
 }
 
 func doUpdate(cmd *cobra.Command, args []string) {
-	fmt.Println("Running update...")
+	fmt.Println("Checking new releases...")
 
+	fmt.Println("You currently have version: " + version)
 	latest, ok, e := selfupdate.DetectLatest("sap/project-kb")
 	if e != nil {
 		log.Fatal("error: ", e)
 	}
 
 	if ok {
-		fmt.Println("Latest version available: " + latest.URL)
+		latestSemVer := semver.MustParse(latest.Version.String())
+		currentSemVer := semver.MustParse(version)
+
+		if latestSemVer.Compare(currentSemVer) > 0 {
+			fmt.Printf("\nNew version detected\n")
+			fmt.Println("Latest version available: " + latest.Version.String())
+			fmt.Println("Please download it from: " + latest.URL)
+		} else {
+			fmt.Println("You already have the latest version")
+		}
+
 	} else {
 		fmt.Println("Could not check the latest available version, you may want to retry later.")
 	}
-
-	fmt.Println("Update completed")
 
 }
