@@ -102,7 +102,7 @@ func (t *ImportTask) Execute() (success bool) {
 
 const (
 	// BugsEndpoint is the endpoint for the rest-backend API to fetch bugs
-	BugsEndpoint = "backend/bugs"
+	BugsEndpoint = "/bugs"
 )
 
 // ImporterPool is a pool of importers
@@ -201,6 +201,7 @@ func (f *Importer) Run() error {
 		if err != nil {
 			return err
 		}
+
 		defer resp1.Body.Close()
 		body1, err := ioutil.ReadAll(resp1.Body)
 		if err != nil {
