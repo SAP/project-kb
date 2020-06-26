@@ -1,5 +1,17 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.5.4.3"></a>
+## [v0.5.4.3](https://github.com/SAP/project-kb/compare/v0.5.4.2...v0.5.4.3) (2020-06-26)
+
+### Bug Fixes
+
+* set default concurrency to 1
+
+### Misc
+
+* improve makefile
+* update changelog generation config
+
 <a name="v0.5.4.2"></a>
 ## [v0.5.4.2](https://github.com/SAP/project-kb/compare/v0.5.4.1...v0.5.4.2) (2020-06-26)
 
