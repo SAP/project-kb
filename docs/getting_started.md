@@ -19,10 +19,15 @@ You can do so with the `make` command; inspecting the Makefile first is a good i
 
 The operation of the `kaybee` command is controlled via a configuration file and with
 command flags and switches (these take priority over the configuration).
+
+To create a configuration file, just run `kaybee setup`; you will have to edit it manually
+to make it work with your particular setup (for example, the Steady endpoint is set to a dummy value
+in the default configuration file, you will need to change that to import data from a Steady backend).
+
 The configuration file, by default, is called `kaybeeconf.yaml` and is searched for
 in the current directory and, if it is not there, in your home.
 
-You can put the file in another location (and give it a different name), and
+You can put the file in any location (and give it a different name), and
 instruct `kaybee` to use it with the global flag `-c`. For example:
 
     kaybee -c /path/to/your/configfile.yaml <command here...>
@@ -124,6 +129,17 @@ To export a folder other than the default, one can use the `--from` option, like
 
     kaybee export --target steady --from /path/to/the/statements/you/wish/to/export
 
-## Publishing  vulnerability data
+
+## Creating new vulnerability statements
+
+You can use `kaybee create` to create a skeleton for you to edit.
+
+Alternatively, you can take an existing statement as a reference, but this is more
+tedious and error prone.
+
+A `check` command is planned, to validate a statement. Also, a more user-friendly GUI-based wizard
+will probably come later on.
+
+## Publishing
 
 *To be written....*
