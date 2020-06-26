@@ -48,7 +48,8 @@ func NewRepository(URL string, branch string, strict bool, rank int, targetDir s
 	r.Rank = rank
 
 	var err error
-	r.Path, err = r.getRepoPath()
+
+	r.Path, _ = r.getRepoPath()
 	r.Path = path.Join(targetDir, r.Path)
 
 	if filesystem.IsDir(r.Path) {

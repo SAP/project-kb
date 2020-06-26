@@ -151,7 +151,8 @@ type Metadata struct {
 // NewStatementFromFile creates a statement
 func NewStatementFromFile(path string) Statement {
 
-	stmtData, err := ioutil.ReadFile(path)
+	var err error
+	stmtData, _ := ioutil.ReadFile(path)
 
 	var s Statement
 	err = yaml.Unmarshal(stmtData, &s)
