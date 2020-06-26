@@ -53,7 +53,11 @@ func (t *ImportTask) WithBackend(backend string) *ImportTask {
 
 // WithConcurrency sets the number of concurrent importers
 func (t *ImportTask) WithConcurrency(c int) *ImportTask {
-	t.concurrency = c
+	if c == 0 {
+		t.concurrency = 1
+	} else {
+		t.concurrency = c
+	}
 	return t
 }
 
