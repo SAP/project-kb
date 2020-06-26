@@ -3,6 +3,7 @@ module github.com/sap/project-kb
 go 1.13
 
 require (
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/gin-gonic/contrib v0.0.0-20191209060500-d6e26eeaa607
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gobuffalo/envy v1.9.0 // indirect
@@ -14,6 +15,7 @@ require (
 	github.com/magiconair/properties v1.8.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/package-url/packageurl-go v0.1.0
+	github.com/rhysd/go-github-selfupdate v1.2.2
 	github.com/rogpeppe/go-internal v1.6.0 // indirect
 	github.com/schollz/progressbar/v2 v2.15.0
 	github.com/sirupsen/logrus v1.6.0 // indirect
