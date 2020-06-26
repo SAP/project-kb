@@ -1,5 +1,17 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.0"></a>
+## [v0.6.0](https://github.com/SAP/project-kb/compare/v0.5.4.3...v0.6.0) (2020-06-26)
+
+* fix: include template config file for setup cmd
+* fix: (export) use output filename as configured
+* new: export fix metadata in json format
+
+### BREAKING CHANGES
+The format of the metadata files produced by the steady script (obtained with
+kaybee export -t steady) is now json.
+
+
 <a name="v0.5.4.3"></a>
 ## [v0.5.4.3](https://github.com/SAP/project-kb/compare/v0.5.4.2...v0.5.4.3) (2020-06-26)
 
