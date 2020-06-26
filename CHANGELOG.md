@@ -1,5 +1,10 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.1"></a>
+## [v0.6.1](https://github.com/SAP/project-kb/compare/v0.6.0.2...v0.6.1) (2020-06-26)
+
+feat: command to check if new release exists
+
 <a name="v0.6.0.2"></a>
 ## [v0.6.0.2](https://github.com/SAP/project-kb/compare/v0.6.0.1...v0.6.0.2) (2020-06-26)
 
