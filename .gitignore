@@ -17,3 +17,5 @@ kaybee/dist/**
 kaybee/kaybeeconf.yaml
 kaybee/myconfig.yml
 kaybee/.kaybee/
+kaybee/steady.sh
+kaybee/kaybeeconf-custom.yaml
