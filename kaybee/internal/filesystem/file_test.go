@@ -59,13 +59,13 @@ func TestDirUtils(t *testing.T) {
 	if !IsDir("../../testdata/steady") {
 		t.Errorf("../../testdata/steady should be recognised as a directory")
 	}
-	// Non existant
+	// Non existent
 	if IsDir("holla") {
 		t.Errorf("holla should not be recognised as a directory")
 	}
 
 	os.RemoveAll("tests/test_dir")
-	// Non recursive non existant directory
+	// Non recursive non existent directory
 	if err := CreateDir("tests/test_dir"); err != nil {
 		t.Errorf("createdir should succeed with path tests/test_dir")
 	}
