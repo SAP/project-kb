@@ -1,5 +1,10 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.5.4.2"></a>
+## [v0.5.4.2](https://github.com/SAP/project-kb/compare/v0.5.4.1...v0.5.4.2) (2020-06-26)
+
+* bug in import command (#15)
+
 <a name="v0.5.4.1"></a>
 ## [v0.5.4.1](https://github.com/SAP/project-kb/compare/v0.5.4...v0.5.4.1) (2020-06-26)
 
