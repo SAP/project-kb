@@ -21,12 +21,7 @@ kaybee export -t steady) is now json.
 <a name="v0.5.4.3"></a>
 ## [v0.5.4.3](https://github.com/SAP/project-kb/compare/v0.5.4.2...v0.5.4.3) (2020-06-26)
 
-### Bug Fixes
-
 * set default concurrency to 1
-
-### Misc
-
 * improve makefile
 * update changelog generation config
 
