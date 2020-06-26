@@ -115,7 +115,7 @@ func rankStatements(statements []Statement) (results [][]Statement) {
 // // As for Notes: take them from the Statement from which the Fixes are taken.
 // // If there are other Statements that do not bring Fixes, append their Notes.
 // // IGNORE THIS: Description-only statemetns should only be considered if they are reconciled with
-// // another non-independent statement that does ahve fixes
+// // another non-independent statement that does have fixes
 // /*
 
 // cases:
