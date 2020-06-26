@@ -298,8 +298,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#publishing-vulnerability-data" class="md-nav__link">
-    Publishing  vulnerability data
+  <a href="#creating-new-vulnerability-statements" class="md-nav__link">
+    Creating new vulnerability statements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publishing" class="md-nav__link">
+    Publishing
   </a>
   
 </li>
@@ -419,8 +426,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#publishing-vulnerability-data" class="md-nav__link">
-    Publishing  vulnerability data
+  <a href="#creating-new-vulnerability-statements" class="md-nav__link">
+    Creating new vulnerability statements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publishing" class="md-nav__link">
+    Publishing
   </a>
   
 </li>
@@ -459,10 +473,13 @@ Make sure it is executable; you might want to also ensure that it is in the <cod
 You can do so with the <code>make</code> command; inspecting the Makefile first is a good idea.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>The operation of the <code>kaybee</code> command is controlled via a configuration file and with
-command flags and switches (these take priority over the configuration).
-The configuration file, by default, is called <code>kaybeeconf.yaml</code> and is searched for
+command flags and switches (these take priority over the configuration).</p>
+<p>To create a configuration file, just run <code>kaybee setup</code>; you will have to edit it manually
+to make it work with your particular setup (for example, the Steady endpoint is set to a dummy value
+in the default configuration file, you will need to change that to import data from a Steady backend).</p>
+<p>The configuration file, by default, is called <code>kaybeeconf.yaml</code> and is searched for
 in the current directory and, if it is not there, in your home.</p>
-<p>You can put the file in another location (and give it a different name), and
+<p>You can put the file in any location (and give it a different name), and
 instruct <code>kaybee</code> to use it with the global flag <code>-c</code>. For example:</p>
 <div class="codehilite"><pre><span></span><code>kaybee -c /path/to/your/configfile.yaml &lt;command here...&gt;
 </code></pre></div>
@@ -561,7 +578,13 @@ vulnerability data to an Eclipse Steady server.</p>
 </code></pre></div>
 
 
-<h2 id="publishing-vulnerability-data">Publishing  vulnerability data<a class="headerlink" href="#publishing-vulnerability-data" title="Permanent link">&para;</a></h2>
+<h2 id="creating-new-vulnerability-statements">Creating new vulnerability statements<a class="headerlink" href="#creating-new-vulnerability-statements" title="Permanent link">&para;</a></h2>
+<p>You can use <code>kaybee create</code> to create a skeleton for you to edit.</p>
+<p>Alternatively, you can take an existing statement as a reference, but this is more
+tedious and error prone.</p>
+<p>A <code>check</code> command is planned, to validate a statement. Also, a more user-friendly GUI-based wizard
+will probably come later on.</p>
+<h2 id="publishing">Publishing<a class="headerlink" href="#publishing" title="Permanent link">&para;</a></h2>
 <p><em>To be written....</em></p>
                 
                   
