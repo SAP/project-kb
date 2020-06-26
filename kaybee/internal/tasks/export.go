@@ -77,10 +77,10 @@ func (t *ExportTask) validate() (ok bool) {
 		log.Fatalln("Invalid export target. Aborting.")
 		return false
 	}
-	if t.outputFile == "" {
-		log.Fatalln("Invalid filename for export script. Aborting.")
-		return false
-	}
+	// if t.outputFile == "" {
+	// 	log.Fatalln("Invalid filename for export script. Aborting.")
+	// 	return false
+	// }
 	if len(t.scripts) < 1 {
 		log.Fatalln("No export scripts specified. Aborting.")
 		return false
@@ -158,6 +158,9 @@ func (t *ExportTask) Execute() (success bool) {
 		tPre = *template.Must(template.New("pre").Parse(s.Pre))
 		tPost = *template.Must(template.New("post").Parse(s.Post))
 
+		if t.outputFile == "" {
+			t.outputFile = s.Filename
+		}
 	}
 
 	if tEach.Name() == "" {
