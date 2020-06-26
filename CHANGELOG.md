@@ -1,5 +1,16 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.5.4.1"></a>
+## [v0.5.4.1](https://github.com/SAP/project-kb/compare/v0.5.4...v0.5.4.1) (2020-06-26)
+
+* fix: broken `version` command (#14)
+
+<a name="v0.5.4"></a>
+## [v0.5.4](https://github.com/SAP/project-kb/compare/v0.5.3...v0.5.4) (2020-06-25)
+
+* fix: add '//' at the end of backend url if missing
+* added some real vulnerability statements
+
 <a name="v0.5.3"></a>
 ## [v0.5.3](https://github.com/SAP/project-kb/compare/v0.5.2...v0.5.3) (2020-06-24)
 

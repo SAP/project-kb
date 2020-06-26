@@ -9,6 +9,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 BINARY_NAME=kaybee
+LDFLAGS=-ldflags='-X "github.com/sap/project-kb/kaybee/cmd.buildDate=$(NOW)" -X "github.com/sap/project-kb/kaybee/cmd.buildCommitID=$(GIT_COMMIT)" -X "github.com/sap/project-kb/kaybee/cmd.version=$(VERSION)"'
 BINARY_UNIX=$(BINARY_NAME)-$(VERSION)_linux-amd64
 BINARY_WINDOWS=$(BINARY_NAME)-$(VERSION)_win-amd64
 BINARY_MACOS=$(BINARY_NAME)-$(VERSION)_darwin-amd64
@@ -16,7 +17,7 @@ BINARY_MACOS=$(BINARY_NAME)-$(VERSION)_darwin-amd64
 all: lint vet test build #ui
 
 build: fmt
-	$(GOBUILD) -ldflags='-X "github.com/sap/project-kb/kaybee/cmd.buildDate=$(NOW)" -X "github.com/sap/project-kb/kaybee/cmd.buildCommitID=$(GIT_COMMIT)" -X "github.com/sap/project-kb/kaybee/cmd.version=$(VERSION)"' -o $(BINARY_NAME) -v
+	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) -v
 
 # ui:
 # 	$(MAKE) --directory=ui
@@ -54,14 +55,14 @@ lint: vet
 
 # Cross compilation
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o dist/$(BINARY_UNIX) -v
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o dist/$(BINARY_UNIX) -v
 
 build-win:
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o dist/$(BINARY_WINDOWS) -v
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o dist/$(BINARY_WINDOWS) -v
 
 build-macos:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) -o dist/$(BINARY_MACOS) -v
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o dist/$(BINARY_MACOS) -v
 
-changelog:
-	$(eval TAG = v$(shell cat VERSION.md))
-	git-chglog $(TAG)
+build-all: build-win build-macos build-linux
+
+.PHONY: build-all
