@@ -57,8 +57,7 @@ kaybee export -t steady) is now json.
 <a name="v0.5.1"></a>
 ## [v0.5.1](https://github.com/SAP/project-kb/compare/2019-05-10...v0.5.1) (2020-06-22)
 
-### Bug Fixes
-Note: this is the first open-source version of the tool
+*Note: this is the first open-source version of the tool*
 
 - "strict" merge policy
 - initial implementation of "soft" merge policy
