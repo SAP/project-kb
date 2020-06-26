@@ -1,10 +1,15 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.0.2"></a>
+## [v0.6.0.2](https://github.com/SAP/project-kb/compare/v0.6.0.1...v0.6.0.2) (2020-06-26)
+
+* fix: force creation of config file with -f flag (for real this time :-))
+
 <a name="v0.6.0.1"></a>
 ## [v0.6.0.1](https://github.com/SAP/project-kb/compare/v0.6.0...v0.6.0.1) (2020-06-26)
 
-* fix: (setup) force creation of config file with -f flag
-* fix: GH build step, install packr
+* fix: force creation of config file with -f flag
+* fix: build step,  install packr
 
 <a name="v0.6.0"></a>
 ## [v0.6.0](https://github.com/SAP/project-kb/compare/v0.5.4.3...v0.6.0) (2020-06-26)
@@ -22,7 +27,6 @@ kaybee export -t steady) is now json.
 ## [v0.5.4.3](https://github.com/SAP/project-kb/compare/v0.5.4.2...v0.5.4.3) (2020-06-26)
 
 * set default concurrency to 1
-* improve makefile
 * update changelog generation config
 
 <a name="v0.5.4.2"></a>
@@ -57,7 +61,7 @@ kaybee export -t steady) is now json.
 <a name="v0.5.1"></a>
 ## [v0.5.1](https://github.com/SAP/project-kb/compare/2019-05-10...v0.5.1) (2020-06-22)
 
-*Note: this is the first open-source version of the tool*
+**Note: this is the first open-source version of the tool**
 
 - "strict" merge policy
 - initial implementation of "soft" merge policy
