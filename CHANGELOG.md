@@ -1,5 +1,16 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.0.1"></a>
+## [v0.6.0.1](https://github.com/SAP/project-kb/compare/v0.6.0...v0.6.0.1) (2020-06-26)
+
+### Bug Fixes
+
+* force creation of config file with -f flag
+
+### Misc
+
+* fix build step,  install packr
+
 <a name="v0.6.0"></a>
 ## [v0.6.0](https://github.com/SAP/project-kb/compare/v0.5.4.3...v0.6.0) (2020-06-26)
 
