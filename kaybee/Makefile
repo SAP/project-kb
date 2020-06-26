@@ -25,17 +25,18 @@ build: fmt
 check: lint vet test
 
 test: 
-	$(GOTEST) -coverprofile=coverage.out ./...
+	$(GOTEST) -failfast -coverprofile=coverage.out ./...
 
 coverage: test
 	go tool cover -html=coverage.out
 
 clean:
 	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_UNIX)
-	rm -f $(BINARY_MACOS)
-	rm coverage.out
+	@rm -f $(BINARY_NAME)
+	@rm -f $(BINARY_UNIX)
+	@rm -f $(BINARY_MACOS)
+	@rm coverage.out
+	@rm -fr dist
 
 run:
 	$(GOBUILD) -o $(BINARY_NAME) -v ./...
