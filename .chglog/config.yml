@@ -7,26 +7,23 @@ options:
   commits:
     filters:
       Type:
-        - "new"
-        - "fix"
-        - "perf"
-        - "docs"
-        - "refactor"
-        - "chore"
+        - feat
+        - fix
+        - perf
+        - refactor
+        - chore
   commit_groups:
     title_maps:
-      new: New
+      feat: New
       fix: Bug Fixes
       perf: Performance Improvements
-      refactor: Code Refactoring
-      doc: Documentation changes
-      chore: Other Changes
+      refactor: Refactoring
+      chore: Misc
   header:
-    pattern: "^((\\w+)\\s.*)$"
+    pattern: "^(\\w*)\\:\\s(.*)$"
     pattern_maps:
-      - Subject
       - Type
+      - Subject
   notes:
     keywords:
       - BREAKING CHANGE
-      - NOTE
