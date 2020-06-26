@@ -27,10 +27,10 @@ func NewSetupTask() *SetupTask {
 	return &t
 }
 
-// WithForceMode sets the flag that controls whether the setup should be done even
+// WithForce sets the flag that controls whether the setup should be done even
 // if a configuration file is already existing (in which case, it will be overwritten)
-func (t *SetupTask) WithForceMode() *SetupTask {
-	t.force = true
+func (t *SetupTask) WithForce(f bool) *SetupTask {
+	t.force = f
 	return t
 }
 
@@ -46,29 +46,36 @@ func (t *SetupTask) Execute() (success bool) {
 
 	t.validate()
 
-	const path string = "./kaybeeconf.yaml"
+	const configFileName string = "./kaybeeconf.yaml"
 
+	// cwd, err := os.Getwd()
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
+	// configFileFullPath := path.Join(cwd, configFileName)
+	configFileFullPath := configFileName
 	// check if file exists
-	if filesystem.FileExists(path) {
-		// force := ctx.Get("force").(bool)
+	if filesystem.FileExists(configFileFullPath) {
 		if t.force {
-			var err = os.Remove(path)
+			fmt.Printf("Overwriting the existing configuration file at %s\n", configFileFullPath)
+			var err = os.Remove(configFileFullPath)
 			if err != nil {
 				log.Fatal("There was an error removing the existing file")
 			}
 		} else {
-			fmt.Printf("The configuration file %s exists. Re-run with the -f flag to overwrite it.\n", path)
+			fmt.Printf("The configuration file %s exists. Re-run with the -f flag to overwrite it.\n", configFileFullPath)
 			log.Fatal("Aborting")
 		}
 	}
 
-	f, err := os.Create(path)
+	f, err := os.Create(configFileFullPath)
 	if err != nil {
-		fmt.Printf("Failed to create file: %s", path)
+		fmt.Printf("Failed to create file: %s", configFileFullPath)
 	}
 	f.Close()
 
-	f, err = os.OpenFile(path, os.O_RDWR, 0644)
+	f, err = os.OpenFile(configFileFullPath, os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}

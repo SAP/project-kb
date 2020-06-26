@@ -46,7 +46,9 @@ func doSetup(cmd *cobra.Command, args []string) {
 		fmt.Println("Non-interactive mode")
 	}
 
-	t := tasks.NewSetupTask().WithInteractiveMode(interactive)
+	t := tasks.NewSetupTask().
+		WithInteractiveMode(interactive).
+		WithForce(force)
 
 	t.Verbose(verbose)
 	t.Execute()
