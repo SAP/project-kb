@@ -98,7 +98,7 @@ func (t *SetupTask) Execute() (success bool) {
 }
 
 func getDefaultConfig() string {
-	box := packr.NewBox("./data")
+	box := packr.NewBox("data")
 
 	s, err := box.FindString("default_config.yaml")
 	if err != nil {
