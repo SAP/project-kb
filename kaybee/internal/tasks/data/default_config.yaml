@@ -92,10 +92,12 @@ export:
 
         [ -d $vulnerability_id/$commit_id ] || mkdir -p $vulnerability_id/$commit_id
         
-        echo "repository=$repo_url" > $vulnerability_id/$commit_id/meta.properties
-        echo "branch=$branch" >> $vulnerability_id/$commit_id/meta.properties
-        echo "timestamp=$timestamp" >> $vulnerability_id/$commit_id/meta.properties
-        echo "commit_id=$commit_id" >> $vulnerability_id/$commit_id/meta.properties
+        echo "{" > $vulnerability_id/$commit_id/metadata.json
+        echo "  \"repository\" : \"$repo_url\"," >> $vulnerability_id/$commit_id/metadata.json
+        echo "  \"branch\" : \"$branch\"," >> $vulnerability_id/$commit_id/metadata.json
+        echo "  \"timestamp\" : \"$timestamp\"," >> $vulnerability_id/$commit_id/metadata.json
+        echo "  \"commit_id\" : \"$commit_id\"" >> $vulnerability_id/$commit_id/metadata.json
+        echo "}" >> $vulnerability_id/$commit_id/metadata.json
 
         echo "dir=$repo_dir"
         echo "pwd=`pwd`"
