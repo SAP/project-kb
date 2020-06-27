@@ -16,6 +16,7 @@ import (
 type CreateTask struct {
 	BaseTask
 	enableGUI bool
+	vulnID    string
 }
 
 // GUIPort is the port (on localhost) on which the Statement creation wizart
@@ -37,9 +38,16 @@ func (t *CreateTask) WithGUI(enableGUI bool) *CreateTask {
 	return t
 }
 
+// WithVulnerabilityID sets the ID of the vulnerability we're creating a statement for
+func (t *CreateTask) WithVulnerabilityID(id string) *CreateTask {
+	t.vulnID = id
+	return t
+}
+
 // Execute performs the actual task and returns true on success
 func (t *CreateTask) Execute() (success bool) {
 
+	t.validate()
 	if t.enableGUI {
 
 		// Set the router as the default one shipped with Gin
@@ -64,16 +72,16 @@ func (t *CreateTask) Execute() (success bool) {
 		router.Run(":" + GUIPort)
 
 	} else {
-		var vulnID = "CVE-xxxx-yyyy"
+		// var vulnID = "CVE-xxxx-yyyy"
 		var statement = model.Statement{
-			VulnerabilityID: vulnID,
+			VulnerabilityID: t.vulnID,
 			Notes: []model.Note{
 				{
 					Links: []string{
 						"https://..............",
 						"https://.......................",
 					},
-					Text: "Some note about " + vulnID,
+					Text: "Some note about " + t.vulnID,
 				},
 			},
 			Fixes: []model.Fix{
@@ -106,10 +114,10 @@ func (t *CreateTask) Execute() (success bool) {
 			},
 		}
 
-		statement.ToFile("./kaybee-export-output")
-		fmt.Printf("The file './kaybee-export-output/" + vulnID + "/statement.yaml' has been created.\n")
+		statement.ToFile("./kaybee-new-statements")
+		fmt.Printf("The file './kaybee-new-statements/" + t.vulnID + "/statement.yaml' has been created.\n")
 		fmt.Printf("With your favourite text editor, modify it as you see fit, then run the following command:\n\n")
-		fmt.Printf("  kaybee export --target steady --from ./kaybee-export-output/\n\n")
+		fmt.Printf("  kaybee export --target steady --from ./kaybee-new-statements/\n\n")
 		fmt.Printf("That will create the script 'steady.sh' that is ready to be executed to import data into the Steady backend.\n")
 	}
 

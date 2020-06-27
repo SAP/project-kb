@@ -57,6 +57,8 @@ func printBanner() {
              /____/` + "\n\n"
 
 	fmt.Print(banner)
-	fmt.Println("This is KayBee, a tool to help with maintaining a collaborative, \n" +
-		"distributed, knowledge base about vulnerabilities of open-source software.\n")
+	fmt.Printf("                    by SAP Security Research\n\n")
+	fmt.Printf("project \"KB\" -- https://sap.github.io/project-kb\n\n")
+	fmt.Println("This is KayBee, a tool developed in project \"KB\", to create and maintain\n" +
+		"a collaborative, distributed knowledge base about vulnerabilities of open-source software.\n")
 }
