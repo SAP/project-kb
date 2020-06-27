@@ -4,6 +4,7 @@ import subprocess
 import sys
 from pprint import pprint
 
+project_slug="sap/project-kb"
 
 commit_types = {
     'new': "New features",
@@ -26,8 +27,10 @@ def get_commit_for_last_tag():
 
 
 def get_commit_for_second_last_tag():
-    return exec("git rev-list --tags --skip=1 --max-count=1")[0]
+    return exec("git rev-list --tags --max-count=1 --skip=1 --no-walk")[0]
 
+def tag_at_commit(c):
+    return exec("git describe --tags " + c)[0]
 
 def parse_commit_msg(msg):
     split_msg = msg.split()
@@ -47,19 +50,30 @@ def parse_commit_msg(msg):
     }
 
 
-def get_commits(since=None):
+def get_commits():
     results = []
 
-    if not since:
-        since = get_commit_for_last_tag()
+    since = get_commit_for_second_last_tag()
+    until = get_commit_for_last_tag()
 
-    commits = exec("git log " + since + "..HEAD --oneline")
+    print(since, until)
+
+    commits = exec("git log " + since + ".." + until + " --oneline")
     for c in commits:
         commit_obj = parse_commit_msg(c)
         if commit_obj:
             results.append(commit_obj)
     return results
 
+def render_changelog_header():
+    since = get_commit_for_second_last_tag()
+    until = get_commit_for_last_tag()
+
+    prev_tag = tag_at_commit(since)
+    curr_tag = tag_at_commit(until)
+
+    print("<a name=\"" + curr_tag + "\"></a>")
+    print("## [" + curr_tag + "](https://github.com/" + project_slug + "/compare/" + prev_tag + "..." + curr_tag +")")
 
 def render_changelog(log):
     changes_by_type = dict()
@@ -84,6 +98,7 @@ def main(args):
     else:
         log = get_commits()
 
+    render_changelog_header()
     render_changelog(log)
 
 
