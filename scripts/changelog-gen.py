@@ -86,9 +86,9 @@ def render_changelog(log):
             changes_by_type[commit_types[l['type']]] = [l]
 
     for t in changes_by_type:
-        print("\n## " + t)
+        print("\n### " + t)
         for c in changes_by_type[t]:
-            print(" * " + c['msg'] + " (" + c['id'] + ")")
+            print(" * " + c['msg'] + " ([" + c['id'] + "](https://github.com/" + project_slug  + "/commit/" + c['id'] +"))")
 
 
 def main(args):
