@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+import subprocess
+import sys
+from pprint import pprint
+
+
+commit_types = {
+    'new': "New features",
+    'feat': "New features", 
+    'feature': "New features", 
+    'fix': "Bugfixes", 
+    'change': "Changes",
+    'refactor': "Changes",
+    'refactoring': "Changes",
+    'chore': "Chores",
+    'docs': "Docs"}
+
+
+def exec(cmdline):
+    return subprocess.run(cmdline.split(), stdout=subprocess.PIPE).stdout.decode("utf-8").splitlines()
+
+
+def get_commit_for_last_tag():
+    return exec("git rev-list --tags --skip=0 --max-count=1")[0]
+
+
+def get_commit_for_second_last_tag():
+    return exec("git rev-list --tags --skip=1 --max-count=1")[0]
+
+
+def parse_commit_msg(msg):
+    split_msg = msg.split()
+    id = split_msg[0]
+
+    commit_type = split_msg[1].split(":")[0]
+    if commit_type not in commit_types:
+        print("ignoring commit " + msg)
+        return None
+    else:
+        msg = " ".join(split_msg[2:])
+
+    return {
+        'id': id,
+        'type': commit_type,
+        'msg': msg
+    }
+
+
+def get_commits(since=None):
+    results = []
+
+    if not since:
+        since = get_commit_for_last_tag()
+
+    commits = exec("git log " + since + "..HEAD --oneline")
+    for c in commits:
+        commit_obj = parse_commit_msg(c)
+        if commit_obj:
+            results.append(commit_obj)
+    return results
+
+
+def render_changelog(log):
+    changes_by_type = dict()
+
+    output = ""
+    for l in log:
+        if commit_types[l['type']] in changes_by_type:
+            changes_by_type[commit_types[l['type']]].append(l)
+        else:
+            changes_by_type[commit_types[l['type']]] = [l]
+
+    for t in changes_by_type:
+        print("\n## " + t)
+        for c in changes_by_type[t]:
+            print(" * " + c['msg'] + " (" + c['id'] + ")")
+
+
+def main(args):
+    if len(args) > 1:
+        since = args[1]
+        log = get_commits(since)
+    else:
+        log = get_commits()
+
+    render_changelog(log)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
