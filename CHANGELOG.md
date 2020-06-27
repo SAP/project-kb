@@ -1,5 +1,12 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.2"></a>
+## [v0.6.2](https://github.com/sap/project-kb/compare/v0.6.1...v0.6.2)
+
+## Chores
+ * add changelog generation script (18f675c)
+ * update deps for update cmd (39d04cd)
+
 <a name="v0.6.1"></a>
 ## [v0.6.1](https://github.com/SAP/project-kb/compare/v0.6.0.2...v0.6.1) (2020-06-26)
 
