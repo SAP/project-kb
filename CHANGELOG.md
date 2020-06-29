@@ -6,6 +6,12 @@
 ### Chores
  * scripts to automate release ([a931e50](https://github.com/sap/project-kb/commit/a931e50))
 
+<a name="v"></a>
+## [v](https://github.com/sap/project-kb/compare/v0.6.3...v)
+
+### Chores
+ * scripts to automate release ([a931e50](https://github.com/sap/project-kb/commit/a931e50))
+
 <a name="v0.6.3"></a>
 ## [v0.6.3](https://github.com/sap/project-kb/compare/v0.6.2...v0.6.3)
 
