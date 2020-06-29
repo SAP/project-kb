@@ -25,8 +25,8 @@ jobs:
     - name: Install golint
       run: go get -u golang.org/x/lint/golint
 
-    - name: Install packr
-      run:  go get -u github.com/gobuffalo/packr/packr
+    - name: Install pkger
+      run:  go get -u github.com/markbates/pkger/cmd/pkger
       
     - name: Vet and test
       run: make -C kaybee check
