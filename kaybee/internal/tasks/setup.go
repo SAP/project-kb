@@ -1,11 +1,13 @@
 package tasks
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
-	"github.com/gobuffalo/packr"
+	"github.com/markbates/pkger"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 )
 
@@ -98,11 +100,15 @@ func (t *SetupTask) Execute() (success bool) {
 }
 
 func getDefaultConfig() string {
-	box := packr.NewBox("data")
-
-	s, err := box.FindString("default_config.yaml")
+	box, err := pkger.Open("/kaybee/internal/tasks/data/default_config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
-	return s
+	defer box.Close()
+
+	s := new(bytes.Buffer)
+	if _, err := io.Copy(s, box); err != nil {
+		log.Fatal("could not copy")
+	}
+	return s.String()
 }

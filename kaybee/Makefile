@@ -4,7 +4,7 @@ $(eval NOW = $(shell date))
 
 # Go parameters
 GOCMD=go
-GOBUILD=packr build
+GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
@@ -16,15 +16,18 @@ BINARY_MACOS=$(BINARY_NAME)-$(VERSION)_darwin-amd64
 
 all: lint vet test build #ui
 
-build: fmt
+build:  pkged.go fmt
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) -v
+
+pkged.go:
+	pkger -o kaybee
 
 # ui:
 # 	$(MAKE) --directory=ui
 
 check: lint vet test
 
-test: 
+test: pkged.go
 	$(GOTEST) -failfast -coverprofile=coverage.out ./...
 
 coverage: test
@@ -52,18 +55,22 @@ fmt:
 	$(GOCMD) fmt ./...
 
 lint: vet
-	golint ./...
+	@golint ./...
+
+security:
+	@gosec ./...
+	@echo "[OK] Go security check was completed!"
 
 # Cross compilation
-build-linux:
+build-linux: pkged.go
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o dist/$(BINARY_UNIX) -v
 
-build-win:
+build-win: pkged.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o dist/$(BINARY_WINDOWS) -v
 
-build-macos:
+build-macos: pkged.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o dist/$(BINARY_MACOS) -v
 
-build-all: build-win build-macos build-linux
+build-all: pkged.go build-win build-macos build-linux
 
 .PHONY: build-all
