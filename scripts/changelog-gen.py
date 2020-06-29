@@ -38,7 +38,7 @@ def parse_commit_msg(msg):
 
     commit_type = split_msg[1].split(":")[0]
     if commit_type not in commit_types:
-        print("ignoring commit " + msg)
+        # print("ignoring commit " + msg)
         return None
     else:
         msg = " ".join(split_msg[2:])
@@ -56,7 +56,7 @@ def get_commits():
     since = get_commit_for_second_last_tag()
     until = get_commit_for_last_tag()
 
-    print(since, until)
+    # print(since, until)
 
     commits = exec("git log " + since + ".." + until + " --oneline")
     for c in commits:
