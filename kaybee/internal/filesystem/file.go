@@ -52,7 +52,7 @@ func GetPubKey(path string) ([]string, error) {
 
 // CreateDir makes a directory at the given path
 func CreateDir(path string) error {
-	if err := os.MkdirAll(path, 0777); err != nil {
+	if err := os.MkdirAll(path, 0750); err != nil {
 		return err
 	}
 	return nil
@@ -119,7 +119,7 @@ func SplitPath(path string) (string, string) {
 
 // CreateFile creates a file in a given path if it does not exist
 func CreateFile(path string) (*os.File, error) {
-	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0666)
+	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
 }
 
 // FileExists checks if a file exists at the specified path

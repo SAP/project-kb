@@ -264,7 +264,7 @@ func (r *Repository) resetPullTimestamp() {
 	ts := fmt.Sprint(time.Now().Unix())
 
 	fileName := path.Join(r.Path, ".pull_timestamp")
-	err := ioutil.WriteFile(fileName, []byte(ts), 0644)
+	err := ioutil.WriteFile(fileName, []byte(ts), 0600)
 	if err != nil {
 		log.Fatal(err)
 	}

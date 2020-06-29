@@ -170,13 +170,13 @@ func (s *Statement) ToFile(path string) error {
 	targetDir := filepath.Join(path, s.VulnerabilityID)
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
 		// log.Println("Creating folder: " + targetDir)
-		os.MkdirAll(targetDir, 0770)
+		os.MkdirAll(targetDir, 0750)
 	}
 
 	dest := filepath.Join(targetDir, "statement.yaml")
 	// fmt.Print("\nSaving statement to file", dest)
 	data, _ := yaml.Marshal(s)
-	err := ioutil.WriteFile(dest, data, 0666)
+	err := ioutil.WriteFile(dest, data, 0600)
 	if err != nil {
 		log.Fatalln("Could not save statement to file: ", dest)
 		log.Fatal(err)

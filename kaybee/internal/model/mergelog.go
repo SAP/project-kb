@@ -42,7 +42,7 @@ func (ml *MergeLog) Dump(filepath string) {
 	// fmt.Println("==========================================")
 
 	f, err := os.OpenFile(path.Join(filepath, "merge.log"),
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Println(err)
 	}

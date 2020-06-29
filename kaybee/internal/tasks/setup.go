@@ -77,7 +77,7 @@ func (t *SetupTask) Execute() (success bool) {
 	}
 	f.Close()
 
-	f, err = os.OpenFile(configFileFullPath, os.O_RDWR, 0644)
+	f, err = os.OpenFile(configFileFullPath, os.O_RDWR, 0600)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
