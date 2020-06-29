@@ -17,5 +17,8 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@v2
 
+      - name: Install Material
+        run: pip install mkdocs-material
+
       - name: Build and Deploy Documentation using MkDocs
         uses: Tangerine-Community/tangy-mkdocs-build-action@v1
