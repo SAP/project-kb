@@ -1,5 +1,17 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.3"></a>
+## [v0.6.3](https://github.com/sap/project-kb/compare/v0.6.2...v0.6.3)
+
+### Bugfixes
+ * setup cmd works (using pkger), fixes: #17 ([8ddb881](https://github.com/sap/project-kb/commit/8ddb881))
+
+### Changes
+ * create cmd now takes vulnID in input ([7478c80](https://github.com/sap/project-kb/commit/7478c80))
+
+### Chores
+ * better changelog generation (with links to commits) ([b55374a](https://github.com/sap/project-kb/commit/b55374a))
+
 <a name="v0.6.2"></a>
 ## [v0.6.2](https://github.com/sap/project-kb/compare/v0.6.1...v0.6.2)
 
