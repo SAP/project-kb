@@ -147,7 +147,7 @@ func (r *Repository) Statements() ([]model.Statement, error) {
 	s := []model.Statement{}
 	// log.Println("    collecting statements")
 
-	files, _ := ioutil.ReadDir(r.Path + "/data")
+	files, _ := ioutil.ReadDir(r.Path + "/" + filesystem.DataPath)
 
 	bar := progressbar.NewOptions(
 		len(files),

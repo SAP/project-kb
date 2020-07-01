@@ -10,7 +10,7 @@ import (
 
 const (
 	// DataPath is the root folder for cve storage
-	DataPath = "data"
+	DataPath = "statements"
 
 	// KeyPath is the directory in which keys are stored
 	KeyPath = "signature"
