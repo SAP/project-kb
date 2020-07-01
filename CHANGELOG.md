@@ -1,5 +1,27 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.4"></a>
+## [v0.6.4](https://github.com/sap/project-kb/compare/v...v0.6.4)
+
+### Changes
+ * remove dependency on packer ([9afd5fe](https://github.com/sap/project-kb/commit/9afd5fe))
+ * default branch for vuln. data is "vulnerability-data" ([582f887](https://github.com/sap/project-kb/commit/582f887), [29a1392](https://github.com/sap/project-kb/commit/29a1392))
+
+### Bugfixes
+ * fail gracefully if no backend is supplied for import ([a8e8e57](https://github.com/sap/project-kb/commit/a8e8e57))
+ * harden file access (reduce perms) ([769bf23](https://github.com/sap/project-kb/commit/769bf23))
+
+### Docs
+ * add reference to project Sparta to Readme file ([bec615b](https://github.com/sap/project-kb/commit/bec615b))
+ * user manual, initial draft ([2aa6e60](https://github.com/sap/project-kb/commit/2aa6e60))
+
+### Chores
+ * update order of pages in docs ([322b01c](https://github.com/sap/project-kb/commit/322b01c))
+ * remove deps in mkdocs config ([5146b74](https://github.com/sap/project-kb/commit/5146b74), [71ed691](https://github.com/sap/project-kb/commit/71ed691))
+ * update docs build action ([a8451f0](https://github.com/sap/project-kb/commit/a8451f0))
+ * update GH build workflow to use pkger ([295839d](https://github.com/sap/project-kb/commit/295839d))
+ * scripts to automate release ([9bd5e9a](https://github.com/sap/project-kb/commit/9bd5e9a))
+
 <a name="v0.6.3"></a>
 ## [v0.6.3](https://github.com/sap/project-kb/compare/v0.6.2...v0.6.3)
 
