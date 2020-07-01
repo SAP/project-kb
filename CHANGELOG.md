@@ -1,5 +1,15 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.5"></a>
+## [v0.6.5](https://github.com/sap/project-kb/compare/v0.6.4...v0.6.5)
+
+### Changes
+ * statements are expected to be in the "statements" folder ([6e4f1db](https://github.com/sap/project-kb/commit/6e4f1db))
+ * check for newer releases in "version" cmd ([8ce3325](https://github.com/sap/project-kb/commit/8ce3325))
+
+### Docs
+ * add credit to Sparta project in docs homepage ([94c1d8b](https://github.com/sap/project-kb/commit/94c1d8b))
+
 <a name="v0.6.4"></a>
 ## [v0.6.4](https://github.com/sap/project-kb/compare/v...v0.6.4)
 
@@ -12,7 +22,6 @@
  * harden file access (reduce perms) ([769bf23](https://github.com/sap/project-kb/commit/769bf23))
 
 ### Docs
- * add reference to project Sparta to Readme file ([bec615b](https://github.com/sap/project-kb/commit/bec615b))
  * user manual, initial draft ([2aa6e60](https://github.com/sap/project-kb/commit/2aa6e60))
 
 ### Chores

@@ -9,7 +9,7 @@ import (
 
 func TestParsePath(t *testing.T) {
 	// Test path parsing successful
-	if _, _, _, valid := ParsePath("data/cve_1234/statement.yaml"); !valid {
+	if _, _, _, valid := ParsePath("statements/cve_1234/statement.yaml"); !valid {
 		t.Errorf("path [data/cve_1234/statement.yaml] should be valid during parsing")
 	}
 

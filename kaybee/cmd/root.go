@@ -52,7 +52,7 @@ func Execute() {
 func init() {
 	// OnInitialize sets the passed functions to be run when each command's Execute method is called.
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "config file (default is $HOME/.kaybee.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "config file")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose mode")
 }
 
