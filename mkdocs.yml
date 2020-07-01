@@ -2,8 +2,8 @@ site_name: project "KB"
 nav:
   - Home: index.md
   - Getting started: getting_started.md
-  - Contributing: contributing.md
   - User manual: user_manual.md
+  - Contributing: contributing.md
   - Developer docs: dev_docs.md
   - FAQ: faq.md
   - Team: team.md
