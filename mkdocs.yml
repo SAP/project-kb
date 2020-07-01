@@ -3,7 +3,7 @@ nav:
   - Home: index.md
   - Getting started: getting_started.md
   - Contributing: contributing.md
-  # - User guide: user_guide.md
+  - User manual: user_manual.md
   - Developer docs: dev_docs.md
   - FAQ: faq.md
   - Team: team.md
