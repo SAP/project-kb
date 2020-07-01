@@ -2,7 +2,7 @@ apiVersion: "v1"
 
 sources:
   - repo: https://github.com/sap/project-kb
-    branch: master
+    branch: vulnerability-data
     rank: 10
 
 # Edit this to point to your Eclipse Steady server (optional)
