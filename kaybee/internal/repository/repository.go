@@ -248,7 +248,11 @@ func (r *Repository) getRepoPath() (string, error) {
 		return filepath.Join(".", strings.ReplaceAll(parsedURL.Path[1:], "/", ".")+"_"+r.Branch), nil
 	}
 
-	return filepath.Join(parsedURL.Hostname() + "_" + strings.ReplaceAll(parsedURL.Path[1:], "/", ".") + "_" + r.Branch), nil
+	if parsedURL.Path == "" {
+		log.Fatal("The source URL is invalid: " + r.URL)
+	}
+
+	return filepath.Join(parsedURL.Host + "_" + strings.ReplaceAll(parsedURL.Path[1:], "/", ".") + "_" + r.Branch), nil
 }
 
 // getLicensePath returns the disk path of the license
