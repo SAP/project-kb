@@ -30,9 +30,9 @@ func init() {
 }
 
 func doUpdate(cmd *cobra.Command, args []string) {
-	fmt.Println("Checking new releases...")
+	fmt.Print("Checking new releases...\n")
 
-	fmt.Println("You currently have version: " + version)
+	// fmt.Println("You currently have version: " + version)
 	latest, ok, e := selfupdate.DetectLatest("sap/project-kb")
 	if e != nil {
 		log.Fatal("error: ", e)
@@ -43,11 +43,11 @@ func doUpdate(cmd *cobra.Command, args []string) {
 		currentSemVer := semver.MustParse(version)
 
 		if latestSemVer.Compare(currentSemVer) > 0 {
-			fmt.Printf("\nNew version detected\n")
+			fmt.Printf("New version detected\n")
 			fmt.Println("Latest version available: " + latest.Version.String())
 			fmt.Println("Please download it from: " + latest.URL)
 		} else {
-			fmt.Println("You already have the latest version")
+			fmt.Println("You have the latest version.")
 		}
 
 	} else {

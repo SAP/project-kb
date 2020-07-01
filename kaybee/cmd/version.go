@@ -31,6 +31,8 @@ to quickly create a Cobra application.`,
 		fmt.Println("Version:            " + version)
 		fmt.Println("Build time:         " + buildDate)
 		fmt.Println("Built from commit:  " + buildCommitID)
+		fmt.Println("")
+		doUpdate(cmd, args)
 	},
 }
 
@@ -61,4 +63,5 @@ func printBanner() {
 	fmt.Printf("project \"KB\" -- https://sap.github.io/project-kb\n\n")
 	fmt.Println("This is KayBee, a tool developed in project \"KB\", to create and maintain\n" +
 		"a collaborative, distributed knowledge base about vulnerabilities of open-source software.\n")
+
 }
