@@ -31,7 +31,7 @@ echo "Updating tag..."
 git tag v$RELEASE -f
 
 echo "Pushing..."
-# git push --tags
+git push --tags
 
 echo "Do not forget to update $PROJECT_ROOT/kaybee/VERSION"
 echo "and to create a release on GitHub"
