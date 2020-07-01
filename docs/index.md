@@ -57,12 +57,11 @@ The **tool** (`kaybee`) allows users to do the following:
 - export the result of the merge operation to a variety of different formats
 
 The **knowledge base**, offers a set of vulnerability statements that can be consumed using the `kaybee` tool.
+It contents are kept in the dedicated branch `vulnerability-data`.
 
 ## Getting started
 
 ### Installing the `kaybee` tool
-
-
 
 ### Importing vulnerability data in Eclipse Steady
 
@@ -107,7 +106,7 @@ The development of Project KB is partly supported by [EU-funded project Sparta](
 3rd party information from NVD and MITRE might have been used as input
 for compiling parts of this knowledge base. See MITRE's [Terms of
 Use](http://cve.mitre.org/about/termsofuse.html) for more information.
-See also [this notice](NOTICE.txt).
+See also [this notice](https://github.com/SAP/project-kb/tree/master/NOTICE.txt).
 
 
 ## Features
