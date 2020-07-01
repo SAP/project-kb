@@ -122,8 +122,14 @@ scripts described in that paper](MSR2019)
 
 ## Credits
 
-Note that 3rd party information from NVD and MITRE might have been used as input
-for compiling this knowledge base. See MITRE's [Terms of
+### Sparta project
+
+The development of Project KB is partly supported by [EU-funded project Sparta](https://www.sparta.eu/).
+
+### 3rd party vulnerability data sources
+
+3rd party information from NVD and MITRE might have been used as input
+for compiling parts of this knowledge base. See MITRE's [Terms of
 Use](http://cve.mitre.org/about/termsofuse.html) for more information.
 See also [this notice](NOTICE.txt).
 
