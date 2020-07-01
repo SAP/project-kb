@@ -44,6 +44,9 @@ func NewImportTask() *ImportTask {
 
 // WithBackend sets the URL of the backend  from which data will be imported
 func (t *ImportTask) WithBackend(backend string) *ImportTask {
+	if backend == "" {
+		log.Fatal("No backend specified, aborting.")
+	}
 	if backend[len(backend)-1] != '/' {
 		backend += "/"
 	}
