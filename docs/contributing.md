@@ -4,8 +4,17 @@
 
 A structured process to create and share vulnerability data is work in progress.
 
-Until it is defined, we invite you to just create pull requests in order to
-submit new vulnerability data, using and existing statement as a template.
+For the time being, you can use `kaybee create <VULN.ID>` to generate a skeleton
+statement that you can then edit with a normal text editor.
+
+You can then create pull requests in order to submit new vulnerability data to this repository
+or you host the statements in your own repository.
+
+You will need to dedicate a branch to the statements: the branch must contain a
+top-level `statements` folder in which you can store your statements. You can
+refer to the [`vulnerability-data` branch in this
+repository](https://github.com/SAP/project-kb/tree/vulnerability-data) to see
+what is the expected structure.
 
 Your statement should provide, at least, a vulnerability identifier (use the CVE
 identifier if it exists), the URL of the source code repository of the affected
