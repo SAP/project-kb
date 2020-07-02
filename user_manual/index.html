@@ -332,6 +332,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#purge" class="md-nav__link">
+    purge
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#update" class="md-nav__link">
     update
   </a>
@@ -494,6 +501,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#purge" class="md-nav__link">
+    purge
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#update" class="md-nav__link">
     update
   </a>
@@ -541,8 +555,10 @@
                 <h1 id="user-manual">User Manual<a class="headerlink" href="#user-manual" title="Permanent link">&para;</a></h1>
 <h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
 <p>This is the user manual of the <code>kaybee</code> tool, which is part of <code>project KB</code>.</p>
-<p>WARNING: this document is work in progress. Some of the commands
+<p><strong>WARNING:</strong> this document is <em>work in progress</em>. Some of the commands
 mentioned below might not be fully implemented at this time.</p>
+<p>Please refer to the output of <code>kaybee help</code> and <code>kaybee &lt;command&gt; help</code> to
+know what flags and options are available.</p>
 <h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">&para;</a></h2>
 <h3 id="create"><code>create</code><a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
 <p>The <code>create</code> command is used to create vulnerability statements.</p>
@@ -558,7 +574,12 @@ variety of services/formats, in particular from a Steady backend.</p>
 <p>The <code>export</code> command is used to export vulnerability statements to
 multiple formats.</p>
 <h3 id="list"><code>list</code><a class="headerlink" href="#list" title="Permanent link">&para;</a></h3>
+<p><em>note</em>: this is still not implemented at this time (v0.6.5)</p>
 <p>The <code>list</code> command is used to display the content of statement repositories (remote or local).</p>
+<h3 id="purge"><code>purge</code><a class="headerlink" href="#purge" title="Permanent link">&para;</a></h3>
+<p>The <code>purge</code> command deletes all the local clones of remote sources that have not been
+updated for longer than a specified amount of time. This command is used to ensure compliance
+to data retention policies, and can be invoked, for example, as a recurrent scheduled job.</p>
 <h3 id="update"><code>update</code><a class="headerlink" href="#update" title="Permanent link">&para;</a></h3>
 <p>The <code>update</code> command is used to check if a newer version of the tool is available, and if so, to update it.</p>
 <h3 id="version"><code>version</code><a class="headerlink" href="#version" title="Permanent link">&para;</a></h3>

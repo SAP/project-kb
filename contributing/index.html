@@ -473,8 +473,15 @@
                 <h1 id="how-to-contribute-to-project-kb">How to contribute to project "KB"<a class="headerlink" href="#how-to-contribute-to-project-kb" title="Permanent link">&para;</a></h1>
 <h4 id="do-you-intend-to-contribute-with-new-vulnerability-data"><strong>Do you intend to contribute with new vulnerability data?</strong><a class="headerlink" href="#do-you-intend-to-contribute-with-new-vulnerability-data" title="Permanent link">&para;</a></h4>
 <p>A structured process to create and share vulnerability data is work in progress.</p>
-<p>Until it is defined, we invite you to just create pull requests in order to
-submit new vulnerability data, using and existing statement as a template.</p>
+<p>For the time being, you can use <code>kaybee create &lt;VULN.ID&gt;</code> to generate a skeleton
+statement that you can then edit with a normal text editor.</p>
+<p>You can then create pull requests in order to submit new vulnerability data to this repository
+or you host the statements in your own repository.</p>
+<p>You will need to dedicate a branch to the statements: the branch must contain a
+top-level <code>statements</code> folder in which you can store your statements. You can
+refer to the <a href="https://github.com/SAP/project-kb/tree/vulnerability-data"><code>vulnerability-data</code> branch in this
+repository</a> to see
+what is the expected structure.</p>
 <p>Your statement should provide, at least, a vulnerability identifier (use the CVE
 identifier if it exists), the URL of the source code repository of the affected
 component and one or more identifiers of the commits used to fix the
