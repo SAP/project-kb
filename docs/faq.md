@@ -2,7 +2,11 @@
 
 ## Troubleshooting
 
-Coming soon...
+??? question "How do I get support?"
+
+    If you need help with project KB, with its data or with the `kaybee` tool,
+    the most efficient way to get support is to ask on this [Gitter channel](https://gitter.im/project-kb/help). 
+
 
 ## Misc
 

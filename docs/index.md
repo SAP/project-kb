@@ -135,9 +135,12 @@ feature request.
 
 ## How to obtain support
 
-For the time being, please use [GitHub
-issues](https://github.com/SAP/project-kb/issues) both to report bugs and to
-request help. Documentation and better support channels will come soon.
+First, take a look at our documentation.
+
+If you cannot find the answer to your questions, you may want to ask for help
+on this [Gitter channel](https://gitter.im/project-kb/help). 
+
+If you think you found a bug, please create an [issue](https://github.com/SAP/project-kb/issues).
 
 
 ## License
