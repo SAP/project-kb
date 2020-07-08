@@ -10,7 +10,7 @@ read
 RELEASE=`cat $PROJECT_ROOT/kaybee/VERSION`
 
 echo "Building..."
-make -C kaybee build-all
+make -C kaybee check build-all
 
 echo "Tagging as \"v$RELEASE\"..."
 git tag v$RELEASE -f
