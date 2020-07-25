@@ -306,7 +306,7 @@ type SteadyLibID struct {
 // KayBee AffectedArtifact structure (that ends up being part of a Statement)
 func (al SteadyAffectedLib) toAffectedArtifact() (aa model.Artifact) {
 	// TODO maven is hardcoded; how to distinguish between different PURL types?
-	aa.ID = "pkg:maven://" + al.LibraryID.GroupID + "/" + al.LibraryID.ArtifactID + "@" + al.LibraryID.Version
+	aa.ID = "pkg:maven/" + al.LibraryID.GroupID + "/" + al.LibraryID.ArtifactID + "@" + al.LibraryID.Version
 	aa.Affected = al.Affected
 	// aa.Reason = al.Explanation + " (source: " + al.Source + ")"
 	aa.Reason = al.Explanation
