@@ -3,10 +3,12 @@ Upstream-Name: project "KB"
 Upstream-Contact: Antonino Sabetta <antonino.sabetta@sap.com>
 Source: https://github.com/sap/project-kb
 
-#Files: kaybee/*  mkdocs.yml docs/* scripts/* vulnerability-data/* MSR2019/* .chglog/* .github/* CHANGELOG.md CONTRIBUTING.md Makefile NOTICE.txt README.md go.mod go.sum .gitignore
-Files: *
+Files: kaybee/*  docs/* scripts/* vulnerability-data/* MSR2019/* NOTICE.txt README.md 
 Copyright: 2020 SAP SE or an SAP affiliate company and project "KB" contributors
 License: Apache-2.0
 
+Files: mkdocs.yml .chglog/* .github/* CHANGELOG.md CONTRIBUTING.md Makefile go.mod go.sum .gitignore
+Copyright: 2020 SAP SE or an SAP affiliate company and project "KB" contributors
+License: CC0-1.0
 
 
