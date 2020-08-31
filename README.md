@@ -168,11 +168,4 @@ request help. Documentation and better support channels will come soon.
 
 See [here](CONTRIBUTING.md).
 
-## License
-
-Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved.
-
-This project is licensed under the Apache Software License, v.2 except as noted
-otherwise in the [LICENSE file](LICENSE.txt).
-
 
