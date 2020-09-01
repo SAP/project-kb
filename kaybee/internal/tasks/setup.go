@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 
 	"github.com/markbates/pkger"
+	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 )
 
@@ -57,13 +57,12 @@ func (t *SetupTask) Execute() (success bool) {
 	if filesystem.FileExists(configFileFullPath) {
 		if t.force {
 			fmt.Printf("Overwriting the existing configuration file at %s\n", configFileFullPath)
-			var err = os.Remove(configFileFullPath)
-			if err != nil {
-				log.Fatal("There was an error removing the existing file")
+			if err := os.Remove(configFileFullPath); err != nil {
+				log.Fatal().Msg("There was an error removing the existing file")
 			}
 		} else {
-			fmt.Printf("The configuration file %s exists. Re-run with the -f flag to overwrite it.\n", configFileFullPath)
-			log.Fatal("Aborting")
+			log.Info().Str("path", configFileFullPath).Msg("The configuration file already exists. Re-run with the -f flag to overwrite it")
+			log.Fatal().Msg("Aborting")
 		}
 	}
 
@@ -74,37 +73,37 @@ func (t *SetupTask) Execute() (success bool) {
 	f.Close()
 
 	f, err = os.OpenFile(configFileFullPath, os.O_RDWR, 0600)
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
 	defer f.Close()
+	if err != nil {
+		log.Fatal().Err(err)
+	}
 
 	configFileContent := getDefaultConfig()
 	_, err = f.WriteString(configFileContent)
 	if err != nil {
-		log.Fatalf("%v", err)
+		log.Fatal().Err(err)
 	}
 
 	// Save file changes.
 	err = f.Sync()
 	if err != nil {
-		log.Fatalf("%v", err)
+		log.Fatal().Err(err)
 	}
 
-	fmt.Println("[+] Setup task completed")
+	log.Info().Msg("Setup task completed")
 	return true
 }
 
 func getDefaultConfig() string {
 	box, err := pkger.Open("/kaybee/internal/tasks/data/default_config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	defer box.Close()
 
 	s := new(bytes.Buffer)
 	if _, err := io.Copy(s, box); err != nil {
-		log.Fatal("could not copy")
+		log.Fatal().Err(err)
 	}
 	return s.String()
 }
