@@ -95,7 +95,7 @@ func (r *Repository) Pull() {
 	refName := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", r.Branch))
 	if err := w.Pull(&git.PullOptions{
 		ReferenceName: refName,
-	}); err != nil {
+	}); err != nil && err != git.NoErrAlreadyUpToDate {
 		log.Fatal().Err(err).Msg("Failed to pull repository")
 	}
 }
@@ -115,13 +115,13 @@ func (r *Repository) Fetch() {
 			ReferenceName: refName,
 			SingleBranch:  true,
 		})
-		if errors.Is(err, git.NoErrAlreadyUpToDate) {
+		if err == git.NoErrAlreadyUpToDate {
 			log.Trace().Err(err).Msg("Failed to plainOpen, skipping")
 		}
 	} else {
 		log.Trace().Msg("Local clone exist, trying to update it")
 		r.Repo, err = git.PlainOpen(r.Path)
-		if errors.Is(err, git.NoErrAlreadyUpToDate) {
+		if err == git.NoErrAlreadyUpToDate {
 			log.Trace().Err(err).Msg("Failed to plainOpen, skipping")
 		}
 		r.Pull()
