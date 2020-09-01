@@ -3,12 +3,10 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/conf"
 	"github.com/sap/project-kb/kaybee/internal/tasks"
 	"github.com/spf13/cobra"
-	// "github.com/sap/project-kb/kaybee/internal/goal"
 )
 
 // TODO make constructor method, as in ExportCmd, for testability
@@ -43,25 +41,17 @@ func init() {
 }
 
 func doMerge(cmd *cobra.Command, args []string) {
-	if verbose {
-		fmt.Println("Merging statements...")
-	}
+	log.Trace().Msg("Merging statements...")
 	if skipPull {
-		if verbose {
-			fmt.Println("Skipping pull, only local clones will be considered")
-		}
+		log.Trace().Msg("Skipping pull, only local clones will be considered")
 	} else {
 		doPull(cmd, args)
 	}
-
 	t := tasks.NewMergeTask().
 		WithPolicy(conf.Policy(mergePolicyName)).
 		WithSources(configuration.GetSources())
 	t.Verbose(verbose)
 	t.Execute()
 
-	if verbose {
-		fmt.Println("Merge completed")
-	}
-
+	log.Trace().Msg("Merge completed")
 }

@@ -19,12 +19,12 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strconv"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -59,15 +59,14 @@ func init() {
 }
 
 func doPrune(args []string) {
-	fmt.Println("Purging old data")
-
+	log.Info().Msg("Purging old data")
 	if maxRetention < 0 {
-		log.Fatal("Retention duration should be a non-negative value.")
+		log.Fatal().Msg("Retention duration should be a non-negative value.")
 	}
 
 	repositoryDirs, err := ioutil.ReadDir(".kaybee/repositories/")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 	if len(repositoryDirs) < 1 {
@@ -79,7 +78,7 @@ func doPrune(args []string) {
 		if d.IsDir() {
 			timestampFile, err := os.Open(path.Join(".kaybee/repositories/", d.Name(), ".pull_timestamp"))
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal().Err(err)
 			}
 			defer timestampFile.Close()
 
@@ -88,16 +87,12 @@ func doPrune(args []string) {
 			// fmt.Printf("%d", tsInt64)
 			ageInDays := int((time.Now().Unix() - tsInt64) / secondsInADay)
 			if ageInDays >= maxRetention {
-				if verbose {
-					fmt.Printf("  Removing %s (age: %d days)\n", d.Name(), ageInDays)
-					os.RemoveAll(path.Join(".kaybee/repositories/", d.Name()))
-				}
+				log.Trace().Str("path", d.Name()).Int("age", ageInDays).Msg("Removing")
+				os.RemoveAll(path.Join(".kaybee/repositories/", d.Name()))
 			} else {
-				if verbose {
-					fmt.Printf("  Keeping %s (age: %d days)\n", d.Name(), ageInDays)
-				}
+				log.Trace().Str("path", d.Name()).Int("age", ageInDays).Msg("Keeping")
 			}
 		}
 	}
-	fmt.Println("Purging completed")
+	log.Info().Msg("Purging complete")
 }

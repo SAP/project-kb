@@ -54,5 +54,4 @@ func doSetup(cmd *cobra.Command, args []string) {
 	t.Execute()
 
 	fmt.Println("Setup completed")
-
 }

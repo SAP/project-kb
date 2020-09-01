@@ -4,10 +4,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/blang/semver/v4"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -33,9 +33,9 @@ func doUpdate(cmd *cobra.Command, args []string) {
 	fmt.Print("Checking new releases...\n")
 
 	// fmt.Println("You currently have version: " + version)
-	latest, ok, e := selfupdate.DetectLatest("sap/project-kb")
-	if e != nil {
-		log.Fatal("error: ", e)
+	latest, ok, err := selfupdate.DetectLatest("sap/project-kb")
+	if err != nil {
+		log.Fatal().Err(err)
 	}
 
 	if ok {
@@ -43,15 +43,13 @@ func doUpdate(cmd *cobra.Command, args []string) {
 		currentSemVer := semver.MustParse(version)
 
 		if latestSemVer.Compare(currentSemVer) > 0 {
-			fmt.Printf("New version detected\n")
-			fmt.Println("Latest version available: " + latest.Version.String())
-			fmt.Println("Please download it from: " + latest.URL)
+			log.Info().Msg("New version detected")
+			log.Info().Str("version", latest.Version.String()).Msg("Newer version available")
+			log.Info().Str("url", latest.URL).Msg("Download it from")
 		} else {
-			fmt.Println("You have the latest version.")
+			log.Info().Str("version", latest.Version.String()).Msg("You have the latest version")
 		}
-
 	} else {
-		fmt.Println("Could not check the latest available version, you may want to retry later.")
+		log.Info().Msg("Could not check the latest available version, you may want to retry later.")
 	}
-
 }

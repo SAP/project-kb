@@ -7,7 +7,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/gookit/color"
+	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/tasks"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +34,7 @@ func init() {
 func doCreate(cmd *cobra.Command, args []string) {
 
 	if len(args) < 1 {
-		color.Warn.Prompt("Please provide a vulnerability ID for the new statement")
+		log.Warn().Msg("Please provide a vulnerability ID for the new statement")
 		os.Exit(-1)
 	}
 
