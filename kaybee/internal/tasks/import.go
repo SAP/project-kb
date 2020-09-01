@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"regexp"
 	"sync"
 	"time"
 
-	"github.com/schollz/progressbar/v2"
-
+	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/model"
+	"github.com/schollz/progressbar/v2"
 )
 
 const (
@@ -44,7 +43,7 @@ func NewImportTask() *ImportTask {
 // WithBackend sets the URL of the backend  from which data will be imported
 func (t *ImportTask) WithBackend(backend string) *ImportTask {
 	if backend == "" {
-		log.Fatal("No backend specified, aborting.")
+		log.Fatal().Msg("No backend specified, aborting.")
 	}
 	if backend[len(backend)-1] != '/' {
 		backend += "/"
@@ -77,11 +76,11 @@ func (t *ImportTask) WithOutputPath(p string) *ImportTask {
 
 func (t *ImportTask) validate() (ok bool) {
 	if t.backend == "" {
-		log.Fatalln("Invalid backend for import. Aborting.")
+		log.Fatal().Msg("Invalid backend for import. Aborting.")
 		return false
 	}
 	if t.outputFolder == "" {
-		log.Fatalln("Invalid output folder. Aborting.")
+		log.Fatal().Msg("Invalid output folder. Aborting.")
 		return false
 	}
 
@@ -95,14 +94,14 @@ func (t *ImportTask) Execute() (success bool) {
 
 	importers, err := NewImporterPool(t.backend, t.concurrency, t.limit, nil)
 	if err != nil {
-		log.Fatalln("Could not create importers pool")
+		log.Fatal().Msg("Could not create importers pool")
 	}
 
 	vulns := importers.Run()
 	for _, v := range vulns {
 		v.ToFile(t.outputFolder)
 	}
-	fmt.Printf("\nSaved %d vulnerability statements in directory '%s'\n", len(vulns), t.outputFolder)
+	log.Info().Int("n_statements", len(vulns)).Str("dest", t.outputFolder).Msg("Statements saved to fs")
 	return true
 }
 
@@ -133,7 +132,7 @@ func NewImporterPool(backend string, concurrent int, limit int, filter map[strin
 	pool := &ImporterPool{}
 	bugs, err := fetchVulnerabilityIDs(backend)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 		return nil, err
 	}
 
