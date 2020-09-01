@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -89,9 +88,7 @@ func (t *ImportTask) validate() (ok bool) {
 
 // Execute performs the actual task and returns true on success
 func (t *ImportTask) Execute() (success bool) {
-
-	fmt.Printf("Importing vulnerability data from %s (using %d workers)\n", t.backend, t.concurrency)
-
+	log.Info().Int("n_workers", t.concurrency).Str("backend", t.backend).Msg("Importing vulnerability data")
 	importers, err := NewImporterPool(t.backend, t.concurrency, t.limit, nil)
 	if err != nil {
 		log.Fatal().Msg("Could not create importers pool")
