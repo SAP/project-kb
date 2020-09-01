@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+
+	"github.com/rs/zerolog/log"
 )
 
 /*
@@ -67,7 +69,7 @@ func (s SmartPolicy) Reconcile(statements []Statement) ReconcileResult {
 			return reconcileResult
 		}
 		for _, c := range sameRankCandidates {
-			fmt.Printf("Examining candidate at rank %d\n", c.Metadata.OriginRank)
+			log.Trace().Int("rank", c.Metadata.OriginRank).Msg("Examining candidate")
 			// if mergedStatement.Fixes
 		}
 	}

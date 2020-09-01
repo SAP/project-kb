@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 
-	"github.com/gookit/color"
+	"github.com/rs/zerolog/log"
 
 	"github.com/sap/project-kb/kaybee/internal/errors"
 )
@@ -35,15 +35,19 @@ func (s SoftPolicy) Reconcile(statements []Statement) ReconcileResult {
 
 	mergedStatement.VulnerabilityID = vulnID
 	s.ReconcileAliases(statements, &mergedStatement)
-	fmt.Printf("\n")
-	color.Info.Prompt("Reconciling fixes for %s", vulnID)
-	color.Info.Prompt("Using sources:")
+	log.Info().Str("vulnID", vulnID).Msg("Reconciling fixes")
 	for _, s := range statements {
-		color.Info.Prompt(" * %s [%s] (rank: %d)", s.Metadata.Origin, s.Metadata.Branch, s.Metadata.OriginRank)
+		log.Trace().
+			Str("origin", s.Metadata.Origin).
+			Str("branch", s.Metadata.Branch).
+			Int("rank", s.Metadata.OriginRank).
+			Msg("Using source")
 	}
 	err = s.ReconcileFixesAndNotes(statements, &mergedStatement)
 	if err != nil {
-		color.Warn.Prompt("Same-rank origins disagree on vulnerability %s", mergedStatement.VulnerabilityID)
+		log.Trace().
+			Str("vulnID", mergedStatement.VulnerabilityID).
+			Msg("Same-rank origins disagree")
 		return ReconcileResult{
 			reconciledStatement: Statement{},
 			candidateStatements: statements,
@@ -180,9 +184,11 @@ func (s *SoftPolicy) ReconcileFixesAndNotes(statements []Statement, result *Stat
 	if countTopRank > 1 {
 		return errors.ErrConflictingStatements
 	}
-
-	fmt.Printf("Reconciled by taking the fixes from top-rank source %s (%s), rank %d\n", selectedOrigin, selectedOriginBranch, topRank)
-
+	log.Trace().
+		Str("selected_origin", selectedOrigin).
+		Str("selected_origin_branch", selectedOriginBranch).
+		Int("top_rank", topRank).
+		Msg("Reconciled by taking the fixes from top-rank source")
 	return nil
 }
 
