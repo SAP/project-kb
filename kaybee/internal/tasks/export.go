@@ -1,14 +1,13 @@
 package tasks
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 
+	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/conf"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 	"github.com/sap/project-kb/kaybee/internal/model"
@@ -16,7 +15,6 @@ import (
 
 // ExportTask is the task that generates a script to import statements into 3rd-party systems
 type ExportTask struct {
-	BaseTask
 	policy     []model.Policy
 	source     string
 	target     string
@@ -35,7 +33,7 @@ func NewExportTask() *ExportTask {
 // WithSource sets the source to export from
 func (t *ExportTask) WithSource(s string) *ExportTask {
 	if s == "" {
-		log.Fatal("Invalid export source specified. Aborting.")
+		log.Fatal().Msg("Invalid export source specified. Aborting.")
 	}
 	t.source = s
 	return t
@@ -44,7 +42,7 @@ func (t *ExportTask) WithSource(s string) *ExportTask {
 // WithTarget sets the target type
 func (t *ExportTask) WithTarget(target string) *ExportTask {
 	if target == "" {
-		log.Fatal("Invalid export target specified. Aborting.")
+		log.Fatal().Msg("Invalid export target specified. Aborting.")
 	}
 	t.target = target
 	return t
@@ -70,20 +68,17 @@ func (t *ExportTask) WithExportScripts(scripts []conf.ExportScript) *ExportTask 
 
 func (t *ExportTask) validate() (ok bool) {
 	if t.source == "" {
-		log.Fatalln("Invalid source for export. Aborting.")
-		return false
+		log.Fatal().Msg("Invalid source for export. Aborting.")
 	}
 	if t.target == "" {
-		log.Fatalln("Invalid export target. Aborting.")
-		return false
+		log.Fatal().Msg("Invalid export target. Aborting.")
 	}
 	// if t.outputFile == "" {
 	// 	log.Fatalln("Invalid filename for export script. Aborting.")
 	// 	return false
 	// }
 	if len(t.scripts) < 1 {
-		log.Fatalln("No export scripts specified. Aborting.")
-		return false
+		log.Fatal().Msg("No export scripts specified. Aborting.")
 	}
 	return true
 }
@@ -96,7 +91,6 @@ func (t *ExportTask) validate() (ok bool) {
 // If no source is specified, the task aborts. If a default directory must be
 // considered, it must be set in the calling command.
 func (t *ExportTask) Execute() (success bool) {
-
 	t.validate()
 
 	var statements []model.Statement
@@ -110,11 +104,11 @@ func (t *ExportTask) Execute() (success bool) {
 		// if the source contains directly a statament, this does not work
 		dirs, err = ioutil.ReadDir(t.source)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal().Err(err)
 		}
 
 		for _, d := range dirs {
-			statementFile = path.Join(t.source, d.Name(), "statement.yaml")
+			statementFile = filepath.Join(t.source, d.Name(), "statement.yaml")
 
 			if !filesystem.IsFile(statementFile) {
 				continue
@@ -164,42 +158,40 @@ func (t *ExportTask) Execute() (success bool) {
 	}
 
 	if tEach.Name() == "" {
-		log.Fatal("Make sure you have a valid export section in your configuration.")
+		log.Fatal().Msg("Make sure you have a valid export section in your configuration.")
 	}
 
 	// var err error
 
 	f, err := os.Create(t.outputFile)
 	if err != nil {
-		log.Println("create file: ", err)
+		log.Error().Err(err).Msg("Failed to create file")
 		return
 	}
 
 	err = tPre.Execute(f, nil)
 	if err != nil {
-		log.Println("Error executing template:", err)
+		log.Error().Err(err).Msg("Failed to execute template")
 	}
 
 	exportCount := 0
 	for _, r := range statements {
 		if IsVulnerabilityExportExcluded(t.denylist, r.VulnerabilityID) {
-			log.Println("Skipping excluded vulnerability: ", r.VulnerabilityID)
+			log.Trace().Str("vulnID", r.VulnerabilityID).Msg("Skipping excluded vulnerability")
 			continue
 		}
-		err = tEach.Execute(f, r)
-		if err != nil {
-			log.Println("Error executing template:", err)
+		if err := tEach.Execute(f, r); err != nil {
+			log.Error().Err(err).Msg("Error executing template")
 		}
 		exportCount++
 	}
 
 	err = tPost.Execute(f, nil)
 	if err != nil {
-		log.Println("Error executing template:", err)
+		log.Error().Err(err).Msg("Error executing template")
 	}
 
-	fmt.Printf("Exported %d statements to %s\n", exportCount, t.outputFile)
-
+	log.Trace().Int("n_exported", exportCount).Str("dest", t.outputFile).Msg("Exported statement")
 	return true
 }
 

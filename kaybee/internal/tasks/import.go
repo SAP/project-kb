@@ -26,7 +26,6 @@ const (
 // a Steady backend or database, and produces a text-based (YAML) representation,
 // useful for further processing (e.g., manual inspection, uploading to a repository, analysis, etc.)
 type ImportTask struct {
-	BaseTask
 	backend      string
 	concurrency  int
 	limit        int

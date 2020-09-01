@@ -40,8 +40,6 @@ func doCreate(cmd *cobra.Command, args []string) {
 
 	t := tasks.NewCreateTask().
 		WithGUI(useGUI)
-
-	t.Verbose(verbose)
 	t.WithVulnerabilityID(args[0])
 	t.Execute()
 }

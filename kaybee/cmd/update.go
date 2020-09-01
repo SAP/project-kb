@@ -3,8 +3,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/blang/semver/v4"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"github.com/rs/zerolog/log"
@@ -30,8 +28,7 @@ func init() {
 }
 
 func doUpdate(cmd *cobra.Command, args []string) {
-	fmt.Print("Checking new releases...\n")
-
+	log.Info().Msg("Checking new releases...")
 	// fmt.Println("You currently have version: " + version)
 	latest, ok, err := selfupdate.DetectLatest("sap/project-kb")
 	if err != nil {

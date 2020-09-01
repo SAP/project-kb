@@ -10,7 +10,6 @@ import (
 // PullTask is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
 type PullTask struct {
-	BaseTask
 	sources []conf.SourceV1
 }
 

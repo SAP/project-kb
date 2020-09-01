@@ -56,7 +56,5 @@ func doExport(args []string) {
 		WithTarget(exportTarget).
 		WithOutputFile(outputFile).
 		WithDenylist(configuration.GetExportDenyList())
-
-	t.Verbose(verbose)
 	t.Execute()
 }

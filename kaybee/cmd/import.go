@@ -51,7 +51,5 @@ func doImport(cmd *cobra.Command, args []string) {
 		WithConcurrency(concurrency).
 		WithLimit(limit).
 		WithOutputPath(importPath)
-
-	t.Verbose(verbose)
 	t.Execute()
 }

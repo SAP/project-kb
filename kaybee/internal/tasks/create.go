@@ -1,11 +1,12 @@
 package tasks
 
 import (
-	"fmt"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 
 	"github.com/sap/project-kb/kaybee/internal/browser"
 	"github.com/sap/project-kb/kaybee/internal/model"
@@ -14,7 +15,6 @@ import (
 // CreateTask is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
 type CreateTask struct {
-	BaseTask
 	enableGUI bool
 	vulnID    string
 }
@@ -47,7 +47,6 @@ func (t *CreateTask) WithVulnerabilityID(id string) *CreateTask {
 // Execute performs the actual task and returns true on success
 func (t *CreateTask) Execute() (success bool) {
 
-	t.validate()
 	if t.enableGUI {
 
 		// Set the router as the default one shipped with Gin
@@ -115,10 +114,10 @@ func (t *CreateTask) Execute() (success bool) {
 		}
 
 		statement.ToFile("./kaybee-new-statements")
-		fmt.Printf("The file './kaybee-new-statements/" + t.vulnID + "/statement.yaml' has been created.\n")
-		fmt.Printf("With your favourite text editor, modify it as you see fit, then run the following command:\n\n")
-		fmt.Printf("  kaybee export --target steady --from ./kaybee-new-statements/\n\n")
-		fmt.Printf("That will create the script 'steady.sh' that is ready to be executed to import data into the Steady backend.\n")
+		log.Info().Str("path", filepath.Join(".", "kaybee-new-statements", t.vulnID, "statement.yaml")).Msg("A statement has been created")
+		log.Info().Msg("With your favourite text editor, modify it as you see fit, then run the following command")
+		log.Info().Msg("	kaybee export --target steady --from ./kaybee-new-statements/")
+		log.Info().Msg("That will create the script 'steady.sh' that is ready to be executed to import data into the Steady backend.")
 	}
 
 	return true

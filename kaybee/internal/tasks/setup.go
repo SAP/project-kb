@@ -14,7 +14,6 @@ import (
 // SetupTask is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
 type SetupTask struct {
-	BaseTask
 	force       bool
 	interactive bool
 }
@@ -45,9 +44,6 @@ func (t *SetupTask) WithInteractiveMode(im bool) *SetupTask {
 // Execute performs the actual task and returns true on success
 func (t *SetupTask) Execute() (success bool) {
 	fmt.Println("[+] Running Setup task")
-
-	t.validate()
-
 	const configFileName string = "./kaybeeconf.yaml"
 
 	// cwd, err := os.Getwd()

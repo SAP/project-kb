@@ -13,7 +13,6 @@ import (
 // MergeTask is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
 type MergeTask struct {
-	BaseTask
 	policy  model.Policy
 	sources []conf.SourceV1
 }

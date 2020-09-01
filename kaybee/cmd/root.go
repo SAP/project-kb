@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/sap/project-kb/kaybee/internal/conf"
@@ -38,6 +39,9 @@ func Execute() {
 		os.Exit(0)
 	}
 	if err := rootCmd.Execute(); err != nil {
+		if verbose {
+			zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		}
 		log.Fatal().Err(err)
 	}
 }
@@ -47,6 +51,10 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "config file")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose mode")
+
+	// setup log levels
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
 
 func initConfig() {

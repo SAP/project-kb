@@ -3,9 +3,7 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
-
+	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/tasks"
 	"github.com/spf13/cobra"
 )
@@ -37,21 +35,19 @@ func init() {
 }
 
 func doSetup(cmd *cobra.Command, args []string) {
-	fmt.Println("Running setup...")
+	log.Info().Msg("Running setup...")
 
 	if interactive {
-		fmt.Println("Interactive mode (not implemented yet)")
-		log.Fatal("Aborting.")
+		log.Info().Msg("Interactive mode (not implemented yet)")
+		log.Fatal().Msg("Aborting.")
 	} else {
-		fmt.Println("Non-interactive mode")
+		log.Info().Msg("Non-interactive mode")
 	}
 
 	t := tasks.NewSetupTask().
 		WithInteractiveMode(interactive).
 		WithForce(force)
-
-	t.Verbose(verbose)
 	t.Execute()
 
-	fmt.Println("Setup completed")
+	log.Info().Msg("Setup completed")
 }

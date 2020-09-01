@@ -9,17 +9,3 @@ type Task interface {
 	Execute() (success bool)
 	validate() (ok bool)
 }
-
-// BaseTask defines the basis for all task implementations
-type BaseTask struct {
-	verbose bool
-}
-
-// Verbose makes the task verbose
-func (t *BaseTask) Verbose(v bool) {
-	t.verbose = v
-}
-
-func (t *BaseTask) validate() bool {
-	return true
-}

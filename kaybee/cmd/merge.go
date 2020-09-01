@@ -50,7 +50,6 @@ func doMerge(cmd *cobra.Command, args []string) {
 	t := tasks.NewMergeTask().
 		WithPolicy(conf.Policy(mergePolicyName)).
 		WithSources(configuration.GetSources())
-	t.Verbose(verbose)
 	t.Execute()
 
 	log.Trace().Msg("Merge completed")
