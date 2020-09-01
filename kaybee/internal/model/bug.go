@@ -1,8 +1,9 @@
 package model
 
 import (
-	"log"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 // A Bug represents vulnerabilities (as represented in the output obtained from the Steady backend)
@@ -57,16 +58,13 @@ func (b *Bug) ToStatement() *Statement {
 		// or "branchID:sha1", therefore there should be 0 or 1 occurrences
 		// of the separator ':'
 		if len(parsedRepoPath) < 0 || len(parsedRepoPath) > 2 {
-			log.Fatal("Unable to parse RepoPath: ", cc.RepoPath)
+			log.Fatal().Str("path", cc.Repo).Msg("Unable to parse RepoPath")
 		}
-
 		fixID = "DEFAULT_BRANCH"
-
 		// if the parsedRepoPath has two segments, then overwrite
 		if len(parsedRepoPath) == 2 {
 			fixID = parsedRepoPath[0]
 		}
-
 		// Construct a commit and add to the commit group corresponding
 		// to the fix at hand (identified by fixID)
 		commit = Commit{
@@ -81,9 +79,6 @@ func (b *Bug) ToStatement() *Statement {
 		} else {
 			commitGroups[fixID].Add(commit)
 		}
-
-		// fmt.Printf("%+v", commitGroups[fixID])
-
 	}
 
 	for key, commitGroup := range commitGroups {
@@ -99,7 +94,6 @@ func (b *Bug) ToStatement() *Statement {
 		note.Links = append(note.Links, l)
 	}
 	s.Notes = append(s.Notes, note)
-
 	// s.Metadata.Origin = "internal"
 	// s.Metadata.Timestamp = 123456789
 	return s
