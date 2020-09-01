@@ -13,11 +13,11 @@ import (
 	"github.com/gookit/color"
 	"github.com/schollz/progressbar/v2"
 
-	"github.com/sap/project-kb/kaybee/internal/model"
-	// "github.com/sap/project-kb/kaybee/pkg/util"
 	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/sap/project-kb/kaybee/internal/model"
 
 	"github.com/sap/project-kb/kaybee/internal/errors"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
