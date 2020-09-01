@@ -1,5 +1,25 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.6"></a>
+## [v0.6.6](https://github.com/SAP/project-kb/compare/v0.6.5...v0.6.6) (2020-09-01)
+
+### Bug Fixes
+
+* invalid maven purl in export
+* make repository processing more robust
+
+### Misc
+
+* add gitter badge
+* add reuse-tool GH action
+* setup pre-commit (2)
+* setup pre-commit, fix newlines
+* update license to std Apache 2, use reuse tool
+* update license to std Apache 2, use reuse tool
+* update license to std Apache 2
+* improve release script
+* use python3 to install mkdocs-material
+
 <a name="v0.6.5"></a>
 ## [v0.6.5](https://github.com/sap/project-kb/compare/v0.6.4...v0.6.5)
 
