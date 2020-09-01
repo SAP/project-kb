@@ -57,7 +57,7 @@ export:
 
       clone_once(){
         DIR=$(folder_for_repo $1)
-        
+
         if [ -d $DIR ];
         then
             echo "Folder $DIR exists, skipping git clone"
@@ -88,10 +88,10 @@ export:
         clone_once $repo_url
         repo_dir=$(folder_for_repo $repo_url)
 
-        timestamp=$(git -C $repo_dir show --no-patch --no-notes --pretty='%at' $commit_id) 
+        timestamp=$(git -C $repo_dir show --no-patch --no-notes --pretty='%at' $commit_id)
 
         [ -d $vulnerability_id/$commit_id ] || mkdir -p $vulnerability_id/$commit_id
-        
+
         echo "{" > $vulnerability_id/$commit_id/metadata.json
         echo "  \"repository\" : \"$repo_url\"," >> $vulnerability_id/$commit_id/metadata.json
         echo "  \"branch\" : \"$branch\"," >> $vulnerability_id/$commit_id/metadata.json
@@ -105,10 +105,10 @@ export:
         # cd repository
         for F in $(git -C $repo_dir diff  --name-only  $commit_id^..$commit_id);
         do
-          
+
           echo "repo_dir=$repo_dir"
           echo "pwd=`pwd`"
-          
+
           echo "Extracting file: $F"
           [ -d $vulnerability_id/$commit_id/before/$(dirname $F) ] || mkdir -p $vulnerability_id/$commit_id/before/$(dirname $F)
           [ -d $vulnerability_id/$commit_id/after/$(dirname $F) ] || mkdir -p $vulnerability_id/$commit_id/after/$(dirname $F)
@@ -121,7 +121,7 @@ export:
     each: |+
       # -----------------------------------------------
       #  Analyzing vulnerability {{ .VulnerabilityID}}
-      # -----------------------------------------------   
+      # -----------------------------------------------
       [ -d ./{{ .VulnerabilityID }} ] || mkdir ./{{ .VulnerabilityID }}
       cat << EOM > ./{{ .VulnerabilityID }}/metadata.json
       {{ .ToJSON }}

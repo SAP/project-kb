@@ -27,7 +27,7 @@ vulnerability statements coming from different sources.
 
 ### `import`
 
-The `import` command is used to import vulnerability data from a 
+The `import` command is used to import vulnerability data from a
 variety of services/formats, in particular from a Steady backend.
 
 ### `export`

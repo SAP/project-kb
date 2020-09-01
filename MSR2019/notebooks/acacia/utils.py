@@ -22,7 +22,7 @@ def execute(cmd, cwd='/tmp', encoding='latin-1'):
         if err:
             # traceback.print_exc()
             return None
-        
+
         raw_output_list = out.decode(encoding).split('\n')
         return raw_output_list
 
@@ -46,13 +46,13 @@ def execute(cmd, cwd='/tmp', encoding='latin-1'):
 #     return string.strip().split()
 
 class LatexExporter():
-    
+
     def __init__(self):
         self.data = set()
-        
+
     def __str__(self):
         self.print()
-        
+
     def save(self,k,v, comment=''):
         print('[' + k + '] ' + comment.strip() + ': ' + str(v))
         self.data.add((k,v,comment))
@@ -60,9 +60,9 @@ class LatexExporter():
     def print(self):
         for d in self.data:
             if d[2]!='':
-                print('\n% ' + str(d[2]))    
+                print('\n% ' + str(d[2]))
             print('\\newcommand{\\' + str(d[0]) +'}{' + str(d[1]) + '\\xspace}')
-    
+
     def to_file(self, filename):
         with open(filename,'w') as f:
             f.write('%\n% This file was auto-generated on ' + str(datetime.now()) +'\n%\n')

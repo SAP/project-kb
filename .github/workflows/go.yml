@@ -27,7 +27,7 @@ jobs:
 
     - name: Install pkger
       run:  go get -u github.com/markbates/pkger/cmd/pkger
-      
+
     - name: Vet and test
       run: make -C kaybee check
 

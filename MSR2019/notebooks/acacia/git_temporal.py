@@ -7,14 +7,14 @@ from datetime import datetime
 GIT_CACHE='/tmp/git-cache-3'
 
 def extract_timing_data(commit_id, repo_url, verbose=False, git_cache=GIT_CACHE):
-    
+
     if not os.path.exists(git_cache):
         print('Folder ' + git_cache + ' must exist!')
         return None
 
     # ensure the repository is available locally
     git.clone_repo(repo_url, output_folder=GIT_CACHE, skip_existing=True)
-    
+
     cwd = os.path.join(git_cache, git.folder_name_from_url(repo_url))
 
     # get tag info
@@ -31,7 +31,7 @@ def extract_timing_data(commit_id, repo_url, verbose=False, git_cache=GIT_CACHE)
         commit_date = '0'
         time_delta = 0
         # print("exception:", commit_id, repo_url, commit_date, tag_date)
-    
+
     if verbose:
         print('repository:                 ' + repo_url)
         print('commit:                     ' + commit_id)
@@ -58,5 +58,3 @@ def main(repo_url, commit_id, verbose=False, git_cache=GIT_CACHE):
 
 if __name__ == '__main__':
     import plac; plac.call(main)
-
-    

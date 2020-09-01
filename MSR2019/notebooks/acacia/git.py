@@ -131,7 +131,7 @@ def clone_repo_multiple(url_list, output_folder, proxy='', shallow=False, skip_e
         results = pool.starmap(clone_repo, args)
 
     # return results
-    
+
     # for repo in tqdm(url_list):
     #     clone_repo(repo,
     #                output_folder=output_folder,
@@ -163,7 +163,7 @@ def clone_repo(url, output_folder, input_file=None, proxy=None, shallow=False, s
             # print('Fetching for existing repo {} in {}'.format(url,repo_folder))
             # sh.git.fetch('origin', _cwd=repo_folder)
             sh.git.fetch('--all', '--tags', _cwd=repo_folder)
-            
+
         return
     else:
         os.makedirs('%s' % repo_folder)
@@ -196,7 +196,7 @@ def clone_repo(url, output_folder, input_file=None, proxy=None, shallow=False, s
     except:
         print('Could not fetch %s (shallow=%s) in %s' % (url, str(shallow), repo_folder))
         return
-    
+
     # print('Fetch of %s (shallow=%s) in %s completed' % (url, str(shallow), repo_folder))
 
     # default_remote_branch = identifyDefaultRemoteBranch(repo_folder) or 'origin/master'

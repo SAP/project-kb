@@ -1,11 +1,11 @@
-# project "KB" 
+# project "KB"
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/sap/project-kb)](https://goreportcard.com/report/github.com/sap/project-kb)
 ![Go](https://github.com/sap/project-kb/workflows/Go/badge.svg)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/SAP/project-kb/blob/master/LICENSE.txt)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](contributing)
 ![GitHub All Releases](https://img.shields.io/github/downloads/SAP/PROJECT-KB/total)
-
+[![REUSE status](https://api.reuse.software/badge/github.com/sap/project-kb)](https://api.reuse.software/info/github.com/sap/project-kb)
 
 `project KB` supports the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities that affect
@@ -28,7 +28,7 @@ growing size of open source ecosystems and the pace at which new vulnerabilities
 are discovered, the _old approach_ cannot scale. We are also more and more
 convinced that vulnerability knowledge-bases about open-source should be
 open-source themselves and adopt the same community-oriented model that governs
-the rest of the open-source ecosystem. 
+the rest of the open-source ecosystem.
 
 These considerations have pushed us to release our vulnerability knowledge base
 in early 2019. In June 2020, we made a further step releasing tool support to
@@ -86,7 +86,7 @@ If you use the dataset for your research work, please cite it as:
     author={Serena E. Ponta and Henrik Plate and Antonino Sabetta and Michele Bezzi and
     C´edric Dangremont},
     title={A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software},
-    booktitle={Proceedings of the 16th International Conference on Mining Software Repositories}, 
+    booktitle={Proceedings of the 16th International Conference on Mining Software Repositories},
     year=2019,
     month=May,
 }
@@ -138,7 +138,7 @@ feature request.
 First, take a look at our documentation.
 
 If you cannot find the answer to your questions, you may want to ask for help
-on this [Gitter channel](https://gitter.im/project-kb/help). 
+on this [Gitter channel](https://gitter.im/project-kb/help).
 
 If you think you found a bug, please create an [issue](https://github.com/SAP/project-kb/issues).
 

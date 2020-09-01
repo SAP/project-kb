@@ -25,7 +25,7 @@ def is_visible_text(e):
 def html_to_txt(body):
     bs = BeautifulSoup(body, 'html.parser')
     elements = bs.findAll(text=True)
-    visible_txt = filter(is_visible_text, elements)  
+    visible_txt = filter(is_visible_text, elements)
     return u" ".join(t.strip() for t in visible_txt)
 
 def check_commit_in_cve(cve, verbose=False):
@@ -46,13 +46,13 @@ def check_commit_in_cve(cve, verbose=False):
                 result += CVE_HAS_GITHUB_LINK
             if 'svn' in page_txt:
                 result += CVE_HAS_SVN_LINK
-        
+
     if verbose:
         print('CVE:     ' + str(cve))
         print('         ' + str(url))
         print('Result:  ' + str(result))
         # print('       ' + str(result[1]))
-        
+
     return ( url, result )
 
 # (help, kind, abbrev, type, choices, metavar)
@@ -66,5 +66,3 @@ def main(cve, verbose):
 
 if __name__ == '__main__':
     import plac; plac.call(main)
-
-    

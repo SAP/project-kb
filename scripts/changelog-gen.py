@@ -8,9 +8,9 @@ project_slug="sap/project-kb"
 
 commit_types = {
     'new': "New features",
-    'feat': "New features", 
-    'feature': "New features", 
-    'fix': "Bugfixes", 
+    'feat': "New features",
+    'feature': "New features",
+    'fix': "Bugfixes",
     'change': "Changes",
     'refactor': "Changes",
     'refactoring': "Changes",

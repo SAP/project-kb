@@ -60,5 +60,3 @@ every drop matters!
 Thanks! :heart: :heart: :heart:
 
 The project "KB" team
-
-

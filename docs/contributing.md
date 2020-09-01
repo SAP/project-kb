@@ -60,5 +60,3 @@ You are most welcome to do so, project "KB" needs every one of you to succeed, e
 Thanks! :heart: :heart: :heart:
 
 The project "KB" team
-
-

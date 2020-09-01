@@ -43,7 +43,7 @@ var purgeCmd = &cobra.Command{
 	Long: `Remove all local clones of remote sources. This command should be run
 	periodically to ensure that data from 3rd party sources, especially personal data
 	about the committers of those sources, is not retained for longer than necessary.
-	
+
 	The '-r' flag can be used to specify the maximum number of days a local clone can
 	remain in the filesystem without being refreshed (with the 'pull' command) before
 	it is considered stale and therefore deleted. If the flag is not set (of if its value
