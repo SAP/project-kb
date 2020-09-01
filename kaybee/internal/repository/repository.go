@@ -1,16 +1,17 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"path"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 
-	"github.com/gookit/color"
 	"github.com/schollz/progressbar/v2"
 
 	"net/url"
@@ -19,7 +20,6 @@ import (
 
 	"github.com/sap/project-kb/kaybee/internal/model"
 
-	"github.com/sap/project-kb/kaybee/internal/errors"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 	"gopkg.in/yaml.v2"
 
@@ -53,18 +53,23 @@ func NewRepository(URL string, branch string, strict bool, rank int, targetDir s
 
 	if filesystem.IsDir(r.Path) {
 		r.Repo, err = git.PlainOpen(r.Path)
-		errors.CheckErr(err)
-
+		if errors.Is(err, git.NoErrAlreadyUpToDate) {
+			log.Trace().Err(err).Msg("Failed to plainOpen, skipping")
+		}
 		// fetches head of the appropriate branch
 		head, err := r.Repo.Head()
-		errors.CheckErr(err)
-
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to fetch head")
+		}
 		//  hashes the commit to get commit tree
 		commit, err := r.Repo.CommitObject(head.Hash())
-		errors.CheckErr(err)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to fetch commit object from HEAD")
+		}
 		r.Tree, err = commit.Tree()
-		errors.CheckErr(err)
-
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to fetch commit tree")
+		}
 		r.FetchKeyRing()
 	}
 	return r
@@ -74,7 +79,9 @@ func NewRepository(URL string, branch string, strict bool, rank int, targetDir s
 func (r *Repository) FetchKeyRing() {
 	if err := filesystem.CreateDir(filesystem.GetKeyPath(r.Path)); err == nil {
 		keys, werr := filesystem.GetPubKey(filesystem.GetKeyPath(r.Path))
-		errors.CheckErr(werr)
+		if werr != nil {
+			log.Fatal().Err(err).Msg("Failed to fetch public keys")
+		}
 		r.KeyRing = keys
 	}
 }
@@ -82,11 +89,15 @@ func (r *Repository) FetchKeyRing() {
 // Pull attempts to pull the latest version of the origin remote
 func (r *Repository) Pull() {
 	w, err := r.Repo.Worktree()
-	errors.CheckErr(err)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to fetch worktree from repo")
+	}
 	refName := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", r.Branch))
-	errors.CheckErr(w.Pull(&git.PullOptions{
+	if err := w.Pull(&git.PullOptions{
 		ReferenceName: refName,
-	}))
+	}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to pull repository")
+	}
 }
 
 // Fetch creates and initializes a git repository if required
@@ -95,9 +106,8 @@ func (r *Repository) Pull() {
 // for consecutive executions
 func (r *Repository) Fetch(verbose bool) {
 	var err error
-	if verbose {
-		color.Info.Prompt("Cloning remote repository %s ...", r.URL)
-	}
+	log.Trace().Str("URL", r.URL).Msg("Cloning remote repository")
+
 	if !filesystem.IsDir(r.Path) {
 		refName := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", r.Branch))
 		r.Repo, err = git.PlainClone(r.Path, false, &git.CloneOptions{
@@ -105,13 +115,15 @@ func (r *Repository) Fetch(verbose bool) {
 			ReferenceName: refName,
 			SingleBranch:  true,
 		})
-		errors.CheckErr(err)
-	} else {
-		if verbose {
-			color.Info.Prompt("Local clone exist, trying to update it")
+		if errors.Is(err, git.NoErrAlreadyUpToDate) {
+			log.Trace().Err(err).Msg("Failed to plainOpen, skipping")
 		}
+	} else {
+		log.Trace().Msg("Local clone exist, trying to update it")
 		r.Repo, err = git.PlainOpen(r.Path)
-		errors.CheckErr(err)
+		if errors.Is(err, git.NoErrAlreadyUpToDate) {
+			log.Trace().Err(err).Msg("Failed to plainOpen, skipping")
+		}
 		r.Pull()
 	}
 
@@ -122,31 +134,29 @@ func (r *Repository) Fetch(verbose bool) {
 
 	// fetches head of the appropriate branch
 	head, err := r.Repo.Head()
-	errors.CheckErr(err)
-
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to fetch head")
+	}
 	//  hashes the commit to get commit tree
 	commit, err := r.Repo.CommitObject(head.Hash())
-	errors.CheckErr(err)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to fetch commit object from HEAD")
+	}
 	r.Tree, err = commit.Tree()
-	errors.CheckErr(err)
-
-	if verbose {
-		// updates the public approved keyrings
-		color.Info.Prompt("Fetching keys")
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to fetch commit tree")
 	}
+
+	log.Trace().Msg("Fetching keys")
 	r.FetchKeyRing()
-
-	if verbose {
-		color.Info.Prompt("Repository updated successfully.")
-	}
+	log.Trace().Msg("Repository updated successfully")
 }
 
 // Statements returns a slice of statements from the commit tree of the repository
 func (r *Repository) Statements() ([]model.Statement, error) {
 	s := []model.Statement{}
-	// log.Println("    collecting statements")
-
-	files, _ := ioutil.ReadDir(r.Path + "/" + filesystem.DataPath)
+	log.Trace().Msg("Collecting statements")
+	files, _ := ioutil.ReadDir(filepath.Join(r.Path, filesystem.DataPath))
 
 	bar := progressbar.NewOptions(
 		len(files),
@@ -154,38 +164,33 @@ func (r *Repository) Statements() ([]model.Statement, error) {
 		progressbar.OptionSetRenderBlankState(true),
 		progressbar.OptionSetPredictTime(false),
 	)
-	// bar.Describe(fmt.Sprintf("---------\n"))
 
 	if err := r.Tree.Files().ForEach(func(f *object.File) error {
 		bar.Add(1)
 		if _, vulnID, _, valid := filesystem.ParsePath(f.Name); valid {
-			// log.Println("    processing ", string(f.Name))
-			fnameLen := len(f.Name)
-			if f.Name[fnameLen-5:fnameLen] != ".yaml" {
-				color.Warn.Prompt("    skipping non-yaml file: " + f.Name)
+			log.Trace().Str("path", f.Name).Msg("Processing file")
+			if filepath.Ext(f.Name) != "yaml" {
+				log.Warn().Str("file", f.Name).Msg("Skipping non-yaml")
 				return nil
 			}
 			commitIter, err := r.Repo.Log(&git.LogOptions{FileName: &f.Name, Order: git.LogOrderCommitterTime})
 			if err != nil {
 				return err
 			}
-
 			result := model.Statement{}
 			data, err := ioutil.ReadFile(filepath.Join(r.Path, f.Name))
 			if err != nil {
-				color.Error.Prompt("Error reading " + filepath.Join(r.Path, f.Name))
+				log.Error().Err(err).Str("path", filepath.Join(r.Path, f.Name)).Msg("Failed to read")
 				return err
 			}
-
 			if err := yaml.Unmarshal(data, &result); err != nil {
-				color.Error.Prompt("Error when unmarshaling " + filepath.Join(r.Path, f.Name))
+				log.Error().Err(err).Str("path", filepath.Join(r.Path, f.Name)).Msg("Failed to unmarshal")
 				return err
 			}
-
 			if o, err := commitIter.Next(); o != nil && err == nil {
 				if r.Strict {
 					if !r.VerifyCommit(o) {
-						color.Error.Prompt("Commit {%s} failed gpg key verification, ignored", o.Hash)
+						log.Error().Str("commit", o.Hash.String()).Msg("Failed gpg key verification, ignored")
 						return nil
 					}
 				}
@@ -237,7 +242,6 @@ func (r *Repository) VerifyCommit(o *object.Commit) bool {
 
 // getRepoPath returns the dir safe name of a repository
 func (r *Repository) getRepoPath() (string, error) {
-
 	parsedURL, err := url.Parse(r.URL)
 	if err != nil {
 		return "", err
@@ -248,7 +252,7 @@ func (r *Repository) getRepoPath() (string, error) {
 	}
 
 	if parsedURL.Path == "" {
-		log.Fatal("The source URL is invalid: " + r.URL)
+		log.Fatal().Str("URL", r.URL).Msg("Invalid URL")
 	}
 
 	return filepath.Join(parsedURL.Host + "_" + strings.ReplaceAll(parsedURL.Path[1:], "/", ".") + "_" + r.Branch), nil
@@ -269,7 +273,6 @@ func (r *Repository) resetPullTimestamp() {
 	fileName := path.Join(r.Path, ".pull_timestamp")
 	err := ioutil.WriteFile(fileName, []byte(ts), 0600)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Failed to write to file")
 	}
-
 }
