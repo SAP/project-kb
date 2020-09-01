@@ -4,25 +4,21 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
-	// homedir "github.com/mitchellh/go-homedir"
+	"github.com/rs/zerolog/log"
 
 	"github.com/sap/project-kb/kaybee/internal/conf"
-	"github.com/sap/project-kb/kaybee/internal/filesystem"
 	"github.com/spf13/cobra"
-	// "gopkg.in/src-d/go-git.v4/storage/filesystem"
 )
 
 var (
 	verbose       bool
-	configuration conf.Configuration
+	configuration conf.Config
 	cfgFile       string = "kaybeeconf.yaml"
 )
 
 // TODO make constructor method, as in ExportCmd, for testability
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:              "kaybee",
@@ -37,15 +33,12 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-
 	if len(os.Args) == 1 {
 		rootCmd.Help()
 		os.Exit(0)
-
 	}
 	if err := rootCmd.Execute(); err != nil {
-		log.Println(err)
-		os.Exit(1)
+		log.Fatal().Err(err)
 	}
 }
 
@@ -57,26 +50,9 @@ func init() {
 }
 
 func initConfig() {
-	// fmt.Println("CONFIG: " + cfgFile)
-
-	if !filesystem.IsFile(cfgFile) {
-		configuration = conf.Configuration{}
-		return
-	}
-
-	p, err := conf.NewParser(cfgFile)
+	configuration, err := conf.ParseConfiguration(cfgFile)
 	if err != nil {
-		log.Fatal("Error parsing configuration")
+		log.Fatal().Str("path", cfgFile).Msg("Error parsing configuration")
 	}
-
-	c, _ := p.Parse()
-	if verbose {
-		fmt.Println("Using config file:", p.Viper.ConfigFileUsed())
-	}
-
-	_, err = c.Validate()
-	if err != nil {
-		log.Fatalln("Invalid config.")
-	}
-	configuration = c
+	log.Trace().Str("config", fmt.Sprintf("%+v\n", configuration)).Msg("Running with configuration")
 }

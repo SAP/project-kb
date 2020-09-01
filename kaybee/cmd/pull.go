@@ -30,7 +30,7 @@ func init() {
 
 func doPull(cmd *cobra.Command, args []string) {
 	t := tasks.NewPullTask().
-		WithSources(configuration.Sources())
+		WithSources(configuration.GetSources())
 
 	t.Verbose(verbose)
 	t.Execute()

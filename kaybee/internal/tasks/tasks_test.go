@@ -10,13 +10,8 @@ import (
 //
 // FIXTURES
 //
-func getConfig() conf.Configuration {
-	p, err := conf.NewParser("../../testdata/conf/kaybeeconf.yaml")
-	// p.SetConfigFile()
-	if err != nil {
-		return conf.Configuration{}
-	}
-	c, _ := p.Parse()
+func getConfig() conf.Config {
+	c, _ := conf.ParseConfiguration("../../testdata/conf/kaybeeconf.yaml")
 	return c
 }
 
@@ -48,17 +43,16 @@ func getConfig() conf.Configuration {
 // MERGE
 //
 func TestMergeTask(t *testing.T) {
-
 	conf := getConfig()
 	log.Printf("config: %v", conf)
 
 	// merge needs pull!
-	pullTask := NewPullTask().WithSources(conf.Sources())
+	pullTask := NewPullTask().WithSources(conf.GetSources())
 	pullTask.Execute()
 
 	task := NewMergeTask().
-		WithPolicy(conf.Policies()[0]).
-		WithSources(conf.Sources())
+		WithPolicy(conf.GetPolicies()[0]).
+		WithSources(conf.GetSources())
 	task.Execute()
 }
 
@@ -69,6 +63,6 @@ func TestPullTask(t *testing.T) {
 	conf := getConfig()
 	log.Printf("config: %v", conf)
 
-	pullTask := NewPullTask().WithSources(conf.Sources())
+	pullTask := NewPullTask().WithSources(conf.GetSources())
 	pullTask.Execute()
 }

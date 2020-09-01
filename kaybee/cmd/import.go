@@ -44,7 +44,7 @@ func init() {
 func doImport(cmd *cobra.Command, args []string) {
 
 	if backend == "" {
-		backend = configuration.Backend()
+		backend = configuration.GetBackend()
 	}
 
 	t := tasks.NewImportTask().

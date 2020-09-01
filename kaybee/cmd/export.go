@@ -51,11 +51,11 @@ func doExport(args []string) {
 	// }
 
 	t := tasks.NewExportTask().
-		WithExportScripts(configuration.ExportScripts()).
+		WithExportScripts(configuration.GetExportScripts()).
 		WithSource(mergedStatementsDir).
 		WithTarget(exportTarget).
 		WithOutputFile(outputFile).
-		WithDenylist(configuration.ExportDenylist())
+		WithDenylist(configuration.GetExportDenyList())
 
 	t.Verbose(verbose)
 	t.Execute()

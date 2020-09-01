@@ -1,9 +1,9 @@
 package tasks
 
 import (
-	"fmt"
-	"log"
 	"os"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/sap/project-kb/kaybee/internal/conf"
 	"github.com/sap/project-kb/kaybee/internal/model"
@@ -15,112 +15,88 @@ import (
 type MergeTask struct {
 	BaseTask
 	policy  model.Policy
-	sources []conf.Source
+	sources []conf.SourceV1
 }
 
 // NewMergeTask constructs a new MergeTask
 func NewMergeTask() (mergeTask *MergeTask) {
-
 	mt := MergeTask{}
 	return &mt
 }
 
 // WithPolicy sets the policy to be used to merge sources
 func (t *MergeTask) WithPolicy(p conf.Policy) *MergeTask {
+	log.Trace().Str("policy", string(p)).Msg("Adding")
 	switch p {
 	case conf.Strict:
-		if t.verbose {
-			fmt.Println("Using policy: STRICT")
-		}
 		t.policy = model.NewStrictPolicy()
+		break
 	case conf.Soft:
-		if t.verbose {
-			fmt.Println("Using policy: SOFT")
-		}
 		t.policy = model.NewSoftPolicy()
+		break
 	default:
-		log.Fatalf("Invalid merge policy -- ABORTING")
+		log.Fatal().Str("policy", string(p)).Msg("Invalid merge policy")
 	}
 	return t
 }
 
 // WithSources sets the sources to be merged
-func (t *MergeTask) WithSources(sources []conf.Source) *MergeTask {
+func (t *MergeTask) WithSources(sources []conf.SourceV1) *MergeTask {
 	t.sources = sources
 	return t
 }
 
 func (t *MergeTask) validate() (ok bool) {
 	if (t.policy == model.Policy{}) {
-		log.Fatalln("Invalid policy. Aborting.")
-		return false
+		log.Fatal().Msg("Invalid merge policy")
 	}
 	if len(t.sources) < 1 {
-		log.Fatalln("No sources to merge. Aborting.")
-		return false
+		log.Fatal().Msg("No sources to merge")
 	}
-
 	return true
 }
 
 // Execute performs the actual merge task and returns true on success
 func (t *MergeTask) Execute() (success bool) {
-
-	if t.verbose {
-		fmt.Println("Merging...")
-	}
-
+	log.Trace().Msg("Attempting merge")
 	t.validate()
 
 	statementsToMerge := make(map[string][]model.Statement)
-
 	inputStatementCount := 0
-
 	// collect statements from each source
+
 	for _, source := range t.sources {
-		if t.verbose {
-			fmt.Printf("\nCollecting vulnerability statements from %s (%s)\n", source.Repo, source.Branch)
-		}
-
+		log.Trace().Str("source", source.Repo).Str("branch", source.Branch).Msg("Collection vuln statements")
 		repository := repository.NewRepository(source.Repo, source.Branch, false, source.Rank, ".kaybee/repositories")
-
 		statements, err := repository.Statements()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal().Err(err).Msg("Failed to fetch statements")
 		}
-
 		for _, stmt := range statements {
 			statementsToMerge[stmt.VulnerabilityID] = append(statementsToMerge[stmt.VulnerabilityID], stmt)
 			inputStatementCount++
 		}
 	}
-
-	if t.verbose {
-		fmt.Printf("\nReconciling statements...\n")
-	}
-
+	log.Trace().Msg("Reconciling statements")
 	// TODO adjust terminology: reduce, merge, reconcile....
 	mergedStatements, mergeLog, err := t.policy.Reduce(statementsToMerge)
 	if err != nil {
-		fmt.Printf("\nCould not merge: %v", err)
+		log.Error().Err(err).Msg("Failed to merge")
 	}
-
 	// fmt.Printf("Merged:\n%v", mergedStatements)
 	os.RemoveAll(".kaybee/merged/")
 
 	for _, st := range mergedStatements {
-		// log.Printf("%+v\n", st)
 		if len(st) != 1 {
-			log.Fatal("WEIRD! After merging, there are still multiple statements for the same vulnerability!")
+			log.Fatal().Msg("Failed to merge multiple statements into a single vulnerability")
 		}
 		st[0].ToFile(".kaybee/merged/")
 	}
-	if t.verbose {
-		fmt.Printf("The merge operation on %d statements from %d sources resulted in %d statements.\n", inputStatementCount, len(t.sources), len(mergedStatements))
-	} else {
-		fmt.Printf("Merged %d sources (%d statements): yielded %d statements.\n", len(t.sources), inputStatementCount, len(mergedStatements))
-	}
-
+	log.Trace().
+		Int("n_initial_statements", inputStatementCount).
+		Int("n_sources", len(t.sources)).
+		Int("n_result_statements", len(mergedStatements)).
+		Msg("Merge operations")
 	mergeLog.Dump(".kaybee/merged/")
 
 	// if verbose {

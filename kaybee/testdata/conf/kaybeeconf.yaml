@@ -19,7 +19,7 @@ policies:
   - strict
   - soft
 
-exportdenylist:
+export_denylist:
   # SVN
   - COLLECTIONS-580
   - CVE-2005-3164

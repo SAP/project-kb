@@ -17,7 +17,7 @@ sources:
   - strict
   - soft
 
-exportdenylist:
+export_denylist:
   # SVN
   - CVE-2005-3164
   - CVE-2005-4838

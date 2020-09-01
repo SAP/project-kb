@@ -46,7 +46,6 @@ func doMerge(cmd *cobra.Command, args []string) {
 	if verbose {
 		fmt.Println("Merging statements...")
 	}
-
 	if skipPull {
 		if verbose {
 			fmt.Println("Skipping pull, only local clones will be considered")
@@ -56,9 +55,8 @@ func doMerge(cmd *cobra.Command, args []string) {
 	}
 
 	t := tasks.NewMergeTask().
-		WithPolicy(conf.PolicyFromString(mergePolicyName)).
-		WithSources(configuration.Sources())
-
+		WithPolicy(conf.Policy(mergePolicyName)).
+		WithSources(configuration.GetSources())
 	t.Verbose(verbose)
 	t.Execute()
 

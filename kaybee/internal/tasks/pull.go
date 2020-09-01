@@ -1,8 +1,7 @@
 package tasks
 
 import (
-	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 
 	"github.com/sap/project-kb/kaybee/internal/conf"
 	"github.com/sap/project-kb/kaybee/internal/repository"
@@ -12,28 +11,25 @@ import (
 // conflicts using a set of pre-defined policies.
 type PullTask struct {
 	BaseTask
-	sources []conf.Source
+	sources []conf.SourceV1
 }
 
 // NewPullTask constructs a new MergeTask
 func NewPullTask() *PullTask {
-
 	t := PullTask{}
 	return &t
 }
 
 // WithSources sets the sources to be merged
-func (t *PullTask) WithSources(sources []conf.Source) *PullTask {
+func (t *PullTask) WithSources(sources []conf.SourceV1) *PullTask {
 	t.sources = sources
 	return t
 }
 
 func (t *PullTask) validate() (ok bool) {
 	if len(t.sources) < 1 {
-		log.Fatalln("No sources to pull. Aborting.")
-		return false
+		log.Fatal().Msg("No sources to pull")
 	}
-
 	return true
 }
 
@@ -50,14 +46,10 @@ func (t *PullTask) Execute() (success bool) {
 
 	t.validate()
 	for _, src := range t.sources {
-		if t.verbose {
-			fmt.Printf("\nPulling source: %s\n", src.Repo)
-		}
+		log.Info().Str("repo", src.Repo).Msg("Pulling")
 		repository := repository.NewRepository(src.Repo, src.Branch, true, src.Rank, ".kaybee/repositories")
 		repository.Fetch(t.verbose)
-		if t.verbose {
-			fmt.Printf("Done with %s\n", src.Repo)
-		}
+		log.Info().Str("repo", src.Repo).Msg("Finished pulling")
 	}
 
 	// fmt.Println("[+] Pull task completed")
