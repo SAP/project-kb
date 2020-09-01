@@ -2,7 +2,7 @@ package model
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
@@ -29,19 +29,19 @@ func (ml *MergeLog) Log(logEntry MergeLogEntry) {
 }
 
 // Dump saves the MergeLog to a file
-func (ml *MergeLog) Dump(filepath string) {
-	f, err := os.OpenFile(path.Join(filepath, "merge.log"),
+func (ml *MergeLog) Dump(file string) {
+	f, err := os.OpenFile(filepath.Join(file, "merge.log"),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	defer f.Close()
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	defer f.Close()
-
 	data, err := yaml.Marshal(ml)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to marshal mergelog entries")
 	}
 	if _, err := f.Write(data); err != nil {
+		// if err := ioutil.WriteFile(file, data, 0644); err != nil {
 		log.Fatal().Err(err).Msg("Failed to write mergelog entries")
 	}
 }

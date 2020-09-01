@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 	"fmt"
-	"path"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -268,10 +267,8 @@ func (r *Repository) getLicensePath() (string, error) {
 }
 
 func (r *Repository) resetPullTimestamp() {
-	ts := fmt.Sprint(time.Now().Unix())
-
-	fileName := path.Join(r.Path, ".pull_timestamp")
-	err := ioutil.WriteFile(fileName, []byte(ts), 0600)
+	fileName := filepath.Join(r.Path, ".pull_timestamp")
+	err := ioutil.WriteFile(fileName, []byte(time.Now().Format("20060102150405")), 0600)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to write to file")
 	}
