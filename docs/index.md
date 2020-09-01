@@ -6,6 +6,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](contributing)
 ![GitHub All Releases](https://img.shields.io/github/downloads/SAP/PROJECT-KB/total)
 [![REUSE status](https://api.reuse.software/badge/github.com/sap/project-kb)](https://api.reuse.software/info/github.com/sap/project-kb)
+[![Join the chat at https://gitter.im/project-kb/help](https://badges.gitter.im/project-kb/help.svg)](https://gitter.im/project-kb/help?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 `project KB` supports the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities that affect
