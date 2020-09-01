@@ -41,16 +41,15 @@ type Repository struct {
 
 // NewRepository creates a new client and updates the appropriate path
 func NewRepository(URL string, branch string, strict bool, rank int, targetDir string) Repository {
-	r := Repository{}
-	r.URL = URL
-	r.Branch = branch
-	r.Strict = strict
-	r.Rank = rank
-
+	r := Repository{
+		URL:    URL,
+		Branch: branch,
+		Strict: strict,
+		Rank:   rank,
+	}
 	var err error
-
 	r.Path, _ = r.getRepoPath()
-	r.Path = path.Join(targetDir, r.Path)
+	r.Path = filepath.Join(targetDir, r.Path)
 
 	if filesystem.IsDir(r.Path) {
 		r.Repo, err = git.PlainOpen(r.Path)
@@ -199,7 +198,7 @@ func (r *Repository) Statements() ([]model.Statement, error) {
 					// Signature:  o.PGPSignature,
 					Branch:     r.Branch,
 					OriginRank: r.Rank,
-					LocalPath:  path.Join(r.Path, f.Name),
+					LocalPath:  filepath.Join(r.Path, f.Name),
 				}
 				// result.Metadata = metadata
 
