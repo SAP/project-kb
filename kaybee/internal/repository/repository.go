@@ -104,7 +104,7 @@ func (r *Repository) Pull() {
 // from a given url and directory path. The clone is storage based
 // and not memory based in order to avoid multiple clones required
 // for consecutive executions
-func (r *Repository) Fetch(verbose bool) {
+func (r *Repository) Fetch() {
 	var err error
 	log.Trace().Str("URL", r.URL).Msg("Cloning remote repository")
 

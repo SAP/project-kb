@@ -48,7 +48,7 @@ func (t *PullTask) Execute() (success bool) {
 	for _, src := range t.sources {
 		log.Info().Str("repo", src.Repo).Msg("Pulling")
 		repository := repository.NewRepository(src.Repo, src.Branch, true, src.Rank, ".kaybee/repositories")
-		repository.Fetch(t.verbose)
+		repository.Fetch()
 		log.Info().Str("repo", src.Repo).Msg("Finished pulling")
 	}
 

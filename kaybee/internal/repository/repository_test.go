@@ -8,18 +8,13 @@ import (
 
 func TestFetch(t *testing.T) {
 	repository := NewRepository("https://github.com/ichbinfrog/test_2", "master", true, 1, "file:///../../.kaybee/repositories")
-
 	// defer os.RemoveAll(repository.Path)
-
 	// Remove old repository
 	os.RemoveAll(repository.Path)
-
 	// Test repository fetching from empty repo
-	repository.Fetch(false)
-
+	repository.Fetch()
 	// Test repository fetching from preexisting repo
-	repository.Fetch(false)
-
+	repository.Fetch()
 	// Test metadata fill
 	statements, err := repository.Statements()
 	if err != nil {
