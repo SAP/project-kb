@@ -2,9 +2,8 @@ package model
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/gookit/color"
+	"github.com/rs/zerolog/log"
 )
 
 // StrictPolicy refuses to solve conflicts and does not perform any reconcile action;
@@ -26,7 +25,7 @@ func NewStrictPolicy() Policy {
 // This is implemented just to satisfy the StatementReconciler interface, but this method
 // is not supposed to be called ever.
 func (p StrictPolicy) Reconcile(statements []Statement) ReconcileResult {
-	log.Fatal("Method Reconcile() should not be invoked on a StrictPolicy!")
+	log.Fatal().Msg("Method Reconcile() should not be invoked on a StrictPolicy!")
 	return ReconcileResult{
 		reconciledStatement: Statement{},
 		candidateStatements: statements,
@@ -47,10 +46,8 @@ func (p StrictPolicy) Reduce(stmts map[string][]Statement) (map[string][]Stateme
 		statementsToReconcile = stmts[s]
 
 		if conflictingStatementsCount > 1 {
-			fmt.Println("")
-			color.Warn.Prompt("Found %d conflicting statements for vulnerability %s -- they will not be reconciled with policy 'strict'.", len(stmts[s]), s)
-			color.Info.Prompt("You may want to try again using another policy, which you can specify with the '-p' flag.")
-			color.Info.Prompt("Example: kaybee merge -p soft")
+			log.Warn().Int("n_conflicting_statements", len(stmts[s])).Str("affected_vulnerability", s).Msg("Found conflicting statements (will not be reconciled with 'strict' policy)")
+			log.Warn().Msg("You may want to try again using another policy, which you can specify with the '-p' flag.\nExample: kaybee merge -p soft")
 			delete(stmts, s)
 			logEntry = MergeLogEntry{
 				policy:             "STRICT",

@@ -8,18 +8,15 @@ import (
 
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
 
 	"github.com/google/uuid"
-
+	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/strings"
-
 	"gopkg.in/yaml.v2"
-	// "strings"
 )
 
 // Statement represents a vulnerability statement
@@ -34,9 +31,7 @@ type Statement struct {
 }
 
 func (s Statement) String() (output string) {
-
 	output = fmt.Sprintf("%s", s.VulnerabilityID)
-
 	return output
 }
 
@@ -157,7 +152,7 @@ func NewStatementFromFile(path string) Statement {
 	var s Statement
 	err = yaml.Unmarshal(stmtData, &s)
 	if err != nil {
-		log.Println(err)
+		log.Error().Err(err)
 	}
 
 	return s
@@ -178,8 +173,7 @@ func (s *Statement) ToFile(path string) error {
 	data, _ := yaml.Marshal(s)
 	err := ioutil.WriteFile(dest, data, 0600)
 	if err != nil {
-		log.Fatalln("Could not save statement to file: ", dest)
-		log.Fatal(err)
+		log.Fatal().Err(err).Str("dest", dest).Msg("Could not save statement to file")
 	}
 	return nil
 }
@@ -188,8 +182,7 @@ func (s *Statement) ToFile(path string) error {
 func (s Statement) ToJSON() string {
 	data, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		log.Fatalln("Could not represent statement in JSON format")
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Failed to unmarshal to JSON")
 	}
 	return string(data)
 }
