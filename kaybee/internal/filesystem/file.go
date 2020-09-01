@@ -2,7 +2,6 @@ package filesystem
 
 import (
 	"io/ioutil"
-	// "net/url"
 	"os"
 	"path/filepath"
 	"strings"
