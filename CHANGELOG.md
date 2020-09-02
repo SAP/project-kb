@@ -1,5 +1,16 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.7"></a>
+## [v0.6.7](https://github.com/sap/project-kb/compare/v0.6.6...v0.6.7)
+
+### New features
+ * improved generated script for steady ([a7ef87c](https://github.com/sap/project-kb/commit/a7ef87c))
+
+### Misc
+ * (attempt) to fix automatic building of docs ([a8e536b](https://github.com/sap/project-kb/commit/a8e536b))
+ * disable test that depends on github authentication to succeed ([2637856](https://github.com/sap/project-kb/commit/2637856))
+ * add gitter badge ([9f46003](https://github.com/sap/project-kb/commit/9f46003))
+
 <a name="v0.6.6"></a>
 ## [v0.6.6](https://github.com/SAP/project-kb/compare/v0.6.5...v0.6.6) (2020-09-01)
 
