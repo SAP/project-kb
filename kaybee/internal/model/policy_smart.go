@@ -21,15 +21,14 @@ func NewSmartPolicy() Policy {
 
 // Reduce only keeps independent statements and discards statements that are non-independent
 func (s SmartPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
-	var mergeLog = NewMergeLog("exec_123456789")
+	mergeLog := &MergeLog{
+		ExecutionID: "exec_123456789",
+	}
 	var logEntry MergeLogEntry
-
 	// var statementsToReconcile []Statement
-
 	for st := range stmts {
 		// conflictingStatementsCount := len(stmts[st])
 		// statementsToReconcile = stmts[st]
-
 		result := s.Reconcile(stmts[st])
 		stmts[st] = []Statement{result.reconciledStatement}
 		logEntry = MergeLogEntry{
@@ -39,11 +38,10 @@ func (s SmartPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statemen
 			resultingStatement: result.reconciledStatement,
 			success:            true,
 		}
-
-		mergeLog.Log(logEntry)
+		mergeLog.Append(logEntry)
 	}
 
-	return stmts, mergeLog, nil
+	return stmts, *mergeLog, nil
 }
 
 // Reconcile returns a single statement out of a list of statements

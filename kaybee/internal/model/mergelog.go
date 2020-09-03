@@ -15,15 +15,8 @@ type MergeLog struct {
 	Entries     []MergeLogEntry `yaml:"entries"`
 }
 
-// NewMergeLog creates a new instance of a MergeLog
-func NewMergeLog(executionID string) MergeLog {
-	return MergeLog{
-		ExecutionID: executionID,
-	}
-}
-
-// Log appends a MergeLogEntry to the MergeLog
-func (ml *MergeLog) Log(logEntry MergeLogEntry) {
+// Append adds a MergeLogEntry to the MergeLog
+func (ml *MergeLog) Append(logEntry MergeLogEntry) {
 	logEntry.executionID = ml.ExecutionID
 	ml.Entries = append(ml.Entries, logEntry)
 }

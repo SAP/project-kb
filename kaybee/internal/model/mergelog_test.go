@@ -47,7 +47,9 @@ var st4 = Statement{
 }
 
 func TestMergeLog(t *testing.T) {
-	ml := NewMergeLog("ex_1234")
+	ml := &MergeLog{
+		ExecutionID: "ex_1234",
+	}
 	logEntry := MergeLogEntry{
 		logMessage: "Sample log message",
 		sourceStatements: []Statement{
@@ -57,6 +59,6 @@ func TestMergeLog(t *testing.T) {
 		success: true,
 		policy:  "soft",
 	}
-	ml.Log(logEntry)
+	ml.Append(logEntry)
 	ml.Dump(".")
 }

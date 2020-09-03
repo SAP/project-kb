@@ -36,7 +36,9 @@ func (p StrictPolicy) Reconcile(statements []Statement) ReconcileResult {
 
 // Reduce only keeps independent statemens and discards statements that are non-independent
 func (p StrictPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
-	var mergeLog = NewMergeLog("exec_123456789")
+	mergeLog := &MergeLog{
+		ExecutionID: "exec_123456789",
+	}
 	var logEntry MergeLogEntry
 
 	var statementsToReconcile []Statement
@@ -65,9 +67,9 @@ func (p StrictPolicy) Reduce(stmts map[string][]Statement) (map[string][]Stateme
 				success:            true,
 			}
 		}
-		mergeLog.Log(logEntry)
+		mergeLog.Append(logEntry)
 
 	}
 
-	return stmts, mergeLog, nil
+	return stmts, *mergeLog, nil
 }

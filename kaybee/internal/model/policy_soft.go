@@ -72,9 +72,10 @@ func (s SoftPolicy) Reconcile(statements []Statement) ReconcileResult {
 
 // Reduce only keeps independent statements and discards statements that are non-independent
 func (s SoftPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
-	var mergeLog = NewMergeLog("exec_123456789")
+	var mergeLog = MergeLog{
+		ExecutionID: "exec_123456789",
+	}
 	var logEntry MergeLogEntry
-
 	var statementsToReconcile []Statement
 
 	for st := range stmts {
@@ -103,7 +104,7 @@ func (s SoftPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement
 
 		}
 
-		mergeLog.Log(logEntry)
+		mergeLog.Append(logEntry)
 	}
 
 	return stmts, mergeLog, nil
