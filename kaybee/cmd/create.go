@@ -5,9 +5,6 @@ Copyright © 2019 - 2020, SAP
 package cmd
 
 import (
-	"os"
-
-	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/task"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +21,7 @@ var createCommand = &cobra.Command{
 	Short: "Create a new statement",
 	Long:  ``,
 	Run:   doCreate,
+	Args:  cobra.ExactArgs(1),
 }
 
 func init() {
@@ -32,11 +30,6 @@ func init() {
 }
 
 func doCreate(cmd *cobra.Command, args []string) {
-	if len(args) < 1 {
-		log.Warn().Msg("Please provide a vulnerability ID for the new statement")
-		os.Exit(-1)
-	}
-
 	t := &task.Create{
 		EnableGUI: useGUI,
 		VulnID:    args[0],

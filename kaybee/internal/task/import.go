@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,7 +38,7 @@ func (t *Import) mustValidate() {
 	if t.Backend == "" {
 		log.Fatal().Msg("No backend specified, aborting.")
 	}
-	if t.Backend[len(t.Backend)-1] != '/' {
+	if strings.HasSuffix(t.Backend, "/") {
 		t.Backend += "/"
 	}
 	if t.OutputFolder == "" {

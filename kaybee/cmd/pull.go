@@ -32,6 +32,5 @@ func doPull(cmd *cobra.Command, args []string) {
 	t := &task.Pull{
 		Sources: configuration.GetSources(),
 	}
-
 	t.Execute()
 }
