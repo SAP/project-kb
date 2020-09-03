@@ -1,4 +1,4 @@
-package tasks
+package task
 
 import (
 	"bytes"
@@ -11,38 +11,15 @@ import (
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 )
 
-// SetupTask is the task that performs merging of statements, reconciling any
+// Setup is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
-type SetupTask struct {
-	force       bool
-	interactive bool
-}
-
-// NewSetupTask constructs a new MergeTask
-func NewSetupTask() *SetupTask {
-
-	t := SetupTask{
-		force:       false,
-		interactive: false,
-	}
-	return &t
-}
-
-// WithForce sets the flag that controls whether the setup should be done even
-// if a configuration file is already existing (in which case, it will be overwritten)
-func (t *SetupTask) WithForce(f bool) *SetupTask {
-	t.force = f
-	return t
-}
-
-// WithInteractiveMode enables interactive mode
-func (t *SetupTask) WithInteractiveMode(im bool) *SetupTask {
-	t.interactive = im
-	return t
+type Setup struct {
+	Force       bool
+	Interactive bool
 }
 
 // Execute performs the actual task and returns true on success
-func (t *SetupTask) Execute() (success bool) {
+func (t *Setup) Execute() (success bool) {
 	fmt.Println("[+] Running Setup task")
 	const configFileName string = "./kaybeeconf.yaml"
 
@@ -55,7 +32,7 @@ func (t *SetupTask) Execute() (success bool) {
 	configFileFullPath := configFileName
 	// check if file exists
 	if filesystem.FileExists(configFileFullPath) {
-		if t.force {
+		if t.Force {
 			fmt.Printf("Overwriting the existing configuration file at %s\n", configFileFullPath)
 			if err := os.Remove(configFileFullPath); err != nil {
 				log.Fatal().Msg("There was an error removing the existing file")

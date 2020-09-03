@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sap/project-kb/kaybee/internal/tasks"
+	"github.com/sap/project-kb/kaybee/internal/task"
 )
 
 // TestExport checks if the export cmd works
@@ -38,13 +38,12 @@ func TestImport(t *testing.T) {
 	defer srv.Close()
 
 	fmt.Println(srv.URL)
-
-	task := tasks.NewImportTask().
-		WithBackend(srv.URL).
-		WithOutputPath("/tmp/kaybee-test/").
-		WithConcurrency(4).
-		WithLimit(5)
-
+	task := &task.Import{
+		Backend:      srv.URL,
+		OutputFolder: "/tmp/kaybee-test",
+		Concurrency:  4,
+		Limit:        5,
+	}
 	task.Execute()
 }
 

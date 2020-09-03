@@ -6,7 +6,7 @@ Copyright © 2020 SAP
 package cmd
 
 import (
-	"github.com/sap/project-kb/kaybee/internal/tasks"
+	"github.com/sap/project-kb/kaybee/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -50,11 +50,12 @@ func doExport(args []string) {
 	// 	doMerge(cmd, args)
 	// }
 
-	t := tasks.NewExportTask().
-		WithExportScripts(configuration.GetExportScripts()).
-		WithSource(mergedStatementsDir).
-		WithTarget(exportTarget).
-		WithOutputFile(outputFile).
-		WithDenylist(configuration.GetExportDenyList())
+	t := task.Export{
+		Source:     mergedStatementsDir,
+		Target:     exportTarget,
+		Denylist:   configuration.GetExportDenyList(),
+		OutputFile: outputFile,
+		Scripts:    configuration.GetExportScripts(),
+	}
 	t.Execute()
 }

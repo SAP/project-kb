@@ -1,4 +1,4 @@
-package tasks
+package task
 
 import (
 	"log"
@@ -47,12 +47,15 @@ func TestMergeTask(t *testing.T) {
 	log.Printf("config: %v", conf)
 
 	// merge needs pull!
-	pullTask := NewPullTask().WithSources(conf.GetSources())
+	pullTask := &Pull{
+		Sources: conf.GetSources(),
+	}
 	pullTask.Execute()
 
-	task := NewMergeTask().
-		WithPolicy(conf.GetPolicies()[0]).
-		WithSources(conf.GetSources())
+	task := &Merge{
+		Sources:      conf.GetSources(),
+		PolicyString: conf.GetPolicies()[0],
+	}
 	task.Execute()
 }
 
@@ -63,6 +66,8 @@ func TestPullTask(t *testing.T) {
 	conf := getConfig()
 	log.Printf("config: %v", conf)
 
-	pullTask := NewPullTask().WithSources(conf.GetSources())
+	pullTask := &Pull{
+		Sources: conf.GetSources(),
+	}
 	pullTask.Execute()
 }

@@ -4,7 +4,7 @@ package cmd
 
 import (
 	"github.com/rs/zerolog/log"
-	"github.com/sap/project-kb/kaybee/internal/tasks"
+	"github.com/sap/project-kb/kaybee/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -44,10 +44,10 @@ func doSetup(cmd *cobra.Command, args []string) {
 		log.Info().Msg("Non-interactive mode")
 	}
 
-	t := tasks.NewSetupTask().
-		WithInteractiveMode(interactive).
-		WithForce(force)
+	t := &task.Setup{
+		Interactive: interactive,
+		Force:       force,
+	}
 	t.Execute()
-
 	log.Info().Msg("Setup completed")
 }

@@ -1,4 +1,4 @@
-package tasks
+package task
 
 import (
 	"io/ioutil"
@@ -13,74 +13,30 @@ import (
 	"github.com/sap/project-kb/kaybee/internal/model"
 )
 
-// ExportTask is the task that generates a script to import statements into 3rd-party systems
-type ExportTask struct {
+// Export is the task that generates a script to import statements into 3rd-party systems
+type Export struct {
 	policy     []model.Policy
-	source     string
-	target     string
-	outputFile string
-	scripts    []conf.ExportScript
-	denylist   []string
+	Source     string
+	Target     string
+	OutputFile string
+	Scripts    []conf.ExportScript
+	Denylist   []string
 }
 
-// NewExportTask constructs a new ExportTask
-func NewExportTask() *ExportTask {
-
-	mt := ExportTask{}
-	return &mt
-}
-
-// WithSource sets the source to export from
-func (t *ExportTask) WithSource(s string) *ExportTask {
-	if s == "" {
-		log.Fatal().Msg("Invalid export source specified. Aborting.")
-	}
-	t.source = s
-	return t
-}
-
-// WithTarget sets the target type
-func (t *ExportTask) WithTarget(target string) *ExportTask {
-	if target == "" {
-		log.Fatal().Msg("Invalid export target specified. Aborting.")
-	}
-	t.target = target
-	return t
-}
-
-// WithDenylist sets the identifiers of vulnerabilities to exclude from the export
-func (t *ExportTask) WithDenylist(bl []string) *ExportTask {
-	t.denylist = bl
-	return t
-}
-
-// WithOutputFile sets the name of the file that the export will produce
-func (t *ExportTask) WithOutputFile(filename string) *ExportTask {
-	t.outputFile = filename
-	return t
-}
-
-// WithExportScripts passes the export script templates to the task
-func (t *ExportTask) WithExportScripts(scripts []conf.ExportScript) *ExportTask {
-	t.scripts = scripts
-	return t
-}
-
-func (t *ExportTask) validate() (ok bool) {
-	if t.source == "" {
+func (t *Export) mustValidate() {
+	if t.Source == "" {
 		log.Fatal().Msg("Invalid source for export. Aborting.")
 	}
-	if t.target == "" {
+	if t.Target == "" {
 		log.Fatal().Msg("Invalid export target. Aborting.")
 	}
 	// if t.outputFile == "" {
 	// 	log.Fatalln("Invalid filename for export script. Aborting.")
 	// 	return false
 	// }
-	if len(t.scripts) < 1 {
+	if len(t.Scripts) < 1 {
 		log.Fatal().Msg("No export scripts specified. Aborting.")
 	}
-	return true
 }
 
 // Execute performs the actual merge task and returns true on success
@@ -90,8 +46,8 @@ func (t *ExportTask) validate() (ok bool) {
 // A source can also be an individual statement file.
 // If no source is specified, the task aborts. If a default directory must be
 // considered, it must be set in the calling command.
-func (t *ExportTask) Execute() (success bool) {
-	t.validate()
+func (t *Export) Execute() (success bool) {
+	t.mustValidate()
 
 	var statements []model.Statement
 
@@ -99,16 +55,16 @@ func (t *ExportTask) Execute() (success bool) {
 	var err error
 	var statementFile string
 
-	if filesystem.IsDir(t.source) {
+	if filesystem.IsDir(t.Source) {
 		// TODO this works only if the source directory contains directories that ocntain statements
 		// if the source contains directly a statament, this does not work
-		dirs, err = ioutil.ReadDir(t.source)
+		dirs, err = ioutil.ReadDir(t.Source)
 		if err != nil {
 			log.Fatal().Err(err)
 		}
 
 		for _, d := range dirs {
-			statementFile = filepath.Join(t.source, d.Name(), "statement.yaml")
+			statementFile = filepath.Join(t.Source, d.Name(), "statement.yaml")
 
 			if !filesystem.IsFile(statementFile) {
 				continue
@@ -116,7 +72,7 @@ func (t *ExportTask) Execute() (success bool) {
 			statements = append(statements, model.NewStatementFromFile(statementFile))
 		}
 	} else {
-		statements = append(statements, model.NewStatementFromFile(t.source))
+		statements = append(statements, model.NewStatementFromFile(t.Source))
 	}
 
 	// c := ctx.Get("configuration").(conf.Configuration)
@@ -133,8 +89,8 @@ func (t *ExportTask) Execute() (success bool) {
 	var tEach, tPre, tPost template.Template
 	// var outputFilename string
 
-	for _, s := range t.scripts {
-		if s.Target != t.target {
+	for _, s := range t.Scripts {
+		if s.Target != t.Target {
 			continue
 		}
 
@@ -152,8 +108,8 @@ func (t *ExportTask) Execute() (success bool) {
 		tPre = *template.Must(template.New("pre").Parse(s.Pre))
 		tPost = *template.Must(template.New("post").Parse(s.Post))
 
-		if t.outputFile == "" {
-			t.outputFile = s.Filename
+		if t.OutputFile == "" {
+			t.OutputFile = s.Filename
 		}
 	}
 
@@ -163,7 +119,7 @@ func (t *ExportTask) Execute() (success bool) {
 
 	// var err error
 
-	f, err := os.Create(t.outputFile)
+	f, err := os.Create(t.OutputFile)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create file")
 		return
@@ -176,7 +132,7 @@ func (t *ExportTask) Execute() (success bool) {
 
 	exportCount := 0
 	for _, r := range statements {
-		if IsVulnerabilityExportExcluded(t.denylist, r.VulnerabilityID) {
+		if IsVulnerabilityExportExcluded(t.Denylist, r.VulnerabilityID) {
 			log.Trace().Str("vulnID", r.VulnerabilityID).Msg("Skipping excluded vulnerability")
 			continue
 		}
@@ -191,7 +147,7 @@ func (t *ExportTask) Execute() (success bool) {
 		log.Error().Err(err).Msg("Error executing template")
 	}
 
-	log.Trace().Int("n_exported", exportCount).Str("dest", t.outputFile).Msg("Exported statement")
+	log.Trace().Int("n_exported", exportCount).Str("dest", t.OutputFile).Msg("Exported statement")
 	return true
 }
 

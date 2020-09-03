@@ -5,7 +5,7 @@ package cmd
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/sap/project-kb/kaybee/internal/conf"
-	"github.com/sap/project-kb/kaybee/internal/tasks"
+	"github.com/sap/project-kb/kaybee/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -47,10 +47,10 @@ func doMerge(cmd *cobra.Command, args []string) {
 	} else {
 		doPull(cmd, args)
 	}
-	t := tasks.NewMergeTask().
-		WithPolicy(conf.Policy(mergePolicyName)).
-		WithSources(configuration.GetSources())
+	t := task.Merge{
+		Sources:      configuration.GetSources(),
+		PolicyString: conf.Policy(mergePolicyName),
+	}
 	t.Execute()
-
 	log.Trace().Msg("Merge completed")
 }

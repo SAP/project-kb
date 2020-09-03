@@ -1,4 +1,4 @@
-package tasks
+package task
 
 import (
 	"os"
@@ -10,23 +10,16 @@ import (
 	"github.com/sap/project-kb/kaybee/internal/repository"
 )
 
-// MergeTask is the task that performs merging of statements, reconciling any
+// Merge is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
-type MergeTask struct {
-	policy  model.Policy
-	sources conf.SourceIterator
+type Merge struct {
+	PolicyString conf.Policy
+	policy       model.Policy
+	Sources      conf.SourceIterator
 }
 
-// NewMergeTask constructs a new MergeTask
-func NewMergeTask() (mergeTask *MergeTask) {
-	mt := MergeTask{}
-	return &mt
-}
-
-// WithPolicy sets the policy to be used to merge sources
-func (t *MergeTask) WithPolicy(p conf.Policy) *MergeTask {
-	log.Trace().Str("policy", string(p)).Msg("Adding")
-	switch p {
+func (t *Merge) mustValidate() {
+	switch t.PolicyString {
 	case conf.Strict:
 		t.policy = model.NewStrictPolicy()
 		break
@@ -34,37 +27,26 @@ func (t *MergeTask) WithPolicy(p conf.Policy) *MergeTask {
 		t.policy = model.NewSoftPolicy()
 		break
 	default:
-		log.Fatal().Str("policy", string(p)).Msg("Invalid merge policy")
+		log.Fatal().Str("policy", string(t.PolicyString)).Msg("Invalid merge policy")
 	}
-	return t
-}
-
-// WithSources sets the sources to be merged
-func (t *MergeTask) WithSources(sources conf.SourceIterator) *MergeTask {
-	t.sources = sources
-	return t
-}
-
-func (t *MergeTask) validate() (ok bool) {
 	if (t.policy == model.Policy{}) {
 		log.Fatal().Msg("Invalid merge policy")
 	}
-	if t.sources.Length() < 1 {
+	if t.Sources.Length() < 1 {
 		log.Fatal().Msg("No sources to merge")
 	}
-	return true
 }
 
 // Execute performs the actual merge task and returns true on success
-func (t *MergeTask) Execute() (success bool) {
+func (t *Merge) Execute() (success bool) {
 	log.Trace().Msg("Attempting merge")
-	t.validate()
+	t.mustValidate()
 
 	statementsToMerge := make(map[string][]model.Statement)
 	inputStatementCount := 0
 
 	// collect statements from each source
-	switch sources := t.sources.(type) {
+	switch sources := t.Sources.(type) {
 	case conf.SourcesV1:
 		for _, source := range sources {
 			log.Trace().Str("source", source.Repo).Str("branch", source.Branch).Msg("Collection vuln statements")
@@ -111,7 +93,7 @@ func (t *MergeTask) Execute() (success bool) {
 	}
 	log.Trace().
 		Int("n_initial_statements", inputStatementCount).
-		Int("n_sources", t.sources.Length()).
+		Int("n_sources", t.Sources.Length()).
 		Int("n_result_statements", len(mergedStatements)).
 		Msg("Merge operations")
 	mergeLog.Dump(".kaybee/merged/")

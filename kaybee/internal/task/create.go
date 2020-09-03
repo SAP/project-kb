@@ -1,4 +1,4 @@
-package tasks
+package task
 
 import (
 	"net/http"
@@ -12,42 +12,20 @@ import (
 	"github.com/sap/project-kb/kaybee/internal/model"
 )
 
-// CreateTask is the task that performs merging of statements, reconciling any
+// Create is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
-type CreateTask struct {
-	enableGUI bool
-	vulnID    string
+type Create struct {
+	EnableGUI bool
+	VulnID    string
 }
 
 // GUIPort is the port (on localhost) on which the Statement creation wizart
 // will be exposed
 const GUIPort string = "3001"
 
-// NewCreateTask constructs a new MergeTask
-func NewCreateTask() *CreateTask {
-
-	t := CreateTask{
-		enableGUI: false,
-	}
-	return &t
-}
-
-// WithGUI enables a graphical UI to create the new statement
-func (t *CreateTask) WithGUI(enableGUI bool) *CreateTask {
-	t.enableGUI = enableGUI
-	return t
-}
-
-// WithVulnerabilityID sets the ID of the vulnerability we're creating a statement for
-func (t *CreateTask) WithVulnerabilityID(id string) *CreateTask {
-	t.vulnID = id
-	return t
-}
-
 // Execute performs the actual task and returns true on success
-func (t *CreateTask) Execute() (success bool) {
-
-	if t.enableGUI {
+func (t *Create) Execute() (success bool) {
+	if t.EnableGUI {
 
 		// Set the router as the default one shipped with Gin
 		router := gin.Default()
@@ -73,14 +51,14 @@ func (t *CreateTask) Execute() (success bool) {
 	} else {
 		// var vulnID = "CVE-xxxx-yyyy"
 		var statement = model.Statement{
-			VulnerabilityID: t.vulnID,
+			VulnerabilityID: t.VulnID,
 			Notes: []model.Note{
 				{
 					Links: []string{
 						"https://..............",
 						"https://.......................",
 					},
-					Text: "Some note about " + t.vulnID,
+					Text: "Some note about " + t.VulnID,
 				},
 			},
 			Fixes: []model.Fix{
@@ -114,7 +92,7 @@ func (t *CreateTask) Execute() (success bool) {
 		}
 
 		statement.ToFile("./kaybee-new-statements")
-		log.Info().Str("path", filepath.Join(".", "kaybee-new-statements", t.vulnID, "statement.yaml")).Msg("A statement has been created")
+		log.Info().Str("path", filepath.Join(".", "kaybee-new-statements", t.VulnID, "statement.yaml")).Msg("A statement has been created")
 		log.Info().Msg("With your favourite text editor, modify it as you see fit, then run the following command")
 		log.Info().Msg("	kaybee export --target steady --from ./kaybee-new-statements/")
 		log.Info().Msg("That will create the script 'steady.sh' that is ready to be executed to import data into the Steady backend.")

@@ -5,7 +5,7 @@ Copyright © 2020 SAP
 package cmd
 
 import (
-	"github.com/sap/project-kb/kaybee/internal/tasks"
+	"github.com/sap/project-kb/kaybee/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -29,8 +29,9 @@ func init() {
 }
 
 func doPull(cmd *cobra.Command, args []string) {
-	t := tasks.NewPullTask().
-		WithSources(configuration.GetSources())
+	t := &task.Pull{
+		Sources: configuration.GetSources(),
+	}
 
 	t.Execute()
 }

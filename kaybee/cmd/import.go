@@ -5,7 +5,7 @@ Copyright © 2019 - 2020, SAP
 package cmd
 
 import (
-	"github.com/sap/project-kb/kaybee/internal/tasks"
+	"github.com/sap/project-kb/kaybee/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -45,11 +45,11 @@ func doImport(cmd *cobra.Command, args []string) {
 	if backend == "" {
 		backend = configuration.GetBackend()
 	}
-
-	t := tasks.NewImportTask().
-		WithBackend(backend).
-		WithConcurrency(concurrency).
-		WithLimit(limit).
-		WithOutputPath(importPath)
+	t := &task.Import{
+		Backend:      backend,
+		Concurrency:  concurrency,
+		Limit:        limit,
+		OutputFolder: importPath,
+	}
 	t.Execute()
 }

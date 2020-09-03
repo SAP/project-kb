@@ -1,4 +1,4 @@
-package tasks
+package task
 
 import (
 	"github.com/rs/zerolog/log"
@@ -7,33 +7,20 @@ import (
 	"github.com/sap/project-kb/kaybee/internal/repository"
 )
 
-// PullTask is the task that performs merging of statements, reconciling any
+// Pull is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
-type PullTask struct {
-	sources conf.SourceIterator
+type Pull struct {
+	Sources conf.SourceIterator
 }
 
-// NewPullTask constructs a new MergeTask
-func NewPullTask() *PullTask {
-	t := PullTask{}
-	return &t
-}
-
-// WithSources sets the sources to be merged
-func (t *PullTask) WithSources(sources conf.SourceIterator) *PullTask {
-	t.sources = sources
-	return t
-}
-
-func (t *PullTask) validate() (ok bool) {
-	if t.sources.Length() < 1 {
+func (t *Pull) mustValidate() {
+	if t.Sources.Length() < 1 {
 		log.Fatal().Msg("No sources to pull")
 	}
-	return true
 }
 
 // Execute performs the actual task and returns true on success
-func (t *PullTask) Execute() (success bool) {
+func (t *Pull) Execute() (success bool) {
 	// fmt.Println("[+] Running pull task")
 
 	// cfg, _ := ctx.Get("configuration").(conf.Configuration)
@@ -42,9 +29,8 @@ func (t *PullTask) Execute() (success bool) {
 	// for _, v := range c.Sources() {
 	// 	fmt.Printf("%s\n", v.Repo)
 	// }
-
-	t.validate()
-	switch sources := t.sources.(type) {
+	t.mustValidate()
+	switch sources := t.Sources.(type) {
 	case conf.SourcesV1:
 		for _, src := range sources {
 			log.Info().Str("repo", src.Repo).Msg("Pulling")

@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/sap/project-kb/kaybee/internal/tasks"
+	"github.com/sap/project-kb/kaybee/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -32,14 +32,14 @@ func init() {
 }
 
 func doCreate(cmd *cobra.Command, args []string) {
-
 	if len(args) < 1 {
 		log.Warn().Msg("Please provide a vulnerability ID for the new statement")
 		os.Exit(-1)
 	}
 
-	t := tasks.NewCreateTask().
-		WithGUI(useGUI)
-	t.WithVulnerabilityID(args[0])
+	t := &task.Create{
+		EnableGUI: useGUI,
+		VulnID:    args[0],
+	}
 	t.Execute()
 }

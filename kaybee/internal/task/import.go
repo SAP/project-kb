@@ -1,4 +1,4 @@
-package tasks
+package task
 
 import (
 	"encoding/json"
@@ -20,85 +20,44 @@ const (
 	defaultOutputFolder        string = ".kaybee/imported"
 )
 
-// ImportTask is the task that performs exporting of vulnerability information from
+// Import is the task that performs exporting of vulnerability information from
 // a Steady backend or database, and produces a text-based (YAML) representation,
 // useful for further processing (e.g., manual inspection, uploading to a repository, analysis, etc.)
-type ImportTask struct {
-	backend      string
-	concurrency  int
-	limit        int
-	outputFolder string
+type Import struct {
+	Backend      string
+	Concurrency  int
+	Limit        int
+	OutputFolder string
 }
 
-// NewImportTask constructs a new ImportTask
-func NewImportTask() *ImportTask {
-	return &ImportTask{
-		concurrency:  maxConcurrent,
-		limit:        limitImport,
-		outputFolder: defaultOutputFolder,
+func (t *Import) mustValidate() {
+	if t.Concurrency == 0 {
+		t.Concurrency = 1
 	}
-}
-
-// WithBackend sets the URL of the backend  from which data will be imported
-func (t *ImportTask) WithBackend(backend string) *ImportTask {
-	if backend == "" {
+	if t.Backend == "" {
 		log.Fatal().Msg("No backend specified, aborting.")
 	}
-	if backend[len(backend)-1] != '/' {
-		backend += "/"
+	if t.Backend[len(t.Backend)-1] != '/' {
+		t.Backend += "/"
 	}
-	t.backend = backend
-	return t
-}
-
-// WithConcurrency sets the number of concurrent importers
-func (t *ImportTask) WithConcurrency(c int) *ImportTask {
-	if c == 0 {
-		t.concurrency = 1
-	} else {
-		t.concurrency = c
-	}
-	return t
-}
-
-// WithLimit sets the maximum number of statements that will be imported
-func (t *ImportTask) WithLimit(l int) *ImportTask {
-	t.limit = l
-	return t
-}
-
-// WithOutputPath sets the path to which the imported data will be saved
-func (t *ImportTask) WithOutputPath(p string) *ImportTask {
-	t.outputFolder = p
-	return t
-}
-
-func (t *ImportTask) validate() (ok bool) {
-	if t.backend == "" {
-		log.Fatal().Msg("Invalid backend for import. Aborting.")
-		return false
-	}
-	if t.outputFolder == "" {
+	if t.OutputFolder == "" {
 		log.Fatal().Msg("Invalid output folder. Aborting.")
-		return false
 	}
-
-	return true
 }
 
 // Execute performs the actual task and returns true on success
-func (t *ImportTask) Execute() (success bool) {
-	log.Info().Int("n_workers", t.concurrency).Str("backend", t.backend).Msg("Importing vulnerability data")
-	importers, err := NewImporterPool(t.backend, t.concurrency, t.limit, nil)
+func (t *Import) Execute() (success bool) {
+	log.Info().Int("n_workers", t.Concurrency).Str("backend", t.Backend).Msg("Importing vulnerability data")
+	importers, err := NewImporterPool(t.Backend, t.Concurrency, t.Limit, nil)
 	if err != nil {
 		log.Fatal().Msg("Could not create importers pool")
 	}
 
 	vulns := importers.Run()
 	for _, v := range vulns {
-		v.ToFile(t.outputFolder)
+		v.ToFile(t.OutputFolder)
 	}
-	log.Info().Int("n_statements", len(vulns)).Str("dest", t.outputFolder).Msg("Statements saved to fs")
+	log.Info().Int("n_statements", len(vulns)).Str("dest", t.OutputFolder).Msg("Statements saved to fs")
 	return true
 }
 
