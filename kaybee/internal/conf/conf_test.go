@@ -14,7 +14,7 @@ func TestParser(t *testing.T) {
 		return
 	}
 	fmt.Printf("\n%+v\n", c)
-	assert.Equal(t, len(c.GetSources()), 2, "Found wrong number of sources")
+	assert.Equal(t, c.GetSources().Length(), 2, "Found wrong number of sources")
 }
 
 func TestParserNoVersion(t *testing.T) {

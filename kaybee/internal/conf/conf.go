@@ -29,10 +29,14 @@ const (
 	Oldest Policy = "oldest"
 )
 
+type SourceIterator interface {
+	Length() int
+}
+
 type Config interface {
 	Validate() bool
 	GetPolicies() []Policy
-	GetSources() []SourceV1
+	GetSources() SourceIterator
 	GetBackend() string
 	GetExportDenyList() []string
 	GetExportScripts() []ExportScript

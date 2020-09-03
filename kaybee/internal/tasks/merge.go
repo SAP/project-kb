@@ -14,7 +14,7 @@ import (
 // conflicts using a set of pre-defined policies.
 type MergeTask struct {
 	policy  model.Policy
-	sources []conf.SourceV1
+	sources conf.SourceIterator
 }
 
 // NewMergeTask constructs a new MergeTask
@@ -40,7 +40,7 @@ func (t *MergeTask) WithPolicy(p conf.Policy) *MergeTask {
 }
 
 // WithSources sets the sources to be merged
-func (t *MergeTask) WithSources(sources []conf.SourceV1) *MergeTask {
+func (t *MergeTask) WithSources(sources conf.SourceIterator) *MergeTask {
 	t.sources = sources
 	return t
 }
@@ -49,7 +49,7 @@ func (t *MergeTask) validate() (ok bool) {
 	if (t.policy == model.Policy{}) {
 		log.Fatal().Msg("Invalid merge policy")
 	}
-	if len(t.sources) < 1 {
+	if t.sources.Length() < 1 {
 		log.Fatal().Msg("No sources to merge")
 	}
 	return true
@@ -62,19 +62,37 @@ func (t *MergeTask) Execute() (success bool) {
 
 	statementsToMerge := make(map[string][]model.Statement)
 	inputStatementCount := 0
-	// collect statements from each source
 
-	for _, source := range t.sources {
-		log.Trace().Str("source", source.Repo).Str("branch", source.Branch).Msg("Collection vuln statements")
-		repository := repository.NewRepository(source.Repo, source.Branch, false, source.Rank, ".kaybee/repositories")
-		statements, err := repository.Statements()
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to fetch statements")
+	// collect statements from each source
+	switch sources := t.sources.(type) {
+	case conf.SourcesV1:
+		for _, source := range sources {
+			log.Trace().Str("source", source.Repo).Str("branch", source.Branch).Msg("Collection vuln statements")
+			repository := repository.NewRepository(source.Repo, source.Branch, false, source.Rank, ".kaybee/repositories")
+			statements, err := repository.Statements()
+			if err != nil {
+				log.Fatal().Err(err).Msg("Failed to fetch statements")
+			}
+			for _, stmt := range statements {
+				statementsToMerge[stmt.VulnerabilityID] = append(statementsToMerge[stmt.VulnerabilityID], stmt)
+				inputStatementCount++
+			}
 		}
-		for _, stmt := range statements {
-			statementsToMerge[stmt.VulnerabilityID] = append(statementsToMerge[stmt.VulnerabilityID], stmt)
-			inputStatementCount++
+		break
+	case conf.SourcesV2:
+		for _, source := range sources {
+			log.Trace().Str("source", source.Repo).Str("branch", source.Branch).Msg("Collection vuln statements")
+			repository := repository.NewRepository(source.Repo, source.Branch, false, 0, ".kaybee/repositories")
+			statements, err := repository.Statements()
+			if err != nil {
+				log.Fatal().Err(err).Msg("Failed to fetch statements")
+			}
+			for _, stmt := range statements {
+				statementsToMerge[stmt.VulnerabilityID] = append(statementsToMerge[stmt.VulnerabilityID], stmt)
+				inputStatementCount++
+			}
 		}
+		break
 	}
 	log.Trace().Msg("Reconciling statements")
 	// TODO adjust terminology: reduce, merge, reconcile....
@@ -93,7 +111,7 @@ func (t *MergeTask) Execute() (success bool) {
 	}
 	log.Trace().
 		Int("n_initial_statements", inputStatementCount).
-		Int("n_sources", len(t.sources)).
+		Int("n_sources", t.sources.Length()).
 		Int("n_result_statements", len(mergedStatements)).
 		Msg("Merge operations")
 	mergeLog.Dump(".kaybee/merged/")

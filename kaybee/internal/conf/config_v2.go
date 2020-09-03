@@ -10,15 +10,19 @@ type ConfigV2 struct {
 	Version         string `yaml:"apiVersion"`
 	Backend         string
 	ExportBlacklist map[string][]string
-	Sources         map[int]SourceV2
+	Sources         SourcesV2
 	Policies        []Policy
 }
 
-// A SourceV2 represents a remote repository in which vulnerability statements are stored
-type SourceV2 struct {
+// A SourcesV2 represents a remote repository in which vulnerability statements are stored
+type SourcesV2 map[int]struct {
 	Repo   string `yaml:"repo"`
 	Branch string `yaml:"branch"`
 	Signed bool   `yaml:"signed"`
+}
+
+func (s SourcesV2) Length() int {
+	return len(s)
 }
 
 func (c ConfigV2) Validate() bool {
@@ -28,17 +32,8 @@ func (c ConfigV2) GetPolicies() []Policy {
 	return c.Policies
 }
 
-func (c ConfigV2) GetSources() []SourceV1 {
-	sources := []SourceV1{}
-	for _, source := range c.Sources {
-		sources = append(sources, SourceV1{
-			Repo:   source.Repo,
-			Branch: source.Branch,
-			Signed: true,
-			Rank:   0,
-		})
-	}
-	return sources
+func (c ConfigV2) GetSources() SourceIterator {
+	return c.Sources
 }
 
 func (c ConfigV2) GetBackend() string {

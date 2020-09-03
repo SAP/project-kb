@@ -10,7 +10,7 @@ import (
 // PullTask is the task that performs merging of statements, reconciling any
 // conflicts using a set of pre-defined policies.
 type PullTask struct {
-	sources []conf.SourceV1
+	sources conf.SourceIterator
 }
 
 // NewPullTask constructs a new MergeTask
@@ -20,13 +20,13 @@ func NewPullTask() *PullTask {
 }
 
 // WithSources sets the sources to be merged
-func (t *PullTask) WithSources(sources []conf.SourceV1) *PullTask {
+func (t *PullTask) WithSources(sources conf.SourceIterator) *PullTask {
 	t.sources = sources
 	return t
 }
 
 func (t *PullTask) validate() (ok bool) {
-	if len(t.sources) < 1 {
+	if t.sources.Length() < 1 {
 		log.Fatal().Msg("No sources to pull")
 	}
 	return true
@@ -44,13 +44,24 @@ func (t *PullTask) Execute() (success bool) {
 	// }
 
 	t.validate()
-	for _, src := range t.sources {
-		log.Info().Str("repo", src.Repo).Msg("Pulling")
-		repository := repository.NewRepository(src.Repo, src.Branch, true, src.Rank, ".kaybee/repositories")
-		repository.Fetch()
-		log.Info().Str("repo", src.Repo).Msg("Finished pulling")
+	switch sources := t.sources.(type) {
+	case conf.SourcesV1:
+		for _, src := range sources {
+			log.Info().Str("repo", src.Repo).Msg("Pulling")
+			repository := repository.NewRepository(src.Repo, src.Branch, true, src.Rank, ".kaybee/repositories")
+			repository.Fetch()
+			log.Info().Str("repo", src.Repo).Msg("Finished pulling")
+		}
+		break
+	case conf.SourcesV2:
+		for _, src := range sources {
+			log.Info().Str("repo", src.Repo).Msg("Pulling")
+			repository := repository.NewRepository(src.Repo, src.Branch, true, 0, ".kaybee/repositories")
+			repository.Fetch()
+			log.Info().Str("repo", src.Repo).Msg("Finished pulling")
+		}
+		break
 	}
-
 	// fmt.Println("[+] Pull task completed")
 	return true
 }
