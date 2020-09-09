@@ -121,6 +121,7 @@ func (t *MergeTask) Execute() (success bool) {
 		fmt.Printf("Merged %d sources (%d statements): yielded %d statements.\n", len(t.sources), inputStatementCount, len(mergedStatements))
 	}
 
+	os.MkdirAll(".kaybee/merged/", os.ModePerm)
 	mergeLog.Dump(".kaybee/merged/")
 
 	// if verbose {
