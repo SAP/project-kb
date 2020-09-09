@@ -50,13 +50,14 @@ func (b *Bug) ToStatement() *Statement {
 		// sanity check: commits should be either of the form "sha1"
 		// or "branchID:sha1", therefore there should be 0 or 1 occurrences
 		// of the separator ':'
-		if len(parsedRepoPath) < 0 || len(parsedRepoPath) > 2 {
+		parsedRepoLen := len(parsedRepoPath)
+		if parsedRepoPath < 0 || parsedRepoPath > 2 {
 			log.Fatal("Unable to parse RepoPath: ", cc.RepoPath)
 		}
 
 		fixID := "DEFAULT_BRANCH"
 		// if the parsedRepoPath has two segments, then overwrite
-		if len(parsedRepoPath) == 2 {
+		if parsedRepoPath == 2 {
 			fixID = parsedRepoPath[0]
 		}
 		// Construct a commit and add to the commit group corresponding
