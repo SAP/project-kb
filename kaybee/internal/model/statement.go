@@ -160,15 +160,12 @@ func NewStatementFromFile(path string) Statement {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Println(err)
-		return nil
 	}
 	s := &Statement{}
-	err := yaml.Unmarshal(data, &s)
-	if err != nil {
+	if err := yaml.Unmarshal(data, &s); err != nil {
 		log.Println(err)
 	}
-
-	return s
+	return *s
 }
 
 // ToFile writes a statement to a file in the directory path specified as argument.
