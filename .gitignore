@@ -21,3 +21,4 @@ kaybee/steady.sh
 kaybee/kaybeeconf-custom.yaml
 kaybee/kaybee-new-statements
 kaybee/pkged.go
+*.log
