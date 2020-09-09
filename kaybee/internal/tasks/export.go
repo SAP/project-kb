@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -114,7 +114,7 @@ func (t *ExportTask) Execute() (success bool) {
 		}
 
 		for _, d := range dirs {
-			statementFile = path.Join(t.source, d.Name(), "statement.yaml")
+			statementFile = filepath.Join(t.source, d.Name(), "statement.yaml")
 
 			if !filesystem.IsFile(statementFile) {
 				continue

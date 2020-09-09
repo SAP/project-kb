@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/sap/project-kb/kaybee/internal/strings"
 )
@@ -35,13 +35,13 @@ func (ml *MergeLog) Entries() []MergeLogEntry {
 }
 
 // Dump saves the MergeLog to a file
-func (ml *MergeLog) Dump(filepath string) {
+func (ml *MergeLog) Dump(path string) {
 
 	// filesystem.CreateFile(filepath)
 
 	// fmt.Println("==========================================")
 
-	f, err := os.OpenFile(path.Join(filepath, "merge.log"),
+	f, err := os.OpenFile(filepath.Join(path, "merge.log"),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Println(err)
