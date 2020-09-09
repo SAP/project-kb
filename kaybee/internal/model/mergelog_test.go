@@ -47,22 +47,16 @@ var st4 = Statement{
 }
 
 func TestMergeLog(t *testing.T) {
-	log := NewMergeLog("ex_1234")
-
-	p := "soft"
-
-	var sourceStatements []Statement
-
-	sourceStatements = append(sourceStatements, st3)
-	sourceStatements = append(sourceStatements, st4)
-
-	logEntry := MergeLogEntry{}
-	logEntry.logMessage = "Sample log message"
-	logEntry.sourceStatements = sourceStatements
-	logEntry.success = true
-	logEntry.policy = p
-
-	log.Log(logEntry)
-
-	log.Dump("some_file.log")
+	ml := NewMergeLog("ex_1234")
+	logEntry := MergeLogEntry{
+		logMessage: "Sample log message",
+		sourceStatements: []Statement{
+			st3,
+			st4,
+		},
+		success: true,
+		policy:  "soft",
+	}
+	ml.Append(logEntry)
+	ml.Dump(".")
 }

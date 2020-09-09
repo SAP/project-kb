@@ -68,7 +68,7 @@ func (p StrictPolicy) Reduce(stmts map[string][]Statement) (map[string][]Stateme
 				success:            true,
 			}
 		}
-		mergeLog.Log(logEntry)
+		mergeLog.Append(logEntry)
 
 	}
 
