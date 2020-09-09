@@ -17,14 +17,7 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@v2
         
-      - name: Install setuptools
-        run: sudo apt-get install python3-setuptools
-        
-      - name: Install Material
-        run: python3 -m pip install mkdocs-material mkdocs
-
-      - name: Build Documentation using MkDocs
-        run: mkdocs build
-
-      - name: Deploy Documentation using MkDocs
-        run: mkdocs gh-deploy
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
