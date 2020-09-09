@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sap/project-kb/kaybee/internal/errors"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 	"gopkg.in/yaml.v2"
 
@@ -54,18 +53,24 @@ func NewRepository(URL string, branch string, strict bool, rank int, targetDir s
 
 	if filesystem.IsDir(r.Path) {
 		r.Repo, err = git.PlainOpen(r.Path)
-		errors.CheckErr(err)
-
+		if err != nil && err != git.NoErrAlreadyUpToDate {
+			log.Fatal(err)
+		}
 		// fetches head of the appropriate branch
 		head, err := r.Repo.Head()
-		errors.CheckErr(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		//  hashes the commit to get commit tree
 		commit, err := r.Repo.CommitObject(head.Hash())
-		errors.CheckErr(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 		r.Tree, err = commit.Tree()
-		errors.CheckErr(err)
-
+		if err != nil {
+			log.Fatal(err)
+		}
 		r.FetchKeyRing()
 	}
 	return r
@@ -74,8 +79,10 @@ func NewRepository(URL string, branch string, strict bool, rank int, targetDir s
 // FetchKeyRing gets all available public GPG keys
 func (r *Repository) FetchKeyRing() {
 	if err := filesystem.CreateDir(filesystem.GetKeyPath(r.Path)); err == nil {
-		keys, werr := filesystem.GetPubKey(filesystem.GetKeyPath(r.Path))
-		errors.CheckErr(werr)
+		keys, err := filesystem.GetPubKey(filesystem.GetKeyPath(r.Path))
+		if err != nil {
+			log.Fatal(err)
+		}
 		r.KeyRing = keys
 	}
 }
@@ -83,11 +90,15 @@ func (r *Repository) FetchKeyRing() {
 // Pull attempts to pull the latest version of the origin remote
 func (r *Repository) Pull() {
 	w, err := r.Repo.Worktree()
-	errors.CheckErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	refName := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", r.Branch))
-	errors.CheckErr(w.Pull(&git.PullOptions{
+	if err := w.Pull(&git.PullOptions{
 		ReferenceName: refName,
-	}))
+	}); err != nil && err != git.NoErrAlreadyUpToDate {
+		log.Fatal(err)
+	}
 }
 
 // Fetch creates and initializes a git repository if required
@@ -106,13 +117,17 @@ func (r *Repository) Fetch(verbose bool) {
 			ReferenceName: refName,
 			SingleBranch:  true,
 		})
-		errors.CheckErr(err)
+		if err != nil && err != git.NoErrAlreadyUpToDate {
+			log.Fatal(err)
+		}
 	} else {
 		if verbose {
 			color.Info.Prompt("Local clone exist, trying to update it")
 		}
 		r.Repo, err = git.PlainOpen(r.Path)
-		errors.CheckErr(err)
+		if err != nil && err != git.NoErrAlreadyUpToDate {
+			log.Fatal(err)
+		}
 		r.Pull()
 	}
 
@@ -123,13 +138,19 @@ func (r *Repository) Fetch(verbose bool) {
 
 	// fetches head of the appropriate branch
 	head, err := r.Repo.Head()
-	errors.CheckErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	//  hashes the commit to get commit tree
 	commit, err := r.Repo.CommitObject(head.Hash())
-	errors.CheckErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	r.Tree, err = commit.Tree()
-	errors.CheckErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if verbose {
 		// updates the public approved keyrings

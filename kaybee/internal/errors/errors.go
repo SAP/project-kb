@@ -2,10 +2,6 @@ package errors
 
 import (
 	"errors"
-	"fmt"
-	"log"
-
-	"gopkg.in/src-d/go-git.v4"
 )
 
 var (
@@ -52,21 +48,3 @@ var (
 	// ErrConfigInvalid is used to signal any configuration error that is not covered by the other config errors
 	ErrConfigInvalid = errors.New("Configuration is invalid")
 )
-
-// CheckErr verifies the type of error and choses to display a warning
-// message or end the process
-func CheckErr(e error) {
-	if errors.Is(e, git.NoErrAlreadyUpToDate) {
-		//fmt.Println("    already up to date, skipping pull")
-
-	} else if errors.Is(e, ErrConflictingStatements) {
-		fmt.Println("    contradicting statements, soft merge failed")
-	} else if e != nil {
-		log.Fatal(e)
-	}
-}
-
-// PrintErr logs the error
-func PrintErr(e error) {
-	log.Println(e.Error())
-}
