@@ -166,14 +166,14 @@ var (
 )
 
 func TestSoftPolicy(t *testing.T) {
-	statementsToMerge := make(map[string][]Statement)
-	statementsToMerge[s1.VulnerabilityID] = append(statementsToMerge[s1.VulnerabilityID], s1)
-	statementsToMerge[s2.VulnerabilityID] = append(statementsToMerge[s2.VulnerabilityID], s2)
-	statementsToMerge[s3.VulnerabilityID] = append(statementsToMerge[s3.VulnerabilityID], s3)
-	statementsToMerge[s4.VulnerabilityID] = append(statementsToMerge[s4.VulnerabilityID], s4)
-	statementsToMerge[s5.VulnerabilityID] = append(statementsToMerge[s5.VulnerabilityID], s5)
-	statementsToMerge[s6.VulnerabilityID] = append(statementsToMerge[s6.VulnerabilityID], s6)
-
+	statementsToMerge := map[string][]Statement{
+		s1.VulnerabilityID: {s1},
+		s2.VulnerabilityID: {s2},
+		s3.VulnerabilityID: {s3},
+		s4.VulnerabilityID: {s4},
+		s5.VulnerabilityID: {s5},
+		s6.VulnerabilityID: {s6},
+	}
 	var s Policy
 	// p, err := conf.NewParser()
 	// if err != nil {
@@ -187,7 +187,7 @@ func TestSoftPolicy(t *testing.T) {
 	mergedStatement, mergeLog, err := s.Reduce(statementsToMerge)
 
 	fmt.Println("Merge log:")
-	for _, logEntry := range mergeLog.Entries() {
+	for _, logEntry := range mergeLog.Entries {
 		fmt.Printf("%v\n", logEntry)
 	}
 
@@ -200,20 +200,21 @@ func TestSoftPolicy(t *testing.T) {
 func TestStrictPolicy(t *testing.T) {
 	var s Policy
 	s = NewStrictPolicy()
-	statementsToMerge := make(map[string][]Statement)
-	statementsToMerge[s1.VulnerabilityID] = append(statementsToMerge[s1.VulnerabilityID], s1)
-	statementsToMerge[s2.VulnerabilityID] = append(statementsToMerge[s2.VulnerabilityID], s2)
-	statementsToMerge[s3.VulnerabilityID] = append(statementsToMerge[s3.VulnerabilityID], s3)
-	statementsToMerge[s4.VulnerabilityID] = append(statementsToMerge[s4.VulnerabilityID], s4)
-	statementsToMerge[s5.VulnerabilityID] = append(statementsToMerge[s5.VulnerabilityID], s5)
-	statementsToMerge[s6.VulnerabilityID] = append(statementsToMerge[s6.VulnerabilityID], s6)
+	statementsToMerge := map[string][]Statement{
+		s1.VulnerabilityID: {s1},
+		s2.VulnerabilityID: {s2},
+		s3.VulnerabilityID: {s3},
+		s4.VulnerabilityID: {s4},
+		s5.VulnerabilityID: {s5},
+		s6.VulnerabilityID: {s6},
+	}
 	mergedStatement, mergeLog, err := s.Reduce(statementsToMerge)
 	if err != nil {
 		fmt.Printf("Could not merge: %v", err)
 	}
 
 	fmt.Println("Merge log:")
-	for _, logEntry := range mergeLog.Entries() {
+	for _, logEntry := range mergeLog.Entries {
 		fmt.Printf("%v\n", logEntry)
 	}
 
@@ -223,20 +224,21 @@ func TestStrictPolicy(t *testing.T) {
 func TestSmartPolicy(t *testing.T) {
 	var s Policy
 	s = NewSmartPolicy()
-	statementsToMerge := make(map[string][]Statement)
-	statementsToMerge[s1.VulnerabilityID] = append(statementsToMerge[s1.VulnerabilityID], s1)
-	statementsToMerge[s2.VulnerabilityID] = append(statementsToMerge[s2.VulnerabilityID], s2)
-	statementsToMerge[s3.VulnerabilityID] = append(statementsToMerge[s3.VulnerabilityID], s3)
-	statementsToMerge[s4.VulnerabilityID] = append(statementsToMerge[s4.VulnerabilityID], s4)
-	statementsToMerge[s5.VulnerabilityID] = append(statementsToMerge[s5.VulnerabilityID], s5)
-	statementsToMerge[s6.VulnerabilityID] = append(statementsToMerge[s6.VulnerabilityID], s6)
+	statementsToMerge := map[string][]Statement{
+		s1.VulnerabilityID: {s1},
+		s2.VulnerabilityID: {s2},
+		s3.VulnerabilityID: {s3},
+		s4.VulnerabilityID: {s4},
+		s5.VulnerabilityID: {s5},
+		s6.VulnerabilityID: {s6},
+	}
 	mergedStatement, mergeLog, err := s.Reduce(statementsToMerge)
 	if err != nil {
 		fmt.Printf("Could not merge: %v", err)
 	}
 
 	fmt.Println("Merge log:")
-	for _, logEntry := range mergeLog.Entries() {
+	for _, logEntry := range mergeLog.Entries {
 		fmt.Printf("%v\n", logEntry)
 	}
 

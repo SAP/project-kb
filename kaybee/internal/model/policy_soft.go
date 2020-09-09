@@ -99,7 +99,7 @@ func (s SoftPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement
 
 		}
 
-		mergeLog.Log(logEntry)
+		mergeLog.Append(logEntry)
 	}
 
 	return stmts, mergeLog, nil

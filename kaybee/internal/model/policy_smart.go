@@ -38,7 +38,7 @@ func (s SmartPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statemen
 			success:            true,
 		}
 
-		mergeLog.Log(logEntry)
+		mergeLog.Append(logEntry)
 	}
 
 	return stmts, mergeLog, nil
