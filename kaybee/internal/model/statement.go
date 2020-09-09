@@ -105,8 +105,8 @@ func (n Note) String() string {
 	return output + "\n"
 }
 
-// ContainsSlice tells whether a contains x.
-func ContainsSlice(a []string, x string) bool {
+// StringSliceContains tells whether a contains x.
+func StringSliceContains(a []string, x string) bool {
 	for _, n := range a {
 		if x == n {
 			return true
@@ -126,7 +126,7 @@ func (n Note) Equals(anotherNote Note) bool {
 	}
 
 	for _, l := range anotherNote.Links {
-		if ContainsSlice(anotherNote.Links, l) {
+		if StringSliceContains(anotherNote.Links, l) {
 			return false
 		}
 	}
