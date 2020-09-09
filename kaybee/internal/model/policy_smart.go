@@ -11,10 +11,9 @@ type SmartPolicy struct{}
 
 // NewSmartPolicy constructs a new SoftPolicy instance
 func NewSmartPolicy() Policy {
-	s := Policy{
+	return Policy{
 		reconciler: SmartPolicy{},
 	}
-	return s
 }
 
 // Reduce only keeps independent statements and discards statements that are non-independent
