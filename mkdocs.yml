@@ -55,15 +55,15 @@ extra:
     # - type: 'linkedin'
     #   link: 'https://linkedin.com/in/squidfunk'
 
-# theme:
-#   name: 'material'
-#   palette:
-#     primary: 'green'
-#     accent: 'green'
-#   logo:
-#     icon: 'cloud'
-#   feature:
-#     tabs: false
+theme:
+  name: 'material'
+  palette:
+    primary: 'green'
+    accent: 'green'
+  logo:
+    icon: 'cloud'
+  feature:
+    tabs: false
 
 extra_css:
   - css/faq.css
