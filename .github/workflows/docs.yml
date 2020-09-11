@@ -1,27 +1,35 @@
-name: Build Docs
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+name: build and deploy mkdocs to github pages
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
-  build:
-    name: Build and Deploy Documentation
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Master
-        uses: actions/checkout@v2
-        
-      - name: Install setuptools
-        run: apt-get install python3-setuptools
-        
-      - name: Install Material
-        run: python3 -m pip install mkdocs-material
+      - uses: actions/checkout@v2
 
-      - name: Build and Deploy Documentation using MkDocs
-        uses: Tangerine-Community/tangy-mkdocs-build-action@v1
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip     # install pip
+          python3 -m pip install mkdocs            # install mkdocs 
+          python3 -m pip install mkdocs-material   # install material theme
+
+      - name: Build site
+        run: mkdocs build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/public
