@@ -15,9 +15,9 @@ jobs:
 
     steps:
       - name: Checkout Master
-        uses: actions/checkout@v2
+        uses: actions/checkout@v1
         
       - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@1.14
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
