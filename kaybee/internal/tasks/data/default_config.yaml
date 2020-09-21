@@ -41,13 +41,13 @@ export:
       echo "Please configure the necessary variables in the script and try again" && exit 1
 
       # Your user token (required to upload vulnerability data to Steady backend)
-      USER_TOKEN="FD262258-9E0E-494F-AB98-10352914D7A6"
+      USER_TOKEN="**************************"
 
       # Backend URL of your Steady instance
       BACKEND_URL="http://localhost:8033/backend/"
 
       # URL of the CIA service of your Steady instance
-      CIA_URL="https://vulas.tools.sap/cia/"
+      CIA_URL="http://localhost:8033/cia/"
 
       # This must be the absolute path to the kb-importer jar file
       KB_IMPORTER_PATH="/full/path/to/kb-importer-X.Y.Z-jar-with-dependencies.jar"
