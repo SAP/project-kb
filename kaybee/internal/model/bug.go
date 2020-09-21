@@ -9,7 +9,7 @@ import (
 type Bug struct {
 	VulnerabilityID  string            `json:"bugId"`
 	Description      string            `json:"description,omitempty"`
-	Links            []string          `json:"reference,omitemtpy"`
+	Links            []string          `json:"reference,omitempty"`
 	ConstructChanges []ConstructChange `json:"constructChanges"`
 }
 
