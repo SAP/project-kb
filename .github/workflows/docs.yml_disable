@@ -16,10 +16,10 @@ jobs:
     steps:
       - name: Checkout Master
         uses: actions/checkout@v2
-        
+
       - name: Install setuptools
         run: apt-get install python3-setuptools
-        
+
       - name: Install Material
         run: python3 -m pip install mkdocs-material
 
