@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"path"
+	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -43,7 +43,7 @@ func NewParser(cfgFile string) (*Parser, error) {
 
 	// order matters!
 	p.Viper.AddConfigPath(".") // first look for config in the working directory
-	p.Viper.AddConfigPath(path.Join(home, ".kaybee"))
+	p.Viper.AddConfigPath(filepath.Join(home, ".kaybee"))
 	p.Viper.AddConfigPath(home)           // then in the home
 	p.Viper.AddConfigPath("/etc/kaybee/") // last in the global configuration
 

@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
-
-	"github.com/sap/project-kb/kaybee/internal/strings"
+	"path/filepath"
+	"strings"
 )
 
 // MergeLog is a collection of merge records, documenting how a merge operation was performed
@@ -34,20 +33,35 @@ func (ml *MergeLog) Entries() []MergeLogEntry {
 	return ml.entries
 }
 
+func (mle MergeLogEntry) String() (output string) {
+	var stmtsAsString string
+
+	for _, s := range mle.sourceStatements {
+		stmtsAsString += Indent(s.PrettyPrint(), "  ") + "\n"
+	}
+
+	output = fmt.Sprintf(
+		"-----\nLog Message:  %s\n"+
+			"Merge Policy: %s\n"+
+			"Sources:\n%s",
+		mle.logMessage,
+		mle.policy,
+		stmtsAsString,
+	)
+
+	return output
+}
+
 // Dump saves the MergeLog to a file
-func (ml *MergeLog) Dump(filepath string) {
-
+func (ml *MergeLog) Dump(path string) {
 	// filesystem.CreateFile(filepath)
-
 	// fmt.Println("==========================================")
-
-	f, err := os.OpenFile(path.Join(filepath, "merge.log"),
+	f, err := os.OpenFile(filepath.Join(path, "merge.log"),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Println(err)
 	}
 	defer f.Close()
-
 	for _, l := range ml.Entries() {
 		// fmt.Println(l)
 		_, err := f.WriteString(l.String())
@@ -85,22 +99,20 @@ type MergeLogEntry struct {
 // 	}
 // }
 
-func (mle MergeLogEntry) String() (output string) {
+// Indent adds consistent indentation to a block of text
+func Indent(objToPrint interface{}, indent string) string {
 
-	var stmtsAsString string
-
-	for _, s := range mle.sourceStatements {
-		stmtsAsString += strings.Indent(s.PrettyPrint(), "  ") + "\n"
+	text := fmt.Sprintf("%s", objToPrint)
+	if text[len(text)-1:] == "\n" {
+		result := ""
+		for _, j := range strings.Split(text[:len(text)-1], "\n") {
+			result += indent + j + "\n"
+		}
+		return result
 	}
-
-	output = fmt.Sprintf(
-		"-----\nLog Message:  %s\n"+
-			"Merge Policy: %s\n"+
-			"Sources:\n%s",
-		mle.logMessage,
-		mle.policy,
-		stmtsAsString,
-	)
-
-	return output
+	result := ""
+	for _, j := range strings.Split(strings.TrimRight(text, "\n"), "\n") {
+		result += indent + j + "\n"
+	}
+	return result[:len(result)-1]
 }

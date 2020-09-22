@@ -15,9 +15,6 @@ import (
 	"regexp"
 
 	"github.com/google/uuid"
-
-	"github.com/sap/project-kb/kaybee/internal/strings"
-
 	"gopkg.in/yaml.v2"
 	// "strings"
 )
@@ -108,6 +105,16 @@ func (n Note) String() string {
 	return output + "\n"
 }
 
+// StringSliceContains tells whether a contains x.
+func StringSliceContains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
 // Equals determines whether two Notes are the same
 func (n Note) Equals(anotherNote Note) bool {
 	if n.Text != anotherNote.Text {
@@ -119,7 +126,7 @@ func (n Note) Equals(anotherNote Note) bool {
 	}
 
 	for _, l := range anotherNote.Links {
-		if !strings.Contains(anotherNote.Links, l) {
+		if StringSliceContains(anotherNote.Links, l) {
 			return false
 		}
 	}
@@ -150,17 +157,15 @@ type Metadata struct {
 
 // NewStatementFromFile creates a statement
 func NewStatementFromFile(path string) Statement {
-
-	var err error
-	stmtData, _ := ioutil.ReadFile(path)
-
-	var s Statement
-	err = yaml.Unmarshal(stmtData, &s)
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Println(err)
 	}
-
-	return s
+	s := &Statement{}
+	if err := yaml.Unmarshal(data, &s); err != nil {
+		log.Println(err)
+	}
+	return *s
 }
 
 // ToFile writes a statement to a file in the directory path specified as argument.

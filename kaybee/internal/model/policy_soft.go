@@ -19,10 +19,9 @@ type SoftPolicy struct{}
 
 // NewSoftPolicy constructs a new SoftPolicy instance
 func NewSoftPolicy() Policy {
-	s := Policy{
+	return Policy{
 		reconciler: SoftPolicy{},
 	}
-	return s
 }
 
 // Reconcile returns a single statement out of a list of statements

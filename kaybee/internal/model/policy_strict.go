@@ -15,10 +15,9 @@ type StrictPolicy struct {
 
 // NewStrictPolicy creates and initializes a new StrictPolicy instance
 func NewStrictPolicy() Policy {
-	s := Policy{
+	return Policy{
 		reconciler: StrictPolicy{},
 	}
-	return s
 }
 
 // Reconcile does nothing (returns always a void Statement); if the two statements in input

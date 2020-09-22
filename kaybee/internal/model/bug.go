@@ -23,7 +23,9 @@ type ConstructChange struct {
 // ToStatement converts a bug as represented by the backend/bugs/VULN-ID endpoint of Steady
 // to a statement object
 func (b *Bug) ToStatement() *Statement {
-	s := &Statement{}
+	s := &Statement{
+		VulnerabilityID: b.VulnerabilityID,
+	}
 
 	// == GOLANG TECHNICALITIES ==
 	//
@@ -36,19 +38,11 @@ func (b *Bug) ToStatement() *Statement {
 	//
 	// See also: https://groups.google.com/forum/?fromgroups=#!topic/golang-nuts/4_pabWnsMp0
 	commitGroups := make(map[string]*CommitSet)
-
-	s.VulnerabilityID = b.VulnerabilityID
-	s.Aliases = nil
-
-	var fixID string
-	var commit Commit
 	// var commitID string
-
 	// uniqueCommits.AddSlice(b.ConstructChanges)
 	// fmt.Println("Unique changes: ", uniqueConstructChanges.Size())
 
 	for _, cc := range b.ConstructChanges {
-
 		// Get an ID for the Fix (group of commits) based on the prefix of
 		// the RepoPath field
 		parsedRepoPath := strings.Split(cc.RepoPath, ":")
@@ -56,24 +50,22 @@ func (b *Bug) ToStatement() *Statement {
 		// sanity check: commits should be either of the form "sha1"
 		// or "branchID:sha1", therefore there should be 0 or 1 occurrences
 		// of the separator ':'
-		if len(parsedRepoPath) < 0 || len(parsedRepoPath) > 2 {
+		parsedRepoLen := len(parsedRepoPath)
+		if parsedRepoLen < 0 || parsedRepoLen > 2 {
 			log.Fatal("Unable to parse RepoPath: ", cc.RepoPath)
 		}
 
-		fixID = "DEFAULT_BRANCH"
-
+		fixID := "DEFAULT_BRANCH"
 		// if the parsedRepoPath has two segments, then overwrite
-		if len(parsedRepoPath) == 2 {
+		if parsedRepoLen == 2 {
 			fixID = parsedRepoPath[0]
 		}
-
 		// Construct a commit and add to the commit group corresponding
 		// to the fix at hand (identified by fixID)
-		commit = Commit{
+		commit := Commit{
 			ID:            cc.Commit,
 			RepositoryURL: cc.Repo,
 		}
-
 		if _, ok := commitGroups[fixID]; !ok {
 			cs := NewCommitSet()
 			cs.Add(commit)
@@ -81,9 +73,6 @@ func (b *Bug) ToStatement() *Statement {
 		} else {
 			commitGroups[fixID].Add(commit)
 		}
-
-		// fmt.Printf("%+v", commitGroups[fixID])
-
 	}
 
 	for key, commitGroup := range commitGroups {
@@ -95,11 +84,9 @@ func (b *Bug) ToStatement() *Statement {
 	}
 
 	note := Note{Text: b.Description}
-	for _, l := range b.Links {
-		note.Links = append(note.Links, l)
-	}
+	note.Links = make([]string, len(b.Links))
+	copy(note.Links, b.Links)
 	s.Notes = append(s.Notes, note)
-
 	// s.Metadata.Origin = "internal"
 	// s.Metadata.Timestamp = 123456789
 	return s

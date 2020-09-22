@@ -21,9 +21,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"strconv"
 	"time"
+
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -77,7 +78,7 @@ func doPrune(args []string) {
 
 	for _, d := range repositoryDirs {
 		if d.IsDir() {
-			timestampFile, err := os.Open(path.Join(".kaybee/repositories/", d.Name(), ".pull_timestamp"))
+			timestampFile, err := os.Open(filepath.Join(".kaybee/repositories/", d.Name(), ".pull_timestamp"))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -90,7 +91,7 @@ func doPrune(args []string) {
 			if ageInDays >= maxRetention {
 				if verbose {
 					fmt.Printf("  Removing %s (age: %d days)\n", d.Name(), ageInDays)
-					os.RemoveAll(path.Join(".kaybee/repositories/", d.Name()))
+					os.RemoveAll(filepath.Join(".kaybee/repositories/", d.Name()))
 				}
 			} else {
 				if verbose {

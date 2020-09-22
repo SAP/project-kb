@@ -5,8 +5,7 @@ type NullPolicy struct{}
 
 // NewNullPolicy constructs a new NullPolicy instance
 func NewNullPolicy() Policy {
-	s := Policy{reconciler: NullPolicy{}}
-	return s
+	return Policy{reconciler: NullPolicy{}}
 }
 
 // Reconcile just returns the first of the two statements as is
