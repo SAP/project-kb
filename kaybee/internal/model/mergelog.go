@@ -1,31 +1,55 @@
 package model
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-
-	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 // MergeLog is a collection of merge records, documenting how a merge operation was performed
 type MergeLog struct {
-	ExecutionID string          `yaml:"execution_id"`
-	Timestamp   int64           `yaml:"timestamp"`
-	Entries     []MergeLogEntry `yaml:"entries"`
+	executionID string
+	timestamp   int64
+	entries     []MergeLogEntry
 }
 
 // NewMergeLog creates a new instance of a MergeLog
 func NewMergeLog(executionID string) MergeLog {
 	return MergeLog{
-		ExecutionID: executionID,
+		executionID: executionID,
 	}
 }
 
-// Append a MergeLogEntry to the MergeLog
-func (ml *MergeLog) Append(logEntry MergeLogEntry) {
-	logEntry.executionID = ml.ExecutionID
-	ml.Entries = append(ml.Entries, logEntry)
+// Log appends a MergeLogEntry to the MergeLog
+func (ml *MergeLog) Log(logEntry MergeLogEntry) {
+	logEntry.executionID = ml.executionID
+	ml.entries = append(ml.entries, logEntry)
+}
+
+// Entries returns all entries in the MergeLog
+func (ml *MergeLog) Entries() []MergeLogEntry {
+	return ml.entries
+}
+
+func (mle MergeLogEntry) String() (output string) {
+	var stmtsAsString string
+
+	for _, s := range mle.sourceStatements {
+		stmtsAsString += Indent(s.PrettyPrint(), "  ") + "\n"
+	}
+
+	output = fmt.Sprintf(
+		"-----\nLog Message:  %s\n"+
+			"Merge Policy: %s\n"+
+			"Sources:\n%s",
+		mle.logMessage,
+		mle.policy,
+		stmtsAsString,
+	)
+
+	return output
 }
 
 // Dump saves the MergeLog to a file
@@ -38,12 +62,21 @@ func (ml *MergeLog) Dump(path string) {
 		log.Println(err)
 	}
 	defer f.Close()
-	data, err := yaml.Marshal(ml)
-	if err != nil {
-		log.Fatal("Failed to marshal mergelog entries")
+	for _, l := range ml.Entries() {
+		// fmt.Println(l)
+		_, err := f.WriteString(l.String())
+		if err != nil {
+			fmt.Println(err)
+			f.Close()
+			return
+		}
 	}
-	if _, err := f.Write(data); err != nil {
-		log.Fatal("Failed to write mergelog entries")
+
+	// fmt.Println(n, "bytes written successfully")
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 }
 
@@ -52,10 +85,10 @@ func (ml *MergeLog) Dump(path string) {
 type MergeLogEntry struct {
 	executionID        string
 	timestamp          int64
-	sourceStatements   []Statement `yaml:"sources"`
+	sourceStatements   []Statement
 	resultingStatement Statement
-	policy             string `yaml:"policy"`
-	logMessage         string `yaml:"message"`
+	policy             string
+	logMessage         string
 	success            bool
 }
 
@@ -65,3 +98,21 @@ type MergeLogEntry struct {
 // 		timestamp: time.Now().Unix(),
 // 	}
 // }
+
+// Indent adds consistent indentation to a block of text
+func Indent(objToPrint interface{}, indent string) string {
+
+	text := fmt.Sprintf("%s", objToPrint)
+	if text[len(text)-1:] == "\n" {
+		result := ""
+		for _, j := range strings.Split(text[:len(text)-1], "\n") {
+			result += indent + j + "\n"
+		}
+		return result
+	}
+	result := ""
+	for _, j := range strings.Split(strings.TrimRight(text, "\n"), "\n") {
+		result += indent + j + "\n"
+	}
+	return result[:len(result)-1]
+}
