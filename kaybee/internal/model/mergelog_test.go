@@ -59,6 +59,6 @@ func TestMergeLog(t *testing.T) {
 		success: true,
 		policy:  "soft",
 	}
-	ml.Append(logEntry)
+	ml.Log(logEntry)
 	ml.Dump(".")
 }

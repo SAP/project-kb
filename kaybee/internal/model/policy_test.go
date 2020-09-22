@@ -187,7 +187,7 @@ func TestSoftPolicy(t *testing.T) {
 	mergedStatement, mergeLog, err := s.Reduce(statementsToMerge)
 
 	fmt.Println("Merge log:")
-	for _, logEntry := range mergeLog.Entries {
+	for _, logEntry := range mergeLog.Entries() {
 		fmt.Printf("%v\n", logEntry)
 	}
 
@@ -214,7 +214,7 @@ func TestStrictPolicy(t *testing.T) {
 	}
 
 	fmt.Println("Merge log:")
-	for _, logEntry := range mergeLog.Entries {
+	for _, logEntry := range mergeLog.Entries() {
 		fmt.Printf("%v\n", logEntry)
 	}
 
@@ -238,7 +238,7 @@ func TestSmartPolicy(t *testing.T) {
 	}
 
 	fmt.Println("Merge log:")
-	for _, logEntry := range mergeLog.Entries {
+	for _, logEntry := range mergeLog.Entries() {
 		fmt.Printf("%v\n", logEntry)
 	}
 
