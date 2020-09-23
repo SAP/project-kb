@@ -19,7 +19,8 @@ echo "Creating changelog..."
 > NEW-CHANGELOG.md
 head -n1 CHANGELOG.md >> NEW-CHANGELOG.md
 echo >> NEW-CHANGELOG.md
-$PROJECT_ROOT/scripts/changelog-gen.py >> NEW-CHANGELOG.md
+$PROJECT_ROOT/scripts/changelog-gen.py >> CHANGELOG-${RELEASE}.md
+cat CHANGELOG-${RELEASE}.md >> NEW-CHANGELOG.md
 tail -n +2 CHANGELOG.md >> NEW-CHANGELOG.md
 mv NEW-CHANGELOG.md CHANGELOG.md
 
@@ -34,6 +35,9 @@ echo "Pushing..."
 git push
 git push --tags
 
-echo "Do not forget to update $PROJECT_ROOT/kaybee/VERSION"
-echo "and to create a release on GitHub"
+echo "Update the version for the next relase cycle (Enter to proceed)"
+read
+nano $PROJECT_ROOT/kaybee/VERSION
+
+echo "Do not forget to create a release on GitHub"
 echo "Done"

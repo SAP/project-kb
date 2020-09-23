@@ -14,7 +14,8 @@ commit_types = {
     'change': "Changes",
     'refactor': "Changes",
     'refactoring': "Changes",
-    'chore': "Chores",
+    'chore': "Misc",
+    'misc': "Misc",
     'docs': "Docs"}
 
 
