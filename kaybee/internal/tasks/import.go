@@ -119,13 +119,14 @@ type ImporterPool []Importer
 // gets a slice of bugs to fetch. Multiple importers can be used ad once, as part of
 // a pool of importers (ImporterPool).
 type Importer struct {
-	Backend     string `yaml:"backend"`
-	Bugs        []*model.Bug
-	Statements  map[string]model.Statement
-	Client      *http.Client
-	Filter      map[string][]*regexp.Regexp
-	ProgressBar *progressbar.ProgressBar
-	Verbose     bool
+	Backend           string `yaml:"backend"`
+	Bugs              []*model.Bug
+	Statements        map[string]model.Statement
+	SkippedStatements []model.Statement
+	Client            *http.Client
+	Filter            map[string][]*regexp.Regexp
+	ProgressBar       *progressbar.ProgressBar
+	Verbose           bool
 }
 
 // NewImporterPool instantiates a pool of Exporters, each taking care of fetching vulnerability
@@ -254,7 +255,7 @@ func (f *Importer) Run() error {
 		// Skip statements that would not contain neither commits nor affected artifacts
 		if len(s.Fixes) == 0 && len(s.AffectedArtifacts) == 0 {
 			if f.Verbose {
-				fmt.Printf("\nStatement for %s would not contain fixes nor affected artifacts, skipping.\n", s.VulnerabilityID)
+				fmt.Println("\nNo fix-commits nor affected artifacts for " + s.VulnerabilityID + ", skipping.")
 			}
 			continue
 		}
