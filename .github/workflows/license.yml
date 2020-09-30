@@ -21,4 +21,3 @@ jobs:
     steps:
       - name: REUSE Compliance Check
         uses: fsfe/reuse-action@v1.1
-

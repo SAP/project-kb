@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/blang/semver/v4"
+	"github.com/blang/semver"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"github.com/spf13/cobra"
 )
+
+var forceUpdate bool
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
@@ -25,8 +27,7 @@ each as mergeable or not along with the conflicting slices.
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
-	// updateCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Interactive configuration")
-	// updateCmd.Flags().BoolVarP(&force, "force", "f", false, "Force overwrite existing configuration file")
+	updateCmd.Flags().BoolVarP(&forceUpdate, "force", "f", false, "Upgrade to the latest version, if different from the one in use")
 }
 
 func doUpdate(cmd *cobra.Command, args []string) {
@@ -40,12 +41,25 @@ func doUpdate(cmd *cobra.Command, args []string) {
 
 	if ok {
 		latestSemVer := semver.MustParse(latest.Version.String())
+
+		// TESTING
+		version = "0.0.1"
 		currentSemVer := semver.MustParse(version)
+		// currentSemVer := semver.MustParse("0.1.1")
 
 		if latestSemVer.Compare(currentSemVer) > 0 {
-			fmt.Printf("New version detected\n")
+			fmt.Printf("Newer version detected\n")
 			fmt.Println("Latest version available: " + latest.Version.String())
-			fmt.Println("Please download it from: " + latest.URL)
+			fmt.Println("You are currently using: " + currentSemVer.String())
+
+			if forceUpdate {
+				fmt.Println("Please wait while downloading and upgrading to version " + latest.Version.String())
+				selfupdate.UpdateSelf(currentSemVer, "sap/project-kb")
+				fmt.Print("Done upgrading to version " + latest.Version.String())
+			} else {
+				fmt.Println("Please download it from: " + latest.URL)
+				fmt.Println("or run 'kaybee update --force' to download and install automatically.")
+			}
 		} else {
 			fmt.Println("You have the latest version.")
 		}
