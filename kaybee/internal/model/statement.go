@@ -13,20 +13,20 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v2"
-	// "strings"
 )
 
 // Statement represents a vulnerability statement
 type Statement struct {
 	ID                uuid.UUID  `yaml:"-" json:"-"`
 	VulnerabilityID   string     `yaml:"vulnerability_id" json:"vulnerability_id"`
-	Aliases           []Alias    `yaml:"aliases" json:"aliases"`
-	Fixes             []Fix      `yaml:"fixes" json:"-"`
-	AffectedArtifacts []Artifact `yaml:"artifacts" json:"affected_artifacts"`
-	Notes             []Note     `yaml:"notes" json:"notes"`
+	Aliases           []Alias    `yaml:"-" json:"-"`
+	Notes             []Note     `yaml:"notes,omitempty" json:"notes"`
+	Fixes             []Fix      `yaml:"fixes,omitempty" json:"-"`
+	AffectedArtifacts []Artifact `yaml:"artifacts,omitempty" json:"affected_artifacts"`
 	Metadata          Metadata   `yaml:"-" json:"-"`
 }
 
@@ -76,7 +76,7 @@ type Artifact struct {
 // A Note represents a description that accompanies a statement; it can have a
 // set of links and a free-text comment. Neither are mandatory.
 type Note struct {
-	Links []string `json:"links"`
+	Links []string `yaml:"links" json:"links"`
 	Text  string   `json:"text"`
 	hash  string
 }
@@ -176,6 +176,13 @@ func (s *Statement) ToFile(path string) error {
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
 		// log.Println("Creating folder: " + targetDir)
 		os.MkdirAll(targetDir, 0750)
+	}
+
+	// strip slashes from the end of repository URLs
+	for i := range s.Fixes {
+		for j := range s.Fixes[i].Commits {
+			s.Fixes[i].Commits[j].RepositoryURL = strings.TrimRight(s.Fixes[i].Commits[j].RepositoryURL, "/")
+		}
 	}
 
 	dest := filepath.Join(targetDir, "statement.yaml")

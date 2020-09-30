@@ -94,7 +94,7 @@ func (t *ImportTask) Execute() (success bool) {
 
 	fmt.Printf("Importing vulnerability data from %s (using %d workers)\n", t.backend, t.concurrency)
 
-	importers, err := NewImporterPool(t.backend, t.concurrency, t.limit, nil)
+	importers, err := NewImporterPool(t.backend, t.concurrency, t.limit, nil, t.verbose)
 	if err != nil {
 		log.Fatalln("Could not create importers pool")
 	}
@@ -125,11 +125,12 @@ type Importer struct {
 	Client      *http.Client
 	Filter      map[string][]*regexp.Regexp
 	ProgressBar *progressbar.ProgressBar
+	Verbose     bool
 }
 
 // NewImporterPool instantiates a pool of Exporters, each taking care of fetching vulnerability
 // data for a subset of the overall set of vulnerabilities stored in the Steady backend.
-func NewImporterPool(backend string, concurrent int, limit int, filter map[string][]*regexp.Regexp) (*ImporterPool, error) {
+func NewImporterPool(backend string, concurrent int, limit int, filter map[string][]*regexp.Regexp, verbose bool) (*ImporterPool, error) {
 
 	pool := &ImporterPool{}
 	bugs, err := fetchVulnerabilityIDs(backend)
@@ -171,6 +172,7 @@ func NewImporterPool(backend string, concurrent int, limit int, filter map[strin
 			Filter:      filter,
 			Statements:  make(map[string]model.Statement),
 			ProgressBar: bar,
+			Verbose:     verbose,
 		})
 	}
 
@@ -220,7 +222,8 @@ func (f *Importer) Run() error {
 
 		// Fetch affected artifacts data
 		var affectedLibs []SteadyAffectedLib
-		resp2, err := f.Client.Get(f.Backend + BugsEndpoint + "/" + b.VulnerabilityID + "/affectedLibIds?onlyWellKnown=true")
+		resp2, err := f.Client.Get(f.Backend + BugsEndpoint + "/" + b.VulnerabilityID + "/affectedLibIds?onlyWellKnown=true&resolved=true")
+		// resp2, err := f.Client.Get(f.Backend + BugsEndpoint + "/" + b.VulnerabilityID + "/affectedLibIds?onlyWellKnown=true")
 		if err != nil {
 			return err
 		}
@@ -233,17 +236,32 @@ func (f *Importer) Run() error {
 			return err
 		}
 		f.ProgressBar.Add(1)
+		// fmt.Println("Fetching " + b.VulnerabilityID)
 		s := b.ToStatement()
 		for _, al := range affectedLibs {
-			// if al.Source == "MANUAL" || al.Source == "AST_EQUALITY" {
 			if al.Source == "MANUAL" {
-				s.AffectedArtifacts = append(s.AffectedArtifacts, al.toAffectedArtifact())
+				aa := al.toAffectedArtifact()
+				aa.Reason = "Reviewed manually"
+				s.AffectedArtifacts = append(s.AffectedArtifacts, aa)
+			} else if al.Source == "AST_EQUALITY" {
+				aa := al.toAffectedArtifact()
+				aa.Reason = "Assessed with Eclipse Steady (AST_EQUALITY)"
+				s.AffectedArtifacts = append(s.AffectedArtifacts, aa)
 			}
 		}
 		// fmt.Printf("%+v", affectedLibs)
+
+		// Skip statements that would not contain neither commits nor affected artifacts
+		if len(s.Fixes) == 0 && len(s.AffectedArtifacts) == 0 {
+			if f.Verbose {
+				fmt.Printf("\nStatement for %s would not contain fixes nor affected artifacts, skipping.\n", s.VulnerabilityID)
+			}
+			continue
+		}
 		if !model.Matches(s, f.Filter) {
 			f.Statements[b.VulnerabilityID] = *s
 		}
+
 	}
 	return nil
 }
