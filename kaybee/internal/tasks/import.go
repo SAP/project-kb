@@ -220,7 +220,8 @@ func (f *Importer) Run() error {
 
 		// Fetch affected artifacts data
 		var affectedLibs []SteadyAffectedLib
-		resp2, err := f.Client.Get(f.Backend + BugsEndpoint + "/" + b.VulnerabilityID + "/affectedLibIds?onlyWellKnown=true")
+		resp2, err := f.Client.Get(f.Backend + BugsEndpoint + "/" + b.VulnerabilityID + "/affectedLibIds?onlyWellKnown=true&resolved=true")
+		// resp2, err := f.Client.Get(f.Backend + BugsEndpoint + "/" + b.VulnerabilityID + "/affectedLibIds?onlyWellKnown=true")
 		if err != nil {
 			return err
 		}
@@ -233,17 +234,30 @@ func (f *Importer) Run() error {
 			return err
 		}
 		f.ProgressBar.Add(1)
+		// fmt.Println("Fetching " + b.VulnerabilityID)
 		s := b.ToStatement()
 		for _, al := range affectedLibs {
-			// if al.Source == "MANUAL" || al.Source == "AST_EQUALITY" {
 			if al.Source == "MANUAL" {
-				s.AffectedArtifacts = append(s.AffectedArtifacts, al.toAffectedArtifact())
+				aa := al.toAffectedArtifact()
+				aa.Reason = "Reviewed manually"
+				s.AffectedArtifacts = append(s.AffectedArtifacts, aa)
+			} else if al.Source == "AST_EQUALITY" {
+				aa := al.toAffectedArtifact()
+				aa.Reason = "Assessed with Eclipse Steady (AST_EQUALITY)"
+				s.AffectedArtifacts = append(s.AffectedArtifacts, aa)
 			}
 		}
 		// fmt.Printf("%+v", affectedLibs)
+
+		// Skip statements that would not contain neither commits nor affected artifacts
+		if len(s.Fixes) == 0 && len(s.AffectedArtifacts) == 0 {
+			fmt.Printf("\nStatement for %s would not contain fixes nor affected artifacts, skipping.\n", s.VulnerabilityID)
+			continue
+		}
 		if !model.Matches(s, f.Filter) {
 			f.Statements[b.VulnerabilityID] = *s
 		}
+
 	}
 	return nil
 }

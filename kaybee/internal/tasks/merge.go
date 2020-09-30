@@ -95,14 +95,15 @@ func (t *MergeTask) Execute() (success bool) {
 		}
 	}
 
+	fmt.Printf("\n")
 	if t.verbose {
-		fmt.Printf("\nReconciling statements...\n")
+		fmt.Printf("Reconciling statements...\n")
 	}
 
 	// TODO adjust terminology: reduce, merge, reconcile....
 	mergedStatements, mergeLog, err := t.policy.Reduce(statementsToMerge)
 	if err != nil {
-		fmt.Printf("\nCould not merge: %v", err)
+		fmt.Printf("Could not merge: %v", err)
 	}
 
 	// fmt.Printf("Merged:\n%v", mergedStatements)
@@ -115,11 +116,8 @@ func (t *MergeTask) Execute() (success bool) {
 		}
 		st[0].ToFile(".kaybee/merged/")
 	}
-	if t.verbose {
-		fmt.Printf("The merge operation on %d statements from %d sources resulted in %d statements.\n", inputStatementCount, len(t.sources), len(mergedStatements))
-	} else {
-		fmt.Printf("Merged %d sources (%d statements): yielded %d statements.\n", len(t.sources), inputStatementCount, len(mergedStatements))
-	}
+
+	fmt.Printf("Merged %d sources (%d statements): yielded %d statements.\n", len(t.sources), inputStatementCount, len(mergedStatements))
 
 	os.MkdirAll(".kaybee/merged/", os.ModePerm)
 	mergeLog.Dump(".kaybee/merged/")
