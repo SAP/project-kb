@@ -9,36 +9,35 @@ read
 RELEASE=`cat $PROJECT_ROOT/kaybee/VERSION`
 
 echo "Building..."
-make -C kaybee check build-all || exit 1
+make -C kaybee check build-all
 
 echo "Tagging as \"v$RELEASE\"..."
 git tag v$RELEASE -f
 
 echo "Creating changelog..."
-> NEW-CHANGELOG.md
-head -n1 CHANGELOG.md >> NEW-CHANGELOG.md
-echo >> NEW-CHANGELOG.md
-$PROJECT_ROOT/scripts/changelog-gen.py >> /tmp/CHANGELOG-${RELEASE}.md
-cat /tmp/CHANGELOG-${RELEASE}.md >> NEW-CHANGELOG.md
-tail -n +2 CHANGELOG.md >> NEW-CHANGELOG.md
-mv NEW-CHANGELOG.md CHANGELOG.md
+#> NEW-CHANGELOG.md
+#head -n1 CHANGELOG.md >> NEW-CHANGELOG.md
+#echo >> NEW-CHANGELOG.md
+$PROJECT_ROOT/scripts/changelog-gen.py > /tmp/CHANGELOG-${RELEASE}.md
+#cat /tmp/CHANGELOG-${RELEASE}.md >> NEW-CHANGELOG.md
+#tail -n +2 CHANGELOG.md >> NEW-CHANGELOG.md
+#mv NEW-CHANGELOG.md CHANGELOG.md
 
 echo "Creating commit for new release..."
-git add CHANGELOG.md kaybee/VERSION
+git add kaybee/VERSION
 git commit -m "release $RELEASE"
+git push
 
 echo "Updating tag..."
 git tag v$RELEASE -f
-
-echo "Pushing..."
-git push
 git push --tags
 
+echo "Creating GH release"
 gh release create v$RELEASE \
     kaybee/dist/kaybee-${RELEASE}_linux-amd64 \
-    kaybee/dist/kaybee-${RELEASE}_darwing-amd64 \
+    kaybee/dist/kaybee-${RELEASE}_darwin-amd64 \
     kaybee/dist/kaybee-${RELEASE}_win-amd64 \
-    --notes-file CHANGELOG-${RELEASE}.md \
+    --notes-file /tmp/CHANGELOG-${RELEASE}.md \
     --prerelease \
     --draft
 
