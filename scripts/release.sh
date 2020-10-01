@@ -38,9 +38,8 @@ gh release create v$RELEASE \
     kaybee/dist/kaybee-${RELEASE}_darwin-amd64 \
     kaybee/dist/kaybee-${RELEASE}_win-amd64 \
     --notes-file /tmp/CHANGELOG-${RELEASE}.md \
-    --prerelease \
-    --draft
-
+    --draft \
+    --title "v$RELEASE"
 
 echo "Update the version for the next relase cycle (Enter to proceed)"
 read
