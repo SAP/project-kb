@@ -254,13 +254,9 @@ func (f *Importer) Run() error {
 
 		// Skip statements that would not contain neither commits nor affected artifacts
 		if len(s.Fixes) == 0 && len(s.AffectedArtifacts) == 0 {
-<<<<<<< HEAD
-			fmt.Printf("\nStatement for %s would not contain fixes nor affected artifacts, skipping.\n", s.VulnerabilityID)
-=======
 			if f.Verbose {
 				fmt.Println("\nNo fix-commits nor affected artifacts for " + s.VulnerabilityID + ", skipping.")
 			}
->>>>>>> master
 			continue
 		}
 		if !model.Matches(s, f.Filter) {

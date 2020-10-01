@@ -42,8 +42,8 @@ func doUpdate(cmd *cobra.Command, args []string) {
 	if ok {
 		latestSemVer := semver.MustParse(latest.Version.String())
 
-		// TESTING
-		version = "0.0.1"
+		// // TESTING
+		// version = "0.0.1"
 		currentSemVer := semver.MustParse(version)
 		// currentSemVer := semver.MustParse("0.1.1")
 
@@ -54,8 +54,12 @@ func doUpdate(cmd *cobra.Command, args []string) {
 
 			if forceUpdate {
 				fmt.Println("Please wait while downloading and upgrading to version " + latest.Version.String())
-				selfupdate.UpdateSelf(currentSemVer, "sap/project-kb")
-				fmt.Print("Done upgrading to version " + latest.Version.String())
+				newVersion, err := selfupdate.UpdateSelf(currentSemVer, "sap/project-kb")
+				if err != nil {
+					fmt.Println("Could not update to new version. Aborting.")
+					return
+				}
+				fmt.Print("Done upgrading to version " + newVersion.Version.String())
 			} else {
 				fmt.Println("Please download it from: " + latest.URL)
 				fmt.Println("or run 'kaybee update --force' to download and install automatically.")
