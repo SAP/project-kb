@@ -1,5 +1,11 @@
 # Changelog (`kaybee` tool)
 
+<a name="v0.6.10"></a>
+## [v0.6.10](https://github.com/sap/project-kb/compare/v0.6.9...v0.6.10)
+
+### Misc
+ * improve release script ([3acf85d](https://github.com/sap/project-kb/commit/3acf85d))
+
 <a name="v0.6.7"></a>
 ## [v0.6.7](https://github.com/sap/project-kb/compare/v0.6.6...v0.6.7)
 

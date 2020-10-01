@@ -18,8 +18,8 @@ echo "Creating changelog..."
 > NEW-CHANGELOG.md
 head -n1 CHANGELOG.md >> NEW-CHANGELOG.md
 echo >> NEW-CHANGELOG.md
-$PROJECT_ROOT/scripts/changelog-gen.py >> CHANGELOG-${RELEASE}.md
-cat CHANGELOG-${RELEASE}.md >> NEW-CHANGELOG.md
+$PROJECT_ROOT/scripts/changelog-gen.py >> /tmp/CHANGELOG-${RELEASE}.md
+cat /tmp/CHANGELOG-${RELEASE}.md >> NEW-CHANGELOG.md
 tail -n +2 CHANGELOG.md >> NEW-CHANGELOG.md
 mv NEW-CHANGELOG.md CHANGELOG.md
 
