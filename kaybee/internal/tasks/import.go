@@ -94,7 +94,7 @@ func (t *ImportTask) Execute() (success bool) {
 
 	fmt.Printf("Importing vulnerability data from %s (using %d workers)\n", t.backend, t.concurrency)
 
-	importers, err := NewImporterPool(t.backend, t.concurrency, t.limit, nil)
+	importers, err := NewImporterPool(t.backend, t.concurrency, t.limit, nil, t.verbose)
 	if err != nil {
 		log.Fatalln("Could not create importers pool")
 	}
@@ -119,17 +119,19 @@ type ImporterPool []Importer
 // gets a slice of bugs to fetch. Multiple importers can be used ad once, as part of
 // a pool of importers (ImporterPool).
 type Importer struct {
-	Backend     string `yaml:"backend"`
-	Bugs        []*model.Bug
-	Statements  map[string]model.Statement
-	Client      *http.Client
-	Filter      map[string][]*regexp.Regexp
-	ProgressBar *progressbar.ProgressBar
+	Backend           string `yaml:"backend"`
+	Bugs              []*model.Bug
+	Statements        map[string]model.Statement
+	SkippedStatements []model.Statement
+	Client            *http.Client
+	Filter            map[string][]*regexp.Regexp
+	ProgressBar       *progressbar.ProgressBar
+	Verbose           bool
 }
 
 // NewImporterPool instantiates a pool of Exporters, each taking care of fetching vulnerability
 // data for a subset of the overall set of vulnerabilities stored in the Steady backend.
-func NewImporterPool(backend string, concurrent int, limit int, filter map[string][]*regexp.Regexp) (*ImporterPool, error) {
+func NewImporterPool(backend string, concurrent int, limit int, filter map[string][]*regexp.Regexp, verbose bool) (*ImporterPool, error) {
 
 	pool := &ImporterPool{}
 	bugs, err := fetchVulnerabilityIDs(backend)
@@ -171,6 +173,7 @@ func NewImporterPool(backend string, concurrent int, limit int, filter map[strin
 			Filter:      filter,
 			Statements:  make(map[string]model.Statement),
 			ProgressBar: bar,
+			Verbose:     verbose,
 		})
 	}
 
@@ -251,7 +254,13 @@ func (f *Importer) Run() error {
 
 		// Skip statements that would not contain neither commits nor affected artifacts
 		if len(s.Fixes) == 0 && len(s.AffectedArtifacts) == 0 {
+<<<<<<< HEAD
 			fmt.Printf("\nStatement for %s would not contain fixes nor affected artifacts, skipping.\n", s.VulnerabilityID)
+=======
+			if f.Verbose {
+				fmt.Println("\nNo fix-commits nor affected artifacts for " + s.VulnerabilityID + ", skipping.")
+			}
+>>>>>>> master
 			continue
 		}
 		if !model.Matches(s, f.Filter) {

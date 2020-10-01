@@ -76,7 +76,11 @@ type Artifact struct {
 // A Note represents a description that accompanies a statement; it can have a
 // set of links and a free-text comment. Neither are mandatory.
 type Note struct {
+<<<<<<< HEAD
 	Links []string `yaml:"-" json:"links"`
+=======
+	Links []string `yaml:"links" json:"links"`
+>>>>>>> master
 	Text  string   `json:"text"`
 	hash  string
 }
