@@ -29,6 +29,12 @@ all: $(SUBDIRS) build-docs
 $(SUBDIRS):
 	$(MAKE) -C $@
 
+build:
+	$(MAKE) --directory=kaybee build
+
+test:
+	$(MAKE) --directory=kaybee test
+
 deploy-docs:
 	mkdocs gh-deploy
 
