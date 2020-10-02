@@ -7,6 +7,6 @@ Files: kaybee/*  docs/* scripts/* vulnerability-data/* MSR2019/* NOTICE.txt READ
 Copyright: 2019-2020 SAP SE or an SAP affiliate company and project "KB" contributors
 License: Apache-2.0
 
-Files: mkdocs.yml .chglog/* .github/* CHANGELOG.md CONTRIBUTING.md Makefile go.mod go.sum .pre-commit-config.yaml .gitignore
+Files: mkdocs.yml .chglog/* .github/* CHANGELOG.md CONTRIBUTING.md Makefile go.mod go.sum .pre-commit-config.yaml .gitignore */*.yaml
 Copyright: 2019-2020 SAP SE or an SAP affiliate company and project "KB" contributors
 License: CC0-1.0
