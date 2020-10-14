@@ -133,8 +133,15 @@ export:
           [ -d $vulnerability_id/$commit_id/before/$(dirname $F) ] || mkdir -p $vulnerability_id/$commit_id/before/$(dirname $F)
           [ -d $vulnerability_id/$commit_id/after/$(dirname $F) ] || mkdir -p $vulnerability_id/$commit_id/after/$(dirname $F)
 
-          git -C $repo_dir show $commit_id~1:$F > $vulnerability_id/$commit_id/before/$F
-          git -C $repo_dir show $commit_id:$F > $vulnerability_id/$commit_id/after/$F
+          if ( git -C $repo_dir cat-file -e $commit_id~1:$F &> /dev/null )
+          then
+            git -C $repo_dir show $commit_id~1:$F > $vulnerability_id/$commit_id/before/$F
+          fi
+
+          if ( git -C $repo_dir cat-file -e $commit_id:$F &> /dev/null )
+          then
+            git -C $repo_dir show $commit_id:$F > $vulnerability_id/$commit_id/after/$F
+          fi
         done
       }
 
