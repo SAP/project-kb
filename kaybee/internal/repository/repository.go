@@ -183,7 +183,7 @@ func (r *Repository) Statements() ([]model.Statement, error) {
 			// log.Println("    processing ", string(f.Name))
 			fnameLen := len(f.Name)
 			if f.Name[fnameLen-5:fnameLen] != ".yaml" {
-				color.Warn.Prompt("    skipping non-yaml file: " + f.Name)
+				// color.Warn.Prompt("    skipping non-yaml file: " + f.Name)
 				return nil
 			}
 			commitIter, err := r.Repo.Log(&git.LogOptions{FileName: &f.Name, Order: git.LogOrderCommitterTime})

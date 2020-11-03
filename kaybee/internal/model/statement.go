@@ -210,16 +210,16 @@ func (s *Statement) ToFile(path string) error {
 	// then write it to disk, as a sibling to the statement.yaml file
 
 	changedSourceCodeTarball := filepath.Join(filepath.Dir(s.Metadata.LocalPath), "changed-source-code.tar.gz")
-	log.Println("Looking for tarball: " + changedSourceCodeTarball)
+	//log.Println("Looking for tarball: " + changedSourceCodeTarball)
 	if _, err := os.Stat(changedSourceCodeTarball); err == nil {
 		_, err := copyFile(changedSourceCodeTarball, filepath.Join(filepath.Dir(dest), "changed-source-code.tar.gz"))
 		if err != nil {
 			log.Fatal("Could not copy file " + changedSourceCodeTarball + " to destination: " + filepath.Dir(dest))
 		} else {
-			log.Println("Tarball copied")
+			// log.Println("Tarball copied")
 		}
 	} else {
-		log.Println("No tarball found")
+		// log.Println("No tarball found")
 	}
 
 	return nil
