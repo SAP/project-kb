@@ -19,7 +19,7 @@ all: lint vet test build #ui
 build:  pkged.go fmt
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) -v
 
-pkged.go:
+pkged.go: internal/tasks/data/default_config.yaml
 	pkger -o kaybee
 
 # ui:
