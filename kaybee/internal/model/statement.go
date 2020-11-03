@@ -5,6 +5,7 @@ package model
 import (
 	"encoding/hex"
 	"encoding/json"
+	"io"
 
 	"fmt"
 	"io/ioutil"
@@ -157,6 +158,7 @@ type Metadata struct {
 
 // NewStatementFromFile creates a statement
 func NewStatementFromFile(path string) Statement {
+
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Println(err)
@@ -165,6 +167,16 @@ func NewStatementFromFile(path string) Statement {
 	if err := yaml.Unmarshal(data, &s); err != nil {
 		log.Println(err)
 	}
+
+	// TODO
+	// if there exist a tar.gz with sources,
+	// store the path to that tarball in the statement metadata
+	//
+	// EDIT: no need to do this: because the path to the statement
+	// is in the metadata, it is easy for the client to check
+	// if the tarball is there or not
+	s.Metadata.LocalPath = filepath.Dir(path)
+
 	return *s
 }
 
@@ -193,6 +205,17 @@ func (s *Statement) ToFile(path string) error {
 		log.Fatalln("Could not save statement to file: ", dest)
 		log.Fatal(err)
 	}
+
+	// if  the statement has an associated sources tarball,
+	// then write it to disk, as a sibling to the statement.yaml file
+	changedSourceCodeTarball := filepath.Join(s.Metadata.LocalPath, "changed-source-code.tar.gz")
+	if _, err := os.Stat(changedSourceCodeTarball); err == nil {
+		_, err := copyFile(changedSourceCodeTarball, filepath.Join(dest, "changed-source-code.tar.gz"))
+		if err != nil {
+			log.Fatal("Could not copy file " + changedSourceCodeTarball + " to destination: " + dest)
+		}
+	}
+
 	return nil
 }
 
@@ -297,4 +320,29 @@ func (set *CommitSet) Remove(cc ...Commit) {
 	for _, elem := range cc {
 		delete(set.data, elem)
 	}
+}
+
+func copyFile(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }
