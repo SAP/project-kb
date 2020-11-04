@@ -106,6 +106,7 @@ export:
         vulnerability_id=$4
         source_tar_path=$5
 
+        [ -d $vulnerability_id/$commit_id ] || mkdir -p $vulnerability_id/$commit_id
         if [ -f $source_tar_path/changed-source-code.tar.gz ]
         then
           echo "{" > $vulnerability_id/$commit_id/metadata.json
@@ -114,7 +115,6 @@ export:
           echo "  \"timestamp\" : \"1522160518\"," >> $vulnerability_id/$commit_id/metadata.json
           echo "  \"commit_id\" : \"$commit_id\"" >> $vulnerability_id/$commit_id/metadata.json
           echo "}" >> $vulnerability_id/$commit_id/metadata.json
-          echo "pwd=`pwd`"
           return
         fi
 
@@ -122,8 +122,6 @@ export:
         repo_dir=$(folder_for_repo $repo_url)
 
         timestamp=$(git -C $repo_dir show --no-patch --no-notes --pretty='%at' $commit_id)
-
-        [ -d $vulnerability_id/$commit_id ] || mkdir -p $vulnerability_id/$commit_id
 
         echo "{" > $vulnerability_id/$commit_id/metadata.json
         echo "  \"repository\" : \"$repo_url\"," >> $vulnerability_id/$commit_id/metadata.json
