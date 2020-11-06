@@ -132,7 +132,7 @@ scripts described in that paper](MSR2019)
 
 ### Sparta project
 
-The development of Project KB is partly supported by [EU-funded project Sparta](https://www.sparta.eu/).
+The development of Project KB is partly supported by EU-funded project [Sparta](https://www.sparta.eu/) and [AssureMOSS](https://assuremoss.eu).
 
 ### 3rd party vulnerability data sources
 
