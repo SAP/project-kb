@@ -155,6 +155,7 @@ export:
       # -----------------------------------------------
       #  Analyzing vulnerability {{ .VulnerabilityID}}
       # -----------------------------------------------
+      {{ if .VulnerabilityID }}
       [ -d ./{{ .VulnerabilityID }} ] || mkdir ./{{ .VulnerabilityID }}
       {{ $source_path := .Metadata.LocalPath }}
       [ -f {{ $source_path }}/changed-source-code.tar.gz ] && tar -xf {{ $source_path }}/changed-source-code.tar.gz -C ./{{ .VulnerabilityID }}
@@ -169,6 +170,7 @@ export:
       {{end}}{{end}}
       {{else}}
       # This vulnerability has no fix-commits
+      {{end}}
       {{end}}
 
     post: |-
