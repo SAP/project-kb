@@ -130,9 +130,12 @@ scripts described in that paper](MSR2019)
 
 ## Credits
 
-### Sparta project
+### EU-funded research projects
 
-The development of Project KB is partly supported by EU-funded project [Sparta](https://www.sparta.eu/) and [AssureMOSS](https://assuremoss.eu).
+The development of Project KB is partly supported by the following EU-funded projects:
+
+* [Sparta](https://www.sparta.eu/)
+* [AssureMOSS](https://assuremoss.eu).
 
 ### 3rd party vulnerability data sources
 
@@ -141,30 +144,20 @@ for compiling parts of this knowledge base. See MITRE's [Terms of
 Use](http://cve.mitre.org/about/termsofuse.html) for more information.
 See also [this notice](NOTICE.txt).
 
-## Features
-
-- Creation of vulnerability statements
-- Retrieval and reconciliation of statement from multiple repositories, based on
-  user-specified policies
-- Export to arbitrary formats with the built-in templating engine
-
 ## Requirements
 
 None, the `kaybee` binary is self-contained. Binary versions for Windows, Linux,
 MacOS are available for [download](https://github.com/SAP/project-kb/releases).
 
-## Limitations
+## Limitations and Known Issues
 
 This project is work-in-progress. The vulnerability knowledge base only contains
 information about vulnerabilities in Java and Python open source components.
 
-## Known Issues
-
 The list of current issues is available
 [here](https://github.com/SAP/project-kb/issues).
 
-Feel free to open a new issue if you think you found a bug or if you have a
-feature request.
+Feel free to open a new issue if you think you found a bug or if you have a feature request.
 
 ## How to obtain support
 
