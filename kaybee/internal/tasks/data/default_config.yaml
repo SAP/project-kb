@@ -104,17 +104,19 @@ export:
         commit_id=$2
         branch=$3
         vulnerability_id=$4
-        source_tar_path=$5
+        source_path=$5
 
         [ -d $vulnerability_id/$commit_id ] || mkdir -p $vulnerability_id/$commit_id
-        if [ -f $source_tar_path/changed-source-code.tar.gz ]
+        if [ -f $source_path/changed-source-code.tar.gz ]
         then
+          timestamp=`cat $vulnerability_id/$commit_id/timestamp`
           echo "{" > $vulnerability_id/$commit_id/metadata.json
           echo "  \"repository\" : \"$repo_url\"," >> $vulnerability_id/$commit_id/metadata.json
           echo "  \"branch\" : \"$branch\"," >> $vulnerability_id/$commit_id/metadata.json
-          echo "  \"timestamp\" : \"1522160518\"," >> $vulnerability_id/$commit_id/metadata.json
+          echo "  \"timestamp\" : \"$timestamp\"," >> $vulnerability_id/$commit_id/metadata.json
           echo "  \"commit_id\" : \"$commit_id\"" >> $vulnerability_id/$commit_id/metadata.json
           echo "}" >> $vulnerability_id/$commit_id/metadata.json
+          rm $vulnerability_id/$commit_id/timestamp
           return
         fi
 
@@ -154,8 +156,8 @@ export:
       #  Analyzing vulnerability {{ .VulnerabilityID}}
       # -----------------------------------------------
       [ -d ./{{ .VulnerabilityID }} ] || mkdir ./{{ .VulnerabilityID }}
-      {{ $source_tar := .Metadata.LocalPath }}
-      [ -f $source_tar/changed-source-code.tar.gz ] && tar -xf {{ .Metadata.LocalPath}}/changed-source-code.tar.gz -C ./{{ .VulnerabilityID }}
+      {{ $source_path := .Metadata.LocalPath }}
+      [ -f {{ $source_path }}/changed-source-code.tar.gz ] && tar -xf {{ $source_path }}/changed-source-code.tar.gz -C ./{{ .VulnerabilityID }}
 
       cat << EOM > ./{{ .VulnerabilityID }}/metadata.json
       {{ .ToJSON }}
@@ -163,7 +165,7 @@ export:
       {{ if .Fixes}}{{ $description :=  or ((index .Notes 0).Text) "" }}
       #make_vuln_metadata {{ .VulnerabilityID }} '{{ JoinNotes . }}' {{ LinksAsCSV . }}
       {{ $vuln := .VulnerabilityID}}{{ $repo := (index (index .Fixes 0).Commits 0).RepositoryURL }}
-      {{ range $f := .Fixes  }}{{ range .Commits }}checkout_commit {{$repo}} {{.ID}} {{$f.ID}} {{ $vuln }} {{ $source_tar }}
+      {{ range $f := .Fixes  }}{{ range .Commits }}checkout_commit {{$repo}} {{.ID}} {{$f.ID}} {{ $vuln }} {{ $source_path }}
       {{end}}{{end}}
       {{else}}
       # This vulnerability has no fix-commits
