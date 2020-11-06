@@ -61,6 +61,11 @@ The **tool** (`kaybee`) allows users to do the following:
 
 The **knowledge base**, offers a set of vulnerability statements that can be consumed using the `kaybee` tool.
 
+#### Future directions
+
+* tool support for mining repositories and databased of advisories to establish the (missing) link between
+vulnerabilities (as described in natural language in the advisories) and the corresponding fix-commits
+
 ## Getting started
 
 ### Installing the `kaybee` tool
