@@ -167,7 +167,7 @@ export:
       {{ $source_path := .Metadata.LocalPath }}
       [ -f {{ $source_path }}/changed-source-code.tar.gz ] && tar -xf {{ $source_path }}/changed-source-code.tar.gz -C ./{{ .VulnerabilityID }}
 
-      cat << EOM > ./{{ .VulnerabilityID }}/metadata.json
+      cat << 'EOM' > ./{{ .VulnerabilityID }}/metadata.json
       {{ .ToJSON }}
       EOM
       {{ if .Fixes}}{{ $description :=  or ((index .Notes 0).Text) "" }}
