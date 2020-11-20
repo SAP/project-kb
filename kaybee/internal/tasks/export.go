@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -152,6 +154,8 @@ func (t *ExportTask) Execute() (success bool) {
 		funcMap := template.FuncMap{
 			"LinksAsCSV": LinksAsCSV,
 			"JoinNotes":  JoinNotes,
+			"MatchPath":  path.Match,
+			"JoinPath":   path.Join,
 		}
 
 		tEach = *template.Must(template.New("each").Funcs(funcMap).Parse(s.Each))
