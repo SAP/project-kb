@@ -105,6 +105,12 @@ export:
         branch=$3
         vulnerability_id=$4
         source_path=$5
+        
+        if [ "$source_path" == "" ]
+        then 
+          echo "[ERROR] Skipping commit $commit_id in $vulnerability_id, empty source_path"
+          return
+        fi
 
         [ -d $vulnerability_id/$commit_id ] || mkdir -p $vulnerability_id/$commit_id
         if [ -f $source_path/changed-source-code.tar.gz ]
@@ -212,3 +218,156 @@ export:
     post: |
       </Vulnerabilities>
       </xml>
+  - target: changed-source-code
+    filename: changed-source-code.sh
+    pre: |
+      #!/bin/bash
+
+      # -----------------------------------------------------
+      #  Script to generate archives with changed source code
+      # -----------------------------------------------------
+
+      ##-------- E D I T   T H I S  S E C T I O N --------
+      ##
+      ## 
+      echo "Please edit the script if you want to delete existing changed-source-code archives"
+      
+      RECREATE=false
+      
+      ##---------------------- E N D --------------------
+      LOCAL_CLONES_DIR="/tmp"
+      
+      folder_for_repo(){
+        X=$1
+
+        # remove trailing slash
+        X=${X%/}
+
+        # remove everything until '://' is matched
+        X=${X#*:\/\/}
+
+        # replace _ for .
+        X=${X//./_}
+
+        # replace _ for /
+        X=${X//\//_}
+        echo ${LOCAL_CLONES_DIR}/$X
+      }
+
+      clone_once(){
+        DIR=$(folder_for_repo $1)
+
+        if [ -d $DIR ];
+        then
+            echo "Folder $DIR exists, skipping git clone"
+        else
+            echo "Cloning $1 to folder $DIR"
+            git clone $1 $DIR
+        fi
+      }
+
+      prepare_folder_for_compression(){
+        statement_path=$1
+  
+        #remove metadata files (if any)
+        find $statement_path -type f -name "metadata.json" -delete
+    
+        #uncomment this line to recreate archives
+        if [ "$RECREATE" = true ];
+        then
+          find $statement_path -type f -name "changed-source-code.tar.gz" -delete
+        fi
+      }
+      
+      compress_changed_code(){
+        statement_path=$1
+        
+        if [ -f $statement_path/changed-source-code.tar.gz ]
+        then
+          echo "[INFO] Skipping $statement_path, tar already exists"
+          return
+        fi
+        
+        touch $statement_path/changed-source-code.tar.gz
+        tar cfz $statement_path/changed-source-code.tar.gz --exclude='statement.yaml' --exclude='changed-source-code.tar.gz' -C $statement_path .
+        
+        #remove commit 
+        echo "rem -r `ls -1 -d $statement_path/*/`"
+        
+      }
+      
+      checkout_commit(){
+        repo_url=$1
+        commit_id=$2
+        branch=$3
+        vulnerability_id=$4
+        statement_path=$5
+
+        if [ "$statement_path" == "" ]
+        then 
+          echo "[ERROR] Skipping commit $commit_id in $vulnerability_id, empty statement_path"
+          return
+        fi
+        
+        if [ -f $statement_path/changed-source-code.tar.gz ]
+        then
+          return
+        fi
+
+        [ -d $statement_path/$commit_id ] || mkdir -p $statement_path/$commit_id
+        clone_once $repo_url
+        repo_dir=$(folder_for_repo $repo_url)
+
+        timestamp=$(git -C $repo_dir show --no-patch --no-notes --pretty='%at' $commit_id)
+        
+        echo "$timestamp" >> $statement_path/$commit_id/timestamp
+
+        echo "dir=$repo_dir"
+        echo "pwd=`pwd`"
+
+        # cd repository
+        for F in $(git -C $repo_dir diff  --name-only  $commit_id^..$commit_id);
+        do
+
+          echo "Checking out file: $F"
+          [ -d $statement_path/$commit_id/before/$(dirname $F) ] || mkdir -p $statement_path/$commit_id/before/$(dirname $F)
+          [ -d $statement_path/$commit_id/after/$(dirname $F) ] || mkdir -p $statement_path/$commit_id/after/$(dirname $F)
+
+          if ( git -C $repo_dir cat-file -e $commit_id~1:$F &> /dev/null )
+          then
+            git -C $repo_dir show $commit_id~1:$F > $statement_path/$commit_id/before/$F
+          fi
+
+          if ( git -C $repo_dir cat-file -e $commit_id:$F &> /dev/null )
+          then
+            git -C $repo_dir show $commit_id:$F > $statement_path/$commit_id/after/$F
+          fi
+        done
+
+      }
+
+    each: |+
+      # -----------------------------------------------
+      #  Processing vulnerability {{ .VulnerabilityID}}
+      # -----------------------------------------------
+      {{ if .VulnerabilityID }}
+      {{ $statement_path := .Metadata.LocalPath }}
+
+       
+      {{ if .Fixes}}
+      prepare_folder_for_compression {{ $statement_path }}
+      {{ $vuln := .VulnerabilityID}}{{ $repo := (index (index .Fixes 0).Commits 0).RepositoryURL }}
+      {{ range $f := .Fixes  }}{{ range .Commits }}checkout_commit {{$repo}} {{.ID}} {{$f.ID}} {{ $vuln }} {{ $statement_path }}
+      {{end}}{{end}}
+      compress_changed_code {{ $statement_path }}
+      {{else}}
+      # This vulnerability has no fix-commits
+      {{end}}
+      {{end}}
+      
+
+    post: |-
+      
+      # ------------------------------------------------
+      # This script was generated with KayBee
+      # ------------------------------------------------
