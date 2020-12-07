@@ -67,7 +67,7 @@ func (s *Statement) Hash() Checksum {
 		}
 
 		for _, al := range s.Aliases {
-			x += al
+			x += string(al)
 		}
 
 		s.hash = md5.Sum([]byte(x))
