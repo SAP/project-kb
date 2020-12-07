@@ -34,9 +34,7 @@ var (
 	// ErrConfigInvalidExportRegex is thrown when an invalid export regex is specified in a configuration
 	ErrConfigInvalidExportRegex = errors.New("Invalid export regex")
 
-	// ErrConfigPolicyMissing is thrown when no policy is specified in a configuration
-	// TODO: rename to ErrConfigPolicyMissing, the choice of using a default needs not be
-	// hardcoded here, so the term 'default' should not be used
+	// ErrConfigPolicyMissing is thrown when no policy is specified
 	ErrConfigPolicyMissing = errors.New("Policy not set")
 
 	// ErrConfigUnknownPolicy is thrown when an unknown/invalid policy is specified in a configuration
