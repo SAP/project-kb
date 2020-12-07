@@ -108,7 +108,7 @@ func (t *ExportTask) Execute() (success bool) {
 	var statementFile string
 
 	if filesystem.IsDir(t.source) {
-		// TODO this works only if the source directory contains directories that ocntain statements
+		// FIXME this works only if the source directory contains directories that ocntain statements
 		// if the source contains directly a statament, this does not work
 		dirs, err = ioutil.ReadDir(t.source)
 		if err != nil {
