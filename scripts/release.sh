@@ -38,12 +38,14 @@ gh release create v$RELEASE \
     kaybee/dist/kaybee-${RELEASE}_darwin-amd64 \
     kaybee/dist/kaybee-${RELEASE}_win-amd64 \
     --notes-file /tmp/CHANGELOG-${RELEASE}.md \
-    --draft \
     --title "v$RELEASE"
 
 echo "Update the version for the next relase cycle (Enter to proceed)"
 read
 nano $PROJECT_ROOT/kaybee/VERSION
 
-echo "Do not forget to create a release on GitHub"
+git add $PROJECT_ROOT/kaybee/VERSION
+RELEASE=`cat $PROJECT_ROOT/kaybee/VERSION`
+git commit -m "start working on version $RELEASE"
+
 echo "Done"
