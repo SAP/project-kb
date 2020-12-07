@@ -3,32 +3,76 @@
 package model
 
 import (
-	"encoding/hex"
+	"crypto/md5"
 	"encoding/json"
-	"io"
-
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
 	"gopkg.in/yaml.v2"
 )
 
+// const hashSize int = 80
+
+// Checksum is a checksum :-)
+type Checksum [16]byte
+
+var zeroChecksum Checksum = [16]byte{0}
+
 // Statement represents a vulnerability statement
 type Statement struct {
-	ID                uuid.UUID  `yaml:"-" json:"-"`
+	// ID                uuid.UUID  `yaml:"-" json:"-"`
 	VulnerabilityID   string     `yaml:"vulnerability_id" json:"vulnerability_id"`
 	Aliases           []Alias    `yaml:"-" json:"-"`
 	Notes             []Note     `yaml:"notes,omitempty" json:"notes"`
 	Fixes             []Fix      `yaml:"fixes,omitempty" json:"-"`
 	AffectedArtifacts []Artifact `yaml:"artifacts,omitempty" json:"affected_artifacts"`
 	Metadata          Metadata   `yaml:"-" json:"-"`
+	hash              Checksum
+}
+
+// Hash computes a unique identifiers for a Statement instance
+func (s *Statement) Hash() Checksum {
+	// FIXME
+	// if the values are changed after the first invocation to this method,
+	// the results might be unexpected... (one would need to manually reset hash to ""
+	// for this to work as expected)
+
+	if s.hash == zeroChecksum {
+		var x string
+
+		x += s.VulnerabilityID
+		for _, n := range s.Notes {
+			x += n.Text
+			for _, l := range n.Links {
+				x += l
+			}
+		}
+
+		for _, f := range s.Fixes {
+			for _, c := range f.Commits {
+				x += c.RepositoryURL + c.ID
+			}
+		}
+
+		for _, a := range s.AffectedArtifacts {
+			x += a.ID + a.Reason + strconv.FormatBool(a.Affected)
+		}
+
+		for _, al := range s.Aliases {
+			x += al
+		}
+
+		s.hash = md5.Sum([]byte(x))
+	}
+	return s.hash
 }
 
 func (s Statement) String() (output string) {
@@ -56,7 +100,23 @@ type Alias string
 type Fix struct {
 	ID      string
 	Commits []Commit
+	hash    Checksum
 	// Metadata Metadata `yaml:"metadata,omitempty"`
+}
+
+// Hash returns a unique identifier for the Fix, based on its contents
+func (f Fix) Hash() Checksum {
+	if f.hash == zeroChecksum {
+		var x string
+
+		x += f.ID
+		for _, c := range f.Commits {
+			x += c.RepositoryURL + c.ID
+		}
+
+		f.hash = md5.Sum([]byte(x))
+	}
+	return f.hash
 }
 
 // Commit identifies a single commit in a repository
@@ -79,12 +139,12 @@ type Artifact struct {
 type Note struct {
 	Links []string `yaml:"links" json:"links"`
 	Text  string   `json:"text"`
-	hash  string
+	hash  Checksum
 }
 
 // Hash computes a unique identifiers for a Note value
-func (n Note) Hash() string {
-	if n.hash == "" {
+func (n Note) Hash() Checksum {
+	if n.hash == zeroChecksum {
 		var x string
 
 		x += n.Text
@@ -92,10 +152,9 @@ func (n Note) Hash() string {
 			x += l
 		}
 
-		n.hash = hex.EncodeToString([]byte(x))
+		n.hash = md5.Sum([]byte(x))
 	}
 	return n.hash
-
 }
 
 func (n Note) String() string {
@@ -176,6 +235,7 @@ func NewStatementFromFile(path string) Statement {
 	// is in the metadata, it is easy for the client to check
 	// if the tarball is there or not
 	s.Metadata.LocalPath = filepath.Dir(path)
+	s.hash = zeroChecksum
 
 	return *s
 }
@@ -208,8 +268,8 @@ func (s *Statement) ToFile(path string) error {
 
 	// if  the statement has an associated sources tarball,
 	// then write it to disk, as a sibling to the statement.yaml file
-
 	changedSourceCodeTarball := filepath.Join(filepath.Dir(s.Metadata.LocalPath), "changed-source-code.tar.gz")
+
 	//log.Println("Looking for tarball: " + changedSourceCodeTarball)
 	if _, err := os.Stat(changedSourceCodeTarball); err == nil {
 		_, err := copyFile(changedSourceCodeTarball, filepath.Join(filepath.Dir(dest), "changed-source-code.tar.gz"))
@@ -234,6 +294,8 @@ func (s Statement) ToJSON() string {
 	}
 	return string(data)
 }
+
+// FIXME: get rid of this, not really needed...
 
 // Matches applies a list of map of param -> regexes to a statement structure
 func Matches(Iface interface{}, regexes map[string][]*regexp.Regexp) bool {

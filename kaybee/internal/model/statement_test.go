@@ -131,3 +131,16 @@ func TestCommitSet(t *testing.T) {
 	assert.True(t, ccs.Contains(cc3), "cc3 is in the set!")
 
 }
+
+func TestStatementHashComparison(t *testing.T) {
+	var s1, s2 Statement
+	s1 = NewStatementFromFile("../../testdata/statements/statement_commits.yaml")
+	s2 = NewStatementFromFile("../../testdata/statements/statement_commits.yaml")
+	assert.Equal(t, s1.Hash(), s2.Hash(), "Hashes differ (for two identical statements)")
+
+	s2.Fixes = nil
+	s2.hash = [16]byte{}
+
+	assert.NotEqual(t, s1.Hash(), s2.Hash(), "Hashes are the same (for different statements)")
+
+}
