@@ -186,8 +186,8 @@ def test_add_commits_to_database(example_vulnerability, example_vulnerability_gi
     assert row['hunks'] == "[(6, 8), (11, 13)]"
     assert row['commit_message_reference_content'] == None
     assert row['preprocessed_message'] == "maven release plugin prepare development iteration"
-    assert row['preprocessed_diff'] == "artifactid artifact id promote build artifactid artifact id version version version snapshot version packaging hpi packaging url https github com jenkinsci project artifactid artifact id plugin url tag promote build tag tag head tag scm"
-    assert row['preprocessed_changed_files'] == "pom.xml"
+    # assert row['preprocessed_diff'] == "artifactid artifact id promote build artifactid artifact id version version version snapshot version packaging hpi packaging url https github com jenkinsci project artifactid artifact id plugin url tag promote build tag tag head tag scm"
+    assert row['preprocessed_changed_files'] == "pom.xml pom xml"
     assert row['preprocessed_commit_message_reference_content'] == None
 
     # test adding without reference content: to speed up the time

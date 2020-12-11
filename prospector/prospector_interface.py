@@ -101,6 +101,10 @@ def load_vulnerabilities():
 
 # @st.cache
 def map_description_to_repository_url(vulnerability_id, description, vulnerabilities_df, repository_url_df):
+    # if the vulnerabilities df is empty
+    if type(vulnerabilities_df) == type(None):
+        return 
+
     if vulnerability_id in list(vulnerabilities_df.index):
         return vulnerabilities_df.at[vulnerability_id, 'repo_url']
 
@@ -134,7 +138,7 @@ def gather_tags(repo_url, tags_df):
 
 # @st.cache
 def get_vulnerability_data(vulnerability_id, vulnerabilities_df, nvd_references_df):
-    if vulnerability_id in list(vulnerabilities_df.index):
+    if type(vulnerabilities_df) != type(None) and vulnerability_id in list(vulnerabilities_df.index):
         repo_url, cve_description, cve_published_date, preprocessed_description = vulnerabilities_df.loc[vulnerability_id]
         # cve_project_name = ' '.join(re.split('/|-|\.', cve_repo_url.lstrip('https?://')))
         references = {nvd_references_df.at[index, 'url'] : nvd_references_df.at[index, 'preprocessed_content'] for index in nvd_references_df[nvd_references_df.vulnerability_id == vulnerability_id].index}
@@ -206,7 +210,7 @@ def dashboard_page(state):
             state.clear()
 
         # if it was a new vulnerability, add it to the DB
-        if state.vulnerability_id not in list(state.vulnerabilities_df.index):
+        if type(state.vulnerabilities_df) == type(None) or state.vulnerability_id not in list(state.vulnerabilities_df.index):
             vulnerabilities_connection, vulnerabilities_cursor = database.connect_with_vulnerabilities_database(vulnerabilities_db_path)
             database.add_vulnerability_to_database(vulnerabilities_connection, state.vulnerability_id, repo_url, vulnerability_description, published_timestamp)
             

@@ -867,7 +867,7 @@ def add_vulnerability_to_database(connection, vulnerability_id, repo_url, descri
             {'vulnerability_id':vulnerability_id, 'repo_url':repo_url, 'description':description, 'published_timestamp':str(published_timestamp), 'preprocessed_description':preprocessed_description})
     
         # add the references to the database
-        if len(references) > 0:
+        if references != None and len(references) > 0:
             add_vulnerability_references_to_database(connection, vulnerability_id, references, driver=driver, verbose=verbose)
     elif verbose:
         print("    There is already a vulnerability with ID {} in the database".format(vulnerability_id))
