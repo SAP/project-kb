@@ -296,17 +296,6 @@ def dashboard_page(state):
             st.write("Showing the top {} candidates from {} candidates considered".format(k, len(advisory_record.ranking_vectors)))
             st.write(output)
 
-    #    with st.beta_expander(label="Developers only section ;)", expanded=False):
-            st.subheader(':rainbow: MAGIC :rainbow:')
-            if state.vulnerability_id not in list(state.fixes_df.vulnerability_id):
-                st.write("This is an unknown vulnerability")
-            else:
-                known_fix_commits = list(state.fixes_df[state.fixes_df.vulnerability_id == state.vulnerability_id].commit_id)
-                st.write(known_fix_commits)
-                for commit_id in known_fix_commits:
-                    if commit_id in advisory_record.ranked_candidate_commits:
-                        st.write("Fix commit {} is on position {}".format(commit_id, advisory_record.ranked_candidate_commits.index(commit_id)))
-
 def create_advisory_record(vulnerability_id, published_timestamp, repo_url, references, advisory_references, vulnerability_description, prospector_connection, preprocessed_description, relevant_tags):
     return rank.Advisory_record(vulnerability_id, published_timestamp, repo_url, references, advisory_references, vulnerability_description, prospector_connection, preprocessed_description, relevant_tags)
 
