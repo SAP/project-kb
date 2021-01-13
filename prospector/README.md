@@ -1,7 +1,7 @@
 # Using Machine-Learning and Natural Language Processing to Find Security-Fixes for Vulnerabilities in Open-Source Software Repositories.
 
 ## Thesis Result Daan Hommersom
-Thesis done in partial fulfillment of the requirements for the degree of Master of Science in Data Science & Entrepreneurship at the Jheronimus Academy of Data Science during a raduation internship at SAP.
+Thesis done in partial fulfillment of the requirements for the degree of Master of Science in Data Science & Entrepreneurship at the Jheronimus Academy of Data Science during a graduation internship at SAP.
 
 # Prospector
 Prospector is a tool to reduce the effort needed in finding security fixes forvulnerabilities in open source software. Two interfaces have been developed where the user can provide the information; a command line interface, and a dashboard developed in StreamLit. If Prospector is used to look for fix commits for a vulnerability which is in the NVD, the user only needs to provide the vulnerability identifier (CVE) and Prospector will create a vulnerability statement automatically through the NVD API.
@@ -23,4 +23,4 @@ For vulnerabilities that are in the NVD (CVEs), you only need to provide the CVE
 
 ### Database & git-explorer
 
-Prospector uses a SQLite database to store commit content. When providing a vulnerability that affects a repository that is not in your database yet, the extraction of this content can take a while (approximately fifty minutes for one-thousand commits). 
+Prospector uses a SQLite database to store commit content. When providing a vulnerability that affects a repository that is not in your database yet, the extraction of this content can take a while (approximately fifty minutes for one-thousand commits). The vulnerability information is also stored in a database, which is used to try to predict a repository URL for the affected project. However, this will only work well after you have added a large number of vulnerabilities do your database.
