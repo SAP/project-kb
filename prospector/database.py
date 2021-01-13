@@ -838,7 +838,7 @@ def add_vulnerability_to_database(connection, vulnerability_id, repo_url, descri
     if if_new_vulnerability(cursor, vulnerability_id):
 
         # gather information for the new vulnerability if needed
-        if description != None and published_timestamp != None and references != None:
+        if description == None or published_timestamp == None or references == None:
             try:
                 nvd_description, nvd_published_timestamp, nvd_references = extract_nvd_content(vulnerability_id)
             except: #if the vulnerability is not in the NVD

@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from joblib import load
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MinMaxScaler
 import spacy
 nlp = spacy.load('en_core_web_sm')
 
@@ -37,11 +38,15 @@ import filter
 import rank
 import main as prospector_main
 
-### TO SPECIFY
+### Magic Numbers
 # MODELS
-# model_path = 'models/LR_15_components.joblib'
-min_max_scaler_path = 'models/PROSPECTOR_min_max_scaler.joblib'
-model_path = 'models/PROSPECTOR_LR_FINAL.joblib'
+min_max_scaler_path = "models/Prospector-universal_columns_scaler.joblib"
+model_path = "models/Prospector-LR.joblib"
+
+# COLUMNS
+vulnerability_specific_columns = ['message_score', 'changed_files_score', 'git_diff_score', 'message_score_reference_content','changed_files_score_code_tokens']
+universal_columns = ['n_hunks', 'avg_hunk_size', 'n_changed_files', 'vulnerability_timestamp']
+columns_to_drop = ['path_similarity_score', 'git_diff_score_code_tokens', 'message_score_code_tokens', 'changed_files_score_reference_content', 'git_diff_score_reference_content']
 
 # DATABASE
 vulnerabilities_db_path = 'data/prospector-vulnerabilities.db'
@@ -56,7 +61,7 @@ def main():
 
     try:
         if state.vulnerabilities_df == None:
-            state.vulnerabilities_df, state.nvd_references_df, state.advisory_references_df, state.tags_df, state.repository_url_df, state.fixes_df = load_vulnerabilities()
+            state.vulnerabilities_df, state.db_references_df, state.advisory_references_df, state.tags_df, state.repository_url_df, state.fixes_df = load_vulnerabilities()
     except:
         pass
 
@@ -83,7 +88,7 @@ def load_vulnerabilities():
     
     print("Reading vulnerabilities")
     vulnerabilities_df = pd.read_sql("SELECT * FROM vulnerabilities", vulnerabilities_connection).set_index("vulnerability_id")
-    nvd_references_df = pd.read_sql("SELECT vulnerability_id, url, preprocessed_content FROM vulnerability_references", vulnerabilities_connection)
+    db_references_df = pd.read_sql("SELECT vulnerability_id, url, preprocessed_content FROM vulnerability_references", vulnerabilities_connection)
     advisory_references_df = pd.read_sql("SELECT vulnerability_id, url FROM advisory_references", vulnerabilities_connection)
     fixes_df = pd.read_sql("SELECT * FROM fix_commits", vulnerabilities_connection)
 
@@ -97,7 +102,7 @@ def load_vulnerabilities():
         repository_url_df.at[i, 'project_name'] = rank.simpler_filter_text(re.sub('^https?://|[^\w]', ' ', repo_url)).lower()
     repository_url_df['project_name'] = repository_url_df.apply(lambda x: ' '.join([token for token in x['project_name'].split(' ') if token not in ['github', 'com', 'git', 'org']]), axis=1)
 
-    return vulnerabilities_df, nvd_references_df, advisory_references_df, tags_df, repository_url_df, fixes_df
+    return vulnerabilities_df, db_references_df, advisory_references_df, tags_df, repository_url_df, fixes_df
 
 # @st.cache
 def map_description_to_repository_url(vulnerability_id, description, vulnerabilities_df, repository_url_df):
@@ -137,16 +142,16 @@ def gather_tags(repo_url, tags_df):
         database.add_tags_to_database(prospector_connection, tags=None, git_repo=None, repo_url=repo_url, verbose=True)
 
 # @st.cache
-def get_vulnerability_data(vulnerability_id, vulnerabilities_df, nvd_references_df):
+def get_vulnerability_data(vulnerability_id, vulnerabilities_df, db_references_df):
     if type(vulnerabilities_df) != type(None) and vulnerability_id in list(vulnerabilities_df.index):
-        repo_url, cve_description, cve_published_date, preprocessed_description = vulnerabilities_df.loc[vulnerability_id]
+        repo_url, cve_description, cve_published_timestamp, preprocessed_description = vulnerabilities_df.loc[vulnerability_id]
         # cve_project_name = ' '.join(re.split('/|-|\.', cve_repo_url.lstrip('https?://')))
-        references = {nvd_references_df.at[index, 'url'] : nvd_references_df.at[index, 'preprocessed_content'] for index in nvd_references_df[nvd_references_df.vulnerability_id == vulnerability_id].index}
+        references = list(db_references_df[db_references_df.vulnerability_id == vulnerability_id].url)
     else:
-        cve_description, cve_published_date, references = database.extract_nvd_content(vulnerability_id)
-        references = {reference : '' for reference in references}
+        cve_description, cve_published_timestamp, references = database.extract_nvd_content(vulnerability_id)
+        references = []
         preprocessed_description = rank.simpler_filter_text(cve_description)
-    return cve_description, cve_published_date, preprocessed_description, references
+    return cve_description, cve_published_timestamp, preprocessed_description, references
 
 # @st.cache(allow_output_mutation=True)
 def connect_with_commits_database(path):
@@ -179,8 +184,9 @@ def dashboard_page(state):
         ranking vectors are computed. These ranking vectors consist of several components that
         can be used to predict whether a candidate commit is the fix commit we are looking for.
         These candidates are then ranked on this probability score. 
-        In 75% of the cases, the fix is in the top 5. In 83% in the top 5, and in
-        87% in the top 20.
+        
+        In 77.68% of the cases, the fix is in the top 5. In 84.03% in the top 10,
+        and in 88.59% in the top 20.
     ''')
 
     st.subheader("ADVISORY RECORD")
@@ -188,18 +194,18 @@ def dashboard_page(state):
 
     if state.vulnerability_id:
         try:
-            cve_description, cve_published_date, preprocessed_description, references = get_vulnerability_data(state.vulnerability_id, state.vulnerabilities_df, state.nvd_references_df)
+            cve_description, cve_published_timestamp, preprocessed_description, references = get_vulnerability_data(state.vulnerability_id, state.vulnerabilities_df, state.db_references_df)
         except:
             references = st.text_input("Please provide useful references (separated by commas)")
             references = references.split(',')
-            cve_description, cve_published_date, preprocessed_description = '', time.time(), None
+            cve_description, cve_published_timestamp, preprocessed_description = '', time.time(), None
     else:
-        cve_description, cve_published_date, preprocessed_description, references = '', time.time(), None, []
+        cve_description, cve_published_timestamp, preprocessed_description, references = '', time.time(), None, []
 
     vulnerability_description = st.text_area("Vulnerability description", value=cve_description)
     project_name = st.text_input("Project name", value=' '.join([token.text for token in nlp(vulnerability_description) if token.tag_ == 'NNP']))
     repo_url = st.text_input("Repository URL", value=map_description_to_repository_url(vulnerability_id=state.vulnerability_id, description=project_name, vulnerabilities_df=state.vulnerabilities_df, repository_url_df=state.repository_url_df) if project_name != '' else '')
-    published_date = st.date_input("Vulnerability published date", value=datetime.fromtimestamp(int(cve_published_date)))
+    published_date = st.date_input("Vulnerability published date", value=datetime.fromtimestamp(int(cve_published_timestamp)))
     published_timestamp = int(time.mktime(published_date.timetuple()))
     
     state.advisory_record_confirmed = st.button("CONFIRM ADVISORY RECORD") if not state.advisory_record_confirmed else True
@@ -217,7 +223,7 @@ def dashboard_page(state):
             # if it was not an NVD CVE, or the extraction failed
             if len(references) == 0:
                 try:
-                    cve_description, cve_published_date, references = database.extract_nvd_content(state.vulnerability_id)
+                    cve_description, cve_published_timestamp, references = database.extract_nvd_content(state.vulnerability_id)
                     references = [reference for reference in references]
                 except:
                     references = st.text_input("Please provide useful references (separated by commas)")
@@ -226,13 +232,14 @@ def dashboard_page(state):
             database.add_vulnerability_references_to_database(vulnerabilities_connection, state.vulnerability_id, references, driver=None)
             prospector_connection, prospector_cursor = connect_with_commits_database(commits_db_path)
             database.add_tags_to_database(prospector_connection, tags=None, git_repo=None, repo_url=repo_url, verbose=True)
-            state.vulnerabilities_df, state.nvd_references_df, state.advisory_references_df, state.tags_df, state.repository_url_df, state.fixes_df = load_vulnerabilities()
+            state.vulnerabilities_df, state.db_references_df, state.advisory_references_df, state.tags_df, state.repository_url_df, state.fixes_df = load_vulnerabilities()
 
         # gather values
         repository_tags = gather_tags(repo_url, state.tags_df)
         versions_in_description = filter.retreive_all_versions_from_description(vulnerability_description)
         tags_in_description = list(dict.fromkeys([tag for version in versions_in_description for tag in filter.get_tag_for_version(repository_tags, version)]))
-        references = [state.nvd_references_df.at[index, 'url'] for index in state.nvd_references_df[state.nvd_references_df.vulnerability_id == state.vulnerability_id].index]
+        references = [state.db_references_df.at[index, 'url'] for index in state.db_references_df[state.db_references_df.vulnerability_id == state.vulnerability_id].index]
+    
         advisory_references = list(state.advisory_references_df[state.advisory_references_df.vulnerability_id == state.vulnerability_id].url)
 
         # allow the user to influence the filtering
@@ -240,8 +247,12 @@ def dashboard_page(state):
         if state.advanced_settings:
 
             # the adding of references can be gone wrong
-          
-            since, until = st.slider("Published date based interval", min_value = published_date - timedelta(days=730), max_value = published_date + timedelta(days=100), value=(published_date - timedelta(days=730), published_date + timedelta(days=100)))
+            first_commit_timestamp = rank.get_first_commit_timestamp(repo_url) #@TODO: add a column to the database containing this value
+            first_commit_date, today = datetime.fromtimestamp(int(first_commit_timestamp)).date(), datetime.fromtimestamp(int(time.time())).date()
+            lower_bound = published_date - timedelta(days=730) if published_date - timedelta(days=730) > first_commit_date else first_commit_date
+            upper_bound = published_date + timedelta(days=100) if published_date + timedelta(days=100) < today else today
+            
+            since, until = st.slider("Published date based interval", min_value = first_commit_date, max_value = today, value=(lower_bound, upper_bound))
             since, until = int(time.mktime(since.timetuple())), int(time.mktime(until.timetuple()))
 
             # references
@@ -252,14 +263,13 @@ def dashboard_page(state):
                 database.add_vulnerability_references_to_database(vulnerabilities_connection, state.vulnerability_id, references, driver=None)
 
             selected_references = st.multiselect('Advisory references', tuple(references), default=tuple(references))
-            # references_content = st.text_area("Reference content", value=rank.extract_n_most_occurring_words(' '.join([rank.remove_project_name_from_string(project_name=project_name, string=references[reference]) for reference in selected_references]), n=20))
 
             # affected versions
             relevant_tags = st.multiselect('Relevant tags', tuple(repository_tags), default=tuple(tags_in_description) if len(tags_in_description) != 0 else None)
             # st input int k
             k = st.number_input("The number of results to show", min_value=1, max_value=50, value=10, step=1)
         else:
-            # references_content = rank.extract_n_most_occurring_words(' '.join([rank.remove_project_name_from_string(project_name=project_name, string=references[reference]) for reference in tuple(references.keys())]), n=20)
+            selected_references = references
             relevant_tags = tags_in_description
             since, until = None, None
             k = 10
@@ -278,16 +288,24 @@ def dashboard_page(state):
             prospector_connection, prospector_cursor = connect_with_commits_database(commits_db_path)
 
             preprocessed_description = rank.simpler_filter_text(vulnerability_description)
-            # preprocessed_description += references_content
 
-            advisory_record = rank.Advisory_record(state.vulnerability_id, published_timestamp, repo_url, selected_references, advisory_references, vulnerability_description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=relevant_tags, verbose=True, since=since, until=until)
+            references_content = tuple(state.db_references_df[(state.db_references_df.vulnerability_id == state.vulnerability_id) & (state.db_references_df.url.isin(selected_references))].preprocessed_content)
+            references_content = rank.extract_n_most_occurring_words(rank.remove_forbidden_words_from_string(string=' '.join(references_content), forbidden_words = rank.reference_stopwords + project_name.split(' ')), n=20)
+            
+            st.write(references_content)
+
+            advisory_record = rank.Advisory_record(state.vulnerability_id, published_timestamp, repo_url, selected_references, references_content, advisory_references, vulnerability_description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=relevant_tags, verbose=True, since=since, until=until)
             
             print("\nGathering candidate commits and computing ranking vectors.")
             advisory_record.gather_candidate_commits()
             advisory_record.compute_ranking_vectors()
-            advisory_record.ranking_vectors.iloc[:,1:] = min_max_scaler.transform(advisory_record.ranking_vectors.iloc[:,1:]) #starting from 1 to skip the commit ID
-            advisory_record.ranked_candidate_commits = rank.rank_candidates(model, advisory_record.ranking_vectors)
 
+            # scaling some columns using the pretrained scaler, and some vulnerability specific
+            advisory_record.ranking_vectors[vulnerability_specific_columns] = MinMaxScaler().fit_transform(advisory_record.ranking_vectors[vulnerability_specific_columns])
+            advisory_record.ranking_vectors[universal_columns] = min_max_scaler.transform(advisory_record.ranking_vectors[universal_columns])
+            advisory_record.ranking_vectors.drop(columns=columns_to_drop, inplace=True)
+
+            advisory_record.ranked_candidate_commits = rank.rank_candidates(model, advisory_record.ranking_vectors)
 
             advisory_record.ranking_vectors.set_index('commit_id', inplace=True)
             output = prospector_main.advisory_record_to_output(advisory_record, model, prospector_cursor, k=k)
@@ -372,7 +390,6 @@ class _SessionState:
 
         self._state["hash"] = self._state["hasher"].to_bytes(self._state["data"], None)
 
-
 def _get_session():
     session_id = get_report_ctx().session_id
     session_info = Server.get_current()._get_session_info(session_id)
@@ -381,7 +398,6 @@ def _get_session():
         raise RuntimeError("Couldn't get your Streamlit Session object.")
 
     return session_info.session
-
 
 def _get_state(hash_funcs=None):
     session = _get_session()

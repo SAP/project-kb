@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MinMaxScaler
 
 current_working_directory = os.getcwd()
 os.chdir('git_explorer')
@@ -24,27 +25,31 @@ import database
 import filter
 import rank
 
+### Magic Numbers
+# MODELS
+min_max_scaler_path = "models/Prospector-universal_columns_scaler.joblib"
+model_path = "models/Prospector-LR.joblib"
+
+# COLUMNS
+vulnerability_specific_columns = ['message_score', 'changed_files_score', 'git_diff_score', 'message_score_reference_content','changed_files_score_code_tokens']
+universal_columns = ['n_hunks', 'avg_hunk_size', 'n_changed_files', 'vulnerability_timestamp']
+columns_to_drop = ['path_similarity_score', 'git_diff_score_code_tokens', 'message_score_code_tokens', 'changed_files_score_reference_content', 'git_diff_score_reference_content']
+
+
 @plac.annotations(
     vulnerability_id=plac.Annotation("A vulnerability ID (typically a CVE)", type=str),
     verbose=plac.Annotation("Definition of verbose: containing more words than necessary: WORDY", 'flag', 'v'),
     description=plac.Annotation("The vulnerability description", "option", type=str),
     published_timestamp=plac.Annotation("The timestamp at which the vulnerability is published (int)", "option", type=int),
     repo_url=plac.Annotation("The affected repository (typically a GitHub URL)", "option", type=str),
+    project_name=plac.Annotation("The name of the affected project (typically a GitHub URL)", "option", type=str),
     references=plac.Annotation("A list of references that provide additional information on the vulnerability", "option", type=list),
     k=plac.Annotation("The number of candidates to show", "option", type=int),
-    vulnerability_specific_scaling=plac.Annotation("To apply vulnerability specific scaling, or apply the pre-trained MinMaxScaler", "option", type=bool),
-    model=plac.Annotation("Ranking model", "option", choices=['logistic_regression'])
+    vulnerability_specific_scaling=plac.Annotation("To apply vulnerability specific scaling, or apply the pre-trained MinMaxScaler", "option", type=bool)
 )
-def main(vulnerability_id, verbose, description=None, published_timestamp=None, repo_url=None, references=None, k=10, vulnerability_specific_scaling=False, model='logistic_regression'):
-    
-    if model == 'logistic_regression':
-        if vulnerability_specific_scaling:
-            # model = load('models/PROSPECTOR_LR_FINAL.joblib')
-            model = load('models/PROSPECTOR_LR.joblib')
-        else:
-            min_max_scaler_on_all_samples = load('models/PROSPECTOR_min_max_scaler.joblib')
-            # model = load('models/PROSPECTOR_LR_with_scaling_on_all_samples.joblib')
-            model = load('models/PROSPECTOR_LR_FINAL.joblib')
+def main(vulnerability_id, verbose, description=None, published_timestamp=None, repo_url=None, project_name=None, references=None, k=10, vulnerability_specific_scaling=False):
+    model = load(model_path)
+    universal_columns_scaler = load(min_max_scaler_path)
 
     # databases are created in the notebook database_creation.ipynb 
     # the vulnerabilities database
@@ -123,7 +128,6 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
                 print('Provide the (GitHub) URL of the affected repository:')
                 repo_url = input()
                 repo_url = re.sub('\.git$|/$', '', repo_url)
-
             print('repo_url:', repo_url)
 
         # add to the database
@@ -135,11 +139,26 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
         # add the references to the database
         database.add_vulnerability_references_to_database(vulnerabilities_connection, vulnerability_id, references, driver=None, verbose=verbose)
     
+    # determine the project_name
+    if project_name == None:
+        if verbose: print('Suggesting a project name')
+        project_name = rank.extract_project_name_from_repository_url(repo_url)
+        print('Does the vulnerability affect the following project: {} [Y/n]'.format(project_name))
+        choice = input()
+        if choice.lower() in ['', 'y', 'yes']: #@TODO: can be a while, where it is either yes or no, not enter
+            print('Confirmed')
+        else:
+            print('Provide the name of the affected project:')
+            project_name = input()
+
+    references_content = tuple(pd.read_sql("SELECT vulnerability_id, url, preprocessed_content FROM vulnerability_references WHERE vulnerability_id = '{}' AND url IN {}".format(vulnerability_id, tuple(references)), vulnerabilities_connection).preprocessed_content)
+    references_content = rank.extract_n_most_occurring_words(rank.remove_forbidden_words_from_string(string=' '.join(references_content), forbidden_words = rank.reference_stopwords + project_name.split(' ')), n=20)
+
     # @TODO: now adding all advisory references --> change to only using the provided references
     advisory_references = [advisory_reference['url'] for advisory_reference in vulnerabilities_cursor.execute("SELECT url FROM advisory_references WHERE vulnerability_id = :vulnerability_id", {'vulnerability_id': vulnerability_id})]
 
     # creating advisory record
-    advisory_record = rank.Advisory_record(vulnerability_id, published_timestamp, repo_url, references, advisory_references, description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=None, verbose=verbose, since=None, until=None)
+    advisory_record = rank.Advisory_record(vulnerability_id, published_timestamp, repo_url, references, references_content, advisory_references, description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=None, verbose=verbose, since=None, until=None)
 
     if verbose:
         print("\nThe following advisory record has been created:")
@@ -148,17 +167,21 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
         print(" - Vulnerability published timestamp: {}".format(advisory_record.published_timestamp))
         print(" - Affected project: {}".format(advisory_record.project_name))
         print(" - Affected repository: {}".format(advisory_record.repo_url))
+        print(" - References content extracted: {}".format(advisory_record.references_content))
 
     if verbose: print("\nGathering candidate commits:")
     advisory_record.gather_candidate_commits()
 
-    if verbose: print("\nRanking candidate commits:")
+    if verbose: print("\Computing ranking vectors:")
     advisory_record.compute_ranking_vectors(vulnerability_specific_scaling)
 
     if vulnerability_specific_scaling == False:
-        if verbose: print("\nApplying pre-trained MinMaxScaler")
-        advisory_record.ranking_vectors.iloc[:,1:] = min_max_scaler_on_all_samples.transform(advisory_record.ranking_vectors.iloc[:,1:]) #starting from 1 to skip the commit ID
+        if verbose: print("\nscaling some columns using the pretrained scaler, and some vulnerability specific")
+        advisory_record.ranking_vectors[vulnerability_specific_columns] = MinMaxScaler().fit_transform(advisory_record.ranking_vectors[vulnerability_specific_columns])
+        advisory_record.ranking_vectors[universal_columns] = universal_columns_scaler.transform(advisory_record.ranking_vectors[universal_columns])
+    advisory_record.ranking_vectors.drop(columns=columns_to_drop, inplace=True)
 
+    if verbose: print("\nRanking the candidate commits:")
     advisory_record.ranked_candidate_commits = rank.rank_candidates(model, advisory_record.ranking_vectors)
 
     if verbose: print('\nResults:')
@@ -183,9 +206,9 @@ def advisory_record_to_output(advisory_record, model, prospector_cursor, k=20):
     string += 'This advisory record is used to select candidate commits. For these candidate commits,\n'
     string += 'ranking vectors are computed. These ranking vectors consist of several components that\n'
     string += 'can be used to predict whether a candidate commit is the fix commit we are looking for.\n'
-    string += 'These candidates are then ranked on this probability score, and the first ten are shown\n'
-    string += 'in this file. In 75% of the cases, the fix is in the top 5. In 83% in the top 5, and in \n'
-    string += '87% in the top 20.'
+    string += 'These candidates are then ranked on this probability score, and the first {} are shown\n'.format(k)
+    string += 'in this file. In 77.68% of the cases, the fix is in the top 5. In 84.03% in the top 10, \n'
+    string += 'and in 88.59% in the top 20.'
 
     string += '\n\nFEATURES:\n'
     string += 'The message_score, git_diff_score, changed_files_score reflect the lexical similarity with \n'
