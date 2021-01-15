@@ -335,7 +335,10 @@ def inspect_page(state):
         st.write('Published date:', datetime.fromtimestamp(int(state.vulnerabilities_df.at[random_vulnerability, 'published_date'])))
 
 class _SessionState:
-    #https://github.com/gaurav-gunhawk/Python/blob/master/Streamlit/Streamlit-SessionStateManagement.py
+    '''
+    Copied from:
+        #https://github.com/gaurav-gunhawk/Python/blob/master/Streamlit/Streamlit-SessionStateManagement.py
+    '''
     def __init__(self, session, hash_funcs):
         """Initialize SessionState instance."""
         self.__dict__["_state"] = {

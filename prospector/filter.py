@@ -475,7 +475,7 @@ def select_commit_ids_based_on_vulnerability_publish_date(vulnerability_publishe
 
     ### Add commits before NVD release
     since, until = database.timestamp_to_timestamp_interval(int(vulnerability_published_timestamp), days_before=days_before, days_after=0)
-    commit_ids_to_add_before = database.get_commit_ids_between_timestamp(str(since), str(until), git_repo=git_repo, repository_url=repo_url)
+    commit_ids_to_add_before = database.get_commit_ids_between_timestamp_interval(str(since), str(until), git_repo=git_repo, repository_url=repo_url)
 
     # maximum to add
     if len(commit_ids_to_add_before) > commits_before_cap:
@@ -483,7 +483,7 @@ def select_commit_ids_based_on_vulnerability_publish_date(vulnerability_publishe
 
     ### Add commits after NVD release
     since, until = database.timestamp_to_timestamp_interval(int(vulnerability_published_timestamp), days_before=0, days_after=days_after)
-    commit_ids_to_add_after = database.get_commit_ids_between_timestamp(str(since), str(until), git_repo=git_repo, repository_url=repo_url)
+    commit_ids_to_add_after = database.get_commit_ids_between_timestamp_interval(str(since), str(until), git_repo=git_repo, repository_url=repo_url)
 
     # maximum to add
     if len(commit_ids_to_add_after) > commits_after_cap:

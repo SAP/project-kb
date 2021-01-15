@@ -5,7 +5,6 @@
 #  - The first one tests cases that should succeed
 #  - The second one tests the cases for which an exception should be raised
 
-
 import pytest
 import os 
 import sys
