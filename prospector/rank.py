@@ -42,20 +42,12 @@ seconds_per_month = 31557600 / 12 # dividing the vulnerability published timesta
 
 relevant_extensions = ["java", "c", "cpp", "h", "py", "js", "xml", "go", "rb", "php", "sh", "scale", "lua", "m", "pl", "ts", "swift", "sql", "groovy", "erl", "swf", "vue", "bat", "s", "ejs", "yaml", "yml", "jar"]
 fix_indicating_words = ['security', 'cve', 'patch', 'vulnerability', 'vulnerable', 'advisory', 'attack', 'exploit', 'exploitable']
+reference_stopwords = ['redhat', 'red', 'hat', 'github', 'GitHub', 'git', 'hub', 'january', 'februari', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'com', 'org', 'version', 'release'] + fix_indicating_words # words to avoid sampling
 
 # # when set to true, multiprocessing will be used to compute lexical similarity
 from multiprocessing import Pool
 with_multiprocessing = True
 number_of_cpus = os.cpu_count()
-
-
-##################################
-# if with_multiprocessing:
-#     from multiprocessing import Pool
-
-#     number_of_cpus = os.cpu_count()
-
-#     p = Pool(number_of_cpus)
 
 def get_cosine_similarity(v1, v2):
     return cosine_similarity(v1, v2)[0][0]
@@ -94,8 +86,8 @@ def snake_case_split(token):
         token (str): the token that should be split if it is in CamelCase
 
     Returns:
-        None: if the token is not in CamelCase
-        list: 'CamelCase' --> ['CamelCase', 'camel', 'case']
+        None: if the token is not in snake_case
+        list: 'snake_case' --> ['snake_case', 'snake', 'case']
     '''
     if type(token) != str:
         raise TypeError('The provided token should be a str data type but is of type {}.'.format(type(token)))
@@ -124,9 +116,18 @@ def dot_case_split(token):
         return 
     return [token] + result
 
-def text_into_chunks(text, chunk_size=1000):
+def text_into_chunks(text, chunk_size=10000):
     '''
     Yield successive n-sized chunks from list.
+    @TODO: now the text is not split at the end of a line / sentence but after the 1000 tokens,
+        might be better to split on line endings or tokens
+
+    Input:
+        text (str/list): the test to split in chunks
+        chunk_size (int): the number characters per chunk
+    
+    Returns:
+        list: a list of the chunks
     '''
     if type(text) == list:
         text = ' '.join(text)
@@ -134,8 +135,10 @@ def text_into_chunks(text, chunk_size=1000):
 
 def filter_text(text, as_tokens=False, as_list=False, remove_duplicates=False, case_sensitive=False, lemmatize=True):
     '''
+    This is the 'complex' filter text function and can be used for all kinds of preprocessing
+
     Input:
-        description (str): textual description to filter
+        text (list/str): The text to filter i.e. a vulnerability description
         as_tokens (bool): whether to return as a list of relevant tokens. If True, the other modifications do not occur (i.e. removing duplicates)
         as_list (bool): to return as a bag of words
         remove_duplicates (bool): to remove duplicates
@@ -144,9 +147,6 @@ def filter_text(text, as_tokens=False, as_list=False, remove_duplicates=False, c
 
     Returns:
         list / str: a list of relevant tokens, or a string
-
-        @TODO:
-        - now the text is not split at the end of a line / sentence but after the 1000 tokens
     '''
     filtered_text = list()
 
@@ -200,6 +200,15 @@ def filter_text(text, as_tokens=False, as_list=False, remove_duplicates=False, c
     return ' '.join(result)
 
 def filter_doc(doc):
+    '''
+    Function used for the simpler_filter_text; filters the textual document (chunk)
+
+    Input: 
+        doc (spacy.tokens.doc.Doc): the input document
+    
+    Returns:
+        str: the preprocessed doc as a string
+    '''
     if type(doc) != spacy.tokens.doc.Doc:
         raise TypeError("The document should be a spacy.tokens.doc.Doc, which is created by means of nlp(")
     
@@ -219,8 +228,15 @@ def filter_doc(doc):
     return ' '.join(result)
 
 def simpler_filter_text(text):
-    ''' Similar to filter_text but without options:
+    ''' 
+    Similar to filter_text but without options:
             will be lemmatized and returned as a string
+
+    Input:
+        text (list/str): the text to preprocess i.e. a vulnerability description
+
+    Returns:
+        str: the preprocessed text
     '''
 
     # when a list is provided concatenate it into a string
@@ -248,6 +264,16 @@ def extract_relevant_lines_from_commit_diff(git_diff, max_lines=10000):
     return [line for line in git_diff if line.startswith(('diff --git', 'index ', '+++ ', '--- ', '@@ ')) == False][:max_lines]
 
 def extract_n_most_occurring_words(text, n=20):
+    '''
+    Extracts the most occurring words from the text
+
+    Input:
+        text (str/list)
+        n (int): the number of words to return
+
+    Returns:
+        str: the n most occurring words
+    '''
     if type(text) == list:
         text = ' '.join(text)
 
@@ -258,7 +284,13 @@ def extract_n_most_occurring_words(text, n=20):
 
 def find_references(text):
     '''
-    Finds references in text, currently only looking for # with digits
+    Finds references in text, currently only looking for Git issues through # with digits and URLs
+
+    Input:
+        text (str/list)
+    
+    Returns:
+        list: a list of the found references
     '''
     if type(text) == list:
         text = ' '.join(text)
@@ -269,18 +301,23 @@ def find_references(text):
     references = github_issue_reference.findall(text) + url_reference.findall(text)
     return [reference.rstrip('.)/,:;[]') for reference in references]
 
+# to avoid being the most occurring words, as they are on every GitHub page
 strings_on_every_page = ['Skip to content', 'Why GitHub?', 'Features', '→', 'Code review', 'Project management', 'Integrations', 'Actions', 'Packages', 'Security', 'Team management', 'Hosting', 'Mobile', 'Customer stories', '→', 'Security', '→', 'Team', 'Enterprise', 'Explore', 'Explore GitHub', '→', 'Learn & contribute', 'Topics', 'Collections', 'Trending', 'Learning Lab', 'Open source guides', 'Connect with others', 'Events', 'Community forum', 'GitHub Education', 'Marketplace', 'Pricing', 'Plans', '→', 'Compare plans', 'Contact Sales', 'Nonprofit', '→', 'Education', '→', 'In this repository', 'All GitHub', '↵', 'Jump to', '↵', 'No suggested jump to results', 'In this repository', 'All GitHub', '↵', 'Jump to', '↵', 'In this repository', 'All GitHub', '↵', 'Jump to', '↵', 'Sign\xa0in', 'Sign\xa0up', '/', 'Watch', 'Star', 'Fork', 'Code', 'Pull requests', 'Actions', 'Security', 'Insights', 'More', 'Code', 'Pull requests', 'Actions', 'Security', 'Insights', 'Dismiss', 'Join GitHub today', 'GitHub is home to over 50 million developers working together to host and review code, manage projects, and build software together.', 'Sign up', 'New issue', 'Have a question about this project?', 'Sign up for a free GitHub account to open an issue and contact its maintainers and the community.', 'Pick a username', 'Email Address', 'Password', 'Sign up for GitHub', 'By clicking “Sign up for GitHub”, you agree to our', 'terms of service', 'and', 'privacy statement', '. We’ll occasionally send you account related emails.', 'Already on GitHub?', 'Sign in', 'to your account', 'Merged', 'Merged', 'Copy link', 'Quote reply', 'commented', 'Copy link', 'Quote reply', 'commented', 'Sign up for free', 'to join this conversation on GitHub', '.\n    Already have an account?', 'Sign in to comment', 'Assignees', 'Labels', 'None yet', 'None yet', 'Milestone', 'None yet', '© 2020 GitHub, Inc.', 'Terms', 'Privacy', 'Security', 'Status', 'Help', 'Contact GitHub', 'Pricing', 'API', 'Training', 'Blog', 'About', 'You can’t perform that action at this time.', 'You signed in with another tab or window.', 'Reload', 'to refresh your session.', 'You signed out in another tab or window.', 'Reload', 'to refresh your session.']
 
 def extract_n_most_occurring_words_from_references(references, repo_url=None, n=20, return_urls=False, driver=None):
     '''
-    Parameters:
-        references: list of references, or a string that is one reference
-        repo_url: the reference can also be an # that refers to an issue page, therefore the repository url is needed
-        n: the amount of words to return
-        return_urls: if you want to collect the urls from the pages --> PageRank
-        driver: a webdriver can be provided to avoid javascript required pages
-    '''
+    Scrape the references and return the n most occurring words from a corpus containing all content of all references
 
+    Input:
+        references (list/str): list of references, or a string that is one reference
+        repo_url (str): the reference can also be an # that refers to an issue page, therefore the repository url is needed
+        n (int): the amount of words to return
+        return_urls (bool): if you want to collect the urls from the pages --> PageRank
+        driver: a webdriver can be provided to avoid javascript required pages
+    
+    Returns:
+        str: the n most occurring words from a corpus containing all content of all references
+    '''
     if type(references) == str:
         references = [references]
 
@@ -328,288 +365,34 @@ def extract_n_most_occurring_words_from_references(references, repo_url=None, n=
         return ' '.join(list({k: v for k, v in sorted(count_dict.items(), key=lambda item: item[1], reverse=True)}.keys())[:n])
     return ' '.join(list({k: v for k, v in sorted(count_dict.items(), key=lambda item: item[1], reverse=True)}.keys())[:n]), str(urls_found)
 
-##################################
-###
-### RANKING
-###
-##################################
-
-def normalize_ranking_vector_component(ranking_vectors, component_indices, reversed=False):
-    '''
-    reversed (bool): if true, the highest value will be mapped to 1 instead of zero
-    '''
-    if type(ranking_vectors) != list:
-        raise TypeError("ranking_vectors should be a list of ranking vectors to normalize")
-    if type(component_indices) == int:
-        component_indices = [component_indices]
-    if type(reversed) == bool:
-        reversed = [reversed] * len(component_indices)
-
-    normalized_ranking_vectors = copy.deepcopy(ranking_vectors) #to copy, not to point to
-
-    for i, component_index in enumerate(component_indices):
-        if component_index >= len(ranking_vectors[0]):
-            raise ValueError("component_index should be an integer corresponding to the index of the value in the ranking vectors to normalize, while the index is is larger than the length of the vectors")
-
-        component_scores = [ranking_vector[component_index] for ranking_vector in ranking_vectors]
-        maximum_value = max(component_scores) if max(component_scores) != 0 else 1
-        minimum_value = min(component_scores) if min(component_scores) != 0 else 1
-
-        for vector_index in range(len(ranking_vectors)):
-            if reversed[i] == False:
-                normalized_ranking_vectors[vector_index][component_index] = ranking_vectors[vector_index][component_index] / maximum_value
-            elif ranking_vectors[vector_index][component_index] == 0:
-                normalized_ranking_vectors[vector_index][component_index] = 1
-            else:
-                normalized_ranking_vectors[vector_index][component_index] = minimum_value / ranking_vectors[vector_index][component_index]
-    return normalized_ranking_vectors
-
-def compute_scores_from_ranking_vectors(candidate_commits_ranking_vectors, weight_vector=(1,1,1), normalize=True):
-    '''
-    Input:
-        ranking_vector (tuple): a vector with different componens
-    '''
-    if len(candidate_commits_ranking_vectors[0][0]) != len(weight_vector):
-        assert ValueError('Ranking vector and weight vector are not of the same length')
-
-    commit_ids = [commit[0] for commit in candidate_commits_ranking_vectors]
-    ranking_vectors = [list(commit[1]) for commit in candidate_commits_ranking_vectors]
-
-    if normalize:
-        ranking_vectors = normalize_ranking_vector_component(ranking_vectors, list(range(len(weight_vector))))
-
-    # compute score
-    result = list()
-
-    for index, ranking_vector in enumerate(ranking_vectors):
-        result.append((commit_ids[index], np.mean([component*weight for component,weight in zip(ranking_vector, weight_vector)])))
-    return result
-
-# def rank_candidates(model, ranking_vectors):
-#     predictions = model.predict_proba(pd.DataFrame(ranking_vectors.values()))
-#     commit_ids = list(ranking_vectors.keys())
-#     commit_scores = [(candidate, predictions[index][1]) for index, candidate in enumerate(commit_ids)]
-#     return [commit[0] for commit in sorted(commit_scores, key = lambda x : x[1], reverse=True)]
-
-def ranking_vector_dict_to_df(ranking_vector_dict, ranking_vector_names):
-    '''
-    Previously, dictionaries were used to store the ranking vectors. These dictionaries had vulnerability IDs as keys,
-        and another dict as values, with commit IDs as keys and the ranking vectors as values. This has been changed 
-        to pd.DataFrame usage, this function can be used to turn one of these dictionaries to a dataframe.
-    '''
-    column_names = ['vulnerability_id', 'commit_id'] + ranking_vector_names
-
-    ranking_vector_df = pd.DataFrame()
-    for vulnerability_id, ranking_vectors in ranking_vector_dict.items():
-        rows = [[vulnerability_id, commit_id] + ranking_vector for commit_id, ranking_vector in ranking_vectors.items()]
-        ranking_vector_df = ranking_vector_df.append(pd.DataFrame(rows, columns=column_names))
-    ranking_vector_df.reset_index(drop=True, inplace=True)
-    return ranking_vector_df
-
-def rank_candidates(model, ranking_vectors):
-    '''
-    @TODO: add test case that the column ID is not dropped from original
-    '''
-
-    commit_ids = tuple(ranking_vectors.commit_id)
-    ranking_vectors = ranking_vectors.drop(columns=['commit_id'])
-
-    # predict the probability of a ranking vector in being the fix, or not
-    predictions = model.predict_proba(ranking_vectors)
-    commit_scores = [(candidate, predictions[index][1]) for index, candidate in enumerate(commit_ids)]
-    return tuple([commit[0] for commit in sorted(commit_scores, key = lambda x : x[1], reverse=True)])
-
-def rank_ranking_vectors(ranking_vector_df, vulnerability_ids, model):
-    '''
-    @TODO: verhaaltje
-
-    Returns:
-        dict: A dictionary with the vulnerability IDs as key, and a list of commit IDs as values.
-            The commit IDs are sorted on the probability of being the fix (ranked)
-    '''
-
-    ranked_vulnerability_candidates = dict()
-
-    for vulnerability in vulnerability_ids:
-
-        # extract the ranking vectors for this vulnerability
-        ranking_vectors = ranking_vector_df[ranking_vector_df.vulnerability_id == vulnerability].reset_index(drop=True).drop(columns=['vulnerability_id'])
-
-        ranked_vulnerability_candidates[vulnerability] = rank_candidates(model, ranking_vectors)
-
-    return ranked_vulnerability_candidates
-
-def evaluate_ranking(ranked_vulnerability_candidates, vulnerabilities, fix_commits_df, fix_commit_group_mapping_dict, validation_method='all', k=[5, 10], verbose=True):
-    no_fixes_count = 0
-    no_fixes_found_count = 0
-
-    if type(k) == int:
-        k = [k]
-
-    df = pd.DataFrame()
-
-    for vulnerability, ranked_candidates in ranked_vulnerability_candidates.items():
-        if vulnerability in vulnerabilities:
-            if vulnerability not in list(fix_commits_df.vulnerability_id):
-                no_fixes_count += 1
-            elif validation_method == 'group':
-                if vulnerability in fix_commit_group_mapping_dict:
-                    fix_commit_groups = [fix_commits for fix_commits in fix_commit_group_mapping_dict[vulnerability].values()]
-                    fix_commit_group_positions = [[ranked_candidates.index(fix_commit) if fix_commit in ranked_candidates else -1 for fix_commit in fix_commit_group] for fix_commit_group in fix_commit_groups]
-                    valid_fix_commit_group_positions = [(positions, np.mean(positions) / len(positions)) for positions in fix_commit_group_positions if all([True if position != -1 else False for position in positions])]
-
-                    #select best group based on average position
-                    if len(valid_fix_commit_group_positions) > 0:
-                        fix_commit_positions = sorted(valid_fix_commit_group_positions, key=lambda x: x[1])[0][0]
-                    else:
-                        fix_commit_positions = []
-                else:
-                    fix_commits = list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id)
-                    fix_commit_positions = [ranked_candidates.index(fix_commit) for fix_commit in fix_commits if fix_commit in ranked_candidates]
-
-            elif validation_method == 'all':            
-                fix_commits = list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id)
-                fix_commit_positions = [ranked_candidates.index(fix_commit) for fix_commit in fix_commits if fix_commit in ranked_candidates]
-
-            else: # validate only on the best fix
-                fix_commits = list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id)
-                try:
-                    fix_commit_positions = [sorted([ranked_candidates.index(fix_commit) for fix_commit in fix_commits if fix_commit in ranked_candidates])[0]]
-                except:
-                    fix_commit_positions = []
-
-            if len(fix_commit_positions) > 0:
-                df.at[vulnerability, 'n candidate commits'] = len(ranked_candidates)
-                df.at[vulnerability, 'n_fix_commits'] = len(fix_commit_positions)
-                df.at[vulnerability, 'fix_commit_positions'] = str(fix_commit_positions)
-                df.at[vulnerability, 'min_ranking_position'] = min(fix_commit_positions)
-                df.at[vulnerability, 'mean_ranking_position'] = np.mean(fix_commit_positions)
-                df.at[vulnerability, 'max_ranking_position'] = max(fix_commit_positions)
-                df.at[vulnerability, 'precision'] = len(fix_commit_positions) / (1 + max(fix_commit_positions))
-
-                for position in k:
-                    if len(fix_commit_positions) <= position:
-                        df.at[vulnerability, 'recall_at_{}'.format(position)] = len([ranked_position for ranked_position in fix_commit_positions if ranked_position < position]) / len(fix_commit_positions)
-                    else:
-                        df.at[vulnerability, 'recall_at_{}'.format(position)] = len([ranked_position for ranked_position in fix_commit_positions if ranked_position < position]) / position
-            else:
-                no_fixes_found_count += 1
-    if verbose: print("{} / {} do not have a known fix among the candidates (and {} do not have a fix in the data).".format(no_fixes_found_count, len(vulnerabilities), len(no_fixes_count)))
-    return df
-
-def create_train_and_test_datasets(ranking_vector_df, vulnerability_ids, fix_commits_df, negative_samples_multiplier=1, test_size=0.2, random_state=4):
-    '''
-    Parameters:
-        ranking_vector_df (pd.DataFrame): the dataframe with all ranking vectors, as returned by @TODO: name
-        vulnerability_ids (list): a list of vulnerability IDs to use for create the train and test data sets
-        fix_commits_df (pd.DataFrame): the vulnerabilities table as a DataFrame (fix_commits_df = pd.read_sql_query("SELECT * FROM fix_commits", vulnerabilities_connection))
-        negative_samples_multiplier (int): how many negative (not security fixes) samples should be drawn for each positive sample. Does not yield the exact multiplied number of instances as not all candidate commits are present among the candidate commits, as only one entire group needs to be present.
-
-    Returns:
-        pd.DataFrame: x_train, the training set
-        pd.DataFrame: x_test, the test set
-        np.array: y_train, the labels of x_train
-        np.array: y_test, the labels of x_test
-    '''
-    random.seed(21)
-
-    subset, labels = pd.DataFrame(), list()
-
-    for vulnerability in vulnerability_ids:
-        vulnerability_ranking_vectors = ranking_vector_df[ranking_vector_df.vulnerability_id == vulnerability].set_index('commit_id').drop(columns=['vulnerability_id'])
-        fix_commits = [commit_id for commit_id in list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id) if commit_id in list(vulnerability_ranking_vectors.index)]
-
-        non_fix_commits = [commit_id for commit_id in list(vulnerability_ranking_vectors.index) if commit_id not in fix_commits]
-
-        # add non fix commits
-        n_fix_commits = len(fix_commits)
-        random.shuffle(non_fix_commits) 
-        commits_to_select = non_fix_commits[:negative_samples_multiplier*n_fix_commits]
-        labels += [0] * len(commits_to_select)
-
-        # add the fix commits
-        commits_to_select += fix_commits
-        labels += [1] * n_fix_commits
-        subset = subset.append(vulnerability_ranking_vectors.loc[commits_to_select])
-
-    # create train and test set
-    subset.fillna(value=0.0, inplace=True)
-
-    x_train, x_test, y_train, y_test = train_test_split(subset, labels, test_size=test_size, random_state=random_state)
-
-    x_train.reset_index(inplace=True, drop=True)
-    x_test.reset_index(inplace=True, drop=True)
-
-    y_train = np.array(y_train, dtype=np.float)
-    y_test = np.array(y_test, dtype=np.float)
-    return x_train, x_test, y_train, y_test
-
-def create_training_set(data, negative_samples_multiplier=1, label_column='cls', random_state=4):
-    '''
-    Parameters:
-        negative_samples_multiplier (int): how many negative (not security fixes) samples should be drawn for each positive sample. Does not yield the exact multiplied number of instances as not all candidate commits are present among the candidate commits, as only one entire group needs to be present.
-
-    Returns:
-        pd.DataFrame(): 
-    '''
-    random.seed(random_state)
-    indices = list(data[data[label_column] == 1].index)
-
-    # for every fix commit; keys can occur more than once
-    for key in list(data[data[label_column] == 1].key):
-
-        ### adding negative samples
-        commits = list(data[data['key'] == key].index) 
-        random.shuffle(commits) 
-
-        added, i = 0, 0
-        while added != negative_samples_multiplier and i != len(commits):
-
-            # fix commits are already in the indices
-            if commits[i] not in indices:
-                indices.append(commits[i])
-                added += 1
-            i += 1
-
-    # sample the instances
-    training_data = data.iloc[sorted(indices)]
-    labels = training_data[label_column].to_numpy(dtype=np.float)
-    training_data = training_data.drop([label_column, 'key', 'commit_id'], axis=1)
-    training_data.reset_index(inplace=True, drop=True)
-    return training_data, labels
-
-# def test_models_on_ranking(model, keys, original_data, classification_data, ranked_candidate_commit_column='ranked_candidate_commits', ranking_vector_column='candidate_commits_ranking_vectors', verbose=True):
-
-#     for key in list(keys):
-#         subset = classification_data[classification_data.key == key]
-#         commit_ids = list(subset.commit_id)
-#         subset = subset.drop(['cls', 'key', 'commit_id'], axis=1)
-#         subset.reset_index(drop=True, inplace=True) 
-#         predictions = model.predict_proba(subset)
-#         commit_scores = [(candidate, predictions[index][1]) for index, candidate in enumerate(commit_ids)]
-#         original_data[key][ranked_candidate_commit_column] = [commit[0] for commit in sorted(commit_scores, key = lambda x : x[1], reverse=True)]
-
-#     return original_data, evaluate_ranking(original_data, keys, k=[5,10], ranked_commits_column=ranked_candidate_commit_column, ranking_vector_column=ranking_vector_column, verbose=verbose)
-
-def plot_learning_curves(model_results, title, y_label, x=None, x_label='training test size'):
-    '''Plots the individual results in a plot'''
-    if x == None:
-        x=[(i+1)/100 for i in range(len(model_results['mean_test_score']))]
-    xi=list(range(len(x)))
-    plt.title(title)
-    plt.plot(xi, model_results['mean_test_score'], color='green', label = 'mean test score')
-    plt.plot(xi, model_results['mean_train_score'], color='blue', label = 'mean train score')
-    plt.xticks(xi, x, rotation='vertical')
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.legend()
-    return
-
 def extract_project_name_from_repository_url(repo_url):
+    '''
+    Extract the project name from a repository URL through splitting the URL;
+        @TODO: might be better to visit the URL and extract the project name via scraping
+
+    Input:
+        repo_url (str): The repository URL
+    
+    Returns:
+        str: The project name
+    '''
     project_name = re.sub('^https?://|[^\w]', ' ', repo_url)
     return ' '.join([token for token in project_name.split(' ') if token not in ['github', 'com', 'git', 'org']])
 
 def map_description_to_repository_url(vulnerabilities_connection, vulnerability_id, description):
+    '''
+    Use the vulnerability database to predict a repository URL
+        @TODO: the repository URL is now predicted based on the database, hence for a vulnerability affecting a repository
+            which is not in the database, the prediction will not be correct
+
+    Input:
+        vulnerabilities_connection (sqlite3.connection): the connection with the vulnerabilities database
+        vulnerability_id (str): if the vulnerability is already in the DB, the repository URL is already known
+        description (list/str): the vulnerability description to use for the prediction
+
+    Returns:
+        str: the predicted repository URL
+    '''
     vulnerabilities_df = pd.read_sql("SELECT vulnerability_id, repo_url FROM vulnerabilities", vulnerabilities_connection).set_index("vulnerability_id")
 
     if vulnerability_id in tuple(vulnerabilities_df.index):
@@ -629,7 +412,31 @@ def map_description_to_repository_url(vulnerabilities_connection, vulnerability_
     return list({k: v for k, v in sorted(scores.items(), key=lambda item: item[1], reverse=True)}.keys())[0]
 
 class Advisory_record:
-    def __init__(self, vulnerability_id, published_timestamp, repo_url, nvd_references, advisory_references, vulnerability_description, connection, preprocessed_vulnerability_description=None, relevant_tags=None, verbose=True, since=None, until=None):
+    '''
+    The advisory record is the object containing all information on the vulnerability, 
+        and will be used for finding the fix commit(s)
+    '''
+    def __init__(self, vulnerability_id, published_timestamp, repo_url, nvd_references, references_content, advisory_references, vulnerability_description, connection, preprocessed_vulnerability_description=None, relevant_tags=None, verbose=True, since=None, until=None):
+        '''
+        Information to provide when initializing an advisory record
+
+        Input:
+            vulnerability_id (str): the vulnerability ID, typically a CVE 
+            published_timestamp (str/int): the timestamp at which the vulnerability was published, or patched if that is known 
+            repo_url (str): the URL of the affected (GitHub) repository URL 
+            nvd_references (list): references to which the NVD refers (1st level references)
+            references_content (str): the content that was extracted from these references, and will be used to compare lexical similarity with
+            advisory_references (list): the references that were extracted from the NVD references (2nd level references)
+            vulnerability_description (str): the vulnerability description 
+            connection (sqlite3.connection): the connection with the (commits) database
+
+            Optional:
+                preprocessed_vulnerability_description (str): if there is already a preprocess vulnerability description
+                relevant_tags (list): a list of tags that are regarded as relevant tags (affected versions of the software)
+                verbose (bool): to print intermediate output 
+                since (timestamp): lower bound for selecting the candidate commits 
+                until (timestamp): upper bound for selecting the candidate commits
+        '''
         self.id = vulnerability_id
         self.published_timestamp = published_timestamp
         self.repo_url = re.sub('\.git$|/$', '', repo_url)
@@ -644,9 +451,10 @@ class Advisory_record:
             self.preprocessed_description = preprocessed_vulnerability_description
 
         self.git_repo = Git(repo_url, cache_path=GIT_CACHE)
-        self.git_repo.clone(skip_existing=False) #@TODO: true or false..?
+        self.git_repo.clone(skip_existing=True) #@TODO: true or false..?
         self.connection = connection
         self.nvd_references = nvd_references
+        self.references_content = references_content
         self.advisory_references = advisory_references
 
         #whether to print or not to print
@@ -656,6 +464,9 @@ class Advisory_record:
         self.until = until
 
     class Reference:
+        '''
+        Used for analyzing the references
+        '''
         def __init__(self, url, repo_url):
             self.url = url
             self.repo_url = re.sub('\.git$|/$', '', repo_url) 
@@ -675,6 +486,7 @@ class Advisory_record:
     def analyse_references(self):
         '''
         Scan the first and second level references for github pull, issue, tag or commit references
+            @TODO: now only checking for /commit/ but it can also be /commits/
         '''
         self.pull_references_nvd = list()
         self.pull_references_adv = list()
@@ -726,6 +538,9 @@ class Advisory_record:
                     self.commits_found_adv.append(commit_id)
 
     def reference_analysis_to_dataframe(self):
+        '''
+        To print the reference analysis as a pd.DataFrame()
+        '''
         return pd.DataFrame({
             'vulnerability_id' : [self.id],
             'repo_url' : [self.repo_url],
@@ -747,6 +562,9 @@ class Advisory_record:
         })
 
     def validate_database_coverage(self):
+        '''
+        Check whether the candidate commits are already in the database, and add them otherwise
+        '''
         database.add_commits_to_database(self.connection, self.candidate_commits, git_repo=self.git_repo, verbose=self.verbose)
         database.add_repository_to_database(self.connection, self.repo_url, self.project_name, verbose=self.verbose)
         database.add_tags_to_database(self.connection, tags=None, git_repo=self.git_repo, verbose=self.verbose)
@@ -762,16 +580,19 @@ class Advisory_record:
         self.candidate_commits = commits_in_the_db
 
     def gather_candidate_commits(self):
+        '''
+        Select commits to consider as candidate commits
+        '''
         if self.since == None and self.until == None:
             self.since, self.until = database.timestamp_to_timestamp_interval(self.published_timestamp, days_before=days_before, days_after=days_after)
 
         ### Add commits before NVD release with maximum to add
-        commit_ids_to_add_before = database.get_commit_ids_between_timestamp(str(self.since), str(self.published_timestamp), git_repo=self.git_repo, repository_url=self.repo_url)
+        commit_ids_to_add_before = database.get_commit_ids_between_timestamp_interval(str(self.since), str(self.published_timestamp), git_repo=self.git_repo, repository_url=self.repo_url)
         if len(commit_ids_to_add_before) > 5215:
             commit_ids_to_add_before = commit_ids_to_add_before[:5215] #add the 5215 closest before the NVD release date
 
         ### Add commits after NVD release with a maximum to add
-        commit_ids_to_add_after = database.get_commit_ids_between_timestamp(str(self.published_timestamp), str(self.until), git_repo=self.git_repo, repository_url=self.repo_url)
+        commit_ids_to_add_after = database.get_commit_ids_between_timestamp_interval(str(self.published_timestamp), str(self.until), git_repo=self.git_repo, repository_url=self.repo_url)
         if len(commit_ids_to_add_after) > 100:
             commit_ids_to_add_after = commit_ids_to_add_after[-100:] #add the 100 closest before the NVD release date
 
@@ -786,50 +607,27 @@ class Advisory_record:
     def compute_ranking_vectors(self, vulnerability_specific_scaling=False):
         self.ranking_vectors = compute_ranking_vectors_for_advisory_records_with_db(self, vulnerability_specific_scaling)
 
-def create_classification_data(data, keys, cve_data_dict, ranking_vector_column='candidate_commits_ranking_vectors', irrelevant_commits_based_on_extension=None, connection=None):
-    '''
-    Returns:
-        pd.DataFrame(): 
-    '''
-    if irrelevant_commits_based_on_extension == None:
-        commits_in_data = tuple(dict.fromkeys([commit_id for key in keys for commit_id in [ranking_vector[0] for ranking_vector in data[key][ranking_vector_column]]]))
-        relevant_commits_based_on_extension = filter.filter_commits_on_files_changed_extensions(commits_in_data, connection)
-        irrelevant_commits_based_on_extension = [commit_id for commit_id in commits_in_data if commit_id not in relevant_commits_based_on_extension]
-
-    classification_df = pd.DataFrame(columns=['cls', 'key', 'commit_id'])
-
-    for key in keys:
-        fix_commits = [fix_commit_id for fix_commit_group in data[key]['fix_commit'] for fix_commit_id in fix_commit_group]
-
-        # make it scaleable on the number of ranking vector components
-        ranking_vector_length = len(data[key][ranking_vector_column][0][1])
-        ranking_vector_components = [list() for i in range(ranking_vector_length)]
-        for candidate in data[key][ranking_vector_column]:
-            for i in range(ranking_vector_length):
-                ranking_vector_components[i].append(candidate[1][i] if len(candidate[1]) >= i+1 else 0.0) 
-
-        # store values in a dict to append to the dataframe
-        df_from_dict = {
-            component_index : ranking_vector_components[component_index] for component_index in range(ranking_vector_length)
-        }
-        df_from_dict['cls'] = [1 if candidate[0] in fix_commits else 0 for candidate in data[key][ranking_vector_column]]
-        df_from_dict['key'] = [key for i in range(len(data[key][ranking_vector_column]))]
-        df_from_dict['commit_id'] = [candidate[0] for candidate in data[key][ranking_vector_column]]
-        
-        classification_df = classification_df.append(pd.DataFrame.from_dict(df_from_dict))
-
-    # removing irrelevant commits based on extensions
-    classification_df = classification_df[~classification_df.commit_id.isin(irrelevant_commits_based_on_extension)]
-    classification_df.reset_index(inplace=True, drop=True)
-    return classification_df
-
 def remove_project_name_from_string(string, project_name):
+    '''
+    Remove the project name from a string
+
+    Input:
+        string (str)
+        project_name (str)
+
+    Input:
+        advisory_record: containing all information
+        candidate_commit_df (pd.DataFrame): The dataframe containing the commit content
+    '''
     try:
         return ' '.join([token for token in string.split(' ') if token not in project_name.split(' ')])
     except:
-        return ''
+        return string
 
 def check_preprocessing(advisory_record, candidate_commit_df):
+    '''
+    Checks whether the candidate commits are preprocessed, and does so when this is not the case
+    '''
     # extract commit content
     project_name = simpler_filter_text(advisory_record.project_name)
 
@@ -852,118 +650,126 @@ def check_preprocessing(advisory_record, candidate_commit_df):
 
     return candidate_commit_df
 
-def compute_lexical_similarity_components(advisory_record, candidate_commit_df):
+def remove_forbidden_words_from_string(string, forbidden_words):
+    '''
+    Removes forbidden words from string
 
-    # Preprocess
+    Input:
+        string (str): the string to remove words from
+        forbidden_words (list/str): the words to remove
+    
+    Returns:
+        str: the string without the forbidden words
+    '''
+    if type(forbidden_words) == 'str':
+        forbidden_words = forbidden_words.split(' ') 
+    try:
+        return ' '.join([token for token in string.split(' ') if token not in forbidden_words])
+    except:
+        return string
+
+def compute_lexical_similarity_components(advisory_record, candidate_commit_df):
+    '''
+    This function computes the lexical similarity features:
+        First, the descriptions are preprocessed and fix indicating words are added to the 
+        description which is compared with the commit messages. The lexical similarity is
+        computed for three vulnerability aspects:
+         - the commit message + fix indicating words
+         - the reference content
+         - the code tokens extracted from the vulnerability description
+        @TODO: the reference content and code tokens lexical similarity features are not of
+        high predictive value, and it might be more efficient to discard these features
+    
+    Input:
+        advisory_record: containing all information
+        candidate_commit_df (pd.DataFrame): The dataframe containing the commit content
+
+    Returns:
+        pd.DataFrame: the candidate_commit_df with the lexical similarity features
+    '''
+    # DESCRIPTION
     project_name = simpler_filter_text(advisory_record.project_name)
     description = advisory_record.preprocessed_description
-    if 'nvd_references_content' in advisory_record.__dict__:
-        description += advisory_record.nvd_references_content
     description = remove_project_name_from_string(string=description, project_name=project_name)
-
-    # create additional bags of words
     description_with_fix_indicating_words = description + ' '.join(fix_indicating_words) # for the commit message
     
+    # CODE TOKENS
+    code_tokens = simpler_filter_text(extract_code_tokens(advisory_record.description))
+    code_tokens = remove_project_name_from_string(string=code_tokens, project_name=project_name)
+
     # define the different aspects and compute vector components
     tfidf_vectorizer_messages, tfidf_vectorizer_files, tfidf_vectorizer_diff = TfidfVectorizer(), TfidfVectorizer(), TfidfVectorizer()
 
-    tfidf_messages = tfidf_vectorizer_messages.fit_transform([description_with_fix_indicating_words] + list(candidate_commit_df['preprocessed_message']))
-    tfidf_files = tfidf_vectorizer_files.fit_transform([description] + list(candidate_commit_df['preprocessed_changed_files']))
-    tfidf_diffs = tfidf_vectorizer_diff.fit_transform([description] + list(candidate_commit_df['preprocessed_diff']))
+    tfidf_messages = tfidf_vectorizer_messages.fit_transform([description_with_fix_indicating_words, advisory_record.references_content, code_tokens] + list(candidate_commit_df['preprocessed_message']))
+    tfidf_files = tfidf_vectorizer_files.fit_transform([description, advisory_record.references_content, code_tokens] + list(candidate_commit_df['preprocessed_changed_files']))
+    tfidf_diffs = tfidf_vectorizer_diff.fit_transform([description, advisory_record.references_content, code_tokens] + list(candidate_commit_df['preprocessed_diff']))
 
     # compute scores
     # can be done with multiprocessing
     if with_multiprocessing:
         with Pool(number_of_cpus) as p:
-            candidate_commit_df['message_score'] = p.starmap(get_cosine_similarity, [(tfidf_messages[0], tfidf_messages[index+1]) for index in range(len(candidate_commit_df))])
-            candidate_commit_df['changed_files_score'] = p.starmap(get_cosine_similarity, [(tfidf_files[0], tfidf_files[index+1]) for index in range(len(candidate_commit_df))])
-            candidate_commit_df['git_diff_score'] = p.starmap(get_cosine_similarity, [(tfidf_diffs[0], tfidf_diffs[index+1]) for index in range(len(candidate_commit_df))])
-            # candidate_commit_df['message_score'] = p.map(get_cosine_similarity, [(tfidf_messages[0], tfidf_messages[index+1]) for index in range(len(candidate_commit_df))])
-            # candidate_commit_df['changed_files_score'] = p.map(get_cosine_similarity, [(tfidf_files[0], tfidf_files[index+1]) for index in range(len(candidate_commit_df))])
-            # candidate_commit_df['git_diff_score'] = p.map(get_cosine_similarity, [(tfidf_diffs[0], tfidf_diffs[index+1]) for index in range(len(candidate_commit_df))])
-    else:
-        candidate_commit_df['message_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[0], tfidf_messages[x.name+1])[0][0], axis=1) #x.name is index
-        candidate_commit_df['changed_files_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[0], tfidf_files[x.name+1])[0][0], axis=1) 
-        candidate_commit_df['git_diff_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[0], tfidf_diffs[x.name+1])[0][0], axis=1) 
+            # vulnerability description
+            candidate_commit_df['message_score'] = p.starmap(get_cosine_similarity, [(tfidf_messages[0], tfidf_messages[index+3]) for index in range(len(candidate_commit_df))])
+            candidate_commit_df['changed_files_score'] = p.starmap(get_cosine_similarity, [(tfidf_files[0], tfidf_files[index+3]) for index in range(len(candidate_commit_df))])
+            candidate_commit_df['git_diff_score'] = p.starmap(get_cosine_similarity, [(tfidf_diffs[0], tfidf_diffs[index+3]) for index in range(len(candidate_commit_df))])
 
+            # with nvd reference content
+            candidate_commit_df['message_score_reference_content'] = p.starmap(get_cosine_similarity, [(tfidf_messages[1], tfidf_messages[index+3]) for index in range(len(candidate_commit_df))])
+            candidate_commit_df['changed_files_score_reference_content'] = p.starmap(get_cosine_similarity, [(tfidf_files[1], tfidf_files[index+3]) for index in range(len(candidate_commit_df))])
+            candidate_commit_df['git_diff_score_reference_content'] = p.starmap(get_cosine_similarity, [(tfidf_diffs[1], tfidf_diffs[index+3]) for index in range(len(candidate_commit_df))])
+
+            # with code tokens
+            candidate_commit_df['message_score_code_tokens'] = p.starmap(get_cosine_similarity, [(tfidf_messages[2], tfidf_messages[index+3]) for index in range(len(candidate_commit_df))])
+            candidate_commit_df['changed_files_score_code_tokens'] = p.starmap(get_cosine_similarity, [(tfidf_files[2], tfidf_files[index+3]) for index in range(len(candidate_commit_df))])
+            candidate_commit_df['git_diff_score_code_tokens'] = p.starmap(get_cosine_similarity, [(tfidf_diffs[2], tfidf_diffs[index+3]) for index in range(len(candidate_commit_df))])
+    else:
+        # vulnerability description
+        candidate_commit_df['message_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[0], tfidf_messages[x.name+3])[0][0], axis=1) #x.name is index
+        candidate_commit_df['changed_files_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[0], tfidf_files[x.name+3])[0][0], axis=1) 
+        candidate_commit_df['git_diff_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[0], tfidf_diffs[x.name+3])[0][0], axis=1) 
+
+        # with nvd reference content
+        candidate_commit_df['message_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[1], tfidf_messages[x.name+3])[0][0], axis=1) #x.name is index
+        candidate_commit_df['changed_files_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[1], tfidf_files[x.name+3])[0][0], axis=1) 
+        candidate_commit_df['git_diff_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[1], tfidf_diffs[x.name+3])[0][0], axis=1) 
+
+        # with code tokens
+        candidate_commit_df['message_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[2], tfidf_messages[x.name+3])[0][0], axis=1) #x.name is index
+        candidate_commit_df['changed_files_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[2], tfidf_files[x.name+3])[0][0], axis=1) 
+        candidate_commit_df['git_diff_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[2], tfidf_diffs[x.name+3])[0][0], axis=1) 
     return candidate_commit_df
 
-# reference_stopwords = ['redhat', 'red', 'hat', 'github', 'GitHub', 'git', 'hub', 'january', 'februari', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'com', 'org', 'version', 'release'] + ['fix', 'security', 'cve', 'patch', 'prevent', 'vulnerability']
-
-# def remove_forbidden_words_from_string(string, forbidden_words):
-#     if type(forbidden_words) == 'str':
-#         forbidden_words = forbidden_words.split(' ') 
-#     try:
-#         return ' '.join([token for token in string.split(' ') if token not in forbidden_words])
-#     except:
-#         return ''
-
-# def compute_lexical_similarity_components_with_references(advisory_record, candidate_commit_df):
-#     #@TODO: now using the nvd references cursor
-
-#     nvd_references_cursor.execute("SELECT url, preprocessed_content FROM vulnerability_references WHERE vulnerability_id = :vulnerability_id", {'vulnerability_id': advisory_record.id})
-#     nvd_references = {nvd_reference['url'] : nvd_reference['preprocessed_content'] for nvd_reference in nvd_references_cursor}
-#     nvd_references_content = extract_n_most_occurring_words(remove_forbidden_words_from_string(string=' '.join(nvd_references.values()), forbidden_words = reference_stopwords + project_name.split(' ')), n=20)
-
-#     # define the different aspects and compute vector components
-#     tfidf_vectorizer_messages, tfidf_vectorizer_files, tfidf_vectorizer_diff = TfidfVectorizer(), TfidfVectorizer(), TfidfVectorizer()
-
-#     tfidf_messages = tfidf_vectorizer_messages.fit_transform([nvd_references_content] + list(candidate_commit_df['preprocessed_message']))
-#     tfidf_files = tfidf_vectorizer_files.fit_transform([nvd_references_content] + list(candidate_commit_df['preprocessed_changed_files']))
-#     tfidf_diffs = tfidf_vectorizer_diff.fit_transform([nvd_references_content] + list(candidate_commit_df['preprocessed_diff']))
-
-#     # compute scores
-#     # candidate_commit_df['nvd_references_message_similarity'] = p.starmap(get_cosine_similarity, [(tfidf_messages[0], tfidf_messages[index+1]) for index in range(len(candidate_commit_df))])
-#     # candidate_commit_df['nvd_references_changed_files_similarity'] = p.starmap(get_cosine_similarity, [(tfidf_files[0], tfidf_files[index+1]) for index in range(len(candidate_commit_df))])
-#     # candidate_commit_df['nvd_references_git_diff_similarity'] = p.starmap(get_cosine_similarity, [(tfidf_diffs[0], tfidf_diffs[index+1]) for index in range(len(candidate_commit_df))])
-
-#     candidate_commit_df['nvd_references_message_similarity'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[0], tfidf_messages[x.name+1])[0][0], axis=1) #x.name is index
-#     candidate_commit_df['nvd_references_changed_files_similarity'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[0], tfidf_files[x.name+1])[0][0], axis=1) 
-#     candidate_commit_df['nvd_references_git_diff_similarity'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[0], tfidf_diffs[x.name+1])[0][0], axis=1) 
-
-#     return candidate_commit_df
-
 def is_path(token):
+    '''
+    Checks whether the token is a path (used for the path similarity score feature)
+
+    Input:
+        token (str)
+
+    Returns:
+        bool: whether the token is a path
+    '''
     return '/' in token.rstrip('.,;:?!"\'') or ('.' in token.rstrip('.,;:?!"\'') and token.rstrip('.,;:?!"\'').split('.')[-1] in relevant_extensions)
 
 def extract_code_tokens(description):
+    '''
+    Extract code tokens from the description: tokens that are either dot.case, snake_case or CamelCase and no path
+        (paths are used in a different feature)
+    '''
     tokens = [token.rstrip('.,;:?!"\'') for token in description.split(' ')] #remove punctuation etc.
     relevant_tokens = [token for token in tokens if not is_path(token) and (dot_case_split(token) or snake_case_split(token) or camel_case_split(token))]
     return relevant_tokens
 
-def compute_lexical_similarity_components_code_tokens(advisory_record, candidate_commit_df):
-
-    # Preprocess
-    project_name = simpler_filter_text(advisory_record.project_name)
-    description = advisory_record.description
-    code_tokens = simpler_filter_text(extract_code_tokens(description))
-    code_tokens = remove_project_name_from_string(string=code_tokens, project_name=project_name)
-
-    # define the different aspects and compute vector components
-    # tfidf_vectorizer_messages = TfidfVectorizer()
-    tfidf_vectorizer_files = TfidfVectorizer()
-    # tfidf_vectorizer_diff = TfidfVectorizer()
-
-    # tfidf_messages = tfidf_vectorizer_messages.fit_transform([code_tokens] + list(candidate_commit_df['preprocessed_message']))
-    tfidf_files = tfidf_vectorizer_files.fit_transform([code_tokens] + list(candidate_commit_df['preprocessed_changed_files']))
-    # tfidf_diffs = tfidf_vectorizer_diff.fit_transform([code_tokens] + list(candidate_commit_df['preprocessed_diff']))
-
-    # compute scores
-    # with multiprocessing
-    if with_multiprocessing:
-        with Pool(number_of_cpus) as p:
-            # candidate_commit_df['message_score_code_tokens'] = p.starmap(get_cosine_similarity, [(tfidf_messages[0], tfidf_messages[index+1]) for index in range(len(candidate_commit_df))])
-            candidate_commit_df['changed_files_score_code_tokens'] = p.starmap(get_cosine_similarity, [(tfidf_files[0], tfidf_files[index+1]) for index in range(len(candidate_commit_df))])
-            # candidate_commit_df['git_diff_score_code_tokens'] = p.starmap(get_cosine_similarity, [(tfidf_diffs[0], tfidf_diffs[index+1]) for index in range(len(candidate_commit_df))])
-    else:
-        # without multiprocessing
-        # candidate_commit_df['message_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[0], tfidf_messages[x.name+1])[0][0], axis=1) #x.name is index
-        candidate_commit_df['changed_files_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[0], tfidf_files[x.name+1])[0][0], axis=1) 
-        # candidate_commit_df['git_diff_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[0], tfidf_diffs[x.name+1])[0][0], axis=1) 
-
-    return candidate_commit_df
-
 def extract_path_tokens_from_text(text):
+    '''
+    Used to look for paths in the text (i.e. vulnerability description)
+
+    Input:
+        text (str)
+
+    Returns:
+        list: a list of paths that are found
+    '''
     return [re.split('\.|,|/', token.rstrip('.,;:?!"\'')) for token in text.split(' ') if ('/' in token.rstrip('.,;:?!"\'') and not token.startswith('</')) or ('.' in token.rstrip('.,;:?!"\'') and token.rstrip('.,;:?!"\'').split('.')[-1] in relevant_extensions)]
 
 def compute_path_similarity_score(changed_files, path_tokens_list):
@@ -972,6 +778,13 @@ def compute_path_similarity_score(changed_files, path_tokens_list):
     - a description can mention multiple paths, therefore a sum is returned
     - a path can match multiple files, therefore the scores are first stored 
     in an intermediate score list and only the highest score is kept.
+
+    Input:
+        changed_files (str/list): the files that have been changed by the commit
+        path_tokens_list (list): a list of path tokens found in the description (by extract_path_tokens_from_text())
+    
+    Returns:
+        int: the score
     '''
     if type(changed_files) == str:
         changed_files = ast.literal_eval(changed_files)
@@ -987,7 +800,7 @@ def compute_path_similarity_score(changed_files, path_tokens_list):
         for changed_file in changed_files:       
 
             changed_file_tokens = list(reversed([token.lower() for token in re.split('\.|,|/', changed_file)]))
-            if with_extension == False and changed_file_tokens[0] in relevant_extensions:
+            if with_extension == False:
                 changed_file_tokens.pop(0) #remove the extension
 
             same_token_count, same_tokens = 0, True
@@ -998,19 +811,212 @@ def compute_path_similarity_score(changed_files, path_tokens_list):
                     same_tokens = False
 
             # adjust for only changing the right extension
-            if with_extension and same_token_count > 0:
+            if with_extension and same_token_count == 1:
                 same_token_count -= 1 
             intermediate_scores.append(same_token_count)
         path_similarity_scores.append(max(intermediate_scores))
     return sum(path_similarity_scores)
 
 def calculate_time_distance_before(commit_timestamp, published_timestamp, first_candidate_timestamp):
+    '''
+    Used to compute a feature reflecting the distance from a commit and the vulnerability publication data,
+        through comparing timestamps. The score is equal to 0.0 if the commit is after the release date, 
+        and between 0.5 and 1.0 if the commit was before the vulnerability release. 
+        The closer the commit is to the release, the higher the value.
+    
+    Input:
+        commit_timestamp (int): the timestamp of the commit
+        published_timestamp (int): the timestamp of the vulnerability publication
+        first_candidate_timestamp (int): the timestamp of the first candidate commit
+
+    Returns:
+        float: the score
+    '''
     return 0.5 + ((commit_timestamp - first_candidate_timestamp) / (published_timestamp - first_candidate_timestamp)) / 2 if commit_timestamp < published_timestamp else 0.0
 
 def calculate_time_distance_after(commit_timestamp, published_timestamp, last_candidate_timestamp):
+    '''
+    Used to compute a feature reflecting the distance from a commit and the vulnerability publication data,
+        through comparing timestamps. The score is equal to 0.0 if the commit is before the release date, 
+        and between 0.5 and 1.0 if the commit was after the vulnerability release. 
+        The closer the commit is to the release, the higher the value.
+    
+    Input:
+        commit_timestamp (int): the timestamp of the commit
+        published_timestamp (int): the timestamp of the vulnerability publication
+        last_candidate_timestamp (int): the timestamp of the last candidate commit
+
+    Returns:
+        float: the score
+    '''
     return 1 - ((commit_timestamp - published_timestamp) / (last_candidate_timestamp - published_timestamp)) / 2 if commit_timestamp > published_timestamp else 0.0
 
-def compute_commit_distance_components(advisory_record, candidate_commit_df, days_before=100, days_after=0):
+def tag_to_major_minor(tag):
+    '''
+    Return the digits corresponding to the major and minor of the tag,
+        when versioning is done as MAJOR.MINOR.PATCH
+    
+    Input:
+        tag (str)
+    
+    Returns:
+        tuple: major digit, minor digit
+    '''
+    splitted_tag = filter.recursively_split_version_string(tag)
+    splitted_tag_digits = [value for value in splitted_tag if type(value) == int]
+
+    #when the tag has no digits
+    if len(splitted_tag_digits) == 0:
+        major, minor = 999, 999
+    elif len(splitted_tag_digits) == 1:
+        major = splitted_tag_digits[0]
+        minor = 999
+    else:
+        major, minor = splitted_tag_digits[0], splitted_tag_digits[1]
+    return major, minor
+
+def tags_to_tree(tags):
+    '''
+    Arrange the tags in a tree (dict) with as nodes (keys) the major and minor versions
+        based on semantic versioning: MAJOR.MINOR.PATCH
+
+    Input:
+        tags (list): a list of tags in the repository (git_repo.get_tags())
+
+    Returns:
+        dict: a dictionary where the keys are all major versions, 
+            and the values are another dictionary with the minor versions as keys
+            and a list of tags belonging to that minor version as values.
+    '''
+    result = dict()
+
+    for tag in tags:
+        major, minor = tag_to_major_minor(tag)
+
+        # add to results
+        if major not in result.keys(): 
+            result[major] = dict()
+        if minor not in result[major].keys():
+            result[major][minor] = list()
+        result[major][minor].append(tag)
+
+    return result #{major: sorted(result[major], key = lambda x : x[1]) for major in result}
+
+def sort_tags_tree(tree, tag_timestamp_dict):
+    '''
+    Sort the tags in the same branch (same MAJOR.MINOR) based on their timestamp
+    Input:
+        tree (dict): tree created by tags_to_tree(tags)
+        tag_timestamp_dict (dict): a dictionary with tags a keys and timestamp as values
+    
+    Returns:
+        dict: a dictionary where the keys are all major versions, 
+            and the values are another dictionary with the minor versions as keys
+            and a list of tags belonging to that minor version as values sorted on timestamp.
+    '''
+    sorted_tree = copy.deepcopy(tree)
+
+    for major in sorted(list(sorted_tree.keys())):
+        for minor in sorted(list(sorted_tree[major].keys())):
+            tags = [(tag, tag_timestamp_dict[tag]) for tag in sorted_tree[major][minor]]
+            tags = sorted(tags, key = lambda x : x[1])
+            sorted_tree[major][minor] = tuple([tag[0] for tag in tags])
+    return sorted_tree
+
+def find_next_tag_in_tags_tree(tag, sorted_tags_tree, tag_timestamp_dict, tag_timestamp=None, first_call=True):
+    '''
+    Return the next tag in the tags tree
+    --> NOT looking for tags with a different MAJOR (MAJOR.MINOR.PATCH)
+    --> only returning a tag if it is indeed with a later timestamp
+
+    Input:
+        tag (str): the tag to map onto the next tag
+        sorted_tags_tree (dict): tags stored in a tree, where the tags are sorted on
+            timestamp (as returned by sort_tags_tree())
+        tag_timestamp_dict (dict): a dictionary to lookup the tag timestamps
+
+        Used for recursion (do not provide a value)
+            tag_timestamp: to validate it is a later tag
+            first_call: to return the original tag if there is no tag found
+
+    Returns:
+        str: the tag that is the next one
+    '''
+    if tag_timestamp == None and first_call == True:
+        tag_timestamp = tag_timestamp_dict[tag]
+
+    major, minor = tag_to_major_minor(tag)
+
+    # if there is another tag in the same MAJOR.MINOR, return that one
+    if sorted_tags_tree[major][minor].index(tag) < len(sorted_tags_tree[major][minor]) - 1:
+        return sorted_tags_tree[major][minor][sorted_tags_tree[major][minor].index(tag)+1]
+
+    # if there is another MINOR, return the first one in the next MINOR list
+    if tuple(sorted_tags_tree[major]).index(minor) < len(sorted_tags_tree[major]) - 1:
+        next_minor = tuple(sorted_tags_tree[major])[tuple(sorted_tags_tree[major]).index(minor)+1]
+        possible_next_tag = sorted_tags_tree[major][next_minor][0]
+
+        # validate that this tag is indeed with a later timestamp
+        if tag_timestamp_dict[tag] < tag_timestamp_dict[possible_next_tag]:
+            return possible_next_tag
+        # try again for the possible next tag
+        else: 
+            return find_next_tag_in_tags_tree(possible_next_tag, sorted_tags_tree, tag_timestamp_dict, tag_timestamp, first_call=False)
+
+    # if there is no tag with a later timestamp in the same MAJOR, return the original tag
+    if first_call:
+        return tag
+
+def map_tag_onto_next_tag(tag, tag_timestamp_dict):
+    '''
+    Find the next tag for a given tag
+
+    Input:
+        tag (str)
+        tag_timestamp_dict (dict): a dictionary to lookup the tag timestamps
+
+    Returns:
+        str: next tag
+    '''
+    tags = tuple(tag_timestamp_dict.keys())
+    tags_tree = tags_to_tree(tags)
+    sorted_tags_tree = sort_tags_tree(tags_tree, tag_timestamp_dict)
+    return find_next_tag_in_tags_tree(tag, sorted_tags_tree, tag_timestamp_dict)
+
+def calculate_reachability_score(row, tag_timestamp_dict, reachable_commits, relevant_tags, days_before):
+    '''
+    A function that can be applied row wise on the candidate commit df to calculate the reachability feature;
+        a score is provided when a commit is reachable and within n days, and the score equals
+        1.0 - (0.01 * n days difference)
+
+    Input:
+        (row)
+        tag_timestamp_dict (dict): a dictionary to lookup the tag timestamps
+        reachable_commits (list): not all commits are reachable from a given tag, this list contains
+            the IDs of commits that are reachable and for which a score should be calculated
+        relevant_tags (list): a list of tags to calculate the reachability from
+        days_before (int): the maximum number of days the commit can be away from the tag timestamp and get a score of higher than 0.0
+    
+    Returns:
+        float: the reachability score
+    '''
+    return 1.0 - (min([int((int(tag_timestamp_dict[tag]) - int(row['timestamp']))/86400) if row['id'] in reachable_commits[tag] else days_before for tag in relevant_tags]) / days_before) if len(relevant_tags) > 0 else 0.0
+    
+def compute_commit_distance_components(advisory_record, candidate_commit_df, days_before=100):
+    '''
+    This function computes the commit distance  features:
+        - time distance before
+        - time distance after
+        - reachability score
+    
+    Input:
+        advisory_record: containing all information
+        candidate_commit_df (pd.DataFrame): The dataframe containing the commit content
+        days_before:  the maximum number of days the commit can be away from the tag timestamp and get a reachability score of higher than 0.0
+
+    Returns:
+        pd.DataFrame: the candidate_commit_df with the commit distance features
+    '''
     cursor = advisory_record.connection.cursor()
 
     # gather the tags in the description
@@ -1043,27 +1049,53 @@ def compute_commit_distance_components(advisory_record, candidate_commit_df, day
     elif len(advisory_record.relevant_tags) == 1:
         advisory_record.relevant_tags.append(advisory_record.relevant_tags[0])
 
-    timestamps_for_tags_in_description = pd.read_sql("SELECT tag, tag_timestamp FROM tags WHERE tag IN {} AND repo_url = '{}'".format(tuple(advisory_record.relevant_tags), advisory_record.repo_url), advisory_record.connection).set_index('tag')
-    timestamps_for_tags_in_description.drop_duplicates(inplace=True)
+    cursor.execute("SELECT tag, tag_timestamp FROM tags WHERE repo_url = :repo_url", {'repo_url':advisory_record.repo_url}) 
+    tag_timestamp_dict = {row['tag'] : row['tag_timestamp'] for row in cursor}
 
+    tags_to_calculate_reachability_from = tuple([map_tag_onto_next_tag(tag, tag_timestamp_dict) for tag in advisory_record.relevant_tags])
+    tags_to_calculate_reachability_from = tuple(dict.fromkeys([tag for tag in tags_to_calculate_reachability_from if tag != None])) # none if there was no correct mapping with map_tag_onto_next_tag
+
+    if len(tags_to_calculate_reachability_from) == 0:
+        candidate_commit_df['reachability_score'] =  [0.0 for i in range(len(candidate_commit_df))]
+        return candidate_commit_df
+
+    # if there are tags that have been mentioned
     reachable_commits = dict()
-    for tag in [tag for tag in advisory_record.relevant_tags if tag in list(timestamps_for_tags_in_description.index) and tag not in reachable_commits]:
-        since, until = database.timestamp_to_timestamp_interval(timestamp=timestamps_for_tags_in_description.at[tag, 'tag_timestamp'], days_before=days_before, days_after=0)
+    for tag in tags_to_calculate_reachability_from:
+        since, until = database.timestamp_to_timestamp_interval(timestamp=tag_timestamp_dict[tag], days_before=days_before, days_after=0)
         reachable_commits[tag] = advisory_record.git_repo.get_commits(ancestors_of=tag, exclude_ancestors_of=None, since=since, until=until)
 
     # calculate scores
-    candidate_commit_df['reachability_score'] = candidate_commit_df.apply(calculate_reachability_score, timestamps_for_tags_in_description=timestamps_for_tags_in_description, reachable_commits=reachable_commits, relevant_tags=advisory_record.relevant_tags, days_before=days_before, axis=1)
+    candidate_commit_df['reachability_score'] = candidate_commit_df.apply(calculate_reachability_score, tag_timestamp_dict=tag_timestamp_dict, reachable_commits=reachable_commits, relevant_tags=tags_to_calculate_reachability_from, days_before=days_before, axis=1)
     
     return candidate_commit_df
 
-def calculate_reachability_score(row, timestamps_for_tags_in_description, reachable_commits, relevant_tags, days_before):
-    relevant_tags = [tag for tag in relevant_tags if tag in list(timestamps_for_tags_in_description.index)]
-    return 1.0 - (min([int((int(timestamps_for_tags_in_description.at[tag, 'tag_timestamp']) - int(row['timestamp']))/86400) if row['id'] in reachable_commits[tag] else days_before for tag in relevant_tags]) / days_before) if len(relevant_tags) > 0 else 0.0
-
 def if_commit_id_in_list(commit_id, commits_found_list):
+    '''
+    Checks whether a commit ID was referred to, based on the first 8 characters
+
+    Input:
+        commit_id (str): the commit ID of the candidate commit
+        commits_found_list (list): a list of commit IDs that were extracted from the references
+
+    Returns:
+        int: 1 if the commit was referred to, and 0 otherwise
+    '''
     return 1 if commit_id[:8] in commits_found_list else 0
 
 def compute_referred_to_components(advisory_record, candidate_commit_df):
+    '''
+    This function computes the commit distance features:
+        - referred to by NVD (1st level)
+        - referred to by advisories (2nd level)
+    
+    Input:
+        advisory_record: containing all information
+        candidate_commit_df (pd.DataFrame): The dataframe containing the commit content
+
+    Returns:
+        pd.DataFrame: the candidate_commit_df with the referred to features
+    '''
     if 'commits_found_nvd' not in advisory_record.__dict__ and 'commits_found_adv' not in advisory_record.__dict__:
         advisory_record.analyse_references()
 
@@ -1072,40 +1104,63 @@ def compute_referred_to_components(advisory_record, candidate_commit_df):
 
     return candidate_commit_df
 
-def if_vulnerability_id_in_list(string, vulnerability_id):
-    return 1 if vulnerability_id in string else 0
+def if_vulnerability_id_in_message(message, vulnerability_id):
+    '''
+    Checks whether the vulnerability ID is in the commit message
+    '''
+    return 1 if vulnerability_id.lower() in message.lower() else 0
 
-def if_other_vulnerability_id_in_list(string, vulnerability_id):
-    if vulnerability_id not in string and 'CVE-' in string: 
+def if_other_vulnerability_id_in_message(message, vulnerability_id):
+    '''
+    Checks whether the vulnerability ID is NOT in the commit message but a differint ID is
+    '''
+    if vulnerability_id.lower() not in message.lower() and 'cve-' in message.lower(): 
         return 1
     return 0
 
 def hunks_to_n_hunks(hunks):
+    '''
+    Count the number of hunks
+    '''
     return len(ast.literal_eval(hunks))
 
 def hunks_to_avg_hunk_size(hunks):
+    '''
+    Compute the average hunk size
+    '''
     hunks = ast.literal_eval(hunks)
     return sum([h[1] - h[0] for h in hunks]) / len(hunks) if len(hunks) != 0 else 0
 
 def contains_issue_reference(message_column):
+    '''
+    Check whether the commit message refers to an issue by means of a # followed by digits
+    '''
     return 1 if len([result.group(0) for result in re.finditer('#\d+:?', ' '.join(ast.literal_eval(message_column)))]) > 0 else 0
 
 def contains_jira_reference(message_column):
+    '''
+    Check whether the commit message refers to a Jira issue by means of a NAME-REF
+    '''
     return 1 if len([result.group(0) for result in re.finditer('\w+-\d+:?', ' '.join(ast.literal_eval(message_column)))]) > 0 else 0
 
 def changed_files_to_n_changed_files(changed_files):
+    '''
+    Count the number of changed files
+    '''
     return len(ast.literal_eval(changed_files))
 
-def compute_ranking_vectors_for_advisory_records_with_db(advisory_record, vulnerability_specific_scaling=False):
+def compute_ranking_vectors_for_advisory_records_with_db(advisory_record, vulnerability_specific_scaling):
     '''
+    Core functionality:
+        Compute the feature vectors for the candidate commits
+
     Input:
         advisory_record:
         vulnerability_specific_scaling: variables can be scaled vulnerability specific, or on the entire training set
-            --> if True, the largest number of the candidates will be scaled to one, otherwise the largest number of all candidates for all vulnerabilities
+            --> if True, the largest number of the candidates will be scaled to one, otherwise it will not be scaled
 
-    Core functionality:
-     - extracts content for the candidates
-     - ranks the candidates based on their lexical similarity with the vulnerability description
+    Returns:
+        pd.DataFrame: a dataframe with the commit IDs and the features
     '''
     if 'candidate_commits' not in advisory_record.__dict__:
         raise ValueError('Advisory record does not contain candidate commits to rank')
@@ -1114,9 +1169,9 @@ def compute_ranking_vectors_for_advisory_records_with_db(advisory_record, vulner
     candidate_commit_df = pd.read_sql("SELECT * FROM commits WHERE id IN {} AND repository_url = '{}'".format(tuple(advisory_record.candidate_commits + [advisory_record.candidate_commits[0]]), advisory_record.repo_url), advisory_record.connection) # +[adisory_record.candidate_commits[0]] as SQL requires at least 2 items
     candidate_commit_df = check_preprocessing(advisory_record, candidate_commit_df)
 
-    # creating the ranking vectors
-    candidate_commit_df['vulnerability_id_in_message'] = candidate_commit_df['message'].apply(if_vulnerability_id_in_list, vulnerability_id=advisory_record.id)
-    candidate_commit_df['other_CVE_in_message'] = candidate_commit_df['message'].apply(if_other_vulnerability_id_in_list, vulnerability_id=advisory_record.id)
+    # creating the feature vectors
+    candidate_commit_df['vulnerability_id_in_message'] = candidate_commit_df['message'].apply(if_vulnerability_id_in_message, vulnerability_id=advisory_record.id)
+    candidate_commit_df['other_CVE_in_message'] = candidate_commit_df['message'].apply(if_other_vulnerability_id_in_message, vulnerability_id=advisory_record.id)
 
     # commit statistics
     candidate_commit_df['n_hunks'] = candidate_commit_df['hunks'].apply(hunks_to_n_hunks)
@@ -1136,29 +1191,222 @@ def compute_ranking_vectors_for_advisory_records_with_db(advisory_record, vulner
 
     # adding lexical similarity components
     candidate_commit_df = compute_lexical_similarity_components(advisory_record, candidate_commit_df)
-    candidate_commit_df = compute_lexical_similarity_components_code_tokens(advisory_record, candidate_commit_df)
-    candidate_commit_df = compute_commit_distance_components(advisory_record, candidate_commit_df, days_before=100, days_after=0)
+    candidate_commit_df = compute_commit_distance_components(advisory_record, candidate_commit_df, days_before=100)
     candidate_commit_df = compute_referred_to_components(advisory_record, candidate_commit_df)
     
     # normalize the values
     candidate_commit_df.drop(columns=['timestamp', 'preprocessed_diff', 'preprocessed_message', 'preprocessed_changed_files'], inplace=True)
-
-    # variables can be scaled vulnerability specific, or on the entire training set
     if vulnerability_specific_scaling:
         candidate_commit_df.iloc[:,1:] = MinMaxScaler().fit_transform(candidate_commit_df.iloc[:,1:])
-    
-    # @TODO: add the vulnerability timestamp as a somewhat normalized component to allow for learning
+
+    # add the vulnerability timestamp as a somewhat normalized component to allow for learning
     candidate_commit_df['vulnerability_timestamp'] = [int(advisory_record.published_timestamp) / seconds_per_month for i in range(len(candidate_commit_df))]
     candidate_commit_df = candidate_commit_df.rename(columns={'id' : 'commit_id'})
-    # return {row[0] : row[1:].tolist() for row in candidate_commit_df.values} # to list to be able to write to JSON
     return candidate_commit_df
 
+def get_first_commit_timestamp(repo_url, git_repo=None):
+    '''
+    Get the timestamp of the first commit in the repository; used for the slider in the interface
+    '''
+    if git_repo == None:
+        git_repo = Git(repo_url, cache_path=GIT_CACHE)
+        git_repo.clone(skip_existing=True)
+
+    all_commits = tuple(git_repo.get_commits())
+    first_commit_id = all_commits[-1]
+    commit = Commit(git_repo, first_commit_id)
+    first_commit_timestamp = commit._exec.run('git show -s --format="%ct" ' + commit._id)[0][1:-1]
+    return int(first_commit_timestamp)
+
+##################################
+###
+### EVALUATE RANKING
+###
+##################################
+
+# def ranking_vector_dict_to_df(ranking_vector_dict, ranking_vector_names):
+#     '''
+#     Previously, dictionaries were used to store the ranking vectors. These dictionaries had vulnerability IDs as keys,
+#         and another dict as values, with commit IDs as keys and the ranking vectors as values. This has been changed 
+#         to pd.DataFrame usage, this function can be used to turn one of these dictionaries to a dataframe.
+#     '''
+#     column_names = ['vulnerability_id', 'commit_id'] + ranking_vector_names
+
+#     ranking_vector_df = pd.DataFrame()
+#     for vulnerability_id, ranking_vectors in ranking_vector_dict.items():
+#         rows = [[vulnerability_id, commit_id] + ranking_vector for commit_id, ranking_vector in ranking_vectors.items()]
+#         ranking_vector_df = ranking_vector_df.append(pd.DataFrame(rows, columns=column_names))
+#     ranking_vector_df.reset_index(drop=True, inplace=True)
+#     return ranking_vector_df
+
+def rank_candidates(model, ranking_vectors):
+    '''
+    Rank the candidate commits
+    @TODO: add test case that the column ID is not dropped from original
+
+    Input:
+        model: the model to use (Scikit-Learn model with predict_proba method)
+        ranking_vectors (pd.DataFrame): the dataframe with the features
+    
+    Returns:
+        tuple: the commit IDs sorted on the probability of being the fix commit
+    '''
+    commit_ids = tuple(ranking_vectors.commit_id)
+    ranking_vectors = ranking_vectors.drop(columns=['commit_id'])
+
+    # predict the probability of a ranking vector in being the fix, or not
+    predictions = model.predict_proba(ranking_vectors)
+    commit_scores = [(candidate, predictions[index][1]) for index, candidate in enumerate(commit_ids)]
+    return tuple([commit[0] for commit in sorted(commit_scores, key = lambda x : x[1], reverse=True)])
+
+def rank_ranking_vectors(ranking_vector_df, vulnerability_ids, model):
+    '''
+    Rank the candidate commits
+
+    Input:
+        ranking_vector_df (pd.DataFrame): the dataframe with the features
+        vulnerability_ids (list): the vulnerability IDs of the vulnerabilities to rank
+        model: the model to use (Scikit-Learn model with predict_proba method)
+
+    Returns:
+        dict: A dictionary with the vulnerability IDs as key, and a list of commit IDs as values.
+            The commit IDs are sorted on the probability of being the fix (ranked)
+    '''
+    ranked_vulnerability_candidates = dict()
+    for vulnerability in vulnerability_ids:
+        if vulnerability in tuple(ranking_vector_df.vulnerability_id.unique()):
+            subset = ranking_vector_df[ranking_vector_df.vulnerability_id == vulnerability]
+            commit_ids = subset.commit_id
+            subset.drop(columns=['vulnerability_id', 'commit_id'], inplace=True)
+            predictions = model.predict_proba(subset.reset_index(drop=True))
+            commit_scores = [(candidate, predictions[index][1]) for index, candidate in enumerate(commit_ids)]
+            ranked_vulnerability_candidates[vulnerability] = [commit[0] for commit in sorted(commit_scores, key = lambda x : x[1], reverse=True)]
+    return ranked_vulnerability_candidates
+
+def evaluate_ranking(ranked_vulnerability_candidates, vulnerabilities, fix_commits_df, validation_method='all', k=[5, 10], verbose=True):
+    '''
+    Evaluate the ranking results
+
+    Input:
+        ranked_vulnerability_candidates (dict): the ranking results as returned by rank_ranking_vectors()
+        vulnerabilities (list): the vulnerability IDs of the vulnerabilities to evaluate
+        fix_commits_df (pd.DataFrame): the dataframe with fix commits 
+        validation_method (str): if set to 'all' validation will be based on averaging on all known fix commits,
+            otherwise just on the highest ranked fix commit
+        k (list): a list of positions (int) to add as a column in the evaluation df
+        verbose (bool): to print additional output
+    
+    Returns:
+        pd.DataFrame: a dataframe presenting the evaluation of the ranking
+    '''
+    no_fixes_count = 0
+    no_fixes_found_count = 0
+
+    if type(k) == int:
+        k = [k]
+
+    df = pd.DataFrame()
+
+    for vulnerability, ranked_candidates in ranked_vulnerability_candidates.items():
+        if vulnerability in vulnerabilities:
+            if vulnerability not in list(fix_commits_df.vulnerability_id):
+                no_fixes_count += 1
+
+            elif validation_method == 'all':            
+                fix_commits = list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id)
+                fix_commit_positions = [ranked_candidates.index(fix_commit) for fix_commit in fix_commits if fix_commit in ranked_candidates]
+
+            else: # validate only on the best fix
+                fix_commits = list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id)
+                try:
+                    fix_commit_positions = [sorted([ranked_candidates.index(fix_commit) for fix_commit in fix_commits if fix_commit in ranked_candidates])[0]]
+                except:
+                    fix_commit_positions = []
+
+            if len(fix_commit_positions) > 0:
+                df.at[vulnerability, 'n candidate commits'] = len(ranked_candidates)
+                df.at[vulnerability, 'n_fix_commits'] = len(fix_commit_positions)
+                df.at[vulnerability, 'fix_commit_positions'] = str(fix_commit_positions)
+                df.at[vulnerability, 'min_ranking_position'] = min(fix_commit_positions)
+                df.at[vulnerability, 'mean_ranking_position'] = np.mean(fix_commit_positions)
+                df.at[vulnerability, 'max_ranking_position'] = max(fix_commit_positions)
+                df.at[vulnerability, 'precision'] = len(fix_commit_positions) / (1 + max(fix_commit_positions))
+
+                for position in k:
+                    if len(fix_commit_positions) <= position:
+                        df.at[vulnerability, 'recall_at_{}'.format(position)] = len([ranked_position for ranked_position in fix_commit_positions if ranked_position < position]) / len(fix_commit_positions)
+                    else:
+                        df.at[vulnerability, 'recall_at_{}'.format(position)] = len([ranked_position for ranked_position in fix_commit_positions if ranked_position < position]) / position
+            else:
+                no_fixes_found_count += 1
+    if verbose: print("{} / {} do not have a known fix among the candidates (and {} do not have a fix in the data).".format(no_fixes_found_count, len(vulnerabilities), len(no_fixes_count)))
+    return df
+
+def create_train_and_test_datasets(ranking_vector_df, vulnerability_ids, fix_commits_df, negative_samples_multiplier=1, test_size=0.2, random_state=4):
+    '''
+    Parameters:
+        ranking_vector_df (pd.DataFrame): the dataframe with all ranking vectors, as returned by @TODO: name
+        vulnerability_ids (list): a list of vulnerability IDs to use for create the train and test data sets
+        fix_commits_df (pd.DataFrame): the vulnerabilities table as a DataFrame (fix_commits_df = pd.read_sql_query("SELECT * FROM fix_commits", vulnerabilities_connection))
+        negative_samples_multiplier (int): how many negative (not security fixes) samples should be drawn for each positive sample. Does not yield the exact multiplied number of instances as not all candidate commits are present among the candidate commits, as only one entire group needs to be present.
+
+    Returns:
+        pd.DataFrame: x_train, the training set
+        pd.DataFrame: x_test, the test set
+        np.array: y_train, the labels of x_train
+        np.array: y_test, the labels of x_test 
+    '''
+    random.seed(21)
+
+    subset, labels = pd.DataFrame(), list()
+
+    for vulnerability in vulnerability_ids:
+        vulnerability_ranking_vectors = ranking_vector_df[ranking_vector_df.vulnerability_id == vulnerability].set_index('commit_id').drop(columns=['vulnerability_id'])
+        fix_commits = [commit_id for commit_id in list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id) if commit_id in list(vulnerability_ranking_vectors.index)]
+
+        non_fix_commits = [commit_id for commit_id in list(vulnerability_ranking_vectors.index) if commit_id not in fix_commits]
+
+        # add non fix commits
+        n_fix_commits = len(fix_commits)
+        random.shuffle(non_fix_commits) 
+        commits_to_select = non_fix_commits[:negative_samples_multiplier*n_fix_commits]
+        labels += [0] * len(commits_to_select)
+
+        # add the fix commits
+        commits_to_select += fix_commits
+        labels += [1] * n_fix_commits
+        subset = subset.append(vulnerability_ranking_vectors.loc[commits_to_select])
+
+    # create train and test set
+    subset.fillna(value=0.0, inplace=True)
+
+    x_train, x_test, y_train, y_test = train_test_split(subset, labels, test_size=test_size, random_state=random_state)
+
+    x_train.reset_index(inplace=True, drop=True)
+    x_test.reset_index(inplace=True, drop=True)
+
+    y_train = np.array(y_train, dtype=np.float)
+    y_test = np.array(y_test, dtype=np.float)
+    return x_train, x_test, y_train, y_test
+
 def analyse_ranking_results(ranking_results_df, method, train_or_test, k=[5, 10, 20]):
+    '''
+    Analyse the evaluated ranking by evaluate_ranking()
+
+    Input:
+        ranking_results_df (pd.DataFrame): the result of evaluate_ranking()
+        method (str): a textual column will be added containing this value
+        train_or_test (str): to specify it is the train or test data
+        k (list): a list of positions (int) to add as a column in the evaluation df
+    
+    Returns:
+        pd.DataFrame: a dataframe presenting the ranking results
+    '''
     df = pd.DataFrame()
     
     df.at[0, 'method'] = method
     df.at[0, 'train_or_test'] = train_or_test
-    df.at[0, 'avg_precision'] = round(np.mean(ranking_results_df.precision) * 100, 2)
+    df.at[0, 'avg_precision'] = np.mean(ranking_results_df.precision)
     df.at[0, 'avg_max_ranking_pos'] = np.mean(ranking_results_df.max_ranking_position)
     df.at[0, 'med_max_ranking_pos'] = np.median(ranking_results_df.max_ranking_position)
     df.at[0, 'n'] = len(ranking_results_df)
@@ -1166,5 +1414,55 @@ def analyse_ranking_results(ranking_results_df, method, train_or_test, k=[5, 10,
     for position in k:
         fixes_in_top_k = len(ranking_results_df[(ranking_results_df.max_ranking_position < position) & (ranking_results_df.n_fix_commits <= position)]) + len(ranking_results_df[(ranking_results_df.max_ranking_position < ranking_results_df.n_fix_commits) & (ranking_results_df.n_fix_commits > position)])
         df.at[0, 'recall_at_{}'.format(position)] = round(fixes_in_top_k / len(ranking_results_df) * 100, 2)
-
     return df
+
+def analyze_cross_validate_df(cross_validate_df, validation_methods_to_keep=['all', 'best']):
+    '''
+    Analyse the ranking results by analyse_ranking_results() on the different splits, reporting standard deviation etc.
+
+    Input:
+        ranking_results_df (pd.DataFrame): the results of analyse_ranking_results() with cross validation
+        validation_methods_to_keep (list): a list of values used for the validation methods
+    
+    Returns:
+        pd.DataFrame: a dataframe presenting the ranking results
+    '''
+    cross_validate_df = cross_validate_df.copy()
+
+    columns = ['avg_precision', 'avg_max_ranking_pos', 'med_max_ranking_pos', 'recall_at_5', 'recall_at_10', 'recall_at_20']
+    column_values_dict = {column : list() for column in columns}
+    
+    # # process the entries
+    cross_validate_df['validation_method'] = cross_validate_df['method'].apply(lambda x: x.split('-')[1])
+    cross_validate_df['method'] = cross_validate_df['method'].apply(lambda x: x.split('-')[0])
+    cross_validate_df['avg_precision'] = cross_validate_df['avg_precision'].apply(lambda x: round(x * 100, 2))
+
+    cross_validate_df = cross_validate_df[cross_validate_df.validation_method.isin(validation_methods_to_keep)]
+
+    if len(validation_methods_to_keep) > 1:
+        # #select the relevant rows
+        cross_validate_df.drop(columns=['index'], inplace=True)
+        grouped_cross_validate_df = cross_validate_df.groupby(['train_or_test', 'method', 'validation_method']).mean()
+        
+        for row in grouped_cross_validate_df.iterrows():
+            subset = cross_validate_df[(cross_validate_df.method == row[0][1]) & (cross_validate_df.validation_method == row[0][2]) & (cross_validate_df.train_or_test == row[0][0])]
+            for column in columns:
+                column_values_dict[column].append('{} ({})'.format(round(row[1][column], 2), round(subset[column].std(), 2)))
+
+        # add to the dataframe
+        for column in columns:
+            grouped_cross_validate_df[column] = column_values_dict[column]
+        return grouped_cross_validate_df
+    else:
+        cross_validate_df.drop(columns=['index', 'validation_method'], inplace=True)
+        grouped_cross_validate_df = cross_validate_df.groupby(['train_or_test', 'method']).mean()
+
+        for row in grouped_cross_validate_df.iterrows():
+            subset = cross_validate_df[(cross_validate_df.method == row[0][1]) & (cross_validate_df.train_or_test == row[0][0])]
+            for column in columns:
+                column_values_dict[column].append('{} ({})'.format(round(row[1][column], 2), round(subset[column].std(), 2)))
+
+        # add to the dataframe
+        for column in columns:
+            grouped_cross_validate_df[column] = column_values_dict[column]
+        return grouped_cross_validate_df

@@ -37,6 +37,7 @@ test_url_terms = ['localhost', 'example', 'mydomain']
 ###
 ##################################
 
+# A list of URLs in the data set that are not GitHub repositories
 repo_urls_to_github_url_mapping_dict = {
     'http://svn.apache.org/repos/asf/tomcat/tc6.0.x' : 'https://github.com/apache/tomcat',
     'http://git.apache.org/cordova-plugin-file-transfer' : 'https://github.com/apache/cordova-plugin-file-transfer',
@@ -90,18 +91,36 @@ repo_urls_to_github_url_mapping_dict = {
 ##################################
 
 def timestamp_to_timestamp_interval(timestamp, days_before, days_after):
+    '''
+    Function to map a timestamp to an interval of two timestamps, 
+        the interval can be specified by the variables days_before and days_after.
+
+    Input:
+        timestamp (str/int/float): timestamp in format i.e. '123456789'
+        days_before (str/int): the number of days before the input timestamp
+        days_after (str/int): the number of days after the input timestamp
+
+    Returns:
+        tuple: timestamp - days_before, timestamp + days_after
+    '''
     since = str(int((datetime.datetime.fromtimestamp(int(timestamp)) - datetime.timedelta(days=int(days_before))).timestamp()))
     until = str(int((datetime.datetime.fromtimestamp(int(timestamp)) + datetime.timedelta(days=int(days_after))).timestamp()))
     return since, until
 
-def get_commit_ids_between_timestamp(since, until, git_repo=None, repository_url=None):
+def get_commit_ids_between_timestamp_interval(since, until, git_repo=None, repository_url=None):
     '''
-    Based on git_explorer.core.get_commits()
+    Function to get all commit IDs that have been committed in the timestamp interval
+        Based on git_explorer.core.get_commits()
         The order is from newest to oldest: the result[0] is the most recent one (larger timestamp), the result[-1] is the oldest (smallest timestamp)
     
     Input:
-        since (str/int): timestamp in format i.e. '1230185619'
-        until (str/int): timestamp in format i.e. '1271076761'
+        since (str/int/float): timestamp in format i.e. '123456789'
+        until (str/int/float): timestamp in format i.e. '123456789'
+        git_repo (git_explorer.core.Git): to use for extracting the content
+        repository_url (str): if git_repo is not provided, a repository url is needed to initialize the git_repo
+    
+    Returns:
+        list: the commit IDs that have been committed in the timestamp interval
     '''
     if git_repo == None and repository_url ==None:
         raise ValueError('Provide a git_repo or a repository_url')
@@ -126,10 +145,17 @@ def get_commit_ids_between_timestamp(since, until, git_repo=None, repository_url
     
     return [l.strip() for l in out]
 
-def get_hunks_from_diff(diff_lines):
+def get_hunks_from_diff(diff_lines): 
+    '''  
+    Extracts the hunks from the Git diff
+        based on git_explorer/commit.py get_hunks()
 
-        
-    ''' based on git_explorer/commit.py get_hunks() '''
+    Input:
+        diff_lines (list): the diff content as returned by Git
+
+    Returns:
+        list: a list of integer tuples containing the hunk information
+    '''
     def is_hunk_line(line):
         return line[0] in '-+' and (len(line) < 2 or (line[1] != line[0]))
 
@@ -180,7 +206,15 @@ def get_hunks_from_diff(diff_lines):
     return flatten_groups(hunks)
 
 def get_changed_files_from_diff(diff_lines):
-    # in the DB, the content is stored as strings as
+    '''  
+    Extracts the changed files from the Git diff
+
+    Input:
+        diff_lines (str/list): the diff content as returned by Git
+
+    Returns:
+        list: a list of changed files
+    '''  
     if type(diff_lines) == str:
         try:
             diff_lines = ast.literal_eval(diff_lines)
@@ -190,15 +224,17 @@ def get_changed_files_from_diff(diff_lines):
 
     return list(dict.fromkeys([changed_file.lstrip('a/, b/') for line in diff_lines if line.startswith('diff --git') for changed_file in line.lstrip('diff --git ').split(' ')]))
 
-
 def extract_commit_message_reference_content(commit_message, repo_url, driver=None):
     '''
-    Parameters:
-        references: list of references, or a string that is one reference
-        repo_url: the reference can also be an # that refers to an issue page, therefore the repository url is needed
-        n: the amount of words to return
-        return_urls: if you want to collect the urls from the pages --> PageRank
+    Can be used to find references in commit messages and extract the content from these references
+
+    Input:
+        commit_message (list/str): the commit message
+        repo_url (str): the repository URL (when commits refer to a Git issue)
         driver: a webdriver can be provided to avoid javascript required pages
+    
+    Returns:
+        list: a list containing the preprocessed content of the references that have been found
     '''
     if type(commit_message) == list:
         commit_message = ' '.join(commit_message)
@@ -243,8 +279,6 @@ def extract_commit_message_reference_content(commit_message, repo_url, driver=No
                         soup = BeautifulSoup(driver.page_source, "html.parser")
                         reference_content = ' '.join([string for string in soup.stripped_strings])
                         references_content.append(rank.simpler_filter_text(reference_content))
-            # else:
-            #     print('Skipping apache.org due to connection..?')
         except:
             print('Failed in obtaining content for reference {}'.format(reference))
 
@@ -252,14 +286,13 @@ def extract_commit_message_reference_content(commit_message, repo_url, driver=No
 
 ##################################
 ###
-### COMMITS DATABASE
+### DATABASE
 ###
 ##################################
 
 def connect_with_database(path, as_row_factory=True, verbose=True):
     '''
-    Connects with a COMMIT database, if create_new_database is True a new .db will be created
-        @TODO: add commit.get_tags()
+    Connects with the database, if create_new_database is True a new .db will be created:
 
     Input:
         path (str): the path where the database can be found or should be created. Can be set to ":memory:" to prototype in memory.
@@ -283,32 +316,9 @@ def connect_with_database(path, as_row_factory=True, verbose=True):
         if verbose: print('Opening database on path {}'.format(path))
     except:
         if verbose: print('Creating new database on path {}'.format(path))
-        
-        with connection:
-            cursor.execute('''CREATE TABLE commits (
-                repository_url text,
-                id text,
-                timestamp text,
-
-                message text,
-                changed_files text,
-                diff text,
-                hunks text,
-                commit_message_reference_content text,
-
-                preprocessed_message text,
-                preprocessed_diff text,
-                preprocessed_changed_files text,
-                preprocessed_commit_message_reference_content text
-
-            )''')
-
+        create_commits_table(connection)
         create_repositories_table(connection)
         create_tags_table(connection)
-        
-        cursor.execute("CREATE INDEX IF NOT EXISTS commit_index ON commits(id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS repository_index ON commits(repository_url)")
-        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS commit_repository_index ON commits(id, repository_url)")
 
     cursor.execute("SELECT COUNT(id) FROM commits")
     if as_row_factory and verbose:
@@ -317,15 +327,56 @@ def connect_with_database(path, as_row_factory=True, verbose=True):
         print('Database contains {} commits'.format(cursor.fetchone()[0]))
     return connection, cursor
 
-def add_commits_to_database(connection, commit_ids, git_repo=None, repository_url=None, driver=None, with_message_references=False, verbose=True, skip_adding_commits=False):
+##################################
+###
+### COMMITS TABLE
+###
+##################################
+
+def create_commits_table(connection):
     '''
     Input:
+        sqlite3.connection: the connection with the database
+    '''
+    cursor = connection.cursor()
+    with connection:
+        cursor.execute('''CREATE TABLE commits (
+            repository_url text,
+            id text,
+            timestamp text,
+
+            message text,
+            changed_files text,
+            diff text,
+            hunks text,
+            commit_message_reference_content text,
+
+            preprocessed_message text,
+            preprocessed_diff text,
+            preprocessed_changed_files text,
+            preprocessed_commit_message_reference_content text
+
+        )''')
+
+        cursor.execute("CREATE INDEX IF NOT EXISTS commit_index ON commits(id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS repository_index ON commits(repository_url)")
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS commit_repository_index ON commits(id, repository_url)")
+
+    print('    Table commits successfully created')
+    cursor.close()
+    return
+
+def add_commits_to_database(connection, commit_ids, git_repo=None, repository_url=None, driver=None, with_message_references_content=False, verbose=True):
+    '''
+    Add commits to the database
+
+    Input:
         connection (sqlite3.connection): the connection to the database
-        cursor (sqlite3.cursor): he cursor of the database
         commit_ids (list): a list of commit_ids
         git_repo (git_explorer.core.Git): to use for extracting the content
-        repository_url: if git_repo is not provided, a repository url is needed to initialize the git_repo
+        repository_url (str): if git_repo is not provided, a repository url is needed to initialize the git_repo
         driver: a webdriver can be provided to avoid javascript required pages
+        with_message_references_content (bool): to add commits references (requires additional time)
         verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
     '''
     if git_repo == None and repository_url ==None:
@@ -356,11 +407,6 @@ def add_commits_to_database(connection, commit_ids, git_repo=None, repository_ur
         cursor.close()
         return
 
-    # @TODO: remove in the end
-    if skip_adding_commits and len(commits_to_add) > 10:
-        print("Skipping vulnerability due to {} new commits".format(len(commits_to_add)))
-        raise RuntimeError("Skipping vulnerability due to {} new commits".format(len(commits_to_add)))
-
     if verbose: print('    {} / {} are already in the database, now adding the rest.'.format(len(commits_already_in_the_db), len(commit_ids)))
 
     for commit_id in tqdm(commits_to_add):
@@ -380,7 +426,7 @@ def add_commits_to_database(connection, commit_ids, git_repo=None, repository_ur
             preprocessed_diff = rank.simpler_filter_text(re.sub('[^A-Za-z0-9]+', ' ', ' '.join(rank.extract_relevant_lines_from_commit_diff(diff))))
             preprocessed_changed_files = rank.simpler_filter_text(changed_files)
             
-            if with_message_references:
+            if with_message_references_content:
                 commit_message_reference_content = extract_commit_message_reference_content(message, repository_url, driver)
                 preprocessed_commit_message_reference_content = rank.extract_n_most_occurring_words(commit_message_reference_content, n=20)
             else:
@@ -404,9 +450,10 @@ def add_commits_to_database(connection, commit_ids, git_repo=None, repository_ur
 
 def create_repositories_table(connection):
     '''
+    Create the repositories table
+
     Input:
         sqlite3.connection: the connection with the database
-        sqlite3.cursor: the cursor of the database
     '''
     cursor = connection.cursor()
     with connection:
@@ -423,6 +470,8 @@ def create_repositories_table(connection):
 
 def add_repository_to_database(connection, repo_url, project_name, verbose=True):
     '''
+    Add repositories to the database
+
     Input:
         connection (sqlite3.connection): the connection to the database
         repo_url (str): the repository url to add
@@ -451,9 +500,10 @@ def add_repository_to_database(connection, repo_url, project_name, verbose=True)
 
 def create_tags_table(connection):
     '''
+    Create the tags table
+
     Input:
         sqlite3.connection: the connection with the database
-        sqlite3.cursor: the cursor of the database
     '''
     cursor = connection.cursor()
     with connection:
@@ -471,11 +521,13 @@ def create_tags_table(connection):
 
 def add_tags_to_database(connection, tags=None, git_repo=None, repo_url=None, verbose=True):
     '''
+    Add tags to the database
+
     Input:
         connection (sqlite3.connection): the connection to the database
         tags (list): a list of tags
         git_repo (git_explorer.core.Git): to use for extracting the content
-        repo_url: if git_repo is not provided, a repository url is needed to initialize the git_repo
+        repo_url (str): if git_repo is not provided, a repository url is needed to initialize the git_repo
         verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
     '''
     if git_repo == None and repo_url ==None:
@@ -530,6 +582,166 @@ def add_tags_to_database(connection, tags=None, git_repo=None, repo_url=None, ve
 ### VULNERABILITIES DATABASE
 ###
 ##################################
+
+def connect_with_vulnerabilities_database(path, as_row_factory=True, verbose=True):
+    '''
+    Connects with a VULNERABILITIES database, if create_new_database is True a new .db will be created
+        @TODO: This database can be combined into one database; not really a need for two separate DBs
+
+    Input:
+        path (str): the path where the database can be found or should be created. Can be set to ":memory:" to prototype in memory.
+        as_row_factory (bool): SQLite allows for a dict-like usage, when as_row_factory=True this functionality is used.
+        verbose: "Definition of verbose: containing more words than necessary: WORDY"
+
+    Returns:
+        sqlite3.connection: the connection with the database
+        sqlite3.cursor: the cursor of the database
+    '''
+    # creates the file if it is not there, otherwise connects with it
+    connection = sqlite3.connect(path)
+    
+    if as_row_factory:
+        connection.row_factory = sqlite3.Row
+    
+    cursor = connection.cursor()
+    
+    try:
+        cursor.execute("CREATE INDEX IF NOT EXISTS vulnerability_id ON vulnerabilities(vulnerability_id)")
+    except:
+        # db does not exist yet
+        create_vulnerabilities_table(connection)
+        create_vulnerability_references_table(connection)
+        create_vulnerability_fixes_table(connection)
+        create_advisory_references_table(connection)
+
+    cursor.execute("SELECT COUNT(vulnerability_id) FROM vulnerabilities")
+    if as_row_factory and verbose:
+        print('Database contains {} vulnerabilities'.format(cursor.fetchone()['COUNT(vulnerability_id)']))
+    elif verbose:
+        print('Database contains {} vulnerabilities'.format(cursor.fetchone()[0]))
+    return connection, cursor
+
+# VULNERABILITIES
+
+def create_vulnerabilities_table(connection):
+    '''
+    @TODO: change published_date --> published_timestamp, and type from string to int
+
+    Input:
+        sqlite3.connection: the connection with the database
+    '''
+    cursor = connection.cursor()
+    
+    with connection:
+        cursor.execute('''CREATE TABLE vulnerabilities (
+            vulnerability_id text,
+            repo_url text,
+            description text,
+            published_date text,
+
+            preprocessed_description text
+        )''')
+        cursor.execute("CREATE INDEX IF NOT EXISTS vulnerability_id ON vulnerabilities(vulnerability_id)")
+
+    print('    Table vulnerabilities successful created')
+    cursor.close()
+    return
+
+def if_new_vulnerability(cursor, vulnerability_id):
+    '''
+    Check whether the vulnerability is already in the database, based on the vulnerability ID
+
+    Input:
+        cursor (sqlite3.cursor): the cursor of the database
+        vulnerability_id (str): the identifier of the vulnerability
+
+    Returns:
+        boolean: True when the vulnerability ID is not yet in the db
+    '''
+    if cursor.execute("SELECT EXISTS(SELECT 1 FROM vulnerabilities WHERE vulnerability_id = :vulnerability_id LIMIT 1) AS 'exists';", {'vulnerability_id':vulnerability_id}).fetchone()['exists'] == 0:
+        return True
+    return False
+
+def extract_nvd_content(vulnerability_id):
+    '''
+    Extracts the content from the NVD by means of the rest-api
+
+    Input:
+        vulnerability_id (str): the vulnerability ID provided by the user
+
+    Returns:
+        str: the vulnerability description
+        int: the NVD published timestamp
+        list: the references from the NVD
+    '''
+    vulnerability_id = re.sub('https://|nvd.nist.gov/vuln/detail/', '', vulnerability_id) #someone might provide an NVD url
+    nist_nvd_request_url = 'https://services.nvd.nist.gov/rest/json/cve/1.0/'
+    r = requests.get(nist_nvd_request_url+vulnerability_id)
+    assert r.ok == True, "vulnerability ID {} is not in the NVD".format(vulnerability_id)
+    cve_content = r.json()
+
+    description = cve_content['result']['CVE_Items'][0]['cve']['description']['description_data'][0]['value']
+    published_timestamp = int(time.mktime(datetime.datetime.strptime(cve_content['result']['CVE_Items'][0]['publishedDate'].split('T')[0], "%Y-%m-%d").timetuple()))
+    references = [reference['url'] for reference in cve_content['result']['CVE_Items'][0]['cve']['references']['reference_data']]
+    return description, published_timestamp, references
+
+def add_vulnerability_to_database(connection, vulnerability_id, repo_url, description=None, published_timestamp=None, references=None, driver=None, verbose=True):
+    '''
+    Input:
+        connection (sqlite3.connection): the connection with the database
+        vulnerability_id (str): the identifier of the vulnerability
+        repo_url (str): the repository url
+        description (str): the description of the vulnerability can be provided manually, or will be extracted from the NVD
+        published_timestamp (str): vulnerability published timestamp can be provided manually, or will be extracted from the NVD
+        references (list): vulnerability references can be provided manually, or will be extracted from the NVD
+        driver: i.e. a chromedriver can be provided to scrape with when requests does not succeed
+        verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
+    '''
+    if type(published_timestamp) == int:
+        published_timestamp = str(published_timestamp)
+
+    #preprocess repo_url entry
+    repo_url = re.sub('\.git$|/$', '', repo_url)
+
+    cursor = connection.cursor()
+    if if_new_vulnerability(cursor, vulnerability_id):
+
+        # gather information for the new vulnerability if needed
+        if description == None or published_timestamp == None or references == None:
+            try:
+                nvd_description, nvd_published_timestamp, nvd_references = extract_nvd_content(vulnerability_id)
+            except: #if the vulnerability is not in the NVD
+                nvd_description, nvd_published_timestamp, nvd_references = None, None, None
+
+            if description == None:
+                if nvd_description == None:
+                    raise ValueError("Since the provided vulnerability ID {} cannot be found in the NVD, you must provide a vulnerability description manually.".format(vulnerability_id))
+                else:
+                    description = nvd_description
+            if published_timestamp == None:
+                if nvd_published_timestamp == None:
+                    raise ValueError("Since the provided vulnerability ID {} cannot be found in the NVD, you must provide a vulnerability published timestamp manually.".format(vulnerability_id))
+                else:
+                    published_timestamp = nvd_published_timestamp
+            if references == None:
+                if nvd_references == None:
+                    raise ValueError("Since the provided vulnerability ID {} cannot be found in the NVD, you must provide a advisory references manually.".format(vulnerability_id))
+                else:
+                    references = nvd_references
+            
+        # add to the database
+        preprocessed_description = rank.simpler_filter_text(description)
+        with connection:
+            cursor.execute("INSERT INTO vulnerabilities VALUES (:vulnerability_id, :repo_url, :description, :published_timestamp, :preprocessed_description)",
+            {'vulnerability_id':vulnerability_id, 'repo_url':repo_url, 'description':description, 'published_timestamp':str(published_timestamp), 'preprocessed_description':preprocessed_description})
+    
+        # add the references to the database
+        if references != None and len(references) > 0:
+            add_vulnerability_references_to_database(connection, vulnerability_id, references, driver=driver, verbose=verbose)
+    elif verbose:
+        print("    There is already a vulnerability with ID {} in the database".format(vulnerability_id))
+    cursor.close()
+    return
 
 # REFERENCES
 
@@ -722,154 +934,5 @@ def add_vulnerability_fixes_to_database(connection, vulnerability_id, commit_ids
                     {'commit_id':commit_id, 'vulnerability_id':vulnerability_id, 'repo_url':repo_url})
         elif verbose:
             print("    Fix {} for vulnerability {} is already in the db".format(commit_id, vulnerability_id))
-    cursor.close()
-    return
-
-# VULNERABILITIES
-
-def connect_with_vulnerabilities_database(path, as_row_factory=True, verbose=True):
-    '''
-    Connects with a VULNERABILITIES database, if create_new_database is True a new .db will be created
-    @TODO: change published_date --> published_timestamp, and type from string to int
-
-    Input:
-        path (str): the path where the database can be found or should be created. Can be set to ":memory:" to prototype in memory.
-        as_row_factory (bool): SQLite allows for a dict-like usage, when as_row_factory=True this functionality is used.
-        verbose: "Definition of verbose: containing more words than necessary: WORDY"
-
-    Returns:
-        sqlite3.connection: the connection with the database
-        sqlite3.cursor: the cursor of the database
-    '''
-    # creates the file if it is not there, otherwise connects with it
-    connection = sqlite3.connect(path)
-    
-    if as_row_factory:
-        connection.row_factory = sqlite3.Row
-    
-    cursor = connection.cursor()
-    
-    try:
-        cursor.execute("CREATE INDEX IF NOT EXISTS vulnerability_id ON vulnerabilities(vulnerability_id)")
-    except:
-        #table does not exist yet
-        with connection:
-            cursor.execute('''CREATE TABLE vulnerabilities (
-                vulnerability_id text,
-                repo_url text,
-                description text,
-                published_date text,
-
-                preprocessed_description text
-            )''')
-        create_vulnerability_references_table(connection)
-        create_vulnerability_fixes_table(connection)
-        create_advisory_references_table(connection)
-
-    with connection:
-        cursor.execute("CREATE INDEX IF NOT EXISTS vulnerability_id ON vulnerabilities(vulnerability_id)")
-
-    cursor.execute("SELECT COUNT(vulnerability_id) FROM vulnerabilities")
-    if as_row_factory and verbose:
-        print('Database contains {} vulnerabilities'.format(cursor.fetchone()['COUNT(vulnerability_id)']))
-    elif verbose:
-        print('Database contains {} vulnerabilities'.format(cursor.fetchone()[0]))
-
-    return connection, cursor
-
-def if_new_vulnerability(cursor, vulnerability_id):
-    '''
-    Check whether the vulnerability is already in the database, based on the vulnerability ID
-
-    Input:
-        cursor (sqlite3.cursor): the cursor of the database
-        vulnerability_id (str): the identifier of the vulnerability
-
-    Returns:
-        boolean: True when the vulnerability ID is not yet in the db
-    '''
-    if cursor.execute("SELECT EXISTS(SELECT 1 FROM vulnerabilities WHERE vulnerability_id = :vulnerability_id LIMIT 1) AS 'exists';", {'vulnerability_id':vulnerability_id}).fetchone()['exists'] == 0:
-        return True
-    return False
-
-def extract_nvd_content(vulnerability_id):
-    '''
-    Extracts the content from the NVD by means of the rest-api
-
-    Input:
-        vulnerability_id (str): the vulnerability ID provided by the user
-
-    Returns:
-        str: the vulnerability description
-        int: the NVD published timestamp
-        list: the references from the NVD
-    '''
-    vulnerability_id = re.sub('https://|nvd.nist.gov/vuln/detail/', '', vulnerability_id)
-    nist_nvd_request_url = 'https://services.nvd.nist.gov/rest/json/cve/1.0/'
-    r = requests.get(nist_nvd_request_url+vulnerability_id)
-    assert r.ok == True, "vulnerability ID {} is not in the NVD".format(vulnerability_id)
-    cve_content = r.json()
-
-    description = cve_content['result']['CVE_Items'][0]['cve']['description']['description_data'][0]['value']
-    published_timestamp = int(time.mktime(datetime.datetime.strptime(cve_content['result']['CVE_Items'][0]['publishedDate'].split('T')[0], "%Y-%m-%d").timetuple()))
-    references = [reference['url'] for reference in cve_content['result']['CVE_Items'][0]['cve']['references']['reference_data']]
-    return description, published_timestamp, references
-
-def add_vulnerability_to_database(connection, vulnerability_id, repo_url, description=None, published_timestamp=None, references=None, driver=None, verbose=True):
-    '''
-    Input:
-        connection (sqlite3.connection): the connection with the database
-        cursor (sqlite3.cursor): the cursor of the database
-        vulnerability_id (str): the identifier of the vulnerability
-        repo_url (str): the repository url
-        description (str): the description of the vulnerability can be provided manually, or will be extracted from the NVD
-        published_timestamp (str): vulnerability published timestamp can be provided manually, or will be extracted from the NVD
-        references (list): vulnerability references can be provided manually, or will be extracted from the NVD
-        driver: i.e. a chromedriver can be provided to scrape with when requests does not succeed
-        verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
-    '''
-    if type(published_timestamp) == int:
-        published_timestamp = str(published_timestamp)
-
-    #preprocess repo_url entry
-    repo_url = re.sub('\.git$|/$', '', repo_url)
-
-    cursor = connection.cursor()
-    if if_new_vulnerability(cursor, vulnerability_id):
-
-        # gather information for the new vulnerability if needed
-        if description != None and published_timestamp != None and references != None:
-            try:
-                nvd_description, nvd_published_timestamp, nvd_references = extract_nvd_content(vulnerability_id)
-            except: #if the vulnerability is not in the NVD
-                nvd_description, nvd_published_timestamp, nvd_references = None, None, None
-
-            if description == None:
-                if nvd_description == None:
-                    raise ValueError("Since the provided vulnerability ID {} cannot be found in the NVD, you must provide a vulnerability description manually.".format(vulnerability_id))
-                else:
-                    description = nvd_description
-            if published_timestamp == None:
-                if nvd_published_timestamp == None:
-                    raise ValueError("Since the provided vulnerability ID {} cannot be found in the NVD, you must provide a vulnerability published timestamp manually.".format(vulnerability_id))
-                else:
-                    published_timestamp = nvd_published_timestamp
-            if references == None:
-                if nvd_references == None:
-                    raise ValueError("Since the provided vulnerability ID {} cannot be found in the NVD, you must provide a advisory references manually.".format(vulnerability_id))
-                else:
-                    references = nvd_references
-            
-        # add to the database
-        preprocessed_description = rank.simpler_filter_text(description)
-        with connection:
-            cursor.execute("INSERT INTO vulnerabilities VALUES (:vulnerability_id, :repo_url, :description, :published_timestamp, :preprocessed_description)",
-            {'vulnerability_id':vulnerability_id, 'repo_url':repo_url, 'description':description, 'published_timestamp':str(published_timestamp), 'preprocessed_description':preprocessed_description})
-    
-        # add the references to the database
-        if references != None and len(references) > 0:
-            add_vulnerability_references_to_database(connection, vulnerability_id, references, driver=driver, verbose=verbose)
-    elif verbose:
-        print("    There is already a vulnerability with ID {} in the database".format(vulnerability_id))
     cursor.close()
     return

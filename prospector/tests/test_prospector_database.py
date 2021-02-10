@@ -65,32 +65,32 @@ def test_timestamp_to_timestamp_interval(example_vulnerability):
     assert database.timestamp_to_timestamp_interval(str(example_vulnerability['nvd_published_timestamp']), days_before=0, days_after=0) == ('1520895600', '1520895600')
 
 #
-# get_commit_ids_between_timestamp
+# get_commit_ids_between_timestamp_interval
 #
 
 @pytest.mark.database
-def test_get_commit_ids_between_timestamp(example_vulnerability, example_vulnerability_git_repo):
+def test_get_commit_ids_between_timestamp_interval(example_vulnerability, example_vulnerability_git_repo):
     #with a git_repo provided
-    commit_ids_to_add = database.get_commit_ids_between_timestamp(since=1457823600, until=1529532000, git_repo=example_vulnerability_git_repo, repository_url=None)
+    commit_ids_to_add = database.get_commit_ids_between_timestamp_interval(since=1457823600, until=1529532000, git_repo=example_vulnerability_git_repo, repository_url=None)
     assert len(commit_ids_to_add) == 100
     assert commit_ids_to_add[0], commit_ids_to_add[-1] == ('e4c9304553f2868f67556644f5831eba60cf2c34', 'be96e51aa2ba68e0f230ff954a3d47f1c15c7a95')
     
     #without a git_repo provided
-    commit_ids_to_add = database.get_commit_ids_between_timestamp(since=1457823600, until=1529532000, git_repo=None, repository_url=example_vulnerability['repo_url'])
+    commit_ids_to_add = database.get_commit_ids_between_timestamp_interval(since=1457823600, until=1529532000, git_repo=None, repository_url=example_vulnerability['repo_url'])
     assert len(commit_ids_to_add) == 100
     assert commit_ids_to_add[0], commit_ids_to_add[-1] == ('e4c9304553f2868f67556644f5831eba60cf2c34', 'be96e51aa2ba68e0f230ff954a3d47f1c15c7a95')
     
     #with timestamp as strings
-    commit_ids_to_add = database.get_commit_ids_between_timestamp(since='1457823600', until='1529532000', git_repo=example_vulnerability_git_repo, repository_url=None)
+    commit_ids_to_add = database.get_commit_ids_between_timestamp_interval(since='1457823600', until='1529532000', git_repo=example_vulnerability_git_repo, repository_url=None)
     assert len(commit_ids_to_add) == 100
     assert commit_ids_to_add[0], commit_ids_to_add[-1] == ('e4c9304553f2868f67556644f5831eba60cf2c34', 'be96e51aa2ba68e0f230ff954a3d47f1c15c7a95')
 
 @pytest.mark.exception_handling
-def test_get_commit_ids_between_timestamp_errors(example_vulnerability, example_vulnerability_git_repo):
+def test_get_commit_ids_between_timestamp_interval_errors(example_vulnerability, example_vulnerability_git_repo):
     with pytest.raises(ValueError):
-        database.get_commit_ids_between_timestamp(since='1457823600', until='1529532000', git_repo=None, repository_url=None)
+        database.get_commit_ids_between_timestamp_interval(since='1457823600', until='1529532000', git_repo=None, repository_url=None)
     with pytest.raises(ValueError):
-        database.get_commit_ids_between_timestamp(since='1529532000', until='1457823600', git_repo=None, repository_url=None)
+        database.get_commit_ids_between_timestamp_interval(since='1529532000', until='1457823600', git_repo=None, repository_url=None)
 
 #
 # get_hunks_from_diff

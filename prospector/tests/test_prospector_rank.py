@@ -5,7 +5,6 @@
 #  - The first one tests cases that should succeed
 #  - The second one tests the cases for which an exception should be raised
 
-
 import pytest
 import os 
 import sys
@@ -240,10 +239,4 @@ def test_find_references(example_commit_content):
 ###
 ##################################
 
-@pytest.mark.ranking
-def test_normalize_ranking_vector_component():
-    test_ranking_vectors = [[1,2,3], [3,4,5], [5,6,7]]
-    assert rank.normalize_ranking_vector_component(test_ranking_vectors, 2) == [[1, 2, 0.42857142857142855], [3, 4, 0.7142857142857143], [5, 6, 1.0]]
-    assert rank.normalize_ranking_vector_component(test_ranking_vectors, 2, True) == [[1, 2, 1.0], [3, 4, 0.6], [5, 6, 0.42857142857142855]]
-    assert rank.normalize_ranking_vector_component(test_ranking_vectors, [0,1,2], True)[0] == [1.0, 1.0, 1.0]
-    assert rank.normalize_ranking_vector_component(test_ranking_vectors, [0,1,2], [False, False, True])[0] == [0.2, 0.3333333333333333, 1.0]
+# @pytest.mark.ranking
