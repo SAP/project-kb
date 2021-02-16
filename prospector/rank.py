@@ -708,7 +708,7 @@ def compute_lexical_similarity_components(advisory_record, candidate_commit_df):
     # can be done with multiprocessing
     if with_multiprocessing:
         with Pool(number_of_cpus) as p:
-            # vulnerability description
+            # vulnerability description with fix indicating words
             candidate_commit_df['message_score'] = p.starmap(get_cosine_similarity, [(tfidf_messages[0], tfidf_messages[index+3]) for index in range(len(candidate_commit_df))])
             candidate_commit_df['changed_files_score'] = p.starmap(get_cosine_similarity, [(tfidf_files[0], tfidf_files[index+3]) for index in range(len(candidate_commit_df))])
             candidate_commit_df['git_diff_score'] = p.starmap(get_cosine_similarity, [(tfidf_diffs[0], tfidf_diffs[index+3]) for index in range(len(candidate_commit_df))])
@@ -1185,7 +1185,7 @@ def compute_ranking_vectors_for_advisory_records_with_db(advisory_record, vulner
     # add path score
     path_tokens_list = extract_path_tokens_from_text(advisory_record.description)
     candidate_commit_df['path_similarity_score'] = candidate_commit_df['changed_files'].apply(compute_path_similarity_score, path_tokens_list=path_tokens_list)
-    
+
     # drop columns that are no longer needed
     candidate_commit_df.drop(columns=['repository_url', 'hunks', 'message', 'changed_files', 'diff', 'commit_message_reference_content', 'preprocessed_commit_message_reference_content'], inplace=True)
 

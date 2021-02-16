@@ -10,8 +10,13 @@ current_working_directory = os.getcwd()
 os.chdir('git_explorer')
 sys.path.append(os.getcwd())
 
-os.environ['GIT_CACHE'] = current_working_directory + '/git_explorer/git_explorer_cache'
-GIT_CACHE = current_working_directory + '/git_explorer/git_explorer_cache'
+# os.environ['GIT_CACHE'] = current_working_directory + '/git_explorer/git_explorer_cache'
+# GIT_CACHE = current_working_directory + '/git_explorer/git_explorer_cache'
+
+GIT_CACHE = ''
+if 'GIT_CACHE' in os.environ:
+    GIT_CACHE = os.environ['GIT_CACHE']
+
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
 os.chdir(current_working_directory)

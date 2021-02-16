@@ -15,8 +15,13 @@ current_working_directory = os.getcwd()
 os.chdir('git_explorer')
 sys.path.append(os.getcwd())
 
-os.environ['GIT_CACHE'] = current_working_directory + '/git_explorer/git_explorer_cache'
-GIT_CACHE = current_working_directory + '/git_explorer/git_explorer_cache'
+#  = current_working_directory + '/git_explorer/git_explorer_cache'
+# current_working_directory + '/git_explorer/git_explorer_cache'
+
+GIT_CACHE = ''
+if 'GIT_CACHE' in os.environ:
+    GIT_CACHE = os.environ['GIT_CACHE']
+    
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
 os.chdir(current_working_directory)
@@ -158,7 +163,11 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
     advisory_references = [advisory_reference['url'] for advisory_reference in vulnerabilities_cursor.execute("SELECT url FROM advisory_references WHERE vulnerability_id = :vulnerability_id", {'vulnerability_id': vulnerability_id})]
 
     # creating advisory record
-    advisory_record = rank.Advisory_record(vulnerability_id, published_timestamp, repo_url, references, references_content, advisory_references, description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=None, verbose=verbose, since=None, until=None)
+    advisory_record = rank.Advisory_record(
+        vulnerability_id,
+        published_timestamp,
+        repo_url,
+        references, references_content, advisory_references, description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=None, verbose=verbose, since=None, until=None)
 
     if verbose:
         print("\nThe following advisory record has been created:")
@@ -172,7 +181,7 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
     if verbose: print("\nGathering candidate commits:")
     advisory_record.gather_candidate_commits()
 
-    if verbose: print("\Computing ranking vectors:")
+    if verbose: print("\nComputing ranking vectors:")
     advisory_record.compute_ranking_vectors(vulnerability_specific_scaling)
 
     if vulnerability_specific_scaling == False:
