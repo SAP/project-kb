@@ -3,7 +3,7 @@ Upstream-Name: project "KB"
 Upstream-Contact: Antonino Sabetta <antonino.sabetta@sap.com>
 Source: https://github.com/sap/project-kb
 
-Files: kaybee/*  docs/* scripts/* vulnerability-data/* MSR2019/* NOTICE.txt README.md
+Files: prospector/* kaybee/*  docs/* scripts/* vulnerability-data/* MSR2019/* NOTICE.txt README.md
 Copyright: 2019-2020 SAP SE or an SAP affiliate company and project "KB" contributors
 License: Apache-2.0
 
