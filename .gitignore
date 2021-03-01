@@ -26,3 +26,6 @@ kaybee/kaybee-new-statements
 kaybee/pkged.go
 *.log
 kaybeeconf.yaml
+prospector/.env
+prospector/workspace.code-workspace
+prospector/.env
