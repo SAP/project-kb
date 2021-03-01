@@ -15,10 +15,6 @@ attrs = "==20.3.0"
 backcall = "==0.2.0"
 base58 = "==2.0.1"
 beautifulsoup4 = "==4.9.3"
-<<<<<<< HEAD
-bleach = "==3.2.1"
-=======
->>>>>>> master
 blinker = "==1.4"
 blis = "==0.4.1"
 boto3 = "==1.16.14"
@@ -33,10 +29,6 @@ click = "==7.1.2"
 cymem = "==2.0.4"
 decorator = "==4.4.2"
 defusedxml = "==0.6.0"
-<<<<<<< HEAD
-requirements-txt = "*"
-=======
->>>>>>> master
 entrypoints = "==0.3"
 enum-compat = "==0.0.3"
 gitdb = "==4.0.5"
