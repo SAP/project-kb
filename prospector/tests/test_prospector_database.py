@@ -12,8 +12,9 @@ current_working_directory = os.getcwd()
 os.chdir('../git_explorer')
 sys.path.append(os.getcwd())
 
-os.environ['GIT_CACHE'] = os.getcwd() + '/git_explorer_cache'
-GIT_CACHE = os.environ['GIT_CACHE']
+GIT_CACHE = ''
+if 'GIT_CACHE' in os.environ:
+    GIT_CACHE = os.environ['GIT_CACHE']
 
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
@@ -74,12 +75,12 @@ def test_get_commit_ids_between_timestamp_interval(example_vulnerability, exampl
     commit_ids_to_add = database.get_commit_ids_between_timestamp_interval(since=1457823600, until=1529532000, git_repo=example_vulnerability_git_repo, repository_url=None)
     assert len(commit_ids_to_add) == 100
     assert commit_ids_to_add[0], commit_ids_to_add[-1] == ('e4c9304553f2868f67556644f5831eba60cf2c34', 'be96e51aa2ba68e0f230ff954a3d47f1c15c7a95')
-    
+
     #without a git_repo provided
     commit_ids_to_add = database.get_commit_ids_between_timestamp_interval(since=1457823600, until=1529532000, git_repo=None, repository_url=example_vulnerability['repo_url'])
     assert len(commit_ids_to_add) == 100
     assert commit_ids_to_add[0], commit_ids_to_add[-1] == ('e4c9304553f2868f67556644f5831eba60cf2c34', 'be96e51aa2ba68e0f230ff954a3d47f1c15c7a95')
-    
+
     #with timestamp as strings
     commit_ids_to_add = database.get_commit_ids_between_timestamp_interval(since='1457823600', until='1529532000', git_repo=example_vulnerability_git_repo, repository_url=None)
     assert len(commit_ids_to_add) == 100
@@ -172,11 +173,11 @@ def test_add_commits_to_database(example_vulnerability, example_vulnerability_gi
     database.add_commits_to_database(connection, commit_ids_to_add[:10], git_repo=example_vulnerability_git_repo, repository_url=example_vulnerability['repo_url'], with_message_references=False)
     cursor.execute('SELECT COUNT(id) FROM commits')
     assert cursor.fetchone()['COUNT(id)'] == 10
-    
+
     # verify entries are correct
     cursor.execute('SELECT * FROM commits')
     row = cursor.fetchone()
-    
+
     assert row['repository_url'] == 'https://github.com/jenkinsci/promoted-builds-plugin'
     assert row['id'] == 'e4c9304553f2868f67556644f5831eba60cf2c34'
     assert row['timestamp'] == '1528139978'
@@ -205,8 +206,8 @@ def test_add_commits_to_database(example_vulnerability, example_vulnerability_gi
 # CVE-2018-16166
 # with open('../scripts/data/vulas_cves.json', 'r') as data_json:
 #     vulas_cves = json.load(data_json)
-    
+
 # cve = 'CVE-2018-16166'
-# repo_url = vulas_cves[cve]['vulas_content']['constructChanges'][0]['repo'].rstrip('.git, /') 
+# repo_url = vulas_cves[cve]['vulas_content']['constructChanges'][0]['repo'].rstrip('.git, /')
 # nvd_published_timestamp = int(time.mktime(datetime.datetime.strptime(vulas_cves[cve]['nvd_content']['publishedDate'].split('T')[0], "%Y-%m-%d").timetuple()))
 # nvd_published_timestamp

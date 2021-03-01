@@ -20,8 +20,10 @@ current_working_directory = os.getcwd()
 os.chdir('git_explorer')
 sys.path.append(os.getcwd())
 
-os.environ['GIT_CACHE'] = current_working_directory + '/git_explorer/git_explorer_cache'
-GIT_CACHE = current_working_directory + '/git_explorer/git_explorer_cache'
+GIT_CACHE = ''
+if 'GIT_CACHE' in os.environ:
+    GIT_CACHE = os.environ['GIT_CACHE']
+
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
 os.chdir(current_working_directory)
@@ -94,8 +96,8 @@ def snake_case_split(token):
 
     result = token.split('_')
     if len(result) == 1:
-        return 
-    return [token] + result    
+        return
+    return [token] + result
 
 def dot_case_split(token):
     '''
@@ -113,7 +115,7 @@ def dot_case_split(token):
 
     result = token.split('.')
     if len(result) == 1:
-        return 
+        return
     return [token] + result
 
 def text_into_chunks(text, chunk_size=10000):
@@ -125,7 +127,7 @@ def text_into_chunks(text, chunk_size=10000):
     Input:
         text (str/list): the test to split in chunks
         chunk_size (int): the number characters per chunk
-    
+
     Returns:
         list: a list of the chunks
     '''
@@ -194,7 +196,7 @@ def filter_text(text, as_tokens=False, as_list=False, remove_duplicates=False, c
         result = [token.lower() for token in result]
     if remove_duplicates:
         result = list(dict.fromkeys([token for token in result]))
-    
+
     if as_list:
         return result
     return ' '.join(result)
@@ -203,16 +205,16 @@ def filter_doc(doc):
     '''
     Function used for the simpler_filter_text; filters the textual document (chunk)
 
-    Input: 
+    Input:
         doc (spacy.tokens.doc.Doc): the input document
-    
+
     Returns:
         str: the preprocessed doc as a string
     '''
     if type(doc) != spacy.tokens.doc.Doc:
         raise TypeError("The document should be a spacy.tokens.doc.Doc, which is created by means of nlp(")
-    
-    tokens = [token for token in doc if token.is_punct == False and token.is_stop == False and any(char for char in token.text if char.isalpha()) and len(token) > 1] #token.pos_ in ['VERB', 'NOUN', 'PROPN', 'ADJ'] and 
+
+    tokens = [token for token in doc if token.is_punct == False and token.is_stop == False and any(char for char in token.text if char.isalpha()) and len(token) > 1] #token.pos_ in ['VERB', 'NOUN', 'PROPN', 'ADJ'] and
     result = list()
     for token in tokens:
         if camel_case_split(token.text):
@@ -228,7 +230,7 @@ def filter_doc(doc):
     return ' '.join(result)
 
 def simpler_filter_text(text):
-    ''' 
+    '''
     Similar to filter_text but without options:
             will be lemmatized and returned as a string
 
@@ -260,7 +262,7 @@ def extract_relevant_lines_from_commit_diff(git_diff, max_lines=10000):
     '''
     if type(git_diff) != list:
         raise TypeError('The git_diff should be a list (as returned by git)')
-        
+
     return [line for line in git_diff if line.startswith(('diff --git', 'index ', '+++ ', '--- ', '@@ ')) == False][:max_lines]
 
 def extract_n_most_occurring_words(text, n=20):
@@ -279,7 +281,7 @@ def extract_n_most_occurring_words(text, n=20):
 
     bow = text.split(' ')
     count_dict = {word : bow.count(word) for word in bow}
-    
+
     return ' '.join(list({k: v for k, v in sorted(count_dict.items(), key=lambda item: item[1], reverse=True)}.keys())[:n])
 
 def find_references(text):
@@ -288,7 +290,7 @@ def find_references(text):
 
     Input:
         text (str/list)
-    
+
     Returns:
         list: a list of the found references
     '''
@@ -314,7 +316,7 @@ def extract_n_most_occurring_words_from_references(references, repo_url=None, n=
         n (int): the amount of words to return
         return_urls (bool): if you want to collect the urls from the pages --> PageRank
         driver: a webdriver can be provided to avoid javascript required pages
-    
+
     Returns:
         str: the n most occurring words from a corpus containing all content of all references
     '''
@@ -337,7 +339,7 @@ def extract_n_most_occurring_words_from_references(references, repo_url=None, n=
                     bow += filter_text(' '.join([string for string in soup.stripped_strings if string not in strings_on_every_page]), as_list=True)
             else:
                 if 'securityfocus.com' in reference.strip('/.'): #securityfocus.com requires a selection in a menu
-                    reference = reference.rstrip('/.') + '/discuss' 
+                    reference = reference.rstrip('/.') + '/discuss'
 
                 r = requests.get(reference.rstrip('.')) #can be end of the sentence
                 soup = BeautifulSoup(r.content, "html.parser")
@@ -372,7 +374,7 @@ def extract_project_name_from_repository_url(repo_url):
 
     Input:
         repo_url (str): The repository URL
-    
+
     Returns:
         str: The project name
     '''
@@ -413,7 +415,7 @@ def map_description_to_repository_url(vulnerabilities_connection, vulnerability_
 
 class Advisory_record:
     '''
-    The advisory record is the object containing all information on the vulnerability, 
+    The advisory record is the object containing all information on the vulnerability,
         and will be used for finding the fix commit(s)
     '''
     def __init__(self, vulnerability_id, published_timestamp, repo_url, nvd_references, references_content, advisory_references, vulnerability_description, connection, preprocessed_vulnerability_description=None, relevant_tags=None, verbose=True, since=None, until=None):
@@ -421,20 +423,20 @@ class Advisory_record:
         Information to provide when initializing an advisory record
 
         Input:
-            vulnerability_id (str): the vulnerability ID, typically a CVE 
-            published_timestamp (str/int): the timestamp at which the vulnerability was published, or patched if that is known 
-            repo_url (str): the URL of the affected (GitHub) repository URL 
+            vulnerability_id (str): the vulnerability ID, typically a CVE
+            published_timestamp (str/int): the timestamp at which the vulnerability was published, or patched if that is known
+            repo_url (str): the URL of the affected (GitHub) repository URL
             nvd_references (list): references to which the NVD refers (1st level references)
             references_content (str): the content that was extracted from these references, and will be used to compare lexical similarity with
             advisory_references (list): the references that were extracted from the NVD references (2nd level references)
-            vulnerability_description (str): the vulnerability description 
+            vulnerability_description (str): the vulnerability description
             connection (sqlite3.connection): the connection with the (commits) database
 
             Optional:
                 preprocessed_vulnerability_description (str): if there is already a preprocess vulnerability description
                 relevant_tags (list): a list of tags that are regarded as relevant tags (affected versions of the software)
-                verbose (bool): to print intermediate output 
-                since (timestamp): lower bound for selecting the candidate commits 
+                verbose (bool): to print intermediate output
+                since (timestamp): lower bound for selecting the candidate commits
                 until (timestamp): upper bound for selecting the candidate commits
         '''
         self.id = vulnerability_id
@@ -459,7 +461,7 @@ class Advisory_record:
 
         #whether to print or not to print
         self.verbose = verbose
-        
+
         self.since = since
         self.until = until
 
@@ -469,7 +471,7 @@ class Advisory_record:
         '''
         def __init__(self, url, repo_url):
             self.url = url
-            self.repo_url = re.sub('\.git$|/$', '', repo_url) 
+            self.repo_url = re.sub('\.git$|/$', '', repo_url)
 
         def is_pull_page(self):
             return self.repo_url+'/pull/' in self.url
@@ -657,12 +659,12 @@ def remove_forbidden_words_from_string(string, forbidden_words):
     Input:
         string (str): the string to remove words from
         forbidden_words (list/str): the words to remove
-    
+
     Returns:
         str: the string without the forbidden words
     '''
     if type(forbidden_words) == 'str':
-        forbidden_words = forbidden_words.split(' ') 
+        forbidden_words = forbidden_words.split(' ')
     try:
         return ' '.join([token for token in string.split(' ') if token not in forbidden_words])
     except:
@@ -671,7 +673,7 @@ def remove_forbidden_words_from_string(string, forbidden_words):
 def compute_lexical_similarity_components(advisory_record, candidate_commit_df):
     '''
     This function computes the lexical similarity features:
-        First, the descriptions are preprocessed and fix indicating words are added to the 
+        First, the descriptions are preprocessed and fix indicating words are added to the
         description which is compared with the commit messages. The lexical similarity is
         computed for three vulnerability aspects:
          - the commit message + fix indicating words
@@ -679,7 +681,7 @@ def compute_lexical_similarity_components(advisory_record, candidate_commit_df):
          - the code tokens extracted from the vulnerability description
         @TODO: the reference content and code tokens lexical similarity features are not of
         high predictive value, and it might be more efficient to discard these features
-    
+
     Input:
         advisory_record: containing all information
         candidate_commit_df (pd.DataFrame): The dataframe containing the commit content
@@ -692,7 +694,7 @@ def compute_lexical_similarity_components(advisory_record, candidate_commit_df):
     description = advisory_record.preprocessed_description
     description = remove_project_name_from_string(string=description, project_name=project_name)
     description_with_fix_indicating_words = description + ' '.join(fix_indicating_words) # for the commit message
-    
+
     # CODE TOKENS
     code_tokens = simpler_filter_text(extract_code_tokens(advisory_record.description))
     code_tokens = remove_project_name_from_string(string=code_tokens, project_name=project_name)
@@ -725,18 +727,18 @@ def compute_lexical_similarity_components(advisory_record, candidate_commit_df):
     else:
         # vulnerability description
         candidate_commit_df['message_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[0], tfidf_messages[x.name+3])[0][0], axis=1) #x.name is index
-        candidate_commit_df['changed_files_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[0], tfidf_files[x.name+3])[0][0], axis=1) 
-        candidate_commit_df['git_diff_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[0], tfidf_diffs[x.name+3])[0][0], axis=1) 
+        candidate_commit_df['changed_files_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[0], tfidf_files[x.name+3])[0][0], axis=1)
+        candidate_commit_df['git_diff_score'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[0], tfidf_diffs[x.name+3])[0][0], axis=1)
 
         # with nvd reference content
         candidate_commit_df['message_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[1], tfidf_messages[x.name+3])[0][0], axis=1) #x.name is index
-        candidate_commit_df['changed_files_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[1], tfidf_files[x.name+3])[0][0], axis=1) 
-        candidate_commit_df['git_diff_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[1], tfidf_diffs[x.name+3])[0][0], axis=1) 
+        candidate_commit_df['changed_files_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[1], tfidf_files[x.name+3])[0][0], axis=1)
+        candidate_commit_df['git_diff_score_reference_content'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[1], tfidf_diffs[x.name+3])[0][0], axis=1)
 
         # with code tokens
         candidate_commit_df['message_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_messages[2], tfidf_messages[x.name+3])[0][0], axis=1) #x.name is index
-        candidate_commit_df['changed_files_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[2], tfidf_files[x.name+3])[0][0], axis=1) 
-        candidate_commit_df['git_diff_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[2], tfidf_diffs[x.name+3])[0][0], axis=1) 
+        candidate_commit_df['changed_files_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_files[2], tfidf_files[x.name+3])[0][0], axis=1)
+        candidate_commit_df['git_diff_score_code_tokens'] = candidate_commit_df.apply(lambda x: cosine_similarity(tfidf_diffs[2], tfidf_diffs[x.name+3])[0][0], axis=1)
     return candidate_commit_df
 
 def is_path(token):
@@ -776,13 +778,13 @@ def compute_path_similarity_score(changed_files, path_tokens_list):
     '''
     Provides a score for the found path and the changed files.
     - a description can mention multiple paths, therefore a sum is returned
-    - a path can match multiple files, therefore the scores are first stored 
+    - a path can match multiple files, therefore the scores are first stored
     in an intermediate score list and only the highest score is kept.
 
     Input:
         changed_files (str/list): the files that have been changed by the commit
         path_tokens_list (list): a list of path tokens found in the description (by extract_path_tokens_from_text())
-    
+
     Returns:
         int: the score
     '''
@@ -797,7 +799,7 @@ def compute_path_similarity_score(changed_files, path_tokens_list):
         reversed_path_tokens = list(reversed([token.lower() for token in path_tokens]))
         with_extension = True if reversed_path_tokens[0] in relevant_extensions else False
 
-        for changed_file in changed_files:       
+        for changed_file in changed_files:
 
             changed_file_tokens = list(reversed([token.lower() for token in re.split('\.|,|/', changed_file)]))
             if with_extension == False:
@@ -812,7 +814,7 @@ def compute_path_similarity_score(changed_files, path_tokens_list):
 
             # adjust for only changing the right extension
             if with_extension and same_token_count == 1:
-                same_token_count -= 1 
+                same_token_count -= 1
             intermediate_scores.append(same_token_count)
         path_similarity_scores.append(max(intermediate_scores))
     return sum(path_similarity_scores)
@@ -820,10 +822,10 @@ def compute_path_similarity_score(changed_files, path_tokens_list):
 def calculate_time_distance_before(commit_timestamp, published_timestamp, first_candidate_timestamp):
     '''
     Used to compute a feature reflecting the distance from a commit and the vulnerability publication data,
-        through comparing timestamps. The score is equal to 0.0 if the commit is after the release date, 
-        and between 0.5 and 1.0 if the commit was before the vulnerability release. 
+        through comparing timestamps. The score is equal to 0.0 if the commit is after the release date,
+        and between 0.5 and 1.0 if the commit was before the vulnerability release.
         The closer the commit is to the release, the higher the value.
-    
+
     Input:
         commit_timestamp (int): the timestamp of the commit
         published_timestamp (int): the timestamp of the vulnerability publication
@@ -837,10 +839,10 @@ def calculate_time_distance_before(commit_timestamp, published_timestamp, first_
 def calculate_time_distance_after(commit_timestamp, published_timestamp, last_candidate_timestamp):
     '''
     Used to compute a feature reflecting the distance from a commit and the vulnerability publication data,
-        through comparing timestamps. The score is equal to 0.0 if the commit is before the release date, 
-        and between 0.5 and 1.0 if the commit was after the vulnerability release. 
+        through comparing timestamps. The score is equal to 0.0 if the commit is before the release date,
+        and between 0.5 and 1.0 if the commit was after the vulnerability release.
         The closer the commit is to the release, the higher the value.
-    
+
     Input:
         commit_timestamp (int): the timestamp of the commit
         published_timestamp (int): the timestamp of the vulnerability publication
@@ -855,10 +857,10 @@ def tag_to_major_minor(tag):
     '''
     Return the digits corresponding to the major and minor of the tag,
         when versioning is done as MAJOR.MINOR.PATCH
-    
+
     Input:
         tag (str)
-    
+
     Returns:
         tuple: major digit, minor digit
     '''
@@ -884,7 +886,7 @@ def tags_to_tree(tags):
         tags (list): a list of tags in the repository (git_repo.get_tags())
 
     Returns:
-        dict: a dictionary where the keys are all major versions, 
+        dict: a dictionary where the keys are all major versions,
             and the values are another dictionary with the minor versions as keys
             and a list of tags belonging to that minor version as values.
     '''
@@ -894,7 +896,7 @@ def tags_to_tree(tags):
         major, minor = tag_to_major_minor(tag)
 
         # add to results
-        if major not in result.keys(): 
+        if major not in result.keys():
             result[major] = dict()
         if minor not in result[major].keys():
             result[major][minor] = list()
@@ -908,9 +910,9 @@ def sort_tags_tree(tree, tag_timestamp_dict):
     Input:
         tree (dict): tree created by tags_to_tree(tags)
         tag_timestamp_dict (dict): a dictionary with tags a keys and timestamp as values
-    
+
     Returns:
-        dict: a dictionary where the keys are all major versions, 
+        dict: a dictionary where the keys are all major versions,
             and the values are another dictionary with the minor versions as keys
             and a list of tags belonging to that minor version as values sorted on timestamp.
     '''
@@ -960,7 +962,7 @@ def find_next_tag_in_tags_tree(tag, sorted_tags_tree, tag_timestamp_dict, tag_ti
         if tag_timestamp_dict[tag] < tag_timestamp_dict[possible_next_tag]:
             return possible_next_tag
         # try again for the possible next tag
-        else: 
+        else:
             return find_next_tag_in_tags_tree(possible_next_tag, sorted_tags_tree, tag_timestamp_dict, tag_timestamp, first_call=False)
 
     # if there is no tag with a later timestamp in the same MAJOR, return the original tag
@@ -996,19 +998,19 @@ def calculate_reachability_score(row, tag_timestamp_dict, reachable_commits, rel
             the IDs of commits that are reachable and for which a score should be calculated
         relevant_tags (list): a list of tags to calculate the reachability from
         days_before (int): the maximum number of days the commit can be away from the tag timestamp and get a score of higher than 0.0
-    
+
     Returns:
         float: the reachability score
     '''
     return 1.0 - (min([int((int(tag_timestamp_dict[tag]) - int(row['timestamp']))/86400) if row['id'] in reachable_commits[tag] else days_before for tag in relevant_tags]) / days_before) if len(relevant_tags) > 0 else 0.0
-    
+
 def compute_commit_distance_components(advisory_record, candidate_commit_df, days_before=100):
     '''
     This function computes the commit distance  features:
         - time distance before
         - time distance after
         - reachability score
-    
+
     Input:
         advisory_record: containing all information
         candidate_commit_df (pd.DataFrame): The dataframe containing the commit content
@@ -1021,7 +1023,7 @@ def compute_commit_distance_components(advisory_record, candidate_commit_df, day
 
     # gather the tags in the description
     if advisory_record.relevant_tags == None:
-        cursor.execute("SELECT tag FROM tags WHERE repo_url = :repo_url", {'repo_url' : advisory_record.repo_url}) 
+        cursor.execute("SELECT tag FROM tags WHERE repo_url = :repo_url", {'repo_url' : advisory_record.repo_url})
         tags = [row['tag'] for row in cursor]
         if len(tags) == 0:
             advisory_record.relevant_tags = []
@@ -1049,7 +1051,7 @@ def compute_commit_distance_components(advisory_record, candidate_commit_df, day
     elif len(advisory_record.relevant_tags) == 1:
         advisory_record.relevant_tags.append(advisory_record.relevant_tags[0])
 
-    cursor.execute("SELECT tag, tag_timestamp FROM tags WHERE repo_url = :repo_url", {'repo_url':advisory_record.repo_url}) 
+    cursor.execute("SELECT tag, tag_timestamp FROM tags WHERE repo_url = :repo_url", {'repo_url':advisory_record.repo_url})
     tag_timestamp_dict = {row['tag'] : row['tag_timestamp'] for row in cursor}
 
     tags_to_calculate_reachability_from = tuple([map_tag_onto_next_tag(tag, tag_timestamp_dict) for tag in advisory_record.relevant_tags])
@@ -1067,7 +1069,7 @@ def compute_commit_distance_components(advisory_record, candidate_commit_df, day
 
     # calculate scores
     candidate_commit_df['reachability_score'] = candidate_commit_df.apply(calculate_reachability_score, tag_timestamp_dict=tag_timestamp_dict, reachable_commits=reachable_commits, relevant_tags=tags_to_calculate_reachability_from, days_before=days_before, axis=1)
-    
+
     return candidate_commit_df
 
 def if_commit_id_in_list(commit_id, commits_found_list):
@@ -1088,7 +1090,7 @@ def compute_referred_to_components(advisory_record, candidate_commit_df):
     This function computes the commit distance features:
         - referred to by NVD (1st level)
         - referred to by advisories (2nd level)
-    
+
     Input:
         advisory_record: containing all information
         candidate_commit_df (pd.DataFrame): The dataframe containing the commit content
@@ -1114,7 +1116,7 @@ def if_other_vulnerability_id_in_message(message, vulnerability_id):
     '''
     Checks whether the vulnerability ID is NOT in the commit message but a differint ID is
     '''
-    if vulnerability_id.lower() not in message.lower() and 'cve-' in message.lower(): 
+    if vulnerability_id.lower() not in message.lower() and 'cve-' in message.lower():
         return 1
     return 0
 
@@ -1181,7 +1183,7 @@ def compute_ranking_vectors_for_advisory_records_with_db(advisory_record, vulner
     #commit message references
     candidate_commit_df['git_issue_reference'] = candidate_commit_df['message'].apply(contains_issue_reference)
     candidate_commit_df['contains_jira_reference'] = candidate_commit_df['message'].apply(contains_jira_reference)
-    
+
     # add path score
     path_tokens_list = extract_path_tokens_from_text(advisory_record.description)
     candidate_commit_df['path_similarity_score'] = candidate_commit_df['changed_files'].apply(compute_path_similarity_score, path_tokens_list=path_tokens_list)
@@ -1193,7 +1195,7 @@ def compute_ranking_vectors_for_advisory_records_with_db(advisory_record, vulner
     candidate_commit_df = compute_lexical_similarity_components(advisory_record, candidate_commit_df)
     candidate_commit_df = compute_commit_distance_components(advisory_record, candidate_commit_df, days_before=100)
     candidate_commit_df = compute_referred_to_components(advisory_record, candidate_commit_df)
-    
+
     # normalize the values
     candidate_commit_df.drop(columns=['timestamp', 'preprocessed_diff', 'preprocessed_message', 'preprocessed_changed_files'], inplace=True)
     if vulnerability_specific_scaling:
@@ -1227,7 +1229,7 @@ def get_first_commit_timestamp(repo_url, git_repo=None):
 # def ranking_vector_dict_to_df(ranking_vector_dict, ranking_vector_names):
 #     '''
 #     Previously, dictionaries were used to store the ranking vectors. These dictionaries had vulnerability IDs as keys,
-#         and another dict as values, with commit IDs as keys and the ranking vectors as values. This has been changed 
+#         and another dict as values, with commit IDs as keys and the ranking vectors as values. This has been changed
 #         to pd.DataFrame usage, this function can be used to turn one of these dictionaries to a dataframe.
 #     '''
 #     column_names = ['vulnerability_id', 'commit_id'] + ranking_vector_names
@@ -1247,7 +1249,7 @@ def rank_candidates(model, ranking_vectors):
     Input:
         model: the model to use (Scikit-Learn model with predict_proba method)
         ranking_vectors (pd.DataFrame): the dataframe with the features
-    
+
     Returns:
         tuple: the commit IDs sorted on the probability of being the fix commit
     '''
@@ -1290,12 +1292,12 @@ def evaluate_ranking(ranked_vulnerability_candidates, vulnerabilities, fix_commi
     Input:
         ranked_vulnerability_candidates (dict): the ranking results as returned by rank_ranking_vectors()
         vulnerabilities (list): the vulnerability IDs of the vulnerabilities to evaluate
-        fix_commits_df (pd.DataFrame): the dataframe with fix commits 
+        fix_commits_df (pd.DataFrame): the dataframe with fix commits
         validation_method (str): if set to 'all' validation will be based on averaging on all known fix commits,
             otherwise just on the highest ranked fix commit
         k (list): a list of positions (int) to add as a column in the evaluation df
         verbose (bool): to print additional output
-    
+
     Returns:
         pd.DataFrame: a dataframe presenting the evaluation of the ranking
     '''
@@ -1312,7 +1314,7 @@ def evaluate_ranking(ranked_vulnerability_candidates, vulnerabilities, fix_commi
             if vulnerability not in list(fix_commits_df.vulnerability_id):
                 no_fixes_count += 1
 
-            elif validation_method == 'all':            
+            elif validation_method == 'all':
                 fix_commits = list(fix_commits_df[fix_commits_df.vulnerability_id == vulnerability].commit_id)
                 fix_commit_positions = [ranked_candidates.index(fix_commit) for fix_commit in fix_commits if fix_commit in ranked_candidates]
 
@@ -1354,7 +1356,7 @@ def create_train_and_test_datasets(ranking_vector_df, vulnerability_ids, fix_com
         pd.DataFrame: x_train, the training set
         pd.DataFrame: x_test, the test set
         np.array: y_train, the labels of x_train
-        np.array: y_test, the labels of x_test 
+        np.array: y_test, the labels of x_test
     '''
     random.seed(21)
 
@@ -1368,7 +1370,7 @@ def create_train_and_test_datasets(ranking_vector_df, vulnerability_ids, fix_com
 
         # add non fix commits
         n_fix_commits = len(fix_commits)
-        random.shuffle(non_fix_commits) 
+        random.shuffle(non_fix_commits)
         commits_to_select = non_fix_commits[:negative_samples_multiplier*n_fix_commits]
         labels += [0] * len(commits_to_select)
 
@@ -1398,12 +1400,12 @@ def analyse_ranking_results(ranking_results_df, method, train_or_test, k=[5, 10,
         method (str): a textual column will be added containing this value
         train_or_test (str): to specify it is the train or test data
         k (list): a list of positions (int) to add as a column in the evaluation df
-    
+
     Returns:
         pd.DataFrame: a dataframe presenting the ranking results
     '''
     df = pd.DataFrame()
-    
+
     df.at[0, 'method'] = method
     df.at[0, 'train_or_test'] = train_or_test
     df.at[0, 'avg_precision'] = np.mean(ranking_results_df.precision)
@@ -1423,7 +1425,7 @@ def analyze_cross_validate_df(cross_validate_df, validation_methods_to_keep=['al
     Input:
         ranking_results_df (pd.DataFrame): the results of analyse_ranking_results() with cross validation
         validation_methods_to_keep (list): a list of values used for the validation methods
-    
+
     Returns:
         pd.DataFrame: a dataframe presenting the ranking results
     '''
@@ -1431,7 +1433,7 @@ def analyze_cross_validate_df(cross_validate_df, validation_methods_to_keep=['al
 
     columns = ['avg_precision', 'avg_max_ranking_pos', 'med_max_ranking_pos', 'recall_at_5', 'recall_at_10', 'recall_at_20']
     column_values_dict = {column : list() for column in columns}
-    
+
     # # process the entries
     cross_validate_df['validation_method'] = cross_validate_df['method'].apply(lambda x: x.split('-')[1])
     cross_validate_df['method'] = cross_validate_df['method'].apply(lambda x: x.split('-')[0])
@@ -1443,7 +1445,7 @@ def analyze_cross_validate_df(cross_validate_df, validation_methods_to_keep=['al
         # #select the relevant rows
         cross_validate_df.drop(columns=['index'], inplace=True)
         grouped_cross_validate_df = cross_validate_df.groupby(['train_or_test', 'method', 'validation_method']).mean()
-        
+
         for row in grouped_cross_validate_df.iterrows():
             subset = cross_validate_df[(cross_validate_df.method == row[0][1]) & (cross_validate_df.validation_method == row[0][2]) & (cross_validate_df.train_or_test == row[0][0])]
             for column in columns:

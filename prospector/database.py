@@ -10,9 +10,6 @@ current_working_directory = os.getcwd()
 os.chdir('git_explorer')
 sys.path.append(os.getcwd())
 
-# os.environ['GIT_CACHE'] = current_working_directory + '/git_explorer/git_explorer_cache'
-# GIT_CACHE = current_working_directory + '/git_explorer/git_explorer_cache'
-
 GIT_CACHE = ''
 if 'GIT_CACHE' in os.environ:
     GIT_CACHE = os.environ['GIT_CACHE']
@@ -97,7 +94,7 @@ repo_urls_to_github_url_mapping_dict = {
 
 def timestamp_to_timestamp_interval(timestamp, days_before, days_after):
     '''
-    Function to map a timestamp to an interval of two timestamps, 
+    Function to map a timestamp to an interval of two timestamps,
         the interval can be specified by the variables days_before and days_after.
 
     Input:
@@ -117,41 +114,41 @@ def get_commit_ids_between_timestamp_interval(since, until, git_repo=None, repos
     Function to get all commit IDs that have been committed in the timestamp interval
         Based on git_explorer.core.get_commits()
         The order is from newest to oldest: the result[0] is the most recent one (larger timestamp), the result[-1] is the oldest (smallest timestamp)
-    
+
     Input:
         since (str/int/float): timestamp in format i.e. '123456789'
         until (str/int/float): timestamp in format i.e. '123456789'
         git_repo (git_explorer.core.Git): to use for extracting the content
         repository_url (str): if git_repo is not provided, a repository url is needed to initialize the git_repo
-    
+
     Returns:
         list: the commit IDs that have been committed in the timestamp interval
     '''
     if git_repo == None and repository_url ==None:
         raise ValueError('Provide a git_repo or a repository_url')
-    
+
     if int(since) >= int(until):
         raise ValueError('The timestamps provided result in an interval without commit IDs, as since >= until.')
-    
+
     if git_repo == None:
         git_repo = Git(repository_url, cache_path=GIT_CACHE)
         git_repo.clone(skip_existing=True)
-        
+
     # create git command
     cmd = ["git", "rev-list", "--all"]
     cmd.append("--since=" + str(since))
     cmd.append("--until=" + str(until))
-    
+
     try:
         out = git_repo._exec.run(cmd)
     except:
         print("Git command failed. Could not obtain commit ids.")
         return
-    
+
     return [l.strip() for l in out]
 
-def get_hunks_from_diff(diff_lines): 
-    '''  
+def get_hunks_from_diff(diff_lines):
+    '''
     Extracts the hunks from the Git diff
         based on git_explorer/commit.py get_hunks()
 
@@ -211,7 +208,7 @@ def get_hunks_from_diff(diff_lines):
     return flatten_groups(hunks)
 
 def get_changed_files_from_diff(diff_lines):
-    '''  
+    '''
     Extracts the changed files from the Git diff
 
     Input:
@@ -219,7 +216,7 @@ def get_changed_files_from_diff(diff_lines):
 
     Returns:
         list: a list of changed files
-    '''  
+    '''
     if type(diff_lines) == str:
         try:
             diff_lines = ast.literal_eval(diff_lines)
@@ -237,17 +234,17 @@ def extract_commit_message_reference_content(commit_message, repo_url, driver=No
         commit_message (list/str): the commit message
         repo_url (str): the repository URL (when commits refer to a Git issue)
         driver: a webdriver can be provided to avoid javascript required pages
-    
+
     Returns:
         list: a list containing the preprocessed content of the references that have been found
     '''
     if type(commit_message) == list:
         commit_message = ' '.join(commit_message)
 
-    repo_url = re.sub('\.git$|/$', '', repo_url) 
+    repo_url = re.sub('\.git$|/$', '', repo_url)
     references = rank.find_references(commit_message)
     references_content = list()
-    
+
     for reference in references:
         time.sleep(0.5)
         try:
@@ -259,9 +256,9 @@ def extract_commit_message_reference_content(commit_message, repo_url, driver=No
                 # check if reference is found and whether it is an issue or pull page
                 if reference.lstrip('#') in r.url and ('/issues/' in r.url or '/pull/' in r.url):
                     references_content.append(rank.simpler_filter_text(' '.join([string for string in soup.stripped_strings if string not in strings_on_every_GitHub_page])))
-            else: 
+            else:
                 if 'securityfocus.com' in reference.strip('/.'): #securityfocus.com requires a selection in a menu
-                    reference = reference.strip('/.') + '/discuss' 
+                    reference = reference.strip('/.') + '/discuss'
 
                 try:
                     r = requests.get(reference.strip('.')) #can be end of the sentence
@@ -303,19 +300,19 @@ def connect_with_database(path, as_row_factory=True, verbose=True):
         path (str): the path where the database can be found or should be created. Can be set to ":memory:" to prototype in memory.
         as_row_factory (bool): SQLite allows for a dict-like usage, when as_row_factory=True this functionality is used.
         verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
-    
+
     Returns:
         sqlite3.connection: the connection with the database
         sqlite3.cursor: the cursor of the database
     '''
     # creates the file if it is not there, otherwise connects with it
     connection = sqlite3.connect(path)
-    
+
     if as_row_factory:
         connection.row_factory = sqlite3.Row
-    
+
     cursor = connection.cursor()
-    
+
     try:
         cursor.execute("SELECT COUNT(id) FROM commits")
         if verbose: print('Opening database on path {}'.format(path))
@@ -386,23 +383,23 @@ def add_commits_to_database(connection, commit_ids, git_repo=None, repository_ur
     '''
     if git_repo == None and repository_url ==None:
         raise ValueError('Provide a git_repo or a repository_url')
-        
+
     if git_repo == None:
         git_repo = Git(repository_url, cache_path=GIT_CACHE)
         git_repo.clone(skip_existing=True)
-    
+
     if repository_url==None:
         repository_url = git_repo.get_url()
     repository_url = re.sub('\.git$|/$', '', repository_url)
-    
+
     if type(commit_ids) == str:
         commit_ids = [commit_ids]
     if len(commit_ids) == 0:
         print('No commit IDs were provided')
         return
-    
+
     cursor = connection.cursor()
-    
+
     # to not add duplicates
     commit_ids = list(dict.fromkeys(commit_ids))  # to get only unique ids
     commits_already_in_the_db = list(pd.read_sql("SELECT id FROM commits WHERE id IN {} and repository_url = '{}'".format(tuple(commit_ids+[commit_ids[0]]), repository_url), connection).id)
@@ -430,16 +427,16 @@ def add_commits_to_database(connection, commit_ids, git_repo=None, repository_ur
             preprocessed_message = rank.simpler_filter_text(message)
             preprocessed_diff = rank.simpler_filter_text(re.sub('[^A-Za-z0-9]+', ' ', ' '.join(rank.extract_relevant_lines_from_commit_diff(diff))))
             preprocessed_changed_files = rank.simpler_filter_text(changed_files)
-            
+
             if with_message_references_content:
                 commit_message_reference_content = extract_commit_message_reference_content(message, repository_url, driver)
                 preprocessed_commit_message_reference_content = rank.extract_n_most_occurring_words(commit_message_reference_content, n=20)
             else:
                 commit_message_reference_content, preprocessed_commit_message_reference_content = None, None
-                
+
             # add to database
             with connection:
-                cursor.execute("INSERT INTO commits VALUES (:repository_url, :id, :timestamp, :message, :changed_files, :diff, :hunks, :commit_message_reference_content, :preprocessed_message, :preprocessed_diff, :preprocessed_changed_files, :preprocessed_commit_message_reference_content)", 
+                cursor.execute("INSERT INTO commits VALUES (:repository_url, :id, :timestamp, :message, :changed_files, :diff, :hunks, :commit_message_reference_content, :preprocessed_message, :preprocessed_diff, :preprocessed_changed_files, :preprocessed_commit_message_reference_content)",
                     {'repository_url':repository_url, 'id':commit_id, 'timestamp':str(timestamp), 'message':str(message), 'changed_files':str(changed_files), 'diff':str(diff), 'hunks':str(hunks), 'commit_message_reference_content':commit_message_reference_content, 'preprocessed_message':preprocessed_message, 'preprocessed_diff':preprocessed_diff, 'preprocessed_changed_files':preprocessed_changed_files, 'preprocessed_commit_message_reference_content':preprocessed_commit_message_reference_content})
         except:
             print('    Failed to add commit {}'.format(commit_id))
@@ -483,20 +480,20 @@ def add_repository_to_database(connection, repo_url, project_name, verbose=True)
         project_name (str): the project name to add
         verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
     '''
-    repo_url = re.sub('\.git$|/$', '', repo_url) 
+    repo_url = re.sub('\.git$|/$', '', repo_url)
     cursor = connection.cursor()
 
     # if it does not exist yet
     if cursor.execute("SELECT EXISTS(SELECT 1 FROM repositories WHERE repo_url = :repo_url LIMIT 1) AS 'exists';", {'repo_url':'repo_url'}).fetchone()['exists'] == 0:
         with connection:
-            cursor.execute("INSERT INTO repositories VALUES (:repo_url, :project_name)", 
+            cursor.execute("INSERT INTO repositories VALUES (:repo_url, :project_name)",
                 {'repo_url':repo_url, 'project_name':project_name})
         if verbose: print('    Successfully added repository to the repositories table.')
     elif verbose:
         print('    repo_url {} is already in the db'.format(repo_url))
     cursor.close()
     return
-    
+
 ##################################
 ###
 ### TAGS TABLE
@@ -541,11 +538,11 @@ def add_tags_to_database(connection, tags=None, git_repo=None, repo_url=None, ve
     if git_repo == None:
         git_repo = Git(repo_url, cache_path=GIT_CACHE)
         git_repo.clone(skip_existing=False)
-    
+
     if repo_url==None:
         repo_url = git_repo.get_url()
 
-    repo_url = re.sub('\.git$|/$', '', repo_url) 
+    repo_url = re.sub('\.git$|/$', '', repo_url)
 
     if tags == None:
         tags = git_repo.get_tags()
@@ -604,12 +601,12 @@ def connect_with_vulnerabilities_database(path, as_row_factory=True, verbose=Tru
     '''
     # creates the file if it is not there, otherwise connects with it
     connection = sqlite3.connect(path)
-    
+
     if as_row_factory:
         connection.row_factory = sqlite3.Row
-    
+
     cursor = connection.cursor()
-    
+
     try:
         cursor.execute("CREATE INDEX IF NOT EXISTS vulnerability_id ON vulnerabilities(vulnerability_id)")
     except:
@@ -636,7 +633,7 @@ def create_vulnerabilities_table(connection):
         sqlite3.connection: the connection with the database
     '''
     cursor = connection.cursor()
-    
+
     with connection:
         cursor.execute('''CREATE TABLE vulnerabilities (
             vulnerability_id text,
@@ -733,13 +730,13 @@ def add_vulnerability_to_database(connection, vulnerability_id, repo_url, descri
                     raise ValueError("Since the provided vulnerability ID {} cannot be found in the NVD, you must provide a advisory references manually.".format(vulnerability_id))
                 else:
                     references = nvd_references
-            
+
         # add to the database
         preprocessed_description = rank.simpler_filter_text(description)
         with connection:
             cursor.execute("INSERT INTO vulnerabilities VALUES (:vulnerability_id, :repo_url, :description, :published_timestamp, :preprocessed_description)",
             {'vulnerability_id':vulnerability_id, 'repo_url':repo_url, 'description':description, 'published_timestamp':str(published_timestamp), 'preprocessed_description':preprocessed_description})
-    
+
         # add the references to the database
         if references != None and len(references) > 0:
             add_vulnerability_references_to_database(connection, vulnerability_id, references, driver=driver, verbose=verbose)
@@ -757,7 +754,7 @@ def create_vulnerability_references_table(connection):
         sqlite3.cursor: the cursor of the database
     '''
     cursor = connection.cursor()
-    
+
     with connection:
         cursor.execute('''CREATE TABLE vulnerability_references (
             url text,
@@ -798,7 +795,7 @@ def add_vulnerability_references_to_database(connection, vulnerability_id, refer
             elif any([term in reference for term in test_url_terms]) == False:
                 try:
                     if 'securityfocus.com' in reference.strip('/.'): #securityfocus.com requires a selection in a menu
-                        reference = reference.strip('/.') + '/discuss' 
+                        reference = reference.strip('/.') + '/discuss'
                     try:
                         r = requests.get(reference.strip('.')) #can be end of the sentence
                         soup = BeautifulSoup(r.content, "html.parser")
@@ -840,7 +837,7 @@ def add_vulnerability_references_to_database(connection, vulnerability_id, refer
 
 def create_advisory_references_table(connection, verbose=True):
     '''
-    # @TODO: add a column that contains the URL from which this URL is obtained, 
+    # @TODO: add a column that contains the URL from which this URL is obtained,
         to allow for deselecting references on the NVD level and thereby also deselecting
         the advisory references that have been extracted from this NVD reference.
 
@@ -849,7 +846,7 @@ def create_advisory_references_table(connection, verbose=True):
         verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
     '''
     cursor = connection.cursor()
-    
+
     with connection:
         cursor.execute('''CREATE TABLE advisory_references (
             url text,
@@ -881,7 +878,7 @@ def add_advisory_references_to_database(connection, vulnerability_id, references
     for reference in references:
         # check if the advisory url is not in the DB
         if cursor.execute("SELECT EXISTS(SELECT 1 FROM advisory_references WHERE  url = :url AND vulnerability_id = :vulnerability_id LIMIT 1) AS 'exists';", {'url' : reference, 'vulnerability_id':vulnerability_id}).fetchone()['exists'] == 0:
-        
+
             # add to database
             with connection:
                 cursor.execute("INSERT INTO advisory_references VALUES (:url, :vulnerability_id)",
@@ -900,7 +897,7 @@ def create_vulnerability_fixes_table(connection):
         sqlite3.cursor: the cursor of the database
     '''
     cursor = connection.cursor()
-    
+
     with connection:
         cursor.execute('''CREATE TABLE fix_commits (
             commit_id text,
@@ -924,7 +921,7 @@ def add_vulnerability_fixes_to_database(connection, vulnerability_id, commit_ids
         verbose (bool): "Definition of verbose: containing more words than necessary: WORDY"
     '''
     cursor = connection.cursor()
-    
+
     if type(commit_ids) == str: #if one commit id is provided
         commit_ids = [commit_ids]
     repo_url = re.sub('\.git$|/$', '', repo_url)

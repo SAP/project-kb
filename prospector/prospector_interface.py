@@ -27,8 +27,10 @@ current_working_directory = os.getcwd()
 os.chdir('git_explorer')
 sys.path.append(os.getcwd())
 
-os.environ['GIT_CACHE'] = current_working_directory + '/git_explorer/git_explorer_cache'
-GIT_CACHE = os.environ['GIT_CACHE']
+GIT_CACHE = ''
+if 'GIT_CACHE' in os.environ:
+    GIT_CACHE = os.environ['GIT_CACHE']
+
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
 os.chdir(current_working_directory)
@@ -85,7 +87,7 @@ def main():
 def load_vulnerabilities():
     prospector_connection, prospector_cursor = database.connect_with_database(commits_db_path)
     vulnerabilities_connection, vulnerabilities_cursor = database.connect_with_vulnerabilities_database(vulnerabilities_db_path)
-    
+
     print("Reading vulnerabilities")
     vulnerabilities_df = pd.read_sql("SELECT * FROM vulnerabilities", vulnerabilities_connection).set_index("vulnerability_id")
     db_references_df = pd.read_sql("SELECT vulnerability_id, url, preprocessed_content FROM vulnerability_references", vulnerabilities_connection)
@@ -108,7 +110,7 @@ def load_vulnerabilities():
 def map_description_to_repository_url(vulnerability_id, description, vulnerabilities_df, repository_url_df):
     # if the vulnerabilities df is empty
     if type(vulnerabilities_df) == type(None):
-        return 
+        return
 
     if vulnerability_id in list(vulnerabilities_df.index):
         return vulnerabilities_df.at[vulnerability_id, 'repo_url']
@@ -172,19 +174,19 @@ def dashboard_page(state):
 
     # with st.beta_expander(label="Find out more", expanded=False):
     st.write('''
-        The objective of Prospector is to minimize the (manual) effort needed for finding 
-        the fix commit of a known vulnerability in an open-source software project. 
-        Since these repositories can contain hundreds thousands commits, the commits are 
-        firstly filtered by only selecting all commits within two years before and 
-        one hundred days after the release date with a maximum of respectively 5215 and 100 commits. 
+        The objective of Prospector is to minimize the (manual) effort needed for finding
+        the fix commit of a known vulnerability in an open-source software project.
+        Since these repositories can contain hundreds thousands commits, the commits are
+        firstly filtered by only selecting all commits within two years before and
+        one hundred days after the release date with a maximum of respectively 5215 and 100 commits.
         A study has shown that this selection has 93% recall.
         \n
         Firstly, an advisory record is created containing information on the vulnerability.
-        This advisory record is used to select candidate commits. For these candidate commits, 
+        This advisory record is used to select candidate commits. For these candidate commits,
         ranking vectors are computed. These ranking vectors consist of several components that
         can be used to predict whether a candidate commit is the fix commit we are looking for.
-        These candidates are then ranked on this probability score. 
-        
+        These candidates are then ranked on this probability score.
+
         In 77.68% of the cases, the fix is in the top 5. In 84.03% in the top 10,
         and in 88.59% in the top 20.
     ''')
@@ -207,7 +209,7 @@ def dashboard_page(state):
     repo_url = st.text_input("Repository URL", value=map_description_to_repository_url(vulnerability_id=state.vulnerability_id, description=project_name, vulnerabilities_df=state.vulnerabilities_df, repository_url_df=state.repository_url_df) if project_name != '' else '')
     published_date = st.date_input("Vulnerability published date", value=datetime.fromtimestamp(int(cve_published_timestamp)))
     published_timestamp = int(time.mktime(published_date.timetuple()))
-    
+
     state.advisory_record_confirmed = st.button("CONFIRM ADVISORY RECORD") if not state.advisory_record_confirmed else True
     if state.advisory_record_confirmed:
 
@@ -219,7 +221,7 @@ def dashboard_page(state):
         if type(state.vulnerabilities_df) == type(None) or state.vulnerability_id not in list(state.vulnerabilities_df.index):
             vulnerabilities_connection, vulnerabilities_cursor = database.connect_with_vulnerabilities_database(vulnerabilities_db_path)
             database.add_vulnerability_to_database(vulnerabilities_connection, state.vulnerability_id, repo_url, vulnerability_description, published_timestamp)
-            
+
             # if it was not an NVD CVE, or the extraction failed
             if len(references) == 0:
                 try:
@@ -228,7 +230,7 @@ def dashboard_page(state):
                 except:
                     references = st.text_input("Please provide useful references (separated by commas)")
                     references = references.split(',')
-            
+
             database.add_vulnerability_references_to_database(vulnerabilities_connection, state.vulnerability_id, references, driver=None)
             prospector_connection, prospector_cursor = connect_with_commits_database(commits_db_path)
             database.add_tags_to_database(prospector_connection, tags=None, git_repo=None, repo_url=repo_url, verbose=True)
@@ -239,7 +241,7 @@ def dashboard_page(state):
         versions_in_description = filter.retreive_all_versions_from_description(vulnerability_description)
         tags_in_description = list(dict.fromkeys([tag for version in versions_in_description for tag in filter.get_tag_for_version(repository_tags, version)]))
         references = [state.db_references_df.at[index, 'url'] for index in state.db_references_df[state.db_references_df.vulnerability_id == state.vulnerability_id].index]
-    
+
         advisory_references = list(state.advisory_references_df[state.advisory_references_df.vulnerability_id == state.vulnerability_id].url)
 
         # allow the user to influence the filtering
@@ -251,7 +253,7 @@ def dashboard_page(state):
             first_commit_date, today = datetime.fromtimestamp(int(first_commit_timestamp)).date(), datetime.fromtimestamp(int(time.time())).date()
             lower_bound = published_date - timedelta(days=730) if published_date - timedelta(days=730) > first_commit_date else first_commit_date
             upper_bound = published_date + timedelta(days=100) if published_date + timedelta(days=100) < today else today
-            
+
             since, until = st.slider("Published date based interval", min_value = first_commit_date, max_value = today, value=(lower_bound, upper_bound))
             since, until = int(time.mktime(since.timetuple())), int(time.mktime(until.timetuple()))
 
@@ -291,11 +293,11 @@ def dashboard_page(state):
 
             references_content = tuple(state.db_references_df[(state.db_references_df.vulnerability_id == state.vulnerability_id) & (state.db_references_df.url.isin(selected_references))].preprocessed_content)
             references_content = rank.extract_n_most_occurring_words(rank.remove_forbidden_words_from_string(string=' '.join(references_content), forbidden_words = rank.reference_stopwords + project_name.split(' ')), n=20)
-            
+
             st.write(references_content)
 
             advisory_record = rank.Advisory_record(state.vulnerability_id, published_timestamp, repo_url, selected_references, references_content, advisory_references, vulnerability_description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=relevant_tags, verbose=True, since=since, until=until)
-            
+
             print("\nGathering candidate commits and computing ranking vectors.")
             advisory_record.gather_candidate_commits()
             advisory_record.compute_ranking_vectors()
@@ -310,7 +312,7 @@ def dashboard_page(state):
             advisory_record.ranking_vectors.set_index('commit_id', inplace=True)
             output = prospector_main.advisory_record_to_output(advisory_record, model, prospector_cursor, k=k)
             tmp_download_link = download_link(output, 'Prospector_results-{}.txt'.format(state.vulnerability_id), "Click here to download Prospector's results as a txt file!")
-            
+
             st.header("Results")
 
             st.markdown(tmp_download_link, unsafe_allow_html=True)

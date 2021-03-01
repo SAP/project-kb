@@ -20,8 +20,9 @@ os.chdir(current_working_directory)
 os.chdir('../../database_creation')
 sys.path.insert(1, '../database_creation')
 
-GIT_CACHE = '/mnt/c/Users/I537960/Documents/git_explorer_cache'
-os.environ['GIT_CACHE'] = '/mnt/c/Users/I537960/Documents/git_explorer_cache'
+GIT_CACHE = ''
+if 'GIT_CACHE' in os.environ:
+    GIT_CACHE = os.environ['GIT_CACHE']
 
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
@@ -52,7 +53,7 @@ def git_repo(example_advisory_record):
     git_repo = Git(example_advisory_record['repo_url'], cache_path=GIT_CACHE)
     git_repo.clone(skip_existing=True)
     return git_repo
-   
+
 @pytest.fixture()
 def tags(git_repo):
     tags = git_repo.get_tags()
@@ -196,7 +197,7 @@ def test_get_tag_for_version_errors_2(tags=[]):
         filter.get_tag_for_version(tags, 'version-1.8')
 
 
-# 
+#
 # get_timestamp_for_tag
 #
 

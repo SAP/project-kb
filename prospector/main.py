@@ -15,13 +15,10 @@ current_working_directory = os.getcwd()
 os.chdir('git_explorer')
 sys.path.append(os.getcwd())
 
-#  = current_working_directory + '/git_explorer/git_explorer_cache'
-# current_working_directory + '/git_explorer/git_explorer_cache'
-
 GIT_CACHE = ''
 if 'GIT_CACHE' in os.environ:
     GIT_CACHE = os.environ['GIT_CACHE']
-    
+
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
 os.chdir(current_working_directory)
@@ -56,20 +53,20 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
     model = load(model_path)
     universal_columns_scaler = load(min_max_scaler_path)
 
-    # databases are created in the notebook database_creation.ipynb 
+    # databases are created in the notebook database_creation.ipynb
     # the vulnerabilities database
     vulnerabilities_connection, vulnerabilities_cursor = database.connect_with_vulnerabilities_database('data/prospector-vulnerabilities.db', verbose=verbose)
     # the commits database
     prospector_connection, prospector_cursor = database.connect_with_database('data/prospector-commits.db', verbose=verbose)
 
     # if the vulnerability is already in the database
-    if database.if_new_vulnerability(vulnerabilities_cursor, vulnerability_id) == False: 
+    if database.if_new_vulnerability(vulnerabilities_cursor, vulnerability_id) == False:
         vulnerability = vulnerabilities_cursor.execute("SELECT * FROM vulnerabilities WHERE vulnerability_id = :vulnerability_id", {'vulnerability_id' : vulnerability_id}).fetchone()
-        
+
         # keep the manually provided value if it has been provided, otherwise select the one in the DB
         repo_url = repo_url if repo_url != None else vulnerability['repo_url']
         published_timestamp = published_timestamp if published_timestamp != None else vulnerability['published_date']
-        
+
         if description == None:
             description = vulnerability['description']
             preprocessed_description = vulnerability['preprocessed_description']
@@ -124,7 +121,7 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
         if repo_url == None:
             if verbose: print('Suggesting a repository URL')
             repo_url = rank.map_description_to_repository_url(vulnerabilities_connection, vulnerability_id, description)
-            
+
             print('Does the vulnerability affect the following repository: {} [Y/n]'.format(repo_url))
             choice = input()
             if choice.lower() in ['', 'y', 'yes']: #@TODO: can be a while, where it is either yes or no, not enter
@@ -143,7 +140,7 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
 
         # add the references to the database
         database.add_vulnerability_references_to_database(vulnerabilities_connection, vulnerability_id, references, driver=None, verbose=verbose)
-    
+
     # determine the project_name
     if project_name == None:
         if verbose: print('Suggesting a project name')
@@ -225,11 +222,11 @@ def advisory_record_to_output(advisory_record, model, prospector_cursor, k=20):
     string += 'much time was between the vulnerability release date and the commit timestamp. The \n'
     string += 'reachability_score reflects whether a commit is reachable from one of the tags mentioned\n'
     string += 'in the vulnerability_description.'
-    
+
     string += '\n\nWEIGHTS (Logistic Regression Coefficients):\n{}'.format(pd.DataFrame({'feature' : advisory_record.ranking_vectors.columns, 'importance' : model.coef_[0]}).set_index('feature').sort_values('importance', ascending=False).transpose().loc['importance'])
-    
+
     string += '\n\nADVISORY RECORD - {}'.format(advisory_record.id)
-    
+
     string += '\n - Vulnerability description: {}'.format(advisory_record.description)
     string += '\n - Published timestamp: {}'.format(advisory_record.published_timestamp)
     string += '\n - Repository: {}'.format(advisory_record.repo_url)

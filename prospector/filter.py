@@ -7,8 +7,10 @@ current_working_directory = os.getcwd()
 os.chdir('git_explorer')
 sys.path.append(os.getcwd())
 
-os.environ['GIT_CACHE'] = current_working_directory + '/git_explorer/git_explorer_cache'
-GIT_CACHE = current_working_directory + '/git_explorer/git_explorer_cache'
+GIT_CACHE = ''
+if 'GIT_CACHE' in os.environ:
+    GIT_CACHE = os.environ['GIT_CACHE']
+
 from core import do_clone, Git, Commit, clone_repo_multiple, utils
 
 os.chdir(current_working_directory)
@@ -34,14 +36,14 @@ relevant_extensions = ["java", "c", "cpp", "h", "py", "js", "xml", "go", "rb", "
 def filter_description(description):
     '''
     Returns:
-        list: a list of relevant words within sentences where version numbers are mentioned 
+        list: a list of relevant words within sentences where version numbers are mentioned
     '''
 
     doc = nlp(description)
 
     relevant_sentences = list()
 
-    for sentence in list(doc.sents): 
+    for sentence in list(doc.sents):
 
         relevant_tokens_in_sentence = list()
 
@@ -101,7 +103,7 @@ def recursively_split_version_string(input_version, output_version=[]):
 
     #otherwise check until what position it is a digit (since we want to keep i.e. a multiple digits number as one integer)
     pos = 0
-    while input_version[pos].isdigit() == input_version[pos+1].isdigit() and pos != len(input_version)-2: # 
+    while input_version[pos].isdigit() == input_version[pos+1].isdigit() and pos != len(input_version)-2: #
         pos += 1
 
     return recursively_split_version_string(input_version[pos+1:], output_version + [input_version[:pos+1]])
@@ -198,12 +200,12 @@ def find_next_tag(tag, tags, tag_timestamp, git_repo, digit_indices=None, loop=-
         digit_indices = list(reversed([index for index, val in enumerate(splitted_tag) if type(val) == int]))
         loop = 0
 
-    # searching for valid tags: recursively to evaluate different 
+    # searching for valid tags: recursively to evaluate different
     tried_indices = []
     for index in digit_indices:
 
         # as we're looking for the next tag, it is unlikely that there will be a gap of more than 10
-        for i in range(10): 
+        for i in range(10):
             splitted_tag[index] += 1
 
             possible_tag = ''.join([str(x) for x in splitted_tag])
@@ -232,8 +234,8 @@ def find_next_tag(tag, tags, tag_timestamp, git_repo, digit_indices=None, loop=-
 
 def find_previous_tag(tag, tags, tag_timestamp, git_repo, digit_indices=None, loop=-1):
     '''
-    Tries to find the previous tag by means of decrementing digits in the tag, 
-        and checking whether the new tag exists. It starts at the last digit and works it way back. 
+    Tries to find the previous tag by means of decrementing digits in the tag,
+        and checking whether the new tag exists. It starts at the last digit and works it way back.
         When all digits have become 0, the last element of tag is removed and the process is tried again.
 
     Input:
@@ -259,14 +261,14 @@ def find_previous_tag(tag, tags, tag_timestamp, git_repo, digit_indices=None, lo
         loop = 0
         digit_indices = list(reversed([index for index, val in enumerate(splitted_tag) if type(val) == int]))
 
-    # searching for valid tags: recursively to evaluate different 
+    # searching for valid tags: recursively to evaluate different
     tried_indices = []
     for index in digit_indices:
 
         i = 0
         #sometimes a date is used (thus takes a long time)
         if splitted_tag[index] < 100:
-            while splitted_tag[index] > 0: 
+            while splitted_tag[index] > 0:
                 i += 1
                 splitted_tag[index] -= 1
 
@@ -284,7 +286,7 @@ def find_previous_tag(tag, tags, tag_timestamp, git_repo, digit_indices=None, lo
 
         #when i.e. current tag is 4.5.0 the next tag to evaluate is 4.4.99
         splitted_tag[index] = 99
-        tried_indices.append(index) 
+        tried_indices.append(index)
 
     #when every combination is tried, chop off the last part of the tag
     if loop == 0 and len(tag) > 1:
@@ -302,7 +304,7 @@ def version_to_wide_interval_tags(tags, version, git_repo, tag_margin=1):
     Input:
         tags (list): a list of tags to map version onto
         version (str): the version
-        git_repo (git_explorer.GIT): 
+        git_repo (git_explorer.GIT):
         tag_margin (int): how wide the interval can be
 
     Returns:
@@ -366,7 +368,7 @@ def version_to_wide_interval_tags(tags, version, git_repo, tag_margin=1):
 
 #     for sentence in relevant_sentences:
 #         for token_index, token in enumerate(sentence):
-            
+
 #             # often stated like: version 1.11.x before 1.11.23, therefore a version ending on x can be skipped
 #             if 'd.d' in token.shape_ and token.text[-1].lower() != 'x':
 #                 vulnerable_version, fixed_version = 0, 0
@@ -379,12 +381,12 @@ def version_to_wide_interval_tags(tags, version, git_repo, tag_margin=1):
 #                 elif sentence[token_index + 1].lemma_ in ['before', 'early', 'to', 'inclusive']:
 #                     vulnerable_version = token.text
 
-#                 # when it is an enumeration i.e. 1.2, 1.3, 1.4 and 1.5, or a standalone 
+#                 # when it is an enumeration i.e. 1.2, 1.3, 1.4 and 1.5, or a standalone
 #                 # elif 'd.d' in sentence[token_index + 1].shape_ and sentence[token_index + 1].text != version_to_next_version(token.text):
 #                 #     vulnerable_version = token.text
-                
+
 #                 # not indicating a range
-#                 elif sentence[token_index - 1].lemma_ in ['through', 'in', 'include', 'inclusive'] and sentence[token_index + 1].text not in ['-']: 
+#                 elif sentence[token_index - 1].lemma_ in ['through', 'in', 'include', 'inclusive'] and sentence[token_index + 1].text not in ['-']:
 #                     vulnerable_version = token.text
 
 #                 # add to tag intervals list
@@ -419,7 +421,7 @@ def get_commits_between_interval_tags(intervals_tags, git_repo=None, repo_url=No
 
     # obtain candidate commits with git-explorer
     if git_repo == None:
-        try: 
+        try:
             git_repo = Git(repo_url, cache_path=GIT_CACHE)
             git_repo.clone(skip_existing=True)
         except:
@@ -450,7 +452,7 @@ def get_commits_between_interval_tags(intervals_tags, git_repo=None, repo_url=No
 
 def select_commit_ids_based_on_vulnerability_publish_date(vulnerability_published_timestamp, git_repo=None, repo_url=None, days_before=730, days_after=100, commits_before_cap=5215, commits_after_cap=100):
     '''
-    To select commit IDs based on the vulnerability publish date. 
+    To select commit IDs based on the vulnerability publish date.
     This can be used as a starting position for the search for fix commits.
 
     Input:
@@ -467,7 +469,7 @@ def select_commit_ids_based_on_vulnerability_publish_date(vulnerability_publishe
     '''
 
     if git_repo == None:
-        try: 
+        try:
             git_repo = Git(repo_url, cache_path=GIT_CACHE)
             git_repo.clone(skip_existing=True)
         except:
@@ -503,7 +505,7 @@ def map_advisory_record_onto_candidate_commits(advisory_record):
     '''
     Map the advisory record onto candidate commits.
 
-    Input: 
+    Input:
         advisory_record (dict)
 
     Returns:
@@ -544,7 +546,7 @@ def extract_extensions_from_changed_files(changed_files):
     return [changed_file.split(".")[-1] for changed_file in changed_files]
 
 def changes_relevant_file(extensions):
-    return any([extension in relevant_extensions for extension in extensions]) 
+    return any([extension in relevant_extensions for extension in extensions])
 
 # makes use of the DB
 def filter_commits_on_files_changed_extensions(commit_ids, connection, return_irrelevant_commits=False, verbose=True):
@@ -564,4 +566,4 @@ def filter_commits_on_files_changed_extensions(commit_ids, connection, return_ir
     if verbose: print('    {} / {} candidates do not change a relevant file based on the extension'.format(len(irrelevant_commits_based_on_extension), len(commit_ids)))
     if return_irrelevant_commits:
         return irrelevant_commits_based_on_extension
-    return [commit_id for commit_id in commit_ids if commit_id not in irrelevant_commits_based_on_extension] 
+    return [commit_id for commit_id in commit_ids if commit_id not in irrelevant_commits_based_on_extension]
