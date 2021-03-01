@@ -28,3 +28,4 @@ kaybee/pkged.go
 kaybeeconf.yaml
 prospector/.env
 prospector/workspace.code-workspace
+prospector/.env

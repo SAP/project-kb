@@ -7,6 +7,6 @@ Files: prospector/* kaybee/*  docs/* scripts/* vulnerability-data/* MSR2019/* NO
 Copyright: 2019-2020 SAP SE or an SAP affiliate company and project "KB" contributors
 License: Apache-2.0
 
-Files: mkdocs.yml .chglog/* .github/* CHANGELOG.md CONTRIBUTING.md Makefile go.mod go.sum .pre-commit-config.yaml .gitignore */*.yaml
+Files: mkdocs.yml .chglog/* .github/* CHANGELOG.md CONTRIBUTING.md Makefile go.mod go.sum .pre-commit-config.yaml .gitignore */*.yaml Pipfile prospector/Pipfile.lock
 Copyright: 2019-2020 SAP SE or an SAP affiliate company and project "KB" contributors
 License: CC0-1.0
