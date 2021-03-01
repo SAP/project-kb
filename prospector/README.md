@@ -15,16 +15,24 @@ Please keep in mind that Prospector is under development: feel free to try it ou
 The easiest way to set it up is to clone this repository and then run the following commands:
 
 ```
-# starting from the rood directory of the project
-cd prospector
+git clone https://github.com/sap/project-kb
+cd project-kb/prospector
+echo "GIT_CACHE=/tmp/git-cache" > .env
+mkdir /tmp/git-cache
 pipenv shell
+pipenv install
+python -m spacy download en_core_web_sm
 ```
+
+If you have issues with the above commands, please open a Github issue and explain in detail what you did and what unexpected behaviour you observed. Please also indicate your operating system and Python version.
+
+Please note that Windows is not supported.
 
 ## Use
 
 Through cloning this repository and installing requirements.txt (`pip install -r requirements.txt`), you should be able to use Prospector yourself. There are two options to run prospector:
 
- - Command line interface: `python main.py <vulnerability_id> `
+ - Command line interface: `python main.py <vulnerability_id> -v`
  - StreamLit interface: `streamlit run prospector_interface.py`
 
 For vulnerabilities that are in the NVD (CVEs), you only need to provide the CVE and the URL of the repository that is affected. For vulnerabilities that are not in the NVD, you will need to provide additional information. Furthermore, you can provide all values manually to improve the prediction.
