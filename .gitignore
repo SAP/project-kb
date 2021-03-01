@@ -2,6 +2,7 @@ site
 **/merge.log
 .kaybee
 */cpu.prof
+*.pyc
 kaybee/internal/repository/profile001.pdf
 kaybee/internal/repository/repository.test
 kaybee/internal/tasks/.kaybee
