@@ -255,7 +255,7 @@ func (f *Importer) Run() error {
 		// Skip statements that would not contain neither commits nor affected artifacts
 		if len(s.Fixes) == 0 && len(s.AffectedArtifacts) == 0 {
 			if f.Verbose {
-				fmt.Println("\nNo fix-commits nor affected artifacts for " + s.VulnerabilityID + ", skipping.")
+				fmt.Println("\nNo fix-commits nor (well-known) affected artifacts for " + s.VulnerabilityID + ", skipping.")
 			}
 			continue
 		}
