@@ -85,7 +85,7 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
         if description == None or published_timestamp == None or references == None:
             try:
                 nvd_description, nvd_published_timestamp, nvd_references = database.extract_nvd_content(vulnerability_id)
-            except: #if the vulnerability is not in the NVD
+            except:  # if the vulnerability is not in the NVD
                 nvd_description, nvd_published_timestamp, nvd_references = None, None, None
 
             if description == None:
@@ -136,7 +136,7 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
         preprocessed_description = rank.simpler_filter_text(description)
         with vulnerabilities_connection:
             vulnerabilities_cursor.execute("INSERT INTO vulnerabilities VALUES (:vulnerability_id, :repo_url, :description, :published_timestamp, :preprocessed_description)",
-            {'vulnerability_id':vulnerability_id, 'repo_url':repo_url, 'description':description, 'published_timestamp':str(published_timestamp), 'preprocessed_description':preprocessed_description})
+                                           {'vulnerability_id': vulnerability_id, 'repo_url': repo_url, 'description': description, 'published_timestamp': str(published_timestamp), 'preprocessed_description': preprocessed_description})
 
         # add the references to the database
         database.add_vulnerability_references_to_database(vulnerabilities_connection, vulnerability_id, references, driver=None, verbose=verbose)
@@ -152,8 +152,13 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
         else:
             print('Provide the name of the affected project:')
             project_name = input()
-
-    references_content = tuple(pd.read_sql("SELECT vulnerability_id, url, preprocessed_content FROM vulnerability_references WHERE vulnerability_id = '{}' AND url IN {}".format(vulnerability_id, tuple(references)), vulnerabilities_connection).preprocessed_content)
+    
+    if len(references) > 1:
+        ref = tuple(references)
+    else:
+        ref = '('+str(references)[1:-1]+')'
+    references_content = tuple(pd.read_sql("SELECT vulnerability_id, url, preprocessed_content FROM vulnerability_references WHERE vulnerability_id = '{}' AND url IN {}".format(
+        vulnerability_id, ref), vulnerabilities_connection).preprocessed_content)
     references_content = rank.extract_n_most_occurring_words(rank.remove_forbidden_words_from_string(string=' '.join(references_content), forbidden_words = rank.reference_stopwords + project_name.split(' ')), n=20)
 
     # @TODO: now adding all advisory references --> change to only using the provided references
@@ -164,7 +169,7 @@ def main(vulnerability_id, verbose, description=None, published_timestamp=None, 
         vulnerability_id,
         published_timestamp,
         repo_url,
-        references, references_content, advisory_references, description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=None, verbose=verbose, since=None, until=None)
+        ref, references_content, advisory_references, description, prospector_connection, preprocessed_vulnerability_description=preprocessed_description, relevant_tags=None, verbose=verbose, since=None, until=None)
 
     if verbose:
         print("\nThe following advisory record has been created:")

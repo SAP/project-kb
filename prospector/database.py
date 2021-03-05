@@ -484,7 +484,7 @@ def add_repository_to_database(connection, repo_url, project_name, verbose=True)
     cursor = connection.cursor()
 
     # if it does not exist yet
-    if cursor.execute("SELECT EXISTS(SELECT 1 FROM repositories WHERE repo_url = :repo_url LIMIT 1) AS 'exists';", {'repo_url':'repo_url'}).fetchone()['exists'] == 0:
+    if cursor.execute("SELECT EXISTS(SELECT 1 FROM repositories WHERE repo_url = (?) LIMIT 1) AS 'exists';", (repo_url,)).fetchone()[0] == 0:
         with connection:
             cursor.execute("INSERT INTO repositories VALUES (:repo_url, :project_name)",
                 {'repo_url':repo_url, 'project_name':project_name})
