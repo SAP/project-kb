@@ -7,7 +7,7 @@ on:
       - 'kaybee/**'
   pull_request:
     branches: [ master ]
-    paths-ignore:
+    paths:
       - 'kaybee/**'    
 
 jobs:
