@@ -47,16 +47,3 @@ func TestImport(t *testing.T) {
 
 	task.Execute()
 }
-
-// func TestExport(t *testing.T) {
-
-// 	exportCmd := NewExportCmd()
-// 	exportCmd.SetArgs([]string{"--from", ".kaybee/merged"})
-// 	exportCmd.Execute()
-// }
-// func TestExport(t *testing.T) {
-
-// 	exportCmd := NewExportCmd()
-// 	exportCmd.SetArgs([]string{"--from", ".kaybee/merged"})
-// 	exportCmd.Execute()
-// }
