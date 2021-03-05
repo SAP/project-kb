@@ -5,10 +5,16 @@ on:
     branches: [ master ]
     paths:
       - 'kaybee/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Makefile'
   pull_request:
     branches: [ master ]
-    paths-ignore:
-      - 'kaybee/**'    
+    paths:
+      - 'kaybee/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Makefile'
 
 jobs:
 
