@@ -1,7 +1,10 @@
 # Prospector
 
 Prospector is a tool to reduce the effort needed to find security fixes for
-*known* vulnerabilities in open source software. 
+*known* vulnerabilities in open source software repositories.
+
+It takes a vulnerability description (in natural language) in input and
+produces in output a ranked list of commits, in decreasing order of relevance.
 
 
 ![](docs/img/prospector.png)
@@ -21,6 +24,7 @@ The easiest way to set up Prospector is to clone this repository and then run th
 
 ```
 git clone https://github.com/sap/project-kb
+git checkout prospector-assuremoss
 cd project-kb/prospector
 echo "GIT_CACHE=/tmp/git-cache" > .env
 mkdir /tmp/git-cache
@@ -36,6 +40,15 @@ Please also indicate your operating system and Python version.
 *Please note that Windows is not supported.*
 
 ## Use
+
+### Starting the backend
+
+`uvicorn api.main:app --reload`
+
+You can then point your browser to `http://127.0.0.1:8000` to access the API.
+You might also want to take a look at `http://127.0.0.1:8000/docs`.
+
+### Using the CLI
 
 `python main.py <vulnerability_id> -r <repository_url> -v`
 
