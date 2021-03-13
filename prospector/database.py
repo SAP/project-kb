@@ -1,8 +1,8 @@
 # This file is used to create a database with commit content
 
 import os, sys, ast, json, time, datetime, requests, sqlite3, re, random
-from selenium import webdriver
-from bs4 import BeautifulSoup
+# from selenium import webdriver
+# from bs4 import BeautifulSoup
 from tqdm import tqdm
 import pandas as pd
 

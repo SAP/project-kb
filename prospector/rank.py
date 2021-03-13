@@ -8,7 +8,7 @@ nlp = spacy.load('en_core_web_sm')
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
+# from selenium import webdriver
 
 from sklearn.model_selection import ShuffleSplit, cross_val_score, cross_validate, train_test_split, GridSearchCV, RandomizedSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
