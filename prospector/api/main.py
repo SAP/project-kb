@@ -1,19 +1,19 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+
 import main as prospector
 
+
+
+# from api import auth
 
 # from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
 from typing import Optional
-
-origins = [
-    "http://localhost:3000",
-    "localhost:3000"
-]
-
 
 api_metadata = [
     {
@@ -30,22 +30,119 @@ api_metadata = [
     },
 ]
 
+
 app = FastAPI(openapi_tags=api_metadata)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[
+        "http://localhost:3000",
+        "localhost:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+
+# ======================================
+# AUTH STUFF
+# The following is taken from https://fastapi.tiangolo.com/tutorial/security/first-steps/
+# with slight modifications to support roles.
+# This will be moved to a separate file eventually,
+# as explained here: https://fastapi.tiangolo.com/tutorial/bigger-applications/
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+fake_users_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "full_name": "John Doe",
+        "email": "johndoe@example.com",
+        "roles": ['user'],
+        "hashed_password": "fakehashedsecret",
+        "disabled": False,
+    },
+    "alice": {
+        "username": "alice",
+        "full_name": "Alice Wonderson",
+        "email": "alice@example.com",
+        "roles": ['user','admin'],
+        "hashed_password": "fakehashedsecret2",
+        "disabled": False,
+    },
+}
+
+class User(BaseModel):
+    username: str
+    email: Optional[str] = None
+    roles: Optional[list] = []
+    full_name: Optional[str] = None
+    disabled: Optional[bool] = None
+
+
+class UserInDB(User):
+    hashed_password: str
+
+
+def get_user(db, username: str):
+    if username in db:
+        user_dict = db[username]
+        return UserInDB(**user_dict)
+
+
+def fake_decode_token(token):
+    # This doesn't provide any security at all
+    # Check the next version
+    user = get_user(fake_users_db, token)
+    return user
+
+def fake_hash_password(password: str):
+    return "fakehashed" + password
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    user = fake_decode_token(token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
+
+
+async def get_current_active_user(current_user: User = Depends(get_current_user)):
+    if current_user.disabled:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user_dict = fake_users_db.get(form_data.username)
+    if not user_dict:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    user = UserInDB(**user_dict)
+    hashed_password = fake_hash_password(form_data.password)
+    if not hashed_password == user.hashed_password:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    return {"access_token": user.username, "token_type": "bearer"}
+
+
+@app.get("/users/me")
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    return current_user
+
+# ===================================
+# Application APIs
+
 
 # -----------------------------------------------------------------------------
 #
 @app.post("/jobs/", tags=['jobs'])
 async def create_job(vulnerability_id='', description='', url=''):
     return {
-        "id": 0,
+        "id": 12,
         "status": "WAITING",
         "query": "CVE-1234-5678",
         "results": []
@@ -53,9 +150,13 @@ async def create_job(vulnerability_id='', description='', url=''):
 
 
 @app.get("/jobs/{job_id}", tags=['jobs'])
-async def get_job(job_id):
+async def get_job(job_id, current_user: User = Depends(get_current_active_user)):
+    if current_user.username != 'alice':
+        raise HTTPException(status_code=400, detail="Unauthorized")
+
     return {
         "id": job_id,
+        "owner": 'alice',
         "status": "RUNNING",
         "query": "CVE-1234-5678",
         "results": []
@@ -128,3 +229,6 @@ async def read_items():
         </body>
     </html>
     """
+@app.get("/items/")
+async def read_items(token: str = Depends(oauth2_scheme)):
+    return {"token": token}
