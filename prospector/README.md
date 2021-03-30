@@ -1,15 +1,20 @@
 # Prospector
 
 Prospector is a tool to reduce the effort needed to find security fixes for
-*known* vulnerabilities in open source software. 
+*known* vulnerabilities in open source software. Its approach is described in more
+detail in this document: https://arxiv.org/pdf/2103.13375.pdf
 
 
 ![](docs/img/prospector.png)
 
 
+**WARNING** Please understand that Prospector is a proof-of-concept of a research idea:
+feel free to try it out, but do expect some rough edges. At this time, a complete reimplementation
+is underway thanks in the context of the AssureMOSS EU-funded project. The work-in-progress
+can be seen in the `assuremoss-prospector` branch, as well as in the issues tagged as `assuremoss`.
 
-**WARNING** Please keep in mind that Prospector is a research prototype, currently
-under development: feel free to try it out, but do expect some rough edges.
+If you are interested in contribution to this activity, you are most welcome: please take a look at the
+open issues, and feel free to participate starting from there.
 
 If you find an bug, please open an issue. I you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
