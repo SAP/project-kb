@@ -209,15 +209,6 @@ async def get_commits(repository_url, commit_id=None, token = Depends(oauth2_sch
     
     return data
 
-    # return {
-    #     'repository_url': repository_url,
-    #     'commit_id': commit_id,
-    #     'feature_1' : 0.02,
-    #     'feature_2' : 0.32,
-    #     'feature_3' : 0.91,
-    #     'feature_4' : 0.76,
-    # }
-
 
 # -----------------------------------------------------------------------------
 @app.post("/legacy", response_class=HTMLResponse)

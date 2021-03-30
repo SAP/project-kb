@@ -17,12 +17,15 @@ def test_simple_write(setupdb):
     db.connect(connect_string)
     commit_obj = { 'id': 'abcd1234', 'repository': 'https://github.com/abc/def', 'feat_1': 'A', 'feat_2': 'B'}
     db.save(commit_obj)
+    commit_obj = { 'id': 'hijk5678', 'repository': 'https://github.com/opq/str', 'feat_1': 'X', 'feat_2': 'Y'}
+    db.save(commit_obj)
 
 def test_simple_read():
     db = PostgresCommitDB()
     db.connect(connect_string)
     commit = { 'hash': 'abcd1234', 'repository': 'https://github.com/abc/def'}
     result = db.lookup( commit )
+    print(result)
     assert result is not None
 
 def test_parse_connect_string():

@@ -29,7 +29,7 @@ class PostgresCommitDB(CommitDB):
             cur = self.connection.cursor()
             # TODO this returns all records, implement real query!
             cur.execute("SELECT * FROM commits")
-            data = cur.fetchone()
+            data = cur.fetchall()
             cur.close()
         except Exception as e:
             print(e)
