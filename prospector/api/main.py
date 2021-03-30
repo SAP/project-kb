@@ -1,19 +1,23 @@
+import os
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-import main as prospector
 
-
-
-# from api import auth
-
-# from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-
 from typing import Optional
+
+from commitdb.postgres import PostgresCommitDB
+db_pass = (os.environ['POSTGRES_PASSWORD'])
+connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(db_pass)
+
+db = PostgresCommitDB()
+db.connect(connect_string)
+
+# legacy prospector
+import main as prospector
 
 api_metadata = [
     {
@@ -197,6 +201,23 @@ async def create_data(repository_url, commit_id, label, vulnerability_id):
         'label': label,
         'vulnerability_id': vulnerability_id
     }
+# -----------------------------------------------------------------------------
+@app.get("/commits/{repository_url}")
+async def get_commits(repository_url, commit_id=None, token = Depends(oauth2_scheme)):
+    commit = (commit_id, repository_url)
+    data = db.lookup( commit )
+    
+    return data
+
+    # return {
+    #     'repository_url': repository_url,
+    #     'commit_id': commit_id,
+    #     'feature_1' : 0.02,
+    #     'feature_2' : 0.32,
+    #     'feature_3' : 0.91,
+    #     'feature_4' : 0.76,
+    # }
+
 
 # -----------------------------------------------------------------------------
 @app.post("/legacy", response_class=HTMLResponse)

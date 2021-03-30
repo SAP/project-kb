@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extras import NamedTupleCursor
 from . import CommitDB
 
 
@@ -11,22 +12,28 @@ class PostgresCommitDB(CommitDB):
     def connect(self, connect_string=None):
         self.connect_string = connect_string.rstrip(";")
         self.connection_data = parse_connect_string(self.connect_string)
-        print(self.connection_data)
+
         self.connection = psycopg2.connect(
             host = self.connection_data['host'],
             dbname = self.connection_data['db'],
             user = self.connection_data['uid'],
-            password = self.connection_data['pwd'])
+            password = self.connection_data['pwd'],
+            cursor_factory=NamedTupleCursor)
     
     def lookup(self, commit_obj):
         if not self.connection:
             raise Exception("Invalid connection")
+
+        data = []
         try:
             cur = self.connection.cursor()
-            cur.execute("SELECT * FROM test")
+            # TODO this returns all records, implement real query!
+            cur.execute("SELECT * FROM commits")
             data = cur.fetchone()
-        except:
-            raise Exception("Could not lookup commit vector in database")
+            cur.close()
+        except Exception as e:
+            print(e)
+            # raise Exception("Could not lookup commit vector in database")
 
         return data
     
@@ -36,19 +43,30 @@ class PostgresCommitDB(CommitDB):
 
         try:
             cur = self.connection.cursor()
-            cur.execute("INSERT INTO test (num, data) VALUES (%s, %s)", (100, "abc'def"))
+            commit_id = commit_obj['id']
+            repository = commit_obj['repository']
+            feat_1 = "X"
+            feat_2 = "Y"
+            # TODO sanitize inputs
+            cur.execute("INSERT INTO commits (hash, repository, feature_1, feature_2) VALUES (%s, %s, %s, %s)", (commit_id, repository, feat_1, feat_2))
             self.connection.commit()
         except:
             raise Exception("Could not save commit vector to database")
         
 
-    def reset():
+    def reset(self):
         if not self.connection:
             raise Exception("Invalid connection")
 
         cur = self.connection.cursor()
-        cur.execute("DROP TABLE IF EXISTS test;")
-        cur.execute("CREATE TABLE test (id serial PRIMARY KEY, num integer, data varchar);")
+        cur.execute("DROP TABLE IF EXISTS commits;")
+        cur.execute("""CREATE TABLE commits (
+                        hash varchar(40),
+                        repository varchar,
+                        feature_1 varchar,
+                        feature_2 varchar,
+                        PRIMARY KEY (hash, repository)
+                       )""")
         self.connection.commit()
 
 def parse_connect_string(connect_string):
