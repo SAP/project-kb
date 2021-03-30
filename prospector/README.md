@@ -9,8 +9,8 @@ detail in this document: https://arxiv.org/pdf/2103.13375.pdf
 
 
 **WARNING** Please understand that Prospector is a proof-of-concept of a research idea:
-feel free to try it out, but do expect some rough edges. At this time, a complete reimplementation
-is underway thanks in the context of the AssureMOSS EU-funded project. The work-in-progress
+feel free to try it out, but do expect some rough edges. At this time, a complete *reimplementation*
+is underway thanks in the context of the **[AssureMOSS](https://assuremoss.eu)** EU-funded project. The work-in-progress
 can be seen in the `assuremoss-prospector` branch, as well as in the issues tagged as `assuremoss`.
 
 If you are interested in contribution to this activity, you are most welcome: please take a look at the
