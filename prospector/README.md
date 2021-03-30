@@ -7,7 +7,7 @@ It takes a vulnerability description (in natural language) in input and
 produces in output a ranked list of commits, in decreasing order of relevance.
 
 
-![](docs/img/prospector.png)
+![](docs/img/prospector-reimplementation.png)
 
 
 
