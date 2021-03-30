@@ -27,6 +27,7 @@ git clone https://github.com/sap/project-kb
 git checkout prospector-assuremoss
 cd project-kb/prospector
 echo "GIT_CACHE=/tmp/git-cache" > .env
+echo "PYTHONPATH=." >> .env
 mkdir /tmp/git-cache
 pipenv shell
 pipenv install
