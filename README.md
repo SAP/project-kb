@@ -136,8 +136,9 @@ scripts described in that paper](MSR2019)
 
 The development of Project KB is partly supported by the following EU-funded projects:
 
-* [Sparta](https://www.sparta.eu/)
-* [AssureMOSS](https://assuremoss.eu).
+* [Sparta](https://www.sparta.eu/) (Grant No.830892).
+* [AssureMOSS](https://assuremoss.eu) (Grant No.952647).
+
 
 ### 3rd party vulnerability data sources
 
