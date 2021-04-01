@@ -57,7 +57,8 @@ class PostgresCommitDB(CommitDB):
                 ),
             )
             self.connection.commit()
-        except:
+        except Exception as e:
+            print(e)
             raise Exception("Could not save commit vector to database")
 
     def reset(self):
@@ -70,46 +71,46 @@ class PostgresCommitDB(CommitDB):
         if not self.connection:
             raise Exception("Invalid connection")
 
-        self._create_table_commits()
+        self._run_sql_script("ddl/commit.sql")
+        self._run_sql_script("ddl/users.sql")
 
-    def _create_table_commits(self):
-        """
-        Input:
-            sqlite3.connection: the connection with the database
-        """
+    def _run_sql_script(self, script_file):
         if not self.connection:
             raise Exception("Invalid connection")
 
+        with open(script_file, "r") as f:
+            ddl = f.read()
+
         cursor = self.connection.cursor()
+        cursor.execute(ddl)
+        # cursor.execute("DROP TABLE IF EXISTS commits;")
+        # cursor.execute(
+        #     """CREATE TABLE commits (
+        #     id varchar(40),
+        #     repository varchar,
+        #     feature_1 varchar,
+        #     feature_2 varchar,
+        #     timestamp text,
+        #     message varchar,
+        #     changed_files varchar,
+        #     diff varchar,
+        #     hunks varchar,
+        #     commit_message_reference_content varchar,
+        #     preprocessed_message varchar,
+        #     preprocessed_diff varchar,
+        #     preprocessed_changed_files varchar,
+        #     preprocessed_commit_message_reference_content varchar,
+        #     PRIMARY KEY (id, repository)
+        # )"""
+        # )
 
-        cursor.execute("DROP TABLE IF EXISTS commits;")
-        cursor.execute(
-            """CREATE TABLE commits (
-            id varchar(40),
-            repository varchar,
-            feature_1 varchar,
-            feature_2 varchar,
-            timestamp text,
-            message varchar,
-            changed_files varchar,
-            diff varchar,
-            hunks varchar,
-            commit_message_reference_content varchar,
-            preprocessed_message varchar,
-            preprocessed_diff varchar,
-            preprocessed_changed_files varchar,
-            preprocessed_commit_message_reference_content varchar,
-            PRIMARY KEY (id, repository)
-        )"""
-        )
-
-        cursor.execute("CREATE INDEX IF NOT EXISTS commit_index ON commits(id)")
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS repository_index ON commits(repository)"
-        )
-        cursor.execute(
-            "CREATE UNIQUE INDEX IF NOT EXISTS commit_repository_index ON commits(id, repository)"
-        )
+        # cursor.execute("CREATE INDEX IF NOT EXISTS commit_index ON commits(id)")
+        # cursor.execute(
+        #     "CREATE INDEX IF NOT EXISTS repository_index ON commits(repository)"
+        # )
+        # cursor.execute(
+        #     "CREATE UNIQUE INDEX IF NOT EXISTS commit_repository_index ON commits(id, repository)"
+        # )
         self.connection.commit()
 
         cursor.close()
