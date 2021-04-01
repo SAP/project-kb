@@ -5,9 +5,8 @@ import pytest
 
 import os
 
-db_pass = os.environ["POSTGRES_PASSWORD"]
 connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
-    db_pass
+    os.environ["POSTGRES_PASSWORD"]
 )
 
 
