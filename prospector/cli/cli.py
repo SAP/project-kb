@@ -7,6 +7,7 @@ from pathlib import Path
 import pprint
 import requests
 import logging
+from datamodel.advisory import AdvisoryRecord, getFromNVD
 
 logger = logging.getLogger("prospector")
 
@@ -19,6 +20,10 @@ def parseArguments():
     parser = argparse.ArgumentParser(description="Prospector CLI")
     parser.add_argument(
         "vulnerability_id", nargs="?", help="ID of the vulnerability to analyze"
+    )
+
+    parser.add_argument(
+        "-r", "--repository", help="Git repository", action="store_true"
     )
 
     parser.add_argument("-c", "--conf", help="specify configuration file")
@@ -92,6 +97,7 @@ def main():
         debug = args.debug
 
     vulnerability_id = args.vulnerability_id
+    repository = args.repository
 
     if debug:
         verbose = True
@@ -122,6 +128,11 @@ def main():
                 print("Server ok!")
         except:
             print("Server did not reply")
+
+    advisory_record = AdvisoryRecord(vulnerability_id, repository)
+    advisory_record = getFromNVD(advisory_record)
+
+    print(advisory_record)
 
 
 if __name__ == "__main__":  # pragma: no cover

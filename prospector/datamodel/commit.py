@@ -1,7 +1,10 @@
-from collections import namedtuple
+from dataclasses import dataclass
+from . import BaseModel
 
-BaseCommit = namedtuple("BaseCommit", ["id", "repository", "feature_1", "feature_2"])
 
-
-class Commit(BaseCommit):
-    pass
+@dataclass
+class Commit(BaseModel):
+    id: str
+    repository: str
+    feature_1: str = ""
+    feature_2: str = ""
