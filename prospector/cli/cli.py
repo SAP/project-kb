@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from advisory_processor.advisory_processor import AdvisoryProcessor
 import os, sys
 import argparse
 import configparser
@@ -7,7 +8,7 @@ from pathlib import Path
 import pprint
 import requests
 import logging
-from datamodel.advisory import AdvisoryRecord, getFromNVD
+from datamodel.advisory import AdvisoryRecord
 
 logger = logging.getLogger("prospector")
 
@@ -22,18 +23,18 @@ def parseArguments():
         "vulnerability_id", nargs="?", help="ID of the vulnerability to analyze"
     )
 
+    parser.add_argument("--repository", default="", help="Git repository")
+
     parser.add_argument(
-        "-r", "--repository", help="Git repository", action="store_true"
+        "--pub-date", default="", help="Publication date of the advisory"
     )
+
+    parser.add_argument("--descr", default="", help="Text of the advisory")
 
     parser.add_argument("-c", "--conf", help="specify configuration file")
 
     parser.add_argument(
         "-p", "--ping", help="Contact server to check it's alive", action="store_true"
-    )
-
-    parser.add_argument(
-        "-f", "--force", help="overwrite outputfile if it exists", action="store_true"
     )
 
     parser.add_argument(
@@ -98,6 +99,8 @@ def main():
 
     vulnerability_id = args.vulnerability_id
     repository = args.repository
+    publication_date = args.pub_date
+    vuln_descr = args.descr
 
     if debug:
         verbose = True
@@ -129,8 +132,16 @@ def main():
         except:
             print("Server did not reply")
 
-    advisory_record = AdvisoryRecord(vulnerability_id, repository)
-    advisory_record = getFromNVD(advisory_record)
+    advisory_record = AdvisoryRecord(
+        vulnerability_id,
+        repository,
+        published_timestamp=publication_date,
+        vulnerability_description=vuln_descr,
+    )
+
+    adv_processor = AdvisoryProcessor()
+
+    advisory_record = adv_processor.process(advisory_record)
 
     print(advisory_record)
 

@@ -1,10 +1,9 @@
 import re
-import requests
+
+# import requests
 
 from dataclasses import dataclass, field
 from . import BaseModel
-
-NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
 
 
 @dataclass
@@ -23,6 +22,7 @@ class AdvisoryRecord:
     vulnerability_description: str = ""
     preprocessed_vulnerability_description: str = ""
     relevant_tags: "list[str]" = None
+    versions: "list[str]" = field(default_factory=list)
 
     # """
     # Information to provide when initializing an advisory record
@@ -63,12 +63,6 @@ class AdvisoryRecord:
     # self.references = references
     # self.references_content = references_content
 
-    # # whether to print or not to print
-    # self.verbose = verbose
-
-    # self.since = since
-    # self.until = until
-
 
 @dataclass
 class Reference:
@@ -94,27 +88,3 @@ class Reference:
 
     def is_commit_page(self):
         return self.repo_url + "/commit/" in self.url
-
-
-def getFromNVD(ar: AdvisoryRecord):
-    """
-    populate object field using NVD data
-    """
-    try:
-        response = requests.get(NVD_REST_ENDPOINT + ar.vulnerability_id)
-        if response.status_code != 200:
-            return False
-        data = response.json()["result"]["CVE_Items"][0]
-        ar.published_timestamp = data["publishedDate"]
-        ar.last_modified_timestamp = data["lastModifiedDate"]
-        ar.vulnerability_description = data["cve"]["description"]["description_data"][
-            0
-        ]["value"]
-        ar.references = [r["url"] for r in data["cve"]["references"]["reference_data"]]
-
-    except:
-        print(
-            "Could not retrieve vulnerability data from NVD for " + ar.vulnerability_id
-        )
-
-    return ar
