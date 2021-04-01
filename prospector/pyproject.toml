@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "commitdb",
+    "datamodel",
+    "cli",
+    "commit-preprocessor",
+    "advisory_processor"
+
+]
