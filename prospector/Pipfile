@@ -131,8 +131,9 @@ fastapi = "*"
 python-multipart = "*"
 pydantic = "*"
 psycopg2-binary = "*"
-pep8 = "*"
 pycodestyle = "*"
+rq = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.6"

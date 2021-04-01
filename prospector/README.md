@@ -10,7 +10,6 @@ produces in output a ranked list of commits, in decreasing order of relevance.
 ![](docs/img/prospector-reimplementation.png)
 
 
-
 **WARNING** Please keep in mind that Prospector is a research prototype, currently
 under development: feel free to try it out, but do expect some rough edges.
 
@@ -32,6 +31,7 @@ echo "POSTGRES_PASSWORD=example" >> .env
 mkdir /tmp/git-cache
 pipenv shell
 pipenv install
+pre-commit install
 python -m spacy download en_core_web_sm
 ```
 
@@ -51,7 +51,7 @@ and working before proceeding.
 
 You can start the database (postgresql) with the following command:
 
-`docker-compose  up -d`
+`docker-compose up -d`
 
 This also starts a convenient DB administration tool at http://localhost:8080
 
