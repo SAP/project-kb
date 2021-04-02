@@ -29,3 +29,13 @@ kaybeeconf.yaml
 prospector/.env
 prospector/workspace.code-workspace
 prospector/.env
+prospector/disabled_tests/skip_test-commits.db
+prospector/disabled_tests/skip_test-vulnerabilities.db
+prospector/.vscode/launch.json
+prospector/.vscode/settings.json
+prospector/install_fastext.sh
+prospector/nvd.ipynb
+prospector/data/nvd.pkl
+prospector/data/nvd.csv
+.vscode/settings.json
+prospector/data/*
