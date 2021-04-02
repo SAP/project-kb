@@ -29,3 +29,4 @@ kaybeeconf.yaml
 prospector/.env
 prospector/workspace.code-workspace
 prospector/.env
+.vscode/settings.json
