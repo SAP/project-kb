@@ -5,6 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 autopep8 = "*"
+black = "*"
 
 [packages]
 altair = "==4.1.0"
@@ -137,3 +138,6 @@ pre-commit = "*"
 
 [requires]
 python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true
