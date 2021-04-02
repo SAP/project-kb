@@ -100,12 +100,6 @@ class AdvisoryRecord:
     # # self.git_repo = Git(repo_url, cache_path=GIT_CACHE)
     # # self.git_repo.clone(skip_existing=True)  # @TODO: true or false..?
 
-    # self.references = references
-    # self.references_content = references_content
-
-
-# TODO convert into a constructor for AdvisoryRecord
-
 
 def extract_versions(text) -> "list[str]":
     """

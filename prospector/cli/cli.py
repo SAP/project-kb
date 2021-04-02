@@ -10,6 +10,8 @@ import requests
 import logging
 from datamodel.advisory import AdvisoryRecord
 
+from git.git import GIT_CACHE, Git
+
 from pprint import pprint
 
 logger = logging.getLogger("prospector")
@@ -32,6 +34,8 @@ def parseArguments():
     )
 
     parser.add_argument("--descr", default="", help="Text of the advisory")
+
+    parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
 
     parser.add_argument("-c", "--conf", help="specify configuration file")
 
@@ -84,6 +88,8 @@ def getConfiguration(customConfigFile=None):
 
 def main():
 
+    # TODO extract separate function prospector(...) for testability purposes
+
     args = parseArguments()
     configuration = getConfiguration(args.conf)
 
@@ -103,6 +109,7 @@ def main():
     repository = args.repository
     publication_date = args.pub_date
     vuln_descr = args.descr
+    use_nvd = args.use_nvd
 
     if debug:
         verbose = True
@@ -139,14 +146,23 @@ def main():
         repository,
         published_timestamp=publication_date,
         description=vuln_descr,
-        from_nvd=True,
+        from_nvd=use_nvd,
     )
 
-    # adv_processor = AdvisoryProcessor()
+    print("Downloading repository {} in {}..".format(repository, GIT_CACHE))
+    repository = Git(repository, GIT_CACHE)
+    repository.clone()
+    tags = repository.get_tags()
+    print(tags)
+    print("Done")
 
+    # TODO take some code from legacy filter.py
+
+    # adv_processor = AdvisoryProcessor()
     # advisory_record = adv_processor.process(advisory_record)
 
-    pprint(advisory_record)
+    if debug:
+        pprint(advisory_record)
 
 
 if __name__ == "__main__":  # pragma: no cover
