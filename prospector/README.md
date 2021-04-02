@@ -25,7 +25,7 @@ internship at SAP Security Research for his Master thesis in Data Science &
 Entrepreneurship at the Jheronimus Academy of Data Science.
 
 The original code developed by Daan Hommersom [can be retrieved
-here](https://github.com/SAP/project-kb/tree/d93b1c3ab47cb4d7ad7537c11a468580dabaf77d)
+here](https://github.com/SAP/project-kb/tree/d93b1c3ab47cb4d7ad7537c11a468580dabaf77d/prospector)
 or through the tag `DAAN_HOMMERSOM_THESIS`.
 
 This folder is kept as a placeholder, while a reimplementation of the tool
