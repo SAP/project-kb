@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from advisory_processor.advisory_processor import AdvisoryProcessor
+# from advisory_processor.advisory_processor import AdvisoryProcessor
 import os, sys
 import argparse
 import configparser
@@ -9,6 +9,8 @@ import pprint
 import requests
 import logging
 from datamodel.advisory import AdvisoryRecord
+
+from pprint import pprint
 
 logger = logging.getLogger("prospector")
 
@@ -107,7 +109,7 @@ def main():
 
     if verbose:
         print("Using the following configuration:")
-        pprint.pprint(
+        pprint(
             {
                 section: dict(configuration[section])
                 for section in configuration.sections()
@@ -136,14 +138,15 @@ def main():
         vulnerability_id,
         repository,
         published_timestamp=publication_date,
-        vulnerability_description=vuln_descr,
+        description=vuln_descr,
+        from_nvd=True,
     )
 
-    adv_processor = AdvisoryProcessor()
+    # adv_processor = AdvisoryProcessor()
 
-    advisory_record = adv_processor.process(advisory_record)
+    # advisory_record = adv_processor.process(advisory_record)
 
-    print(advisory_record)
+    pprint(advisory_record)
 
 
 if __name__ == "__main__":  # pragma: no cover

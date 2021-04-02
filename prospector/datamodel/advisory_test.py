@@ -1,5 +1,5 @@
 # from dataclasses import asdict
-from datamodel.advisory import AdvisoryRecord, buildAdvisoryRecord
+from datamodel.advisory import AdvisoryRecord
 
 # import pytest
 
@@ -21,23 +21,25 @@ advisory_text = """Unspecified vulnerability in Uconnect before 15.26.1, as used
     demonstrated on a 2014 Jeep Cherokee Limited FWD."""
 
 
-def test_extractor_provided_text():
+def test_adv_record_versions():
 
-    # rec = AdvisoryRecord(
-    #     "CVE-0000-0000", "today", vulnerability_description=advisory_text
-    # )
-    # processor = AdvisoryFactory()
-
-    record = buildAdvisoryRecord("CVE-2014-0050", vuln_description=advisory_text)
-    print(record)
+    record = AdvisoryRecord("CVE-2014-0050", description=advisory_text)
+    # print(record)
 
     assert "15.26.1" in record.versions
     assert "15.26" not in record.versions
 
 
-def test_extractor_nvd():
-    record = buildAdvisoryRecord("CVE-2014-0050", query_nvd=True)
+def test_adv_record_nvd():
+    record = AdvisoryRecord("CVE-2014-0050", from_nvd=True)
 
-    print(record)
+    # print(record)
     assert "1.3.1" in record.versions
     assert "1.3" not in record.versions
+
+
+def test_adv_record_products():
+    record = AdvisoryRecord("CVE-XXXX-YYYY", description=advisory_text)
+
+    # print(record)
+    assert "Chrysler" in record.affected_products

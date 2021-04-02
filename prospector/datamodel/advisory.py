@@ -1,6 +1,7 @@
 import re
 import requests
 
+from typing import Tuple
 from dataclasses import dataclass, field
 
 # from . import BaseModel
@@ -21,10 +22,47 @@ class AdvisoryRecord:
     references: "list[str]" = field(default_factory=list)
     references_content: "list[str]" = field(default_factory=list)
     advisory_references: "list[str]" = field(default_factory=list)
-    vulnerability_description: str = ""
+    affected_products: "list[str]" = field(default_factory=list)
+    description: str = ""
     preprocessed_vulnerability_description: str = ""
     relevant_tags: "list[str]" = None
     versions: "list[str]" = field(default_factory=list)
+    from_nvd: bool = False
+
+    def __post_init__(self):
+        if self.from_nvd:
+            self.description,
+            self.published_timestamp,
+            self.last_modified_timestamp,
+            self.advisory_references = self._getFromNVD(self.vulnerability_id)
+
+        self.versions.extend(
+            [v for v in extract_versions(self.description) if v not in self.versions]
+        )
+        self.affected_products = extract_products(self.description)
+
+    def _getFromNVD(self, vuln_id: str):
+        """
+        populate object field using NVD data
+        returns: description, published_timestamp, last_modified timestamp, list of links
+        """
+
+        try:
+            response = requests.get(NVD_REST_ENDPOINT + vuln_id)
+            if response.status_code != 200:
+                return "", ""
+            data = response.json()["result"]["CVE_Items"][0]
+            self.published_timestamp = data["publishedDate"]
+            self.last_modified_timestamp = data["lastModifiedDate"]
+            self.description = data["cve"]["description"]["description_data"][0][
+                "value"
+            ]
+            self.references = [
+                r["url"] for r in data["cve"]["references"]["reference_data"]
+            ]
+
+        except:
+            print("Could not retrieve vulnerability data from NVD for " + vuln_id)
 
     # """
     # Information to provide when initializing an advisory record
@@ -67,30 +105,6 @@ class AdvisoryRecord:
 
 
 # TODO convert into a constructor for AdvisoryRecord
-def buildAdvisoryRecord(
-    vuln_id: str, vuln_description: str = "", query_nvd: bool = False
-) -> AdvisoryRecord:
-    """
-    Creates an instance of AdvisoryRecord
-
-    Args:
-        ar(AdvisoryRecord): an AdvisoryRecord with at least a vuln-id
-
-    Returns:
-        AdvisoryRecord: a record with all the relevant fields filled-in
-    """
-
-    adv_rec = AdvisoryRecord(vuln_id)
-
-    if query_nvd:
-        adv_rec = getFromNVD(vuln_id)
-
-    adv_rec.vulnerability_description += vuln_description
-
-    # start annotating/pre-processing
-    adv_rec.versions = extract_versions(adv_rec.vulnerability_description)
-
-    return adv_rec
 
 
 def extract_versions(text) -> "list[str]":
@@ -108,31 +122,9 @@ def extract_products(text) -> "list[str]":
     Extract product names from advisory text
     """
     # TODO implement this properly
-    return []
-
-
-def getFromNVD(vuln_id: str):
-    """
-    populate object field using NVD data
-    """
-    ar = AdvisoryRecord(vuln_id, "")
-
-    try:
-        response = requests.get(NVD_REST_ENDPOINT + vuln_id)
-        if response.status_code != 200:
-            return ar
-        data = response.json()["result"]["CVE_Items"][0]
-        ar.published_timestamp = data["publishedDate"]
-        ar.last_modified_timestamp = data["lastModifiedDate"]
-        ar.vulnerability_description = data["cve"]["description"]["description_data"][
-            0
-        ]["value"]
-        ar.references = [r["url"] for r in data["cve"]["references"]["reference_data"]]
-
-    except:
-        print("Could not retrieve vulnerability data from NVD for " + vuln_id)
-
-    return ar
+    regex = r"([A-Z]+[a-z\b]+)"
+    result = list(set(re.findall(regex, text)))
+    return [p for p in result if len(p) > 2]
 
 
 @dataclass
