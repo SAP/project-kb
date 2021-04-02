@@ -1,9 +1,11 @@
 import re
-
-# import requests
+import requests
 
 from dataclasses import dataclass, field
-from . import BaseModel
+
+# from . import BaseModel
+
+NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
 
 
 @dataclass
@@ -13,7 +15,7 @@ class AdvisoryRecord:
     """
 
     vulnerability_id: str
-    repository_url: str
+    repository_url: str = ""
     published_timestamp: str = ""
     last_modified_timestamp: str = ""
     references: "list[str]" = field(default_factory=list)
@@ -62,6 +64,75 @@ class AdvisoryRecord:
 
     # self.references = references
     # self.references_content = references_content
+
+
+# TODO convert into a constructor for AdvisoryRecord
+def buildAdvisoryRecord(
+    vuln_id: str, vuln_description: str = "", query_nvd: bool = False
+) -> AdvisoryRecord:
+    """
+    Creates an instance of AdvisoryRecord
+
+    Args:
+        ar(AdvisoryRecord): an AdvisoryRecord with at least a vuln-id
+
+    Returns:
+        AdvisoryRecord: a record with all the relevant fields filled-in
+    """
+
+    adv_rec = AdvisoryRecord(vuln_id)
+
+    if query_nvd:
+        adv_rec = getFromNVD(vuln_id)
+
+    adv_rec.vulnerability_description += vuln_description
+
+    # start annotating/pre-processing
+    adv_rec.versions = extract_versions(adv_rec.vulnerability_description)
+
+    return adv_rec
+
+
+def extract_versions(text) -> "list[str]":
+    """
+    Extract all versions mentioned in the advisory text
+    """
+    regex = r"[0-9]{1,}\.[0-9]{1,}[0-9a-z.]*"
+    result = re.findall(regex, text)
+
+    return result
+
+
+def extract_products(text) -> "list[str]":
+    """
+    Extract product names from advisory text
+    """
+    # TODO implement this properly
+    return []
+
+
+def getFromNVD(vuln_id: str):
+    """
+    populate object field using NVD data
+    """
+    ar = AdvisoryRecord(vuln_id, "")
+
+    try:
+        response = requests.get(NVD_REST_ENDPOINT + vuln_id)
+        if response.status_code != 200:
+            return ar
+        data = response.json()["result"]["CVE_Items"][0]
+        ar.published_timestamp = data["publishedDate"]
+        ar.last_modified_timestamp = data["lastModifiedDate"]
+        ar.vulnerability_description = data["cve"]["description"]["description_data"][
+            0
+        ]["value"]
+        ar.references = [r["url"] for r in data["cve"]["references"]["reference_data"]]
+
+    except:
+        print("Could not retrieve vulnerability data from NVD for " + vuln_id)
+
+    return ar
 
 
 @dataclass

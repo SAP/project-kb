@@ -6,6 +6,4 @@ testpaths = [
     "datamodel",
     "cli",
     "commit-preprocessor",
-    "advisory_processor"
-
 ]

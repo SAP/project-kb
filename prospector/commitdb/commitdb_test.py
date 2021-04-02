@@ -5,7 +5,7 @@ import pytest
 
 import os
 
-connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
+connect_string = "HOST=127.0.0.1;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
     os.environ["POSTGRES_PASSWORD"]
 )
 
@@ -39,6 +39,6 @@ def test_simple_read():
 def test_parse_connect_string():
     result = dict()
     parsed_connect_string = parse_connect_string(connect_string)
-    assert parsed_connect_string["host"] == "localhost"
+    assert parsed_connect_string["host"] == "127.0.0.1"
     assert parsed_connect_string["uid"] == "postgres"
     assert parsed_connect_string["port"] == "5432"
