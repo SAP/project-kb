@@ -133,7 +133,7 @@ pydantic = "*"
 psycopg2-binary = "*"
 pycodestyle = "*"
 rq = "*"
-
+pytest-cov = "*"
 
 [requires]
 python_version = "3.6"

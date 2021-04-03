@@ -20,7 +20,7 @@ db = PostgresCommitDB()
 db.connect(connect_string)
 
 # legacy prospector
-import main as prospector
+# import main as prospector
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},
@@ -210,23 +210,6 @@ async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_schem
 
 
 # -----------------------------------------------------------------------------
-@app.post("/legacy", response_class=HTMLResponse)
-async def make_legacy_query(vulnerability_id, repository_url=""):
-    prospector.main(vulnerability_id=vulnerability_id, repo_url=repository_url)
-    return """
-    <html>
-        <head>
-            <title>Prospector</title>
-        </head>
-        <body>
-            <h1>Results</h1>
-            .........
-        </body>
-    </html>
-    """
-
-
-# -----------------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def read_items():
     return """
@@ -240,6 +223,14 @@ async def read_items():
         </body>
     </html>
     """
+
+
+# -----------------------------------------------------------------------------
+@app.get("/status")
+async def get_status():
+    status = {"status": "ok"}
+
+    return status
 
 
 @app.get("/items/")

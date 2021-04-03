@@ -1,9 +1,11 @@
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q"
+addopts = "-ra -q --cov-report html:cov_html --cov=."
 testpaths = [
     "commitdb",
     "datamodel",
     "cli",
     "commit-preprocessor",
+    "git",
+    "api"
 ]
