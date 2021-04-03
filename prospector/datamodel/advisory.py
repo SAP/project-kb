@@ -28,20 +28,23 @@ class AdvisoryRecord:
     relevant_tags: "list[str]" = None
     versions: "list[str]" = field(default_factory=list)
     from_nvd: bool = False
+    nvd_rest_endpoint: str = NVD_REST_ENDPOINT
 
     def __post_init__(self):
         if self.from_nvd:
             self.description,
             self.published_timestamp,
             self.last_modified_timestamp,
-            self.advisory_references = self._getFromNVD(self.vulnerability_id)
+            self.advisory_references = self._getFromNVD(
+                self.vulnerability_id, self.nvd_rest_endpoint
+            )
 
         self.versions.extend(
             [v for v in extract_versions(self.description) if v not in self.versions]
         )
         self.affected_products = extract_products(self.description)
 
-    def _getFromNVD(self, vuln_id: str):
+    def _getFromNVD(self, vuln_id: str, nvd_rest_endpoint: str):
         """
         populate object field using NVD data
         returns: description, published_timestamp, last_modified timestamp, list of links

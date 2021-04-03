@@ -9,6 +9,7 @@ import pprint
 import requests
 import logging
 from datamodel.advisory import AdvisoryRecord
+from cli.prospector_client import prospector
 
 from git.git import GIT_CACHE, Git
 
@@ -86,10 +87,28 @@ def getConfiguration(customConfigFile=None):
     return config
 
 
+def ping_server(server_url: str, verbose: bool = False):
+    """Tries to contact backend server
+
+    Args:
+        server_url (str): the URL of the server endpoint
+        verbose (bool, optional): enable verbose output. Defaults to False.
+    """
+
+    if verbose:
+        print("Contacting server " + server_url)
+
+    try:
+        response = requests.get(server_url)
+        if response.status_code != 200:
+            print("Server replied with an unexpected status: " + response.status_code)
+        else:
+            print("Server ok!")
+    except:
+        print("Server did not reply")
+
+
 def main():
-
-    # TODO extract separate function prospector(...) for testability purposes
-
     args = parseArguments()
     configuration = getConfiguration(args.conf)
 
@@ -105,14 +124,31 @@ def main():
     if args.debug:
         debug = args.debug
 
+    if debug:
+        verbose = True
+
+    if configuration["global"].get("nvd_rest_endpoint"):
+        nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
+
+    if args.ping:
+        srv = configuration["global"]["server"]
+        ping_server(srv, verbose)
+
+    if args.vulnerability_id is None:
+        print("No vulnerability id was specified. Cannot proceed.")
+        sys.exit(-1)
+
     vulnerability_id = args.vulnerability_id
     repository = args.repository
     publication_date = args.pub_date
     vuln_descr = args.descr
     use_nvd = args.use_nvd
 
-    if debug:
-        verbose = True
+    git_cache = GIT_CACHE
+    if os.environ["GIT_CACHE"]:
+        git_cache = os.environ["GIT_CACHE"]
+    if configuration["global"].get("git_cache"):
+        git_cache = configuration["global"].get("git_cache")
 
     if verbose:
         print("Using the following configuration:")
@@ -126,43 +162,17 @@ def main():
     if verbose:
         print("Vulnerability ID: " + vulnerability_id)
 
-    if args.ping:
-        srv = configuration["global"]["server"]
-
-        if verbose:
-            print("Contacting server " + srv)
-
-        try:
-            response = requests.get(srv)
-            if response.status_code != 200:
-                print("Server replied with an unexpected status.")
-            else:
-                print("Server ok!")
-        except:
-            print("Server did not reply")
-
-    advisory_record = AdvisoryRecord(
+    prospector(
         vulnerability_id,
         repository,
-        published_timestamp=publication_date,
-        description=vuln_descr,
-        from_nvd=use_nvd,
+        publication_date,
+        vuln_descr,
+        use_nvd,
+        nvd_rest_endpoint,
+        git_cache,
+        verbose,
+        debug,
     )
-
-    print("Downloading repository {} in {}..".format(repository, GIT_CACHE))
-    repository = Git(repository, GIT_CACHE)
-    repository.clone()
-    tags = repository.get_tags()
-    print(tags)
-    print("Done")
-
-    # TODO take some code from legacy filter.py
-
-    # adv_processor = AdvisoryProcessor()
-    # advisory_record = adv_processor.process(advisory_record)
-
-    if debug:
-        pprint(advisory_record)
 
 
 if __name__ == "__main__":  # pragma: no cover
