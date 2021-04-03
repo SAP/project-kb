@@ -25,14 +25,14 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
 current_working_directory = os.getcwd()
-os.chdir("git_explorer")
-sys.path.append(os.getcwd())
+# os.chdir("git")
+# sys.path.append(os.getcwd())
 
 GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from core import do_clone, Git, Commit, clone_repo_multiple, utils
+from git.git import do_clone, Git, Commit, clone_repo_multiple
 
 os.chdir(current_working_directory)
 

@@ -3,7 +3,7 @@
 import rank
 import filter
 import database
-from core import do_clone, Git, Commit, clone_repo_multiple, utils
+from git.git import do_clone, Git, Commit, clone_repo_multiple
 import re
 import os
 import json
@@ -27,8 +27,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
 
 current_working_directory = os.getcwd()
-os.chdir("git_explorer")
-sys.path.append(os.getcwd())
+# os.chdir("git_explorer")
+# sys.path.append(os.getcwd())
 
 GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
@@ -113,11 +113,11 @@ def main(
         vulnerabilities_connection,
         vulnerabilities_cursor,
     ) = database.connect_with_vulnerabilities_database(
-        "data/prospector-vulnerabilities.db", verbose=verbose
+        "../../data/prospector-vulnerabilities.db", verbose=verbose
     )
     # the commits database
     prospector_connection, prospector_cursor = database.connect_with_database(
-        "data/prospector-commits.db", verbose=verbose
+        "../../data/prospector-commits.db", verbose=verbose
     )
 
     # if the vulnerability is already in the database

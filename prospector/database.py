@@ -8,14 +8,15 @@ from tqdm import tqdm
 import pandas as pd
 
 current_working_directory = os.getcwd()
-os.chdir("git_explorer")
-sys.path.append(os.getcwd())
+
+# os.chdir("git_explorer")
+# sys.path.append(os.getcwd())
 
 GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from core import do_clone, Git, Commit, clone_repo_multiple, utils
+from git.git import do_clone, Git, Commit, clone_repo_multiple
 
 os.chdir(current_working_directory)
 
@@ -396,92 +397,92 @@ def get_changed_files_from_diff(diff_lines):
     )
 
 
-def extract_commit_message_reference_content(commit_message, repo_url, driver=None):
-    """
-    Can be used to find references in commit messages and extract the content from these references
+# def extract_commit_message_reference_content(commit_message, repo_url, driver=None):
+#     """
+#     Can be used to find references in commit messages and extract the content from these references
 
-    Input:
-        commit_message (list/str): the commit message
-        repo_url (str): the repository URL (when commits refer to a Git issue)
-        driver: a webdriver can be provided to avoid javascript required pages
+#     Input:
+#         commit_message (list/str): the commit message
+#         repo_url (str): the repository URL (when commits refer to a Git issue)
+#         driver: a webdriver can be provided to avoid javascript required pages
 
-    Returns:
-        list: a list containing the preprocessed content of the references that have been found
-    """
-    if type(commit_message) == list:
-        commit_message = " ".join(commit_message)
+#     Returns:
+#         list: a list containing the preprocessed content of the references that have been found
+#     """
+#     if type(commit_message) == list:
+#         commit_message = " ".join(commit_message)
 
-    repo_url = re.sub("\.git$|/$", "", repo_url)
-    references = rank.find_references(commit_message)
-    references_content = list()
+#     repo_url = re.sub("\.git$|/$", "", repo_url)
+#     references = rank.find_references(commit_message)
+#     references_content = list()
 
-    for reference in references:
-        time.sleep(0.5)
-        try:
-            if "http" not in reference:
-                url = repo_url + "/issues/" + reference.lstrip("#")
-                r = requests.get(url)
-                soup = BeautifulSoup(r.content, "html.parser")
+#     for reference in references:
+#         time.sleep(0.5)
+#         try:
+#             if "http" not in reference:
+#                 url = repo_url + "/issues/" + reference.lstrip("#")
+#                 r = requests.get(url)
+#                 soup = BeautifulSoup(r.content, "html.parser")
 
-                # check if reference is found and whether it is an issue or pull page
-                if reference.lstrip("#") in r.url and (
-                    "/issues/" in r.url or "/pull/" in r.url
-                ):
-                    references_content.append(
-                        rank.simpler_filter_text(
-                            " ".join(
-                                [
-                                    string
-                                    for string in soup.stripped_strings
-                                    if string not in strings_on_every_GitHub_page
-                                ]
-                            )
-                        )
-                    )
-            else:
-                if "securityfocus.com" in reference.strip(
-                    "/."
-                ):  # securityfocus.com requires a selection in a menu
-                    reference = reference.strip("/.") + "/discuss"
+#                 # check if reference is found and whether it is an issue or pull page
+#                 if reference.lstrip("#") in r.url and (
+#                     "/issues/" in r.url or "/pull/" in r.url
+#                 ):
+#                     references_content.append(
+#                         rank.simpler_filter_text(
+#                             " ".join(
+#                                 [
+#                                     string
+#                                     for string in soup.stripped_strings
+#                                     if string not in strings_on_every_GitHub_page
+#                                 ]
+#                             )
+#                         )
+#                     )
+#             else:
+#                 if "securityfocus.com" in reference.strip(
+#                     "/."
+#                 ):  # securityfocus.com requires a selection in a menu
+#                     reference = reference.strip("/.") + "/discuss"
 
-                try:
-                    r = requests.get(reference.strip("."))  # can be end of the sentence
-                    soup = BeautifulSoup(r.content, "html.parser")
-                    reference_content = " ".join(
-                        [string for string in soup.stripped_strings]
-                    )
+#                 try:
+#                     r = requests.get(reference.strip("."))  # can be end of the sentence
+#                     soup = BeautifulSoup(r.content, "html.parser")
+#                     reference_content = " ".join(
+#                         [string for string in soup.stripped_strings]
+#                     )
 
-                    # Apache pony mail requires the webdriver to see the content
-                    if (
-                        "requires JavaScript enabled" in reference_content
-                        and driver != None
-                    ):
+#                     # Apache pony mail requires the webdriver to see the content
+#                     if (
+#                         "requires JavaScript enabled" in reference_content
+#                         and driver != None
+#                     ):
 
-                        driver.get(reference.strip("."))
-                        time.sleep(0.5)
-                        soup = BeautifulSoup(driver.page_source, "html.parser")
-                        reference_content = " ".join(
-                            [string for string in soup.stripped_strings]
-                        )
+#                         driver.get(reference.strip("."))
+#                         time.sleep(0.5)
+#                         soup = BeautifulSoup(driver.page_source, "html.parser")
+#                         reference_content = " ".join(
+#                             [string for string in soup.stripped_strings]
+#                         )
 
-                    references_content.append(
-                        rank.simpler_filter_text(reference_content)
-                    )
-                except:
-                    if driver != None:
-                        driver.get(reference.strip("."))
-                        time.sleep(0.5)
-                        soup = BeautifulSoup(driver.page_source, "html.parser")
-                        reference_content = " ".join(
-                            [string for string in soup.stripped_strings]
-                        )
-                        references_content.append(
-                            rank.simpler_filter_text(reference_content)
-                        )
-        except:
-            print("Failed in obtaining content for reference {}".format(reference))
+#                     references_content.append(
+#                         rank.simpler_filter_text(reference_content)
+#                     )
+#                 except:
+#                     if driver != None:
+#                         driver.get(reference.strip("."))
+#                         time.sleep(0.5)
+#                         soup = BeautifulSoup(driver.page_source, "html.parser")
+#                         reference_content = " ".join(
+#                             [string for string in soup.stripped_strings]
+#                         )
+#                         references_content.append(
+#                             rank.simpler_filter_text(reference_content)
+#                         )
+#         except:
+#             print("Failed in obtaining content for reference {}".format(reference))
 
-    return references_content
+#     return references_content
 
 
 ##################################
@@ -1274,12 +1275,13 @@ def add_vulnerability_references_to_database(
                         )
                     except:
                         print("Failed in adding advisory references")
-                except:
+                except Exception as e:
                     print(
                         "    reference {} could not be added to the db".format(
                             reference
                         )
                     )
+                    print(e)
         elif verbose:
             print("    reference {} is already in the db".format(reference))
     cursor.close()

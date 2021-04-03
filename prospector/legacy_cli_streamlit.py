@@ -32,14 +32,14 @@ GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from core import do_clone, Git, Commit, clone_repo_multiple, utils
+from git.git import do_clone, Git, Commit, clone_repo_multiple, utils
 
 os.chdir(current_working_directory)
 
 import database
 import filter
 import rank
-import main as prospector_main
+import legacy_cli as prospector_main
 
 ### Magic Numbers
 # MODELS
