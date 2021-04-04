@@ -9,7 +9,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from typing import Optional
 
+import redis
+from rq import Queue, Connection
+from rq.job import Job
+
+from git.git import do_clone, sample_func
+
 from commitdb.postgres import PostgresCommitDB
+
+redis_url = os.environ["REDIS_URL"]
 
 db_pass = os.environ["POSTGRES_PASSWORD"]
 connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
@@ -144,23 +152,69 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 
 # -----------------------------------------------------------------------------
 #
-@app.post("/jobs/", tags=["jobs"])
-async def create_job(vulnerability_id="", description="", url=""):
-    return {"id": 12, "status": "WAITING", "query": "CVE-1234-5678", "results": []}
+@app.post("/jobs/clone", tags=["jobs"])
+async def create_clone_job(repository):
+    # task_type = request.form["type"]
+    with Connection(redis.from_url(redis_url)):
+        q = Queue()
+        job = Job.create(
+            # do_clone
+            sample_func,
+            (repository, "/tmp",),
+            description="clone job " + repository,
+        )
+        q.enqueue_job(job)
+
+    response_object = {
+        "job_data": {
+            "job_id": job.get_id(),
+            "job_status": job.get_status(),
+            "job_queue_position": job.get_position(),
+            "job_description": job.description,
+            "job_created_at": job.created_at,
+            "job_started_at": job.started_at,
+            "job_ended_at": job.ended_at,
+            "job_result": job.result,
+        }
+    }
+    return response_object
+    # return {"id": 12, "status": "WAITING", "query": "CVE-1234-5678", "results": []}
 
 
 @app.get("/jobs/{job_id}", tags=["jobs"])
-async def get_job(job_id, current_user: User = Depends(get_current_active_user)):
-    if current_user.username != "alice":
-        raise HTTPException(status_code=400, detail="Unauthorized")
+async def get_job(job_id):
+    # async def get_job(job_id, current_user: User = Depends(get_current_active_user)):
+    #     if current_user.username != "alice":
+    #         raise HTTPException(status_code=400, detail="Unauthorized")
 
-    return {
-        "id": job_id,
-        "owner": "alice",
-        "status": "RUNNING",
-        "query": "CVE-1234-5678",
-        "results": [],
-    }
+    # return {
+    #     "id": job_id,
+    #     "owner": "alice",
+    #     "status": "RUNNING",
+    #     "query": "CVE-1234-5678",
+    #     "results": [],
+    # }
+
+    with Connection(redis.from_url(redis_url)):
+        q = Queue()
+        job = q.fetch_job(job_id)
+    if job:
+        print("job {} result: {}".format(job.get_id(), job.result))
+        response_object = {
+            "job_data": {
+                "job_id": job.get_id(),
+                "job_status": job.get_status(),
+                "job_queue_position": job.get_position(),
+                "job_description": job.description,
+                "job_created_at": job.created_at,
+                "job_started_at": job.started_at,
+                "job_ended_at": job.ended_at,
+                "job_result": job._result,
+            }
+        }
+    else:
+        response_object = {"status": "error"}
+    return response_object
 
 
 # -----------------------------------------------------------------------------

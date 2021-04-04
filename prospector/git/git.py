@@ -26,10 +26,16 @@ if not os.path.isdir(GIT_CACHE):
     )
 
 
-def do_clone(url, output_folder, proxy=None, shallow=False, skip_existing=False):
+def sample_func(s, z):
+    res = dict()
+    res["value"] = len(s + z)
+    return res
+
+
+def do_clone(url, output_folder, shallow=False, skip_existing=False):
     git = Git(url, cache_path=output_folder, shallow=shallow)
-    git.clone(shallow=shallow, proxy=proxy, skip_existing=skip_existing)
-    return git
+    git.clone(shallow=shallow, skip_existing=skip_existing)
+    return str(len(git.get_commits()))
 
 
 def clone_repo_multiple(
