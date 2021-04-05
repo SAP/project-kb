@@ -36,10 +36,13 @@ python -m spacy download en_core_web_sm
 ```
 
 If you have issues with the above commands, please open a Github issue and
-explain in detail what you did and what unexpected behaviour you observed.
-Please also indicate your operating system and Python version.
+explain in detail what you did and what unexpected behaviour you observed (also indicate your operating system and Python version).
 
 *Please note that Windows is not supported.*
+
+**IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
+your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
+black is run prior to committing anyway, but the auto-formatting might save you some time and avoid frustration.
 
 ## Starting the backend database
 
