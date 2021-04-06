@@ -1,4 +1,5 @@
 import os
+from pprint import pprint
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
@@ -12,6 +13,7 @@ from typing import Optional
 import redis
 from rq import Queue, Connection
 from rq.job import Job
+
 
 from git.git import do_clone, sample_func
 
@@ -158,10 +160,10 @@ async def create_clone_job(repository):
     with Connection(redis.from_url(redis_url)):
         q = Queue()
         job = Job.create(
-            # do_clone
-            sample_func,
+            do_clone,
             (repository, "/tmp",),
             description="clone job " + repository,
+            result_ttl=1000,
         )
         q.enqueue_job(job)
 
@@ -209,7 +211,7 @@ async def get_job(job_id):
                 "job_created_at": job.created_at,
                 "job_started_at": job.started_at,
                 "job_ended_at": job.ended_at,
-                "job_result": job._result,
+                "job_result": job.result,
             }
         }
     else:

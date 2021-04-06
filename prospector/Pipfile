@@ -132,11 +132,11 @@ python-multipart = "*"
 pydantic = "*"
 psycopg2-binary = "*"
 pycodestyle = "*"
-rq = "*"
+rq = "==1.8.0"
 pytest-cov = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true

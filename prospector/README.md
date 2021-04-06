@@ -51,7 +51,7 @@ and working before proceeding.
 
 You can start the database (postgresql) with the following command:
 
-`docker-compose up -d`
+`docker-compose up -d --build`
 
 This also starts a convenient DB administration tool at http://localhost:8080
 
