@@ -1,6 +1,5 @@
 import os
-from sys import argv
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
 
 import redis
 from rq import Queue, Connection
@@ -10,24 +9,10 @@ from git.git import do_clone
 
 from api.routers.nvd_feed_update import main
 
-from ..dependencies import (
-    get_current_active_user,
-    fake_users_db,
-    fake_hash_password,
-    User,
-    UserInDB,
-    oauth2_scheme,
-)
-
-# from fastapi.security import OAuth2PasswordRequestForm
-
 redis_url = os.environ["REDIS_URL"]
 
 router = APIRouter(
-    prefix="/jobs",
-    tags=["jobs"],
-    # dependencies=[Depends(oauth2_scheme)],
-    responses={404: {"description": "Not found"}},
+    prefix="/jobs", tags=["jobs"], responses={404: {"description": "Not found"}},
 )
 
 # -----------------------------------------------------------------------------
@@ -35,14 +20,14 @@ router = APIRouter(
 @router.post("/clone", tags=["jobs"])
 async def create_clone_job(repository):
     with Connection(redis.from_url(redis_url)):
-        q = Queue()
+        queue = Queue()
         job = Job.create(
             do_clone,
             (repository, "/tmp",),
             description="clone job " + repository,
             result_ttl=1000,
         )
-        q.enqueue_job(job)
+        queue.enqueue_job(job)
 
     response_object = {
         "job_data": {
@@ -62,8 +47,8 @@ async def create_clone_job(repository):
 @router.get("/{job_id}", tags=["jobs"])
 async def get_job(job_id):
     with Connection(redis.from_url(redis_url)):
-        q = Queue()
-        job = q.fetch_job(job_id)
+        queue = Queue()
+        job = queue.fetch_job(job_id)
     if job:
         print("job {} result: {}".format(job.get_id(), job.result))
         response_object = {
@@ -86,9 +71,9 @@ async def get_job(job_id):
 @router.post("/update_feed", tags=["jobs"])
 async def create_update_feed_job():
     with Connection(redis.from_url(redis_url)):
-        q = Queue()
+        queue = Queue()
         job = Job.create(main, description="update nvd feed", result_ttl=1000,)
-        q.enqueue_job(job)
+        queue.enqueue_job(job)
 
     response_object = {
         "job_data": {
