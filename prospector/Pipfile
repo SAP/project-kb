@@ -9,6 +9,8 @@ black = "*"
 pylint = "==2.6.0"
 pytest = "==6.1.2"
 pre-commit = "*"
+pytest-cov = "*"
+
 
 [packages]
 altair = "==4.1.0"
@@ -133,7 +135,7 @@ pydantic = "*"
 psycopg2-binary = "*"
 pycodestyle = "*"
 rq = "==1.8.0"
-pytest-cov = "*"
+
 
 [requires]
 python_version = "3.8"
