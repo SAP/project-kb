@@ -36,12 +36,15 @@ python -m spacy download en_core_web_sm
 ```
 
 If you have issues with the above commands, please open a Github issue and
-explain in detail what you did and what unexpected behaviour you observed.
-Please also indicate your operating system and Python version.
+explain in detail what you did and what unexpected behaviour you observed (also indicate your operating system and Python version).
 
 *Please note that Windows is not supported.*
 
-## Starting the backend database
+**IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
+your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
+black is run prior to committing anyway, but the auto-formatting might save you some time and avoid frustration.
+
+## Starting the backend database and the job workers
 
 Note: this section and the following assume you have performed succesfully the
 steps in the *setup* section above.
@@ -49,7 +52,7 @@ steps in the *setup* section above.
 This is achieved with docker and docker-compose, make sure you have both installed
 and working before proceeding.
 
-You can start the database (postgresql) with the following command:
+You can then start the necessary containers with the following command:
 
 `docker-compose up -d --build`
 
