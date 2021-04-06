@@ -2,7 +2,7 @@
 
 -- Drop table
 
-DROP TABLE public.commits;
+DROP TABLE IF EXISTS public.commits;
 
 CREATE TABLE public.commits (
 	id varchar(40) NOT NULL,
