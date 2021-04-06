@@ -1,25 +1,37 @@
+import os
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-import main as prospector
 
-
-
-# from api import auth
-
-# from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-
 from typing import Optional
 
+import redis
+from rq import Queue, Connection
+from rq.job import Job
+
+from git.git import do_clone, sample_func
+
+from commitdb.postgres import PostgresCommitDB
+
+redis_url = os.environ["REDIS_URL"]
+
+db_pass = os.environ["POSTGRES_PASSWORD"]
+connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
+    db_pass
+)
+
+db = PostgresCommitDB()
+db.connect(connect_string)
+
+# legacy prospector
+# import main as prospector
+
 api_metadata = [
-    {
-        "name": "data",
-        "description": "Operations with data used to train ML models.",
-    },
+    {"name": "data", "description": "Operations with data used to train ML models."},
     {
         "name": "jobs",
         "description": "Manage jobs.",
@@ -30,18 +42,14 @@ api_metadata = [
     },
 ]
 
-
 app = FastAPI(openapi_tags=api_metadata)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "localhost:3000"
-    ],
+    allow_origins=["http://localhost:3000", "localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
@@ -59,7 +67,7 @@ fake_users_db = {
         "username": "johndoe",
         "full_name": "John Doe",
         "email": "johndoe@example.com",
-        "roles": ['user'],
+        "roles": ["user"],
         "hashed_password": "fakehashedsecret",
         "disabled": False,
     },
@@ -67,11 +75,12 @@ fake_users_db = {
         "username": "alice",
         "full_name": "Alice Wonderson",
         "email": "alice@example.com",
-        "roles": ['user','admin'],
+        "roles": ["user", "admin"],
         "hashed_password": "fakehashedsecret2",
         "disabled": False,
     },
 }
+
 
 class User(BaseModel):
     username: str
@@ -97,8 +106,10 @@ def fake_decode_token(token):
     user = get_user(fake_users_db, token)
     return user
 
+
 def fake_hash_password(password: str):
     return "fakehashed" + password
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     user = fake_decode_token(token)
@@ -115,6 +126,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -133,86 +145,122 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
+
 # ===================================
 # Application APIs
 
 
 # -----------------------------------------------------------------------------
 #
-@app.post("/jobs/", tags=['jobs'])
-async def create_job(vulnerability_id='', description='', url=''):
-    return {
-        "id": 12,
-        "status": "WAITING",
-        "query": "CVE-1234-5678",
-        "results": []
+@app.post("/jobs/clone", tags=["jobs"])
+async def create_clone_job(repository):
+    # task_type = request.form["type"]
+    with Connection(redis.from_url(redis_url)):
+        q = Queue()
+        job = Job.create(
+            # do_clone
+            sample_func,
+            (repository, "/tmp",),
+            description="clone job " + repository,
+        )
+        q.enqueue_job(job)
+
+    response_object = {
+        "job_data": {
+            "job_id": job.get_id(),
+            "job_status": job.get_status(),
+            "job_queue_position": job.get_position(),
+            "job_description": job.description,
+            "job_created_at": job.created_at,
+            "job_started_at": job.started_at,
+            "job_ended_at": job.ended_at,
+            "job_result": job.result,
+        }
     }
+    return response_object
+    # return {"id": 12, "status": "WAITING", "query": "CVE-1234-5678", "results": []}
 
 
-@app.get("/jobs/{job_id}", tags=['jobs'])
-async def get_job(job_id, current_user: User = Depends(get_current_active_user)):
-    if current_user.username != 'alice':
-        raise HTTPException(status_code=400, detail="Unauthorized")
+@app.get("/jobs/{job_id}", tags=["jobs"])
+async def get_job(job_id):
+    # async def get_job(job_id, current_user: User = Depends(get_current_active_user)):
+    #     if current_user.username != "alice":
+    #         raise HTTPException(status_code=400, detail="Unauthorized")
 
-    return {
-        "id": job_id,
-        "owner": 'alice',
-        "status": "RUNNING",
-        "query": "CVE-1234-5678",
-        "results": []
-    }
+    # return {
+    #     "id": job_id,
+    #     "owner": "alice",
+    #     "status": "RUNNING",
+    #     "query": "CVE-1234-5678",
+    #     "results": [],
+    # }
+
+    with Connection(redis.from_url(redis_url)):
+        q = Queue()
+        job = q.fetch_job(job_id)
+    if job:
+        print("job {} result: {}".format(job.get_id(), job.result))
+        response_object = {
+            "job_data": {
+                "job_id": job.get_id(),
+                "job_status": job.get_status(),
+                "job_queue_position": job.get_position(),
+                "job_description": job.description,
+                "job_created_at": job.created_at,
+                "job_started_at": job.started_at,
+                "job_ended_at": job.ended_at,
+                "job_result": job._result,
+            }
+        }
+    else:
+        response_object = {"status": "error"}
+    return response_object
+
 
 # -----------------------------------------------------------------------------
 # Data here refers to training data, used to train ML models
 # TODO find a less generic term
-@app.get("/data", tags=['data'])
+@app.get("/data", tags=["data"])
 async def get_data():
     return [
         {
-        'repository_url': "https://github.com/apache/struts",
-        'commit_id': 'a4612fe8232678cab3297',
-        'label': 1,
-        'vulnerability_id': 'CVE-XXXX-YYYY'
+            "repository_url": "https://github.com/apache/struts",
+            "commit_id": "a4612fe8232678cab3297",
+            "label": 1,
+            "vulnerability_id": "CVE-XXXX-YYYY",
         },
         {
-        'repository_url': "https://github.com/apache/struts",
-        'commit_id': 'a4612fe8232678cab3297',
-        'label': 1,
-        'vulnerability_id': 'CVE-XXXX-YYYY'
+            "repository_url": "https://github.com/apache/struts",
+            "commit_id": "a4612fe8232678cab3297",
+            "label": 1,
+            "vulnerability_id": "CVE-XXXX-YYYY",
         },
         {
-        'repository_url': "https://github.com/apache/struts",
-        'commit_id': 'a4612fe8232678cab3297',
-        'label': 1,
-        'vulnerability_id': 'CVE-XXXX-YYYY'
+            "repository_url": "https://github.com/apache/struts",
+            "commit_id": "a4612fe8232678cab3297",
+            "label": 1,
+            "vulnerability_id": "CVE-XXXX-YYYY",
         },
     ]
 
 
-@app.post("/data", tags=['data'])
+@app.post("/data", tags=["data"])
 async def create_data(repository_url, commit_id, label, vulnerability_id):
     return {
-        'repository_url': repository_url,
-        'commit_id': commit_id,
-        'label': label,
-        'vulnerability_id': vulnerability_id
+        "repository_url": repository_url,
+        "commit_id": commit_id,
+        "label": label,
+        "vulnerability_id": vulnerability_id,
     }
 
+
 # -----------------------------------------------------------------------------
-@app.post("/legacy", response_class=HTMLResponse)
-async def make_legacy_query(vulnerability_id,repository_url=""):
-    prospector.main(vulnerability_id=vulnerability_id, repo_url = repository_url)
-    return """
-    <html>
-        <head>
-            <title>Prospector</title>
-        </head>
-        <body>
-            <h1>Results</h1>
-            .........
-        </body>
-    </html>
-    """
+@app.get("/commits/{repository_url}")
+async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_scheme)):
+    commit = (commit_id, repository_url)
+    data = db.lookup(commit)
+
+    return data
 
 
 # -----------------------------------------------------------------------------
@@ -229,6 +277,16 @@ async def read_items():
         </body>
     </html>
     """
+
+
+# -----------------------------------------------------------------------------
+@app.get("/status")
+async def get_status():
+    status = {"status": "ok"}
+
+    return status
+
+
 @app.get("/items/")
 async def read_items(token: str = Depends(oauth2_scheme)):
     return {"token": token}

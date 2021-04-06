@@ -1,0 +1,32 @@
+version: "3.1"
+
+services:
+  worker:
+    build: worker
+    volumes:
+      - .:/pythonimports
+    depends_on:
+      - redis
+    environment:
+      LOG_LEVEL: debug
+      PIP_REQUIREMENTS: requirements.txt
+      GIT_CACHE: /tmp
+
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080

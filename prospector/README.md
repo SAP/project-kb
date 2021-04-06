@@ -7,8 +7,7 @@ It takes a vulnerability description (in natural language) in input and
 produces in output a ranked list of commits, in decreasing order of relevance.
 
 
-![](docs/img/prospector.png)
-
+![](docs/img/prospector-reimplementation.png)
 
 
 **WARNING** Please keep in mind that Prospector is a research prototype, currently
@@ -18,7 +17,7 @@ If you find an bug, please open an issue. I you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
 but fails without it)
 
-## Setup
+## Setup (for development and demonstration purposes only!)
 
 The easiest way to set up Prospector is to clone this repository and then run the following commands:
 
@@ -27,44 +26,50 @@ git clone https://github.com/sap/project-kb
 git checkout prospector-assuremoss
 cd project-kb/prospector
 echo "GIT_CACHE=/tmp/git-cache" > .env
+echo "PYTHONPATH=." >> .env
+echo "POSTGRES_PASSWORD=example" >> .env
 mkdir /tmp/git-cache
 pipenv shell
 pipenv install
+pre-commit install
 python -m spacy download en_core_web_sm
 ```
 
 If you have issues with the above commands, please open a Github issue and
-explain in detail what you did and what unexpected behaviour you observed.
-Please also indicate your operating system and Python version.
+explain in detail what you did and what unexpected behaviour you observed (also indicate your operating system and Python version).
 
 *Please note that Windows is not supported.*
 
-## Use
+**IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
+your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
+black is run prior to committing anyway, but the auto-formatting might save you some time and avoid frustration.
 
-### Starting the backend
+## Starting the backend database and the job workers
+
+Note: this section and the following assume you have performed succesfully the
+steps in the *setup* section above.
+
+This is achieved with docker and docker-compose, make sure you have both installed
+and working before proceeding.
+
+You can then start the necessary containers with the following command:
+
+`docker-compose up -d`
+
+This also starts a convenient DB administration tool at http://localhost:8080
+
+## Starting the RESTful server
 
 `uvicorn api.main:app --reload`
 
 You can then point your browser to `http://127.0.0.1:8000` to access the API.
 You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
-### Using the CLI
+## Using the CLI
+
+NOTE: this is about the "legacy" CLI. A new CLI is being developed.
 
 `python main.py <vulnerability_id> -r <repository_url> -v`
-
-For vulnerabilities that are in the NVD (CVEs), you only need to provide the CVE
-and the URL of the repository that is affected. For vulnerabilities that are not
-in the NVD, you will need to provide additional information. Furthermore, you
-can provide all values manually to improve the prediction.
-
-The repository also contains a streamlit-based graphical UI, but it is not maintained
-and will be discontinued.
-
-### Database & git-explorer
-
-Prospector uses a SQLite database to store commit content. When providing a
-vulnerability that affects a repository that is not in your database yet, the
-extraction of this content can take a while (approximately 1000 commits/hour).
 
 ## Credits
 
