@@ -22,14 +22,18 @@ import zipfile
 from contextlib import closing
 import io
 import os
-import sys
+
+# import sys
 import json
 import time
-import plac
-from tqdm import tqdm
-from io import StringIO
+
+# import plac
+# from tqdm import tqdm
+
+# from io import StringIO
 from pprint import pprint
-import logging
+
+# import logging
 
 # note: The NVD has not data older than 2002
 START_FROM_YEAR = os.environ.get("CVE_DATA_AS_OF_YEAR") or "2002"
@@ -114,7 +118,8 @@ def do_fetch(what, verbose=False):
             print(f.filename)
             data = json.loads(archive.read(f).decode())
 
-    pbar = tqdm(data["CVE_Items"])
+    # pbar = tqdm(data["CVE_Items"])
+    pbar = data["CVE_Items"]
     for v in pbar:
         CVE_id = v["cve"]["CVE_data_meta"]["ID"]
         CVE_year = CVE_id.split("-")[1]
@@ -145,10 +150,10 @@ def need_full():
         return True
 
 
-@plac.annotations(
-    force=("Force a full update of all feeds", "flag", "f", bool),
-    verbose=("Verbose mode", "flag", "v", bool),
-)
+# @plac.annotations(
+#     force=("Force a full update of all feeds", "flag", "f", bool),
+#     verbose=("Verbose mode", "flag", "v", bool),
+# )
 def main(force=False, verbose=False):
 
     if force or need_full():
@@ -158,5 +163,5 @@ def main(force=False, verbose=False):
     do_update(verbose=verbose)
 
 
-if __name__ == "__main__":
-    plac.call(main)
+# if __name__ == "__main__":
+#     plac.call(main)

@@ -1,4 +1,5 @@
 import os
+from sys import argv
 from fastapi import APIRouter, Depends, HTTPException
 
 import redis
@@ -6,6 +7,8 @@ from rq import Queue, Connection
 from rq.job import Job
 
 from git.git import do_clone
+
+from api.routers.nvd_feed_update import main
 
 from ..dependencies import (
     get_current_active_user,
@@ -77,4 +80,26 @@ async def get_job(job_id):
         }
     else:
         response_object = {"status": "error"}
+    return response_object
+
+
+@router.post("/update_feed", tags=["jobs"])
+async def create_update_feed_job():
+    with Connection(redis.from_url(redis_url)):
+        q = Queue()
+        job = Job.create(main, description="update nvd feed", result_ttl=1000,)
+        q.enqueue_job(job)
+
+    response_object = {
+        "job_data": {
+            "job_id": job.get_id(),
+            "job_status": job.get_status(),
+            "job_queue_position": job.get_position(),
+            "job_description": job.description,
+            "job_created_at": job.created_at,
+            "job_started_at": job.started_at,
+            "job_ended_at": job.ended_at,
+            "job_result": job.result,
+        }
+    }
     return response_object
