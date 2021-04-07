@@ -4,7 +4,7 @@ addopts = "-ra -q --cov-report html:cov_html --cov=."
 testpaths = [
     "commitdb",
     "datamodel",
-    "cli",
+    "client",
     "commit-preprocessor",
     "git",
     "api"

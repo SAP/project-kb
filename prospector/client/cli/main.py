@@ -12,7 +12,7 @@ from pprint import pprint
 
 import requests
 
-from cli.prospector_client import prospector
+from client.cli.prospector_client import prospector
 from datamodel.advisory import AdvisoryRecord
 from git.git import GIT_CACHE, Git
 
