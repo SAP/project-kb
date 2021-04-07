@@ -12,7 +12,6 @@ pre-commit = "*"
 pytest-cov = "*"
 pycodestyle = "*"
 
-
 [packages]
 numpy = "==1.19.4"
 pandas = "==1.1.4"
@@ -40,7 +39,7 @@ python-multipart = "*"
 pydantic = "*"
 psycopg2-binary = "*"
 rq = "==1.8.0"
-
+plac = "*"
 
 [requires]
 python_version = "3.8"
