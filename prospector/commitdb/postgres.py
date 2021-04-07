@@ -61,7 +61,7 @@ class PostgresCommitDB(CommitDB):
             cur.execute(
                 "INSERT INTO commits (id, repository, feature_1, feature_2) VALUES (%s, %s, %s, %s)",
                 (
-                    commit_obj.id,
+                    commit_obj.commit_id,
                     commit_obj.repository,
                     commit_obj.feature_1,
                     commit_obj.feature_2,
