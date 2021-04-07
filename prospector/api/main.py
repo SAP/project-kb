@@ -1,21 +1,18 @@
 import os
-from pprint import pprint
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI
+
+# from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from commitdb.postgres import PostgresCommitDB
 
-from .dependencies import (
-    User,
-    UserInDB,
-    fake_hash_password,
-    fake_users_db,
-    get_current_active_user,
-    oauth2_scheme,
-)
+# from .dependencies import oauth2_scheme
 from .routers import jobs, nvd, users
+
+# from pprint import pprint
+
 
 db_pass = os.environ["POSTGRES_PASSWORD"]
 connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
@@ -90,7 +87,8 @@ async def create_data(repository_url, commit_id, label, vulnerability_id):
 
 # -----------------------------------------------------------------------------
 @app.get("/commits/{repository_url}")
-async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_scheme)):
+# async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_scheme)):
+async def get_commits(repository_url, commit_id=None):
     commit = (commit_id, repository_url)
     data = db.lookup(commit)
 
@@ -118,5 +116,4 @@ async def read_items():
 # -----------------------------------------------------------------------------
 @app.get("/status")
 async def get_status():
-    status = {"status": "ok"}
-    return status
+    return {"status": "ok"}
