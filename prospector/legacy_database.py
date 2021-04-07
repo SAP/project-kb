@@ -1,11 +1,21 @@
 # This file is used to create a database with commit content
 
-import os, sys, ast, json, time, datetime, requests, sqlite3, re, random
+import ast
+import datetime
+import json
+import os
+import random
+import re
+import sqlite3
+import sys
+import time
+
+import pandas as pd
+import requests
 
 # from selenium import webdriver
 # from bs4 import BeautifulSoup
 from tqdm import tqdm
-import pandas as pd
 
 current_working_directory = os.getcwd()
 
@@ -16,7 +26,7 @@ GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from git.git import do_clone, Git, Commit, clone_repo_multiple
+from git.git import Commit, Git, clone_repo_multiple, do_clone
 
 os.chdir(current_working_directory)
 

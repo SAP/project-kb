@@ -1,4 +1,12 @@
-import random, os, re, copy, time, datetime, ast, copy, sys
+import ast
+import copy
+import datetime
+import os
+import random
+import re
+import sys
+import time
+
 import numpy as np
 import pandas as pd
 import spacy
@@ -6,23 +14,24 @@ import spacy
 nlp = spacy.load("en_core_web_sm")
 
 import sqlite3
+
+import matplotlib.pyplot as plt
 import requests
 from bs4 import BeautifulSoup
-
-# from selenium import webdriver
-
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.model_selection import (
+    GridSearchCV,
+    RandomizedSearchCV,
     ShuffleSplit,
     cross_val_score,
     cross_validate,
     train_test_split,
-    GridSearchCV,
-    RandomizedSearchCV,
 )
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
+
+# from selenium import webdriver
+
 
 current_working_directory = os.getcwd()
 # os.chdir("git")
@@ -32,7 +41,7 @@ GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from git.git import do_clone, Git, Commit, clone_repo_multiple
+from git.git import Commit, Git, clone_repo_multiple, do_clone
 
 os.chdir(current_working_directory)
 

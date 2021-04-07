@@ -12,15 +12,27 @@ except ModuleNotFoundError:
     from streamlit.server.server import Server
 
 # For Prospector
-import pandas as pd
-import numpy as np
-import re, os, json, sqlite3, requests, time, datetime, ast, random, copy, sys, base64
+import ast
+import base64
+import copy
+import datetime
+import json
+import os
+import random
+import re
+import sqlite3
+import sys
+import time
 from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
+import requests
+import spacy
 from joblib import load
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
-import spacy
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -32,13 +44,14 @@ GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from git.git import do_clone, Git, Commit, clone_repo_multiple, utils
+from git.git import Commit, Git, clone_repo_multiple, do_clone, utils
 
 os.chdir(current_working_directory)
 
 import database
 import filter
 import rank
+
 import legacy_cli as prospector_main
 
 ### Magic Numbers

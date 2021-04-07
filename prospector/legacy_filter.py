@@ -1,6 +1,14 @@
-import os, sys, re, difflib, spacy, time, datetime, ast
+import ast
+import datetime
+import difflib
+import os
+import re
+import sys
+import time
+
 import numpy as np
 import pandas as pd
+import spacy
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -12,7 +20,7 @@ GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from git.git import do_clone, Git, Commit, clone_repo_multiple
+from git.git import Commit, Git, clone_repo_multiple, do_clone
 
 os.chdir(current_working_directory)
 
