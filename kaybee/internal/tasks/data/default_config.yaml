@@ -218,8 +218,8 @@ export:
     post: |
       </Vulnerabilities>
       </xml>
-  - target: changed-source-code
-    filename: changed-source-code.sh
+  - target: steady-with-changed-source-code
+    filename: steady-with-changed-source-code.sh
     pre: |
       #!/bin/bash
 
