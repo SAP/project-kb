@@ -29,20 +29,31 @@ echo "GIT_CACHE=/tmp/git-cache" > .env
 echo "PYTHONPATH=." >> .env
 echo "POSTGRES_PASSWORD=example" >> .env
 mkdir /tmp/git-cache
-pipenv shell
+pipenv --python 3.8
 pipenv install
 pre-commit install
 python -m spacy download en_core_web_sm
 ```
 
-If you have issues with the above commands, please open a Github issue and
-explain in detail what you did and what unexpected behaviour you observed (also indicate your operating system and Python version).
+This is necessary only the first time you set up your dev. environment.
+Afterwards, you will just have to remember to activate the environment
+with `pipenv shell`.
 
-*Please note that Windows is not supported.*
+If at any time you wish to remove the virtual environment and create it from scratch
+(for example, because you want to use a different version of the python interpreter),
+just do `pipenv --rm` and the repeat the steps above.
+
+If you have issues with these steps, please open a Github issue and
+explain in detail what you did and what unexpected behaviour you observed
+(also indicate your operating system and Python version).
+
+*Please note that Windows is not supported*, WSL should be fine though.
+
 
 **IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
 your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
-black is run prior to committing anyway, but the auto-formatting might save you some time and avoid frustration.
+black is run prior to committing anyway, but the auto-formatting might save you some time
+and avoid frustration.
 
 ## Starting the backend database and the job workers
 
