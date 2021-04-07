@@ -18,16 +18,11 @@
 #
 
 import io
-
-# import sys
 import json
 import os
 import time
 import zipfile
 from contextlib import closing
-
-# from io import StringIO
-from pprint import pprint
 
 import plac
 import requests
@@ -81,16 +76,16 @@ def do_update(quiet=False):
         if not quiet:
             print("[ii] We already have this update, no new data to fetch.")
         return False
-    else:
-        do_fetch("modified")
-        with open(os.path.join(DATA_PATH, "metadata.json"), "w") as f:
-            f.write(json.dumps(metadata_dict))
-        return True
+
+    do_fetch("modified")
+    with open(os.path.join(DATA_PATH, "metadata.json"), "w") as f:
+        f.write(json.dumps(metadata_dict))
+    return True
 
 
 def do_fetch_full(start_from_year=START_FROM_YEAR, quiet=False):
     years_to_fetch = [
-        y for y in range(int(START_FROM_YEAR), int(time.strftime("%Y")) + 1)
+        y for y in range(int(start_from_year), int(time.strftime("%Y")) + 1)
     ]
     if not quiet:
         print("[ii] Fetching feeds: " + str(years_to_fetch))
@@ -146,16 +141,16 @@ def need_full(quiet=False):
             if not quiet:
                 print("[ii] Data folder {} is empty".format(DATA_PATH))
             return True
-        else:
-            # Directory exists and is not empty
-            if not quiet:
-                print("[ii] Data folder found at " + DATA_PATH)
-            return False
-    else:
-        # Directory doesn't exist
+
+        # Directory exists and is not empty
         if not quiet:
-            print("[ii] Data folder {} does not exist".format(DATA_PATH))
-        return True
+            print("[ii] Data folder found at " + DATA_PATH)
+        return False
+
+    # Directory doesn't exist
+    if not quiet:
+        print("[ii] Data folder {} does not exist".format(DATA_PATH))
+    return True
 
 
 @plac.annotations(
