@@ -41,7 +41,7 @@ feel free to try it out, but do expect some rough edges.*
 At this time, a complete *reimplementation* is underway in the context of
 the **[AssureMOSS](https://assuremoss.eu)** EU-funded project. The
 work-in-progress is kept in the [assuremoss-prospector](https://github.com/SAP/project-kb/tree/prospector-assuremoss/prospector) branch, as well as
-in the issues tagged as `assuremoss`.
+in the [issues tagged as assuremoss](https://github.com/SAP/project-kb/issues?q=is%3Aissue+is%3Aopen+label%3Aassuremoss).
 
 Anyone interested in contributing to this activity is welcome: please take a
 look at the open issues, and feel free to participate starting from there.
