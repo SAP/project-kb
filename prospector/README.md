@@ -40,7 +40,7 @@ feel free to try it out, but do expect some rough edges.*
 
 At this time, a complete *reimplementation* is underway in the context of
 the **[AssureMOSS](https://assuremoss.eu)** EU-funded project. The
-work-in-progress is kept in the `assuremoss-prospector` branch, as well as
+work-in-progress is kept in the [assuremoss-prospector](https://github.com/SAP/project-kb/tree/prospector-assuremoss/prospector) branch, as well as
 in the issues tagged as `assuremoss`.
 
 Anyone interested in contributing to this activity is welcome: please take a
