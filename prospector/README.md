@@ -45,3 +45,7 @@ in the issues tagged as `assuremoss`.
 
 Anyone interested in contributing to this activity is welcome: please take a
 look at the open issues, and feel free to participate starting from there.
+
+<img src="https://user-images.githubusercontent.com/2268970/113933126-7d018c80-97f4-11eb-801b-c48f56ee416c.png" width="120"><img src="https://user-images.githubusercontent.com/2268970/113933131-7d9a2300-97f4-11eb-8856-0849f9b73dbb.png" width="120"><img src="https://user-images.githubusercontent.com/2268970/113932953-50e60b80-97f4-11eb-9d90-6808b46df7ab.png" width="120"><img src="https://user-images.githubusercontent.com/2268970/113932956-517ea200-97f4-11eb-859b-f1505380d86b.png" width="120"><img src="https://user-images.githubusercontent.com/2268970/113932957-517ea200-97f4-11eb-9fa7-9b91581f95d9.png" width="120">
+
+
