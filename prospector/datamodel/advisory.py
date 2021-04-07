@@ -1,6 +1,7 @@
 # from typing import Tuple
-from dataclasses import dataclass, field
 import re
+from dataclasses import dataclass, field
+
 import requests
 
 # from . import BaseModel

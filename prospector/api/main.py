@@ -1,26 +1,21 @@
 import os
 from pprint import pprint
+
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-
-from .dependencies import (
-    get_current_active_user,
-    fake_users_db,
-    fake_hash_password,
-    User,
-    UserInDB,
-    oauth2_scheme,
-)
-
-from .routers import users
-from .routers import jobs
-from .routers import nvd
-
-
 from commitdb.postgres import PostgresCommitDB
 
+from .dependencies import (
+    User,
+    UserInDB,
+    fake_hash_password,
+    fake_users_db,
+    get_current_active_user,
+    oauth2_scheme,
+)
+from .routers import jobs, nvd, users
 
 db_pass = os.environ["POSTGRES_PASSWORD"]
 connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(

@@ -4,7 +4,9 @@ the underlying database where pre-processed commits are stored
 """
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
+
 from datamodel.commit import Commit
+
 from . import CommitDB
 
 

@@ -1,5 +1,6 @@
-from .git import Git, version_to_wide_interval_tags
 from pprint import pprint
+
+from .git import Git, version_to_wide_interval_tags
 
 
 def test_get_commits_in_time_interval():

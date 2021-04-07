@@ -1,19 +1,20 @@
 #!/usr/bin/python3
 
 # from advisory_processor.advisory_processor import AdvisoryProcessor
-import os, sys
 import argparse
 import configparser
-from pathlib import Path
-import pprint
-import requests
 import logging
-from datamodel.advisory import AdvisoryRecord
-from cli.prospector_client import prospector
-
-from git.git import GIT_CACHE, Git
-
+import os
+import pprint
+import sys
+from pathlib import Path
 from pprint import pprint
+
+import requests
+
+from cli.prospector_client import prospector
+from datamodel.advisory import AdvisoryRecord
+from git.git import GIT_CACHE, Git
 
 logger = logging.getLogger("prospector")
 

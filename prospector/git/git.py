@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
-import subprocess
-import multiprocessing
-import logging
-import os
-import sys
-import shutil
-import random
-import re
 import difflib
 import hashlib
+import logging
+import multiprocessing
+import os
+import random
+import re
+import shutil
+import subprocess
+import sys
+from datetime import datetime
 
 # from pprint import pprint
 # import pickledb
 
-from datetime import datetime
 
 GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:

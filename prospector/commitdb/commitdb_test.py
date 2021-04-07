@@ -3,9 +3,11 @@ Unit tests for database-related functionality
 
 """
 import os
+
+import pytest
+
 from commitdb.postgres import PostgresCommitDB, parse_connect_string
 from datamodel.commit import Commit
-import pytest
 
 CONNECT_STRING = "HOST=127.0.0.1;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
     os.environ["POSTGRES_PASSWORD"]

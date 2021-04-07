@@ -1,19 +1,19 @@
 # This file is based on the rest-nvd module that is part of Eclipse Steady.
 
+import json
+import logging
+import os
+
+import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-import requests
-import json
-import os
-import logging
-
 from ..dependencies import (
-    get_current_active_user,
-    fake_users_db,
-    fake_hash_password,
     User,
     UserInDB,
+    fake_hash_password,
+    fake_users_db,
+    get_current_active_user,
     oauth2_scheme,
 )
 

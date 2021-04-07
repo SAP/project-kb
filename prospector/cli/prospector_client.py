@@ -1,6 +1,7 @@
-from datamodel.advisory import AdvisoryRecord
-from git.git import Git, GIT_CACHE
 from pprint import pprint
+
+from datamodel.advisory import AdvisoryRecord
+from git.git import GIT_CACHE, Git
 
 
 def prospector(
