@@ -15,3 +15,8 @@ class Commit(BaseModel):
     jira_refs: "list[str]" = field(default_factory=list)
     ghissue_refs: "list[str]" = field(default_factory=list)
     cve_refs: "list[str]" = field(default_factory=list)
+
+    def format(self):
+        out = "Commit: {} {}".format(self.repository, self.commit_id)
+        out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
+        return out
