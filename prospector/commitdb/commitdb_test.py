@@ -41,7 +41,7 @@ def test_simple_read():
 
 
 def test_parse_connect_string():
-    result = dict()
+    # result = dict()
     parsed_connect_string = parse_connect_string(CONNECT_STRING)
     assert parsed_connect_string["host"] == "127.0.0.1"
     assert parsed_connect_string["uid"] == "postgres"

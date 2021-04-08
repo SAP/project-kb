@@ -59,13 +59,8 @@ class PostgresCommitDB(CommitDB):
 
             # TODO sanitize inputs
             cur.execute(
-                "INSERT INTO commits (id, repository, feature_1, feature_2) VALUES (%s, %s, %s, %s)",
-                (
-                    commit_obj.commit_id,
-                    commit_obj.repository,
-                    commit_obj.feature_1,
-                    commit_obj.feature_2,
-                ),
+                "INSERT INTO commits (id, repository, feature_1) VALUES (%s, %s, %s)",
+                (commit_obj.commit_id, commit_obj.repository, commit_obj.feature_1),
             )
             self.connection.commit()
         except Exception as exception:
