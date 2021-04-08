@@ -32,7 +32,7 @@ def preprocess_commit(git_commit: gitCommit) -> Commit:
     which they must be matched)
     """
 
-    commit_id = git_commit.get_id()[1]
+    commit_id = git_commit.get_id()
     repository = git_commit._repository
 
     result = Commit(commit_id, repository)

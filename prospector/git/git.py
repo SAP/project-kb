@@ -364,7 +364,7 @@ class Commit:
                     "Failed to obtain full commit id for: %s in dir: %s"
                     % (self._id, self._exec._workdir)
                 )
-        return (self._id, self._attributes["full_id"])
+        return self._attributes["full_id"]
 
     def get_msg(self):
         if "msg" not in self._attributes:
