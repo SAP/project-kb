@@ -8,8 +8,7 @@ more detail in this document: https://arxiv.org/pdf/2103.13375.pdf
 The document can be cited as follows:
 ```
 @misc{hommersom2021mapping,
-    title = {Automated Mapping of Vulnerability Advisories onto
-    their Fix Commits in Open Source Repositories},
+    title = {Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories},
     author = {Hommersom, Daan and
     Sabetta, Antonino and
     Coppola, Bonaventura and
