@@ -44,4 +44,3 @@ in the [issues tagged as assuremoss](https://github.com/SAP/project-kb/issues?q=
 
 Anyone interested in contributing to this activity is welcome: please take a
 look at the open issues, and feel free to participate starting from there.
-

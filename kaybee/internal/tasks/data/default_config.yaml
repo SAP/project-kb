@@ -105,9 +105,9 @@ export:
         branch=$3
         vulnerability_id=$4
         source_path=$5
-        
+
         if [ "$source_path" == "" ]
-        then 
+        then
           echo "[ERROR] Skipping commit $commit_id in $vulnerability_id, empty source_path"
           return
         fi
@@ -229,14 +229,14 @@ export:
 
       ##-------- E D I T   T H I S  S E C T I O N --------
       ##
-      ## 
+      ##
       echo "Please edit the script if you want to delete existing changed-source-code archives"
-      
+
       RECREATE=false
-      
+
       ##---------------------- E N D --------------------
       LOCAL_CLONES_DIR="/tmp"
-      
+
       folder_for_repo(){
         X=$1
 
@@ -268,34 +268,34 @@ export:
 
       prepare_folder_for_compression(){
         statement_path=$1
-  
+
         #remove metadata files (if any)
         find $statement_path -type f -name "metadata.json" -delete
-    
+
         #uncomment this line to recreate archives
         if [ "$RECREATE" = true ];
         then
           find $statement_path -type f -name "changed-source-code.tar.gz" -delete
         fi
       }
-      
+
       compress_changed_code(){
         statement_path=$1
-        
+
         if [ -f $statement_path/changed-source-code.tar.gz ]
         then
           echo "[INFO] Skipping $statement_path, tar already exists"
           return
         fi
-        
+
         touch $statement_path/changed-source-code.tar.gz
         tar cfz $statement_path/changed-source-code.tar.gz --exclude='statement.yaml' --exclude='changed-source-code.tar.gz' -C $statement_path .
-        
-        #remove commit 
+
+        #remove commit
         echo "rem -r `ls -1 -d $statement_path/*/`"
-        
+
       }
-      
+
       checkout_commit(){
         repo_url=$1
         commit_id=$2
@@ -304,11 +304,11 @@ export:
         statement_path=$5
 
         if [ "$statement_path" == "" ]
-        then 
+        then
           echo "[ERROR] Skipping commit $commit_id in $vulnerability_id, empty statement_path"
           return
         fi
-        
+
         if [ -f $statement_path/changed-source-code.tar.gz ]
         then
           return
@@ -319,7 +319,7 @@ export:
         repo_dir=$(folder_for_repo $repo_url)
 
         timestamp=$(git -C $repo_dir show --no-patch --no-notes --pretty='%at' $commit_id)
-        
+
         echo "$timestamp" >> $statement_path/$commit_id/timestamp
 
         echo "dir=$repo_dir"
@@ -353,7 +353,7 @@ export:
       {{ if .VulnerabilityID }}
       {{ $statement_path := .Metadata.LocalPath }}
 
-       
+
       {{ if .Fixes}}
       prepare_folder_for_compression {{ $statement_path }}
       {{ $vuln := .VulnerabilityID}}{{ $repo := (index (index .Fixes 0).Commits 0).RepositoryURL }}
@@ -364,10 +364,10 @@ export:
       # This vulnerability has no fix-commits
       {{end}}
       {{end}}
-      
+
 
     post: |-
-      
+
       # ------------------------------------------------
       # This script was generated with KayBee
       # ------------------------------------------------
