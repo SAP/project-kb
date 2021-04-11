@@ -11,8 +11,8 @@ func NewNullPolicy() Policy {
 }
 
 // Reconcile just returns the first of the two statements as is
-func (st NullPolicy) Reconcile(statements []model.Statement) ReconcileResult {
-	return ReconcileResult{
+func (st NullPolicy) Reconcile(statements []model.Statement) Result {
+	return Result{
 		reconciledStatement: model.Statement{},
 		candidateStatements: statements,
 		comment:             "Method Reconcile() does nothing in the NullPolicy!",

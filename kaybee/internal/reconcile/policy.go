@@ -9,12 +9,12 @@ import "github.com/sap/project-kb/kaybee/internal/model"
 // that are not independent and how to reduce sets of statements by applying such reconcile operation
 // to non-independent statements
 type StatementReconciler interface {
-	Reconcile([]model.Statement) ReconcileResult
+	Reconcile([]model.Statement) Result
 	Reduce(stmts map[string][]model.Statement) (map[string][]model.Statement, MergeLog, error)
 }
 
-// ReconcileResult encodes the result of a reconcile operation
-type ReconcileResult struct {
+// Result encodes the result of a reconcile operation
+type Result struct {
 	reconciledStatement model.Statement
 	candidateStatements []model.Statement
 	comment             string
@@ -28,7 +28,7 @@ type Policy struct {
 }
 
 // Reconcile merges two statements into one as specified in the Merger object
-func (s *Policy) Reconcile(statements []model.Statement) ReconcileResult {
+func (s *Policy) Reconcile(statements []model.Statement) Result {
 	// the actual Merge() that is invoked is the one defined
 	// in a type that implements the StatementReconciler interface and
 	// an instance of which is assigned to the reconciler field of a Policy instance

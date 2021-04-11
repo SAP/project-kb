@@ -25,9 +25,9 @@ func NewStrictPolicy() Policy {
 // are not independent a suitable error signals it
 // This is implemented just to satisfy the StatementReconciler interface, but this method
 // is not supposed to be called ever.
-func (p StrictPolicy) Reconcile(statements []model.Statement) ReconcileResult {
+func (p StrictPolicy) Reconcile(statements []model.Statement) Result {
 	log.Fatal("Method Reconcile() should not be invoked on a StrictPolicy!")
-	return ReconcileResult{
+	return Result{
 		reconciledStatement: model.Statement{},
 		candidateStatements: statements,
 		comment:             "Method Reconcile() should not be invoked on a StrictPolicy!",

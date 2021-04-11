@@ -46,9 +46,9 @@ func (s SmartPolicy) Reduce(stmts map[string][]model.Statement) (map[string][]mo
 }
 
 // Reconcile returns a single statement out of a list of statements
-func (s SmartPolicy) Reconcile(statements []model.Statement) ReconcileResult {
+func (s SmartPolicy) Reconcile(statements []model.Statement) Result {
 	var (
-		reconcileResult ReconcileResult
+		reconcileResult Result
 		mergedStatement model.Statement
 		vulnID          = statements[0].VulnerabilityID
 	)
@@ -59,7 +59,7 @@ func (s SmartPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 
 	for _, sameRankCandidates := range rankedCandidates {
 		if len(sameRankCandidates) > 1 {
-			reconcileResult = ReconcileResult{
+			reconcileResult = Result{
 				reconciledStatement: model.Statement{},
 				candidateStatements: statements,
 				comment:             fmt.Sprintf("Reconcile aborted, there are multiple statements from same-rank sources for %s", vulnID),
@@ -73,7 +73,7 @@ func (s SmartPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 		}
 	}
 
-	reconcileResult = ReconcileResult{
+	reconcileResult = Result{
 		reconciledStatement: mergedStatement,
 		candidateStatements: statements,
 		comment:             fmt.Sprintf("Reconciled %d statements about vuln. '%s'", len(statements), vulnID),

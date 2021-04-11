@@ -26,7 +26,7 @@ func NewSoftPolicy() Policy {
 }
 
 // Reconcile returns a single statement out of a list of statements
-func (s SoftPolicy) Reconcile(statements []model.Statement) ReconcileResult {
+func (s SoftPolicy) Reconcile(statements []model.Statement) Result {
 	var (
 		mergedStatement model.Statement
 		err             error
@@ -44,7 +44,7 @@ func (s SoftPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 	err = s.ReconcileFixesAndNotes(statements, &mergedStatement)
 	if err != nil {
 		color.Warn.Prompt("Same-rank origins disagree on vulnerability %s", mergedStatement.VulnerabilityID)
-		return ReconcileResult{
+		return Result{
 			reconciledStatement: model.Statement{},
 			candidateStatements: statements,
 			comment:             "Same-rank origins disagree on vulnerability " + mergedStatement.VulnerabilityID,
@@ -58,7 +58,7 @@ func (s SoftPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 	// 	return Statement{}, err
 	// }
 	// mergedStatement = s.ReconcileAffectedArtifacts(s1, s2)
-	return ReconcileResult{
+	return Result{
 		reconciledStatement: mergedStatement,
 		candidateStatements: statements,
 		comment:             fmt.Sprintf("Reconciled %d statements about vuln. '%s'", len(statements), vulnID),

@@ -38,7 +38,7 @@ func NewInteractivePolicy() Policy {
 }
 
 // Reconcile returns a single statement out of a list of statements
-func (s InteractivePolicy) Reconcile(statements []model.Statement) ReconcileResult {
+func (s InteractivePolicy) Reconcile(statements []model.Statement) Result {
 	var (
 		mergedStatement model.Statement
 		err             error
@@ -65,7 +65,7 @@ func (s InteractivePolicy) Reconcile(statements []model.Statement) ReconcileResu
 
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
-		return ReconcileResult{}
+		return Result{}
 	}
 
 	fmt.Printf("You choose %s\n", result)
@@ -92,7 +92,7 @@ func (s InteractivePolicy) Reconcile(statements []model.Statement) ReconcileResu
 
 	// ask a log message for the mergelog
 
-	return ReconcileResult{
+	return Result{
 		reconciledStatement: mergedStatement,
 		candidateStatements: statements,
 		comment:             fmt.Sprintf("Reconciled %d statements about vuln. '%s'", len(statements), vulnID),
