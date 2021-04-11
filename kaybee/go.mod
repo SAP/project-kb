@@ -9,6 +9,7 @@ require (
 	github.com/go-git/go-git/v5 v5.3.0
 	github.com/gookit/color v1.4.2
 	github.com/magiconair/properties v1.8.5
+	github.com/manifoldco/promptui v0.8.0
 	github.com/markbates/pkger v0.17.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/package-url/packageurl-go v0.1.0

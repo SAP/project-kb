@@ -18,6 +18,8 @@ type MergeTask struct {
 	sources []conf.Source
 }
 
+const mergeLogDir = ".kaybee/merged/"
+
 // NewMergeTask constructs a new MergeTask
 func NewMergeTask() (mergeTask *MergeTask) {
 
@@ -33,13 +35,18 @@ func (t *MergeTask) WithPolicy(p conf.Policy) *MergeTask {
 			fmt.Println("Using policy: STRICT")
 		}
 		t.policy = model.NewStrictPolicy()
+	case conf.Interactive:
+		if t.verbose {
+			fmt.Println("Using policy: INTERACTIVE")
+		}
+		t.policy = model.NewSoftPolicy()
 	case conf.Soft:
 		if t.verbose {
 			fmt.Println("Using policy: SOFT")
 		}
 		t.policy = model.NewSoftPolicy()
 	default:
-		log.Fatalf("Invalid merge policy -- ABORTING")
+		log.Fatalf("Invalid merge policy: " + p.String() + " -- ABORTING")
 	}
 	return t
 }
@@ -107,20 +114,20 @@ func (t *MergeTask) Execute() (success bool) {
 	}
 
 	// fmt.Printf("Merged:\n%v", mergedStatements)
-	os.RemoveAll(".kaybee/merged/")
+	os.RemoveAll(mergeLogDir)
 
 	for _, st := range mergedStatements {
 		// log.Printf("%+v\n", st)
 		if len(st) != 1 {
 			log.Fatal("WEIRD! After merging, there are still multiple statements for the same vulnerability!")
 		}
-		st[0].ToFile(".kaybee/merged/")
+		st[0].ToFile(mergeLogDir)
 	}
 
 	fmt.Printf("Merged %d sources (%d statements): yielded %d statements.\n", len(t.sources), inputStatementCount, len(mergedStatements))
 
-	os.MkdirAll(".kaybee/merged/", os.ModePerm)
-	mergeLog.Dump(".kaybee/merged/")
+	os.MkdirAll(mergeLogDir, os.ModePerm)
+	mergeLog.Dump(mergeLogDir)
 
 	// if verbose {
 	// 	fmt.Println("Merge log:")

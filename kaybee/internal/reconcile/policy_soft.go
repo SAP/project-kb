@@ -1,4 +1,4 @@
-package model
+package reconcile
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"github.com/gookit/color"
 
 	"github.com/sap/project-kb/kaybee/internal/errors"
+	"github.com/sap/project-kb/kaybee/internal/model"
 )
 
 /*
@@ -25,9 +26,9 @@ func NewSoftPolicy() Policy {
 }
 
 // Reconcile returns a single statement out of a list of statements
-func (s SoftPolicy) Reconcile(statements []Statement) ReconcileResult {
+func (s SoftPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 	var (
-		mergedStatement Statement
+		mergedStatement model.Statement
 		err             error
 		vulnID          = statements[0].VulnerabilityID
 	)
@@ -44,7 +45,7 @@ func (s SoftPolicy) Reconcile(statements []Statement) ReconcileResult {
 	if err != nil {
 		color.Warn.Prompt("Same-rank origins disagree on vulnerability %s", mergedStatement.VulnerabilityID)
 		return ReconcileResult{
-			reconciledStatement: Statement{},
+			reconciledStatement: model.Statement{},
 			candidateStatements: statements,
 			comment:             "Same-rank origins disagree on vulnerability " + mergedStatement.VulnerabilityID,
 			success:             false,
@@ -66,11 +67,11 @@ func (s SoftPolicy) Reconcile(statements []Statement) ReconcileResult {
 }
 
 // Reduce only keeps independent statements and discards statements that are non-independent
-func (s SoftPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
+func (s SoftPolicy) Reduce(stmts map[string][]model.Statement) (map[string][]model.Statement, MergeLog, error) {
 	var mergeLog = NewMergeLog("exec_123456789")
 	var logEntry MergeLogEntry
 
-	var statementsToReconcile []Statement
+	var statementsToReconcile []model.Statement
 
 	for st := range stmts {
 		conflictingStatementsCount := len(stmts[st])
@@ -78,7 +79,7 @@ func (s SoftPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement
 
 		if conflictingStatementsCount > 1 {
 			result := s.Reconcile(statementsToReconcile)
-			stmts[st] = []Statement{result.reconciledStatement}
+			stmts[st] = []model.Statement{result.reconciledStatement}
 			logEntry = MergeLogEntry{
 				policy:             "SOFT",
 				logMessage:         result.comment,
@@ -107,8 +108,8 @@ func (s SoftPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement
 // ReconcileAliases implements the policy to reconcile the Aliases
 // section of a Statement
 // Result: union
-func (s *SoftPolicy) ReconcileAliases(statements []Statement, result *Statement) error {
-	aliasSet := make(map[Alias]struct{})
+func (s *SoftPolicy) ReconcileAliases(statements []model.Statement, result *model.Statement) error {
+	aliasSet := make(map[model.Alias]struct{})
 
 	for _, item := range statements {
 		for _, a := range item.Aliases {
@@ -142,13 +143,13 @@ cases:
 	- take those notes, plus take fixes (and notes if any) from second-best ranked, if unique, else FAIL
 
 */
-func (s *SoftPolicy) ReconcileFixesAndNotes(statements []Statement, result *Statement) error {
+func (s *SoftPolicy) ReconcileFixesAndNotes(statements []model.Statement, result *model.Statement) error {
 	var topRank int = 1000
 	var countTopRank = 0
 	var selectedOrigin string
 	var selectedOriginBranch string
 
-	var additionalNotes []Note
+	var additionalNotes []model.Note
 
 	for _, s := range statements {
 		if len(s.Fixes) > 0 {

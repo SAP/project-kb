@@ -1,7 +1,9 @@
-package model
+package reconcile
 
 import (
 	"fmt"
+
+	"github.com/sap/project-kb/kaybee/internal/model"
 )
 
 /*
@@ -17,7 +19,7 @@ func NewSmartPolicy() Policy {
 }
 
 // Reduce only keeps independent statements and discards statements that are non-independent
-func (s SmartPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
+func (s SmartPolicy) Reduce(stmts map[string][]model.Statement) (map[string][]model.Statement, MergeLog, error) {
 	var mergeLog = NewMergeLog("exec_123456789")
 	var logEntry MergeLogEntry
 
@@ -28,7 +30,7 @@ func (s SmartPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statemen
 		// statementsToReconcile = stmts[st]
 
 		result := s.Reconcile(stmts[st])
-		stmts[st] = []Statement{result.reconciledStatement}
+		stmts[st] = []model.Statement{result.reconciledStatement}
 		logEntry = MergeLogEntry{
 			policy:             "SMART",
 			logMessage:         result.comment,
@@ -44,10 +46,10 @@ func (s SmartPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statemen
 }
 
 // Reconcile returns a single statement out of a list of statements
-func (s SmartPolicy) Reconcile(statements []Statement) ReconcileResult {
+func (s SmartPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 	var (
 		reconcileResult ReconcileResult
-		mergedStatement Statement
+		mergedStatement model.Statement
 		vulnID          = statements[0].VulnerabilityID
 	)
 
@@ -58,7 +60,7 @@ func (s SmartPolicy) Reconcile(statements []Statement) ReconcileResult {
 	for _, sameRankCandidates := range rankedCandidates {
 		if len(sameRankCandidates) > 1 {
 			reconcileResult = ReconcileResult{
-				reconciledStatement: Statement{},
+				reconciledStatement: model.Statement{},
 				candidateStatements: statements,
 				comment:             fmt.Sprintf("Reconcile aborted, there are multiple statements from same-rank sources for %s", vulnID),
 				success:             false,
@@ -83,7 +85,7 @@ func (s SmartPolicy) Reconcile(statements []Statement) ReconcileResult {
 }
 
 // return a list of lists of statements, grouped by rank
-func rankStatements(statements []Statement) (results [][]Statement) {
+func rankStatements(statements []model.Statement) (results [][]model.Statement) {
 	results = append(results, statements)
 	return results
 }

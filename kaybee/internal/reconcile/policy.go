@@ -1,4 +1,6 @@
-package model
+package reconcile
+
+import "github.com/sap/project-kb/kaybee/internal/model"
 
 // See https://github.com/tmrts/go-patterns/blob/master/behavioral/policy.md
 // for an explanation of the pattern adopted here
@@ -7,14 +9,14 @@ package model
 // that are not independent and how to reduce sets of statements by applying such reconcile operation
 // to non-independent statements
 type StatementReconciler interface {
-	Reconcile([]Statement) ReconcileResult
-	Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error)
+	Reconcile([]model.Statement) ReconcileResult
+	Reduce(stmts map[string][]model.Statement) (map[string][]model.Statement, MergeLog, error)
 }
 
 // ReconcileResult encodes the result of a reconcile operation
 type ReconcileResult struct {
-	reconciledStatement Statement
-	candidateStatements []Statement
+	reconciledStatement model.Statement
+	candidateStatements []model.Statement
 	comment             string
 	success             bool
 }
@@ -26,7 +28,7 @@ type Policy struct {
 }
 
 // Reconcile merges two statements into one as specified in the Merger object
-func (s *Policy) Reconcile(statements []Statement) ReconcileResult {
+func (s *Policy) Reconcile(statements []model.Statement) ReconcileResult {
 	// the actual Merge() that is invoked is the one defined
 	// in a type that implements the StatementReconciler interface and
 	// an instance of which is assigned to the reconciler field of a Policy instance
@@ -34,7 +36,7 @@ func (s *Policy) Reconcile(statements []Statement) ReconcileResult {
 }
 
 // Reduce scans a list of Statements and merges those that can be reconciled
-func (s *Policy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
+func (s *Policy) Reduce(stmts map[string][]model.Statement) (map[string][]model.Statement, MergeLog, error) {
 	// the actual Merge() that is invoked is the one defined
 	// in a type that implements the StatementReconciler interface and
 	// an instance of which is assigned to the reconciler field of a Policy instance

@@ -1,10 +1,11 @@
-package model
+package reconcile
 
 import (
 	"fmt"
 	"log"
 
 	"github.com/gookit/color"
+	"github.com/sap/project-kb/kaybee/internal/model"
 )
 
 // StrictPolicy refuses to solve conflicts and does not perform any reconcile action;
@@ -24,10 +25,10 @@ func NewStrictPolicy() Policy {
 // are not independent a suitable error signals it
 // This is implemented just to satisfy the StatementReconciler interface, but this method
 // is not supposed to be called ever.
-func (p StrictPolicy) Reconcile(statements []Statement) ReconcileResult {
+func (p StrictPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 	log.Fatal("Method Reconcile() should not be invoked on a StrictPolicy!")
 	return ReconcileResult{
-		reconciledStatement: Statement{},
+		reconciledStatement: model.Statement{},
 		candidateStatements: statements,
 		comment:             "Method Reconcile() should not be invoked on a StrictPolicy!",
 		success:             false,
@@ -35,11 +36,11 @@ func (p StrictPolicy) Reconcile(statements []Statement) ReconcileResult {
 }
 
 // Reduce only keeps independent statemens and discards statements that are non-independent
-func (p StrictPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
+func (p StrictPolicy) Reduce(stmts map[string][]model.Statement) (map[string][]model.Statement, MergeLog, error) {
 	var mergeLog = NewMergeLog("exec_123456789")
 	var logEntry MergeLogEntry
 
-	var statementsToReconcile []Statement
+	var statementsToReconcile []model.Statement
 
 	for s := range stmts {
 		conflictingStatementsCount := len(stmts[s])
@@ -55,7 +56,7 @@ func (p StrictPolicy) Reduce(stmts map[string][]Statement) (map[string][]Stateme
 				policy:             "STRICT",
 				logMessage:         fmt.Sprintf("Found %d conflicting statements about vuln. %s; won't reconcile!", conflictingStatementsCount, s),
 				sourceStatements:   statementsToReconcile,
-				resultingStatement: Statement{},
+				resultingStatement: model.Statement{},
 				success:            false,
 			}
 		} else {

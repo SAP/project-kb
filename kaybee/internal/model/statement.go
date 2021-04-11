@@ -40,8 +40,7 @@ type Statement struct {
 
 // Hash computes a unique identifiers for a Statement instance
 func (s *Statement) Hash() Checksum {
-	// FIXME
-	// if the values are changed after the first invocation to this method,
+	// FIXME if the values are changed after the first invocation to this method,
 	// the results might be unexpected... (one would need to manually reset hash to ""
 	// for this to work as expected)
 
@@ -203,17 +202,6 @@ type Metadata struct {
 	// Timestamp  int64  `yaml:"timestamp"`
 	// Signature  string `yaml:"signature,omitempty"`
 }
-
-// IsIndependent checks if two statement contain contradicting information
-// that cannot be merged without conflict resolution
-// func (s1 *Statement) IsIndependent(s2 Statement) bool {
-// 	// TODO This function is not really necessary, to be removed
-// 	if s1.VulnerabilityID != s2.VulnerabilityID {
-// 		return true
-// 	}
-
-// 	return false
-// }
 
 // NewStatementFromFile creates a statement
 func NewStatementFromFile(path string) Statement {

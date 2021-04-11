@@ -1,4 +1,6 @@
-package model
+package reconcile
+
+import "github.com/sap/project-kb/kaybee/internal/model"
 
 // NullPolicy implements a policy that does nothing
 type NullPolicy struct{}
@@ -9,9 +11,9 @@ func NewNullPolicy() Policy {
 }
 
 // Reconcile just returns the first of the two statements as is
-func (st NullPolicy) Reconcile(statements []Statement) ReconcileResult {
+func (st NullPolicy) Reconcile(statements []model.Statement) ReconcileResult {
 	return ReconcileResult{
-		reconciledStatement: Statement{},
+		reconciledStatement: model.Statement{},
 		candidateStatements: statements,
 		comment:             "Method Reconcile() does nothing in the NullPolicy!",
 		success:             false,
@@ -19,6 +21,6 @@ func (st NullPolicy) Reconcile(statements []Statement) ReconcileResult {
 }
 
 // Reduce just returns the same statements as passed in input
-func (st NullPolicy) Reduce(stmts map[string][]Statement) (map[string][]Statement, MergeLog, error) {
+func (st NullPolicy) Reduce(stmts map[string][]model.Statement) (map[string][]model.Statement, MergeLog, error) {
 	return stmts, MergeLog{}, nil
 }

@@ -1,4 +1,4 @@
-package model
+package reconcile
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sap/project-kb/kaybee/internal/model"
 )
 
 // MergeLog is a collection of merge records, documenting how a merge operation was performed
@@ -85,8 +87,8 @@ func (ml *MergeLog) Dump(path string) {
 type MergeLogEntry struct {
 	executionID        string
 	timestamp          int64
-	sourceStatements   []Statement
-	resultingStatement Statement
+	sourceStatements   []model.Statement
+	resultingStatement model.Statement
 	policy             string
 	logMessage         string
 	success            bool
