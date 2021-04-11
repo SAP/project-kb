@@ -1,4 +1,4 @@
-module github.com/sap/project-kb/kaybee/kaybee
+module github.com/sap/project-kb/kaybee
 
 go 1.16
 
@@ -14,7 +14,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/package-url/packageurl-go v0.1.0
 	github.com/rhysd/go-github-selfupdate v1.2.3
-	github.com/sap/project-kb v0.6.18
 	github.com/schollz/progressbar/v2 v2.15.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1

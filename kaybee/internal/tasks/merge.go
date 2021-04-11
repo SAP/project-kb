@@ -7,6 +7,7 @@ import (
 
 	"github.com/sap/project-kb/kaybee/internal/conf"
 	"github.com/sap/project-kb/kaybee/internal/model"
+	"github.com/sap/project-kb/kaybee/internal/reconcile"
 	"github.com/sap/project-kb/kaybee/internal/repository"
 )
 
@@ -14,7 +15,7 @@ import (
 // conflicts using a set of pre-defined policies.
 type MergeTask struct {
 	BaseTask
-	policy  model.Policy
+	policy  reconcile.Policy
 	sources []conf.Source
 }
 
@@ -34,19 +35,19 @@ func (t *MergeTask) WithPolicy(p conf.Policy) *MergeTask {
 		if t.verbose {
 			fmt.Println("Using policy: STRICT")
 		}
-		t.policy = model.NewStrictPolicy()
+		t.policy = reconcile.NewStrictPolicy()
 	case conf.Interactive:
 		if t.verbose {
 			fmt.Println("Using policy: INTERACTIVE")
 		}
-		t.policy = model.NewSoftPolicy()
+		t.policy = reconcile.NewInteractivePolicy()
 	case conf.Soft:
 		if t.verbose {
 			fmt.Println("Using policy: SOFT")
 		}
-		t.policy = model.NewSoftPolicy()
+		t.policy = reconcile.NewSoftPolicy()
 	default:
-		log.Fatalf("Invalid merge policy: " + p.String() + " -- ABORTING")
+		log.Fatalf("**Invalid merge policy: " + p.String() + " -- ABORTING")
 	}
 	return t
 }
@@ -58,7 +59,7 @@ func (t *MergeTask) WithSources(sources []conf.Source) *MergeTask {
 }
 
 func (t *MergeTask) validate() (ok bool) {
-	if (t.policy == model.Policy{}) {
+	if (t.policy == reconcile.Policy{}) {
 		log.Fatalln("Invalid policy. Aborting.")
 		return false
 	}
