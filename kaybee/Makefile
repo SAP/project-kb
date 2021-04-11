@@ -23,7 +23,7 @@ build:  env pkged.go fmt
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) -v
 
 pkged.go: internal/tasks/data/default_config.yaml
-	pkger -o kaybee
+	pkger
 
 # ui:
 # 	$(MAKE) --directory=ui
