@@ -9,12 +9,12 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/sap/project-kb)](https://api.reuse.software/info/github.com/sap/project-kb)
 
 
-
 `Project KB` supports the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities that affect
 open-source software.
 
-This repository contains both a [tool](kaybee) and [vulnerability data](vulnerability-data).
+This repository contains a [vulnerability knowledge-base](vulnerability-data)
+as well as set of tools to support its creation and management.
 
 Additionally, the [MSR2019](MSR2019) folder contains the package associated with
 the paper we published at the Mining Software Repository conference in 2019 (see
@@ -34,9 +34,15 @@ open-source themselves and adopt the same community-oriented model that governs
 the rest of the open-source ecosystem.
 
 These considerations have pushed us to release our vulnerability knowledge base
-in early 2019. In June 2020, we made a further step releasing tool support to
+in early 2019. In June 2020, we made a further step releasing the `kaybee` tool support to
 make the creation, aggregation, and consumption of vulnerability data much
-easier.
+easier. In late 2020, we also released, as a proof-of-concept, the prototype
+`prospector`, whose goal is to automate the mapping of vulnerability advisories
+onto their fix-commits. A technical description of the approach we implemented in
+`prospector` can be found in this [preprint](https://arxiv.org/abs/2103.13375).
+As of April 2021, together with our partners in the EU-funded project AssureMOSS,
+we are reimplementing `prospector` to make it more robust, scalable, and user-friendly.
+The reimplementation is carried out in the dedicate branch `prospector-assuremoss`.
 
 We hope this will encourage more contributors to join our efforts to build a
 collaborative, comprehensive knowledge base where each party remains in control
@@ -59,24 +65,29 @@ The **toolkit** comprises:
     - fetch vulnerability statements from one or more remote sources (git repositories)
     - merge the content of multiple sources of statements, based on a conflict resolution policy
     - export the result of the merge operation to a variety of different formats
-  * `prospector`, a research prototype to help map vulnerability advisories onto the commits that contain fixes for those vulnerabilities.
+  * `prospector`, a research prototype to help map vulnerability advisories onto
+    the commits that contain fixes for those vulnerabilities (more info
+    [here]](https://arxiv.org/abs/2103.13375)).
 
-The **knowledge base**, offers a set of vulnerability statements that can be consumed using the `kaybee` tool.
-
-#### Future directions
-
-* tool support for mining repositories and databased of advisories to establish the (missing) link between
-vulnerabilities (as described in natural language in the advisories) and the corresponding fix-commits
+The **knowledge base**, offers a set of vulnerability statements that can be
+consumed using the `kaybee` tool.
 
 ## Getting started
 
 ### Installing the `kaybee` tool
 
-There is nothing to install actually, just [download a binary](https://github.com/SAP/project-kb/releases/latest) compatible with
-your operating system, make sure it has execution permissions if applicable, and
-then run it.
+With `kaybee` it is possible to fetch the vulnerability statements from this
+repository (or from any other repository) and export them to a number of
+formats, including a script to import them to a [Steady
+backend](https://github.com/eclipse/steady).
 
-Optionally, for your convenience, you may want to make sure that the binary is in your `$PATH`.
+There is nothing to install actually, just [download a
+binary](https://github.com/SAP/project-kb/releases/latest) compatible with your
+operating system, make sure it has execution permissions if applicable, and then
+run it.
+
+Optionally, for your convenience, you may want to make sure that the binary is
+in your `$PATH`.
 
 For example, in Linux you would put the following line in your `.bashrc` file:
 
@@ -100,11 +111,20 @@ Please check out the [project "KB" home page](https://sap.github.io/project-kb/)
 
 ### Importing vulnerability data in Eclipse Steady
 
-The steps that are required to import the knowledge base in [Eclipse
-Steady](https://github.com/eclipse/steady/) are described in [this
-tutorial](https://eclipse.github.io/steady/vuln_db/tutorials/vuln_db_tutorial/).
-Further information can be found
-[here](https://eclipse.github.io/steady/vuln_db/).
+Run the following command:
+
+```kaybee pull```
+
+This will retrieve all the statements from all the sources configured in your
+`kaybeeconf.yaml` file.
+
+You can then run:
+
+```kaybee export --target steady```
+
+to generate a script `steady.sh`; edit the top of the script to indicate the URL of
+your Steady backend and change the other variables as you see fit (there are comments
+in the file to guide you), then run it.
 
 ## Publications
 
