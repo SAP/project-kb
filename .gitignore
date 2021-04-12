@@ -30,3 +30,4 @@ prospector/.env
 prospector/workspace.code-workspace
 prospector/.env
 .vscode/settings.json
+kaybee/internal/reconcile/debug.test
