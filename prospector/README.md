@@ -93,6 +93,14 @@ Try the following example:
 
 To run the tests, run:
 
+## Testing
+
+First, you need to install pytest-cov:
+
+`pip install pytest-cov`
+
+To run the tests, run:
+
 `pytest`
 ## Credits
 
