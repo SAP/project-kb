@@ -7,7 +7,9 @@ from .preprocessor import extract_cve_references, preprocess_commit
 
 @pytest.fixture
 def repository():
-    return Git("https://github.com/apache/struts")
+    repo = Git("https://github.com/apache/struts")
+    repo.clone()
+    return repo
 
 
 def test_proprocess_commit(repository):
