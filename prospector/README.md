@@ -85,9 +85,9 @@ You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
 ## Using the CLI
 
-NOTE: this is about the "legacy" CLI. A new CLI is being developed.
+Try the following example:
 
-`python main.py <vulnerability_id> -r <repository_url> -v`
+`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload -v --use-nvd`
 
 ## Credits
 
