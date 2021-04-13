@@ -23,8 +23,8 @@ The easiest way to set up Prospector is to clone this repository and then run th
 
 ```
 git clone https://github.com/sap/project-kb
-git checkout prospector-assuremoss
 cd project-kb/prospector
+git checkout prospector-assuremoss
 echo "GIT_CACHE=/tmp/git-cache" > .env
 echo "PYTHONPATH=." >> .env
 echo "POSTGRES_PASSWORD=example" >> .env
