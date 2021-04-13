@@ -40,6 +40,7 @@ psycopg2-binary = "*"
 rq = "==1.8.0"
 plac = "*"
 pytest = "*"
+python-levenshtein = "*"
 
 [requires]
 python_version = "3.8"
