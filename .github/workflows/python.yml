@@ -13,7 +13,25 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis:alpine
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -38,7 +56,7 @@ jobs:
     - name: Test with pytest
       env:
           GIT_CACHE: "./git-cache"
-          POSTGRES_PASSWORD: ""
+          POSTGRES_PASSWORD: "postgres"
           REDIS_URL: ""
       run: |
         cd prospector
