@@ -82,6 +82,15 @@ NOTE: this is about the "legacy" CLI. A new CLI is being developed.
 
 `python main.py <vulnerability_id> -r <repository_url> -v`
 
+## Testing
+
+First, you need to install pytest-cov:
+
+`pip install pytest-cov`
+
+To run the tests, run:
+
+`pytest`
 ## Credits
 
 This project was initially developed by Daan Hommersom as part of his thesis
