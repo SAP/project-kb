@@ -38,6 +38,8 @@ jobs:
     - name: Test with pytest
       env:
           GIT_CACHE: "./git-cache"
+          POSTGRES_PASSWORD: ""
+          REDIS_URL: ""
       run: |
         cd prospector
         mkdir ./git-cache
