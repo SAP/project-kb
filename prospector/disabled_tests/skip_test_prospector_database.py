@@ -5,7 +5,16 @@
 #  - The first one tests cases that should succeed
 #  - The second one tests the cases for which an exception should be raised
 
-import pytest, os, sys, ast, json, time, datetime, requests, sqlite3
+import ast
+import datetime
+import json
+import os
+import sqlite3
+import sys
+import time
+
+import pytest
+import requests
 
 current_working_directory = os.getcwd()
 
@@ -16,7 +25,7 @@ GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from core import do_clone, Git, Commit, clone_repo_multiple, utils
+from core import Commit, Git, clone_repo_multiple, do_clone, utils
 
 os.chdir("..")
 sys.path.append(os.getcwd())
