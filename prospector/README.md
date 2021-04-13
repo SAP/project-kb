@@ -55,6 +55,13 @@ your editor so that autoformatting is enforced "on save". The pre-commit hook en
 black is run prior to committing anyway, but the auto-formatting might save you some time
 and avoid frustration.
 
+If you use VScode, this can be achieved by pasting these lines in your configuration file:
+
+```
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+```
+
 ## Starting the backend database and the job workers
 
 Note: this section and the following assume you have performed succesfully the
