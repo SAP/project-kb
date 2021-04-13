@@ -14,9 +14,13 @@ from .routers import jobs, nvd, users
 # from pprint import pprint
 
 
+db_user = os.environ["POSTGRES_USER"]
 db_pass = os.environ["POSTGRES_PASSWORD"]
-connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
-    db_pass
+db_host = os.environ["POSTGRES_HOST"]
+db_port = os.environ["POSTGRES_PORT"]
+db_name = os.environ["POSTGRES_DBNAME"]
+connect_string = "HOST={};DB={};UID={};PWD={};PORT={};".format(
+    db_host, db_name, db_user, db_pass, db_port
 )
 
 db = PostgresCommitDB()
