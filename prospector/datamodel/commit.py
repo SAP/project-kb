@@ -8,10 +8,13 @@ class Commit(BaseModel):
     commit_id: str
     repository: str
     feature_1: str = ""
-    log_msg: str = ""
-    diff: "list[list[str]]" = field(default_factory=list)
+    timestamp: int = 0
     hunks: "list[list[str]]" = field(default_factory=list)
     hunk_count: int = 0
+    message: str = ""
+    diff: "list[list[str]]" = field(default_factory=list)
+    changed_files: "list[str]" = field(default_factory=list)
+    message_reference_content: "list[str]" = field(default_factory=list)
     jira_refs: "list[str]" = field(default_factory=list)
     ghissue_refs: "list[str]" = field(default_factory=list)
     cve_refs: "list[str]" = field(default_factory=list)
