@@ -20,6 +20,8 @@ jobs:
       redis:
         # Docker Hub image
         image: redis:alpine
+        ports:
+          - 6379:6379
       postgres:
         # Docker Hub image
         image: postgres
@@ -32,6 +34,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
