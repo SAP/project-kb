@@ -20,14 +20,17 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install dependencies
+    - name: Setup pipenv environment
       run: |
         python -m pip install --upgrade pip
         pip install black pytest pipenv
+        pipenv --rm
         pipenv --python 3.8
     - name: Activate pipenv
       run: |
+        cd prospector
         pipenv shell
+        pipenv install --dev
 #     - name: Lint with flake8
 #       run: |
 #         # stop the build if there are Python syntax errors or undefined names
