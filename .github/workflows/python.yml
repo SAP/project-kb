@@ -5,9 +5,9 @@ name: Pytest
 
 on:
   push:
-    branches: [prospector-assuremoss, copernico-fix-ghactions]
+    branches: [prospector-assuremoss]
   pull_request:
-    branches: [prospector-assuremoss, copernico-fix-ghactions]
+    branches: [prospector-assuremoss]
 
 jobs:
   build:
