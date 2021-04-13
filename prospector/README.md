@@ -30,7 +30,7 @@ echo "PYTHONPATH=." >> .env
 echo "POSTGRES_PASSWORD=example" >> .env
 mkdir /tmp/git-cache
 pipenv --python 3.8
-pipenv install
+pipenv install --dev
 pre-commit install
 python -m spacy download en_core_web_sm
 ```
