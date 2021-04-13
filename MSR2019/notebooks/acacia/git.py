@@ -1,13 +1,15 @@
-import subprocess
-import multiprocessing
 import logging
-import os, sys
-import sh
-import re
-from . import utils
-from tqdm import tqdm
+import multiprocessing
+import os
 import random
+import re
+import subprocess
+import sys
 
+import sh
+from tqdm import tqdm
+
+from . import utils
 
 # stopwords = set(['apache',
 #              'index',
@@ -45,11 +47,13 @@ def reservoir_sampling(input_list, N):
             sample[replace] = line
     return sample
 
+
 def folder_name_from_url(url):
-    if url[-1] == '/':
+    if url[-1] == "/":
         url = url[:-1]
 
-    return  url.split('/')[-1]
+    return url.split("/")[-1]
+
 
 # def identifyDefaultRemoteBranch(dir):
 #     '''
@@ -121,13 +125,19 @@ def folder_name_from_url(url):
 #         logging.error(str(e))
 #         return None
 
-def clone_repo_multiple(url_list, output_folder, proxy='', shallow=False, skip_existing=False, concurrent=4):
-    '''
+
+def clone_repo_multiple(
+    url_list, output_folder, proxy="", shallow=False, skip_existing=False, concurrent=4
+):
+    """
     This is the parallelized version of clone_repo (works with a list of repositories).
-    '''
+    """
 
     with multiprocessing.Pool(concurrent) as pool:
-        args = ((url, output_folder, None, proxy, shallow, skip_existing) for url in url_list)
+        args = (
+            (url, output_folder, None, proxy, shallow, skip_existing)
+            for url in url_list
+        )
         results = pool.starmap(clone_repo, args)
 
     # return results
@@ -139,13 +149,16 @@ def clone_repo_multiple(url_list, output_folder, proxy='', shallow=False, skip_e
     #                shallow=shallow,
     #                skip_existing=skip_existing)
 
-def clone_repo(url, output_folder, input_file=None, proxy=None, shallow=False, skip_existing=False):
-    '''
+
+def clone_repo(
+    url, output_folder, input_file=None, proxy=None, shallow=False, skip_existing=False
+):
+    """
     Clones the specified repository checking out the default branch in a subdir of output_folder.
     Shallow=true speeds up considerably the operation, but no history.
-    '''
+    """
     if len(url) == 0 and len(input_file) == 0:
-        print('url and input-file parameters cannot be both left unspecified')
+        print("url and input-file parameters cannot be both left unspecified")
         sys.exit(-1)
 
     repo_name = folder_name_from_url(url)
@@ -162,39 +175,43 @@ def clone_repo(url, output_folder, input_file=None, proxy=None, shallow=False, s
         else:
             # print('Fetching for existing repo {} in {}'.format(url,repo_folder))
             # sh.git.fetch('origin', _cwd=repo_folder)
-            sh.git.fetch('--all', '--tags', _cwd=repo_folder)
+            sh.git.fetch("--all", "--tags", _cwd=repo_folder)
 
         return
     else:
-        os.makedirs('%s' % repo_folder)
+        os.makedirs("%s" % repo_folder)
 
-    print('Processing %s' % url)
-
-    try:
-        sh.git.init( _cwd=repo_folder)
-    except:
-        print('Could not initialize repository in %s (already initialized?)' % repo_folder)
+    print("Processing %s" % url)
 
     try:
-        sh.git.remote('add',  'origin', '%s' % url , _cwd=repo_folder)
+        sh.git.init(_cwd=repo_folder)
     except:
-        print('Could not update remote in %s' % repo_folder)
+        print(
+            "Could not initialize repository in %s (already initialized?)" % repo_folder
+        )
+
+    try:
+        sh.git.remote("add", "origin", "%s" % url, _cwd=repo_folder)
+    except:
+        print("Could not update remote in %s" % repo_folder)
 
     if proxy:
         try:
-            sh.git.config("http.proxy","{}".format(proxy), _cwd=repo_folder)
+            sh.git.config("http.proxy", "{}".format(proxy), _cwd=repo_folder)
             sh.git.config("https.proxy", "{}".format(proxy), _cwd=repo_folder)
         except sh.ErrorReturnCode_128:
-            print('Error setting proxy for project %s in %s' % (repo_name, repo_folder) )
+            print("Error setting proxy for project %s in %s" % (repo_name, repo_folder))
 
     try:
         if shallow:
-            sh.git.fetch('--depth', '1', 'origin', _cwd=repo_folder)
+            sh.git.fetch("--depth", "1", "origin", _cwd=repo_folder)
         else:
             # sh.git.fetch('--all', _cwd=repo_folder)
-            sh.git.fetch('--all', '--tags', _cwd=repo_folder)
+            sh.git.fetch("--all", "--tags", _cwd=repo_folder)
     except:
-        print('Could not fetch %s (shallow=%s) in %s' % (url, str(shallow), repo_folder))
+        print(
+            "Could not fetch %s (shallow=%s) in %s" % (url, str(shallow), repo_folder)
+        )
         return
 
     # print('Fetch of %s (shallow=%s) in %s completed' % (url, str(shallow), repo_folder))
@@ -203,57 +220,62 @@ def clone_repo(url, output_folder, input_file=None, proxy=None, shallow=False, s
     #
     # sh.git.checkout(default_remote_branch, _cwd=repo_folder)
 
+
 def get_random_commits(n, repo, base_dir):
-    '''
+    """
     Return a list of n random commits from repo, which is assumed to be available
     as a standard-named subdirectory of base_dir
-    '''
+    """
     git_opts = ["--all", "--format=%H"]
     repo_name = folder_name_from_url(repo)
-    cwd = os.path.join(base_dir,repo_name)
+    cwd = os.path.join(base_dir, repo_name)
     try:
-        all_commits = sh.git("log","--all", "--format=%H", _cwd=cwd)
+        all_commits = sh.git("log", "--all", "--format=%H", _cwd=cwd)
     except subprocess.CalledProcessError:
         print("Git command failed, cannot get random commits")
         return []
 
-    all_commits = [ n.strip() for n in all_commits ]
+    all_commits = [n.strip() for n in all_commits]
     # Donald Knuth's "reservoir sampling"
     # http://data-analytics-tools.blogspot.de/2009/09/reservoir-sampling-algorithm-in-perl.html
     return reservoir_sampling(all_commits, n)
 
 
 def extract_commit_msg(commit_id, repo, base_dir):
-    '''
+    """
     Extracts log message of commit_id assuming that the repo has been
     previously cloned in a subdirectory of dir (whose name is inferred from the repo url)
-    '''
+    """
 
     # repo_name =  repo.replace('/',' ').split(' ')[-1]
     repo_name = folder_name_from_url(repo)
 
-    cwd = os.path.join(base_dir,repo_name)
+    cwd = os.path.join(base_dir, repo_name)
     try:
         out = sh.git.log("--format=%s", "-n1", commit_id, _cwd=cwd)
     except:
-        print('Failed to obtain commit message for commit: %s in dir: %s' % (commit_id, cwd))
+        print(
+            "Failed to obtain commit message for commit: %s in dir: %s"
+            % (commit_id, cwd)
+        )
         return None
 
     return out.stdout
 
+
 def extract_commit_diff(commit_id, repo, base_dir):
-    '''
+    """
     Extracts patch for commit_id assuming that a valid repo has been
     previously cloned in dir
-    '''
+    """
     repo_name = folder_name_from_url(repo)
-    cwd = os.path.join(base_dir,repo_name)
+    cwd = os.path.join(base_dir, repo_name)
     try:
-        out = sh.git.diff( commit_id + "^.." + commit_id, _cwd=cwd, _tty_out=False)
+        out = sh.git.diff(commit_id + "^.." + commit_id, _cwd=cwd, _tty_out=False)
         # out = unicode(out, errors='ignore')
 
     except:
-        print('Failed to obtain patch for commit: %s in dir: %s' % (commit_id, cwd))
+        print("Failed to obtain patch for commit: %s in dir: %s" % (commit_id, cwd))
         return None
 
     return out.stdout

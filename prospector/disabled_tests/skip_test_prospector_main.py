@@ -1,6 +1,18 @@
-import pytest, re, os, json, sqlite3, requests, time, datetime, ast, random, copy, sys
+import ast
+import copy
+import datetime
+import json
+import os
+import random
+import re
+import sqlite3
+import sys
+import time
+
 import numpy as np
 import pandas as pd
+import pytest
+import requests
 
 current_working_directory = os.getcwd()
 
@@ -11,15 +23,15 @@ GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
     GIT_CACHE = os.environ["GIT_CACHE"]
 
-from core import do_clone, Git, Commit, clone_repo_multiple, utils
+from core import Commit, Git, clone_repo_multiple, do_clone, utils
 
 os.chdir("..")
 sys.path.append(os.getcwd())
 
 import database
 import filter
-import rank
 import main
+import rank
 
 os.chdir(current_working_directory)
 sys.path.insert(1, "../experiment/tests")

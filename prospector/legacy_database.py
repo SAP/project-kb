@@ -1,3 +1,5 @@
+# pragma: no cover
+#
 # This file is used to create a database with commit content
 
 import ast
