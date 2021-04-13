@@ -1,38 +1,57 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python application
+name: Pytest
 
 on:
   push:
     branches: [prospector-assuremoss]
-    paths:
-      - 'prospector/**'
   pull_request:
     branches: [prospector-assuremoss]
-    paths:
-      - 'prospector/**'
-
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis:alpine
+        ports:
+          - 6379:6379
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install dependencies
+    - name: Setup pipenv environment
       run: |
         python -m pip install --upgrade pip
-        pip install black pytest pipenv
-        pipenv --python 3.8
+        pip install pipenv
     - name: Activate pipenv
       run: |
-        pipenv shell
+        cd prospector
+        pipenv --python 3.8
+        pipenv install --dev
 #     - name: Lint with flake8
 #       run: |
 #         # stop the build if there are Python syntax errors or undefined names
@@ -40,5 +59,11 @@ jobs:
 #         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
 #         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
+      env:
+          GIT_CACHE: "./git-cache"
+          POSTGRES_PASSWORD: "postgres"
+          REDIS_URL: ""
       run: |
-        pytest
+        cd prospector
+        mkdir ./git-cache
+        pipenv run pytest
