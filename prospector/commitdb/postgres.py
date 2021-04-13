@@ -1,10 +1,21 @@
+"""
+This module implements an abstraction layer on top of
+the underlying database where pre-processed commits are stored
+"""
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
-from . import CommitDB
+
 from datamodel.commit import Commit
+
+from . import CommitDB
 
 
 class PostgresCommitDB(CommitDB):
+    """
+    This class implements the database abstraction layer
+    for PostgreSQL
+    """
+
     def __init__(self):
         self.connect_string = ""
         self.connection_data = dict()
@@ -33,8 +44,8 @@ class PostgresCommitDB(CommitDB):
             cur.execute("SELECT * FROM commits")
             data = cur.fetchall()
             cur.close()
-        except Exception as e:
-            print(e)
+        except Exception as ex:
+            print(ex)
             # raise Exception("Could not lookup commit vector in database")
 
         return data
@@ -48,17 +59,12 @@ class PostgresCommitDB(CommitDB):
 
             # TODO sanitize inputs
             cur.execute(
-                "INSERT INTO commits (id, repository, feature_1, feature_2) VALUES (%s, %s, %s, %s)",
-                (
-                    commit_obj.id,
-                    commit_obj.repository,
-                    commit_obj.feature_1,
-                    commit_obj.feature_2,
-                ),
+                "INSERT INTO commits (id, repository, feature_1) VALUES (%s, %s, %s)",
+                (commit_obj.commit_id, commit_obj.repository, commit_obj.feature_1),
             )
             self.connection.commit()
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
             raise Exception("Could not save commit vector to database")
 
     def reset(self):
@@ -78,8 +84,8 @@ class PostgresCommitDB(CommitDB):
         if not self.connection:
             raise Exception("Invalid connection")
 
-        with open(script_file, "r") as f:
-            ddl = f.read()
+        with open(script_file, "r") as file:
+            ddl = file.read()
 
         cursor = self.connection.cursor()
         cursor.execute(ddl)
@@ -114,7 +120,6 @@ class PostgresCommitDB(CommitDB):
         self.connection.commit()
 
         cursor.close()
-        return
 
 
 def parse_connect_string(connect_string):
@@ -124,8 +129,8 @@ def parse_connect_string(connect_string):
     connect_string = connect_string.rstrip(";")
     try:
         parsed_string = [e.split("=") for e in connect_string.split(";")]
-        for k, v in parsed_string:
-            result[k.lower()] = v
+        for key, value in parsed_string:
+            result[key.lower()] = value
     except:
         raise Exception("Invalid connect string: " + connect_string)
 

@@ -3,7 +3,7 @@
 # COPYRIGHT NOTICE
 #
 # This code comes from https://github.com/geekinutah/docker-python-rq-worker
-# (possibly with minor modifications)
+# (with minor modifications to make it work with alpine instead of ubuntu)
 
 if [ ${PIP_PACKAGES} != 'none' ]; then
     for i in $(echo ${PIP_PACKAGES} | sed 's/,/ /g'); do

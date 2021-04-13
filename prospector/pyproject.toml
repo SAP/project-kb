@@ -1,11 +1,15 @@
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --cov-report html:cov_html --cov=."
+addopts = "-ra -q --cov-config=.coveragerc --cov-report html:cov_html --cov=."
 testpaths = [
     "commitdb",
     "datamodel",
-    "cli",
-    "commit-preprocessor",
+    "client",
+    "commit_preprocessor",
     "git",
     "api"
 ]
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3

@@ -1,23 +1,18 @@
 import os
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from pydantic import BaseModel
+from fastapi import FastAPI
+
+# from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
-
-
-from fastapi.responses import HTMLResponse
-from typing import Optional
-
-import redis
-from rq import Queue, Connection
-from rq.job import Job
-
-from git.git import do_clone, sample_func
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from commitdb.postgres import PostgresCommitDB
 
-redis_url = os.environ["REDIS_URL"]
+# from .dependencies import oauth2_scheme
+from .routers import jobs, nvd, users
+
+# from pprint import pprint
+
 
 db_pass = os.environ["POSTGRES_PASSWORD"]
 connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
@@ -26,9 +21,6 @@ connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".for
 
 db = PostgresCommitDB()
 db.connect(connect_string)
-
-# legacy prospector
-# import main as prospector
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},
@@ -52,170 +44,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ======================================
-# AUTH STUFF
-# The following is taken from https://fastapi.tiangolo.com/tutorial/security/first-steps/
-# with slight modifications to support roles.
-# This will be moved to a separate file eventually,
-# as explained here: https://fastapi.tiangolo.com/tutorial/bigger-applications/
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "roles": ["user"],
-        "hashed_password": "fakehashedsecret",
-        "disabled": False,
-    },
-    "alice": {
-        "username": "alice",
-        "full_name": "Alice Wonderson",
-        "email": "alice@example.com",
-        "roles": ["user", "admin"],
-        "hashed_password": "fakehashedsecret2",
-        "disabled": False,
-    },
-}
-
-
-class User(BaseModel):
-    username: str
-    email: Optional[str] = None
-    roles: Optional[list] = []
-    full_name: Optional[str] = None
-    disabled: Optional[bool] = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
-
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-
-
-def fake_decode_token(token):
-    # This doesn't provide any security at all
-    # Check the next version
-    user = get_user(fake_users_db, token)
-    return user
-
-
-def fake_hash_password(password: str):
-    return "fakehashed" + password
-
-
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    user = fake_decode_token(token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return user
-
-
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
-
-@app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user_dict = fake_users_db.get(form_data.username)
-    if not user_dict:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    user = UserInDB(**user_dict)
-    hashed_password = fake_hash_password(form_data.password)
-    if not hashed_password == user.hashed_password:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-
-    return {"access_token": user.username, "token_type": "bearer"}
-
-
-@app.get("/users/me")
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return current_user
-
-
-# ===================================
-# Application APIs
-
-
-# -----------------------------------------------------------------------------
-#
-@app.post("/jobs/clone", tags=["jobs"])
-async def create_clone_job(repository):
-    # task_type = request.form["type"]
-    with Connection(redis.from_url(redis_url)):
-        q = Queue()
-        job = Job.create(
-            # do_clone
-            sample_func,
-            (repository, "/tmp",),
-            description="clone job " + repository,
-        )
-        q.enqueue_job(job)
-
-    response_object = {
-        "job_data": {
-            "job_id": job.get_id(),
-            "job_status": job.get_status(),
-            "job_queue_position": job.get_position(),
-            "job_description": job.description,
-            "job_created_at": job.created_at,
-            "job_started_at": job.started_at,
-            "job_ended_at": job.ended_at,
-            "job_result": job.result,
-        }
-    }
-    return response_object
-    # return {"id": 12, "status": "WAITING", "query": "CVE-1234-5678", "results": []}
-
-
-@app.get("/jobs/{job_id}", tags=["jobs"])
-async def get_job(job_id):
-    # async def get_job(job_id, current_user: User = Depends(get_current_active_user)):
-    #     if current_user.username != "alice":
-    #         raise HTTPException(status_code=400, detail="Unauthorized")
-
-    # return {
-    #     "id": job_id,
-    #     "owner": "alice",
-    #     "status": "RUNNING",
-    #     "query": "CVE-1234-5678",
-    #     "results": [],
-    # }
-
-    with Connection(redis.from_url(redis_url)):
-        q = Queue()
-        job = q.fetch_job(job_id)
-    if job:
-        print("job {} result: {}".format(job.get_id(), job.result))
-        response_object = {
-            "job_data": {
-                "job_id": job.get_id(),
-                "job_status": job.get_status(),
-                "job_queue_position": job.get_position(),
-                "job_description": job.description,
-                "job_created_at": job.created_at,
-                "job_started_at": job.started_at,
-                "job_ended_at": job.ended_at,
-                "job_result": job._result,
-            }
-        }
-    else:
-        response_object = {"status": "error"}
-    return response_object
-
+app.include_router(users.router)
+app.include_router(jobs.router)
+app.include_router(nvd.router)
 
 # -----------------------------------------------------------------------------
 # Data here refers to training data, used to train ML models
@@ -256,7 +87,8 @@ async def create_data(repository_url, commit_id, label, vulnerability_id):
 
 # -----------------------------------------------------------------------------
 @app.get("/commits/{repository_url}")
-async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_scheme)):
+# async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_scheme)):
+async def get_commits(repository_url, commit_id=None):
     commit = (commit_id, repository_url)
     data = db.lookup(commit)
 
@@ -266,27 +98,22 @@ async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_schem
 # -----------------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def read_items():
-    return """
-    <html>
-        <head>
-            <title>Prospector</title>
-        </head>
-        <body>
-            <h1>Prospector API</h1>
-            Click <a href="/docs">here</a> for docs and here for <a href="/openapi.json">OpenAPI specs</a>.
-        </body>
-    </html>
-    """
+    response = RedirectResponse(url="/docs")
+    return response
+    # return """
+    # <html>
+    #     <head>
+    #         <title>Prospector</title>
+    #     </head>
+    #     <body>
+    #         <h1>Prospector API</h1>
+    #         Click <a href="/docs">here</a> for docs and here for <a href="/openapi.json">OpenAPI specs</a>.
+    #     </body>
+    # </html>
+    # """
 
 
 # -----------------------------------------------------------------------------
 @app.get("/status")
 async def get_status():
-    status = {"status": "ok"}
-
-    return status
-
-
-@app.get("/items/")
-async def read_items(token: str = Depends(oauth2_scheme)):
-    return {"token": token}
+    return {"status": "ok"}

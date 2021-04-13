@@ -1,8 +1,10 @@
+# from typing import Tuple
 import re
+from dataclasses import dataclass, field
+
 import requests
 
-from typing import Tuple
-from dataclasses import dataclass, field
+from commit_preprocessor.constants import RELEVANT_EXTENSIONS
 
 # from . import BaseModel
 
@@ -29,31 +31,28 @@ class AdvisoryRecord:
     versions: "list[str]" = field(default_factory=list)
     from_nvd: bool = False
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
+    paths: "list[str]" = field(default_factory=list)
 
     def __post_init__(self):
         if self.from_nvd:
-            self.description,
-            self.published_timestamp,
-            self.last_modified_timestamp,
-            self.advisory_references = self._getFromNVD(
-                self.vulnerability_id, self.nvd_rest_endpoint
-            )
+            self._get_from_nvd(self.vulnerability_id, self.nvd_rest_endpoint)
 
         self.versions.extend(
             [v for v in extract_versions(self.description) if v not in self.versions]
         )
         self.affected_products = extract_products(self.description)
+        self.paths = extract_path_tokens(self.description)
 
-    def _getFromNVD(self, vuln_id: str, nvd_rest_endpoint: str):
+    def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
         populate object field using NVD data
         returns: description, published_timestamp, last_modified timestamp, list of links
         """
 
         try:
-            response = requests.get(NVD_REST_ENDPOINT + vuln_id)
+            response = requests.get(nvd_rest_endpoint + vuln_id)
             if response.status_code != 200:
-                return "", ""
+                return
             data = response.json()["result"]["CVE_Items"][0]
             self.published_timestamp = data["publishedDate"]
             self.last_modified_timestamp = data["lastModifiedDate"]
@@ -71,16 +70,21 @@ class AdvisoryRecord:
     # Information to provide when initializing an advisory record
     # Input:
     #     vulnerability_id (str): the vulnerability ID, typically a CVE
-    #     published_timestamp (str/int): the timestamp at which the vulnerability was published, or patched if that is known
+    #     published_timestamp (str/int): the timestamp at which the vulnerability was
+    #                                    published, or patched if that is known
     #     repo_url (str): the URL of the affected (GitHub) repository URL
     #     nvd_references (list): references to which the NVD refers (1st level references)
-    #     references_content (str): the content that was extracted from these references, and will be used to compare lexical similarity with
-    #     advisory_references (list): the references that were extracted from the NVD references (2nd level references)
+    #     references_content (str): the content that was extracted from these references,
+    #                               and will be used to compare lexical similarity with
+    #     advisory_references (list): the references that were extracted
+    #                                 from the NVD references (2nd level references)
     #     vulnerability_description (str): the vulnerability description
     #     connection (sqlite3.connection): the connection with the (commits) database
     #     Optional:
-    #         preprocessed_vulnerability_description (str): if there is already a preprocess vulnerability description
-    #         relevant_tags (list): a list of tags that are regarded as relevant tags (affected versions of the software)
+    #         preprocessed_vulnerability_description (str): if there is already
+    #                                       a preprocess vulnerability description
+    #         relevant_tags (list): a list of tags that are regarded as relevant tags
+    #                                (affected versions of the software)
     #         verbose (bool): to print intermediate output
     #         since (timestamp): lower bound for selecting the candidate commits
     #         until (timestamp): upper bound for selecting the candidate commits
@@ -122,6 +126,27 @@ def extract_products(text) -> "list[str]":
     regex = r"([A-Z]+[a-z\b]+)"
     result = list(set(re.findall(regex, text)))
     return [p for p in result if len(p) > 2]
+
+
+def extract_path_tokens(text: str) -> "list[str]":
+    """
+    Used to look for paths in the text (i.e. vulnerability description)
+
+    Input:
+        text (str)
+
+    Returns:
+        list: a list of paths that are found
+    """
+    return [
+        re.split(r"\.|,|/", token.rstrip(r".,;:?!\"'"))
+        for token in text.split(" ")
+        if ("/" in token.rstrip(r".,;:?!\"'") and not token.startswith("</"))
+        or (
+            "." in token.rstrip(r".,;:?!\"'")
+            and token.rstrip(r".,;:?!\"'").split(".")[-1] in RELEVANT_EXTENSIONS
+        )
+    ]
 
 
 @dataclass

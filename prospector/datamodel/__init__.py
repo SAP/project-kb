@@ -3,5 +3,5 @@ from dataclasses import asdict
 
 
 class BaseModel:
-    def asDict(self):
+    def as_dict(self):
         return asdict(self)

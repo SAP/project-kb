@@ -23,7 +23,7 @@ ENV LANG=C.UTF-8
 
 RUN apk add python3 py3-pip git supervisor curl \
     && pip3 install rq \
-    && pip install Jinja2 \
+    && pip3 install Jinja2 \
     && rm  -rf /tmp/* /var/cache/apk/*
 
 COPY requirements.txt /requirements.txt
