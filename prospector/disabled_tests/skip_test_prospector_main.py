@@ -173,8 +173,10 @@ def test_ranking(example_vulnerability):
     )
 
     advisory_record.gather_candidate_commits()
-    advisory_record.ranking_vectors = rank.compute_ranking_vectors_for_advisory_records_with_db(
-        advisory_record, advisory_record.connection
+    advisory_record.ranking_vectors = (
+        rank.compute_ranking_vectors_for_advisory_records_with_db(
+            advisory_record, advisory_record.connection
+        )
     )
     assert len(advisory_record.ranking_vectors) == 54
 

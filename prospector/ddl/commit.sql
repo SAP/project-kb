@@ -8,17 +8,17 @@ CREATE TABLE public.commits (
 	id varchar(40) NOT NULL,
 	repository varchar NOT NULL,
 	feature_1 varchar NULL,
-	feature_2 varchar NULL,
-	timestamp text NULL,
-	message varchar NULL,
-	changed_files varchar NULL,
-	diff varchar NULL,
+	timestamp int,
+	-- preprocessed data
 	hunks varchar NULL,
-	commit_message_reference_content varchar NULL,
-	preprocessed_message varchar NULL,
-	preprocessed_diff varchar NULL,
-	preprocessed_changed_files varchar NULL,
-	preprocessed_commit_message_reference_content varchar NULL,
+	hunk_count int,
+	message varchar NULL,
+	diff varchar NULL,
+	changed_files varchar NULL,
+	message_reference_content varchar NULL,
+	jira_refs varchar NULL,
+	ghissue_refs varchar NULL,
+	cve_refs varchar NULL,
 	CONSTRAINT commits_pkey PRIMARY KEY (id, repository)
 );
 CREATE INDEX IF NOT EXISTS commit_index ON public.commits USING btree (id);
