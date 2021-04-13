@@ -30,7 +30,7 @@ echo "PYTHONPATH=." >> .env
 echo "POSTGRES_PASSWORD=example" >> .env
 mkdir /tmp/git-cache
 pipenv --python 3.8
-pipenv install
+pipenv install --dev
 pre-commit install
 python -m spacy download en_core_web_sm
 ```
@@ -55,6 +55,13 @@ your editor so that autoformatting is enforced "on save". The pre-commit hook en
 black is run prior to committing anyway, but the auto-formatting might save you some time
 and avoid frustration.
 
+If you use VScode, this can be achieved by pasting these lines in your configuration file:
+
+```
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+```
+
 ## Starting the backend database and the job workers
 
 Note: this section and the following assume you have performed succesfully the
@@ -78,9 +85,9 @@ You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
 ## Using the CLI
 
-NOTE: this is about the "legacy" CLI. A new CLI is being developed.
+Try the following example:
 
-`python main.py <vulnerability_id> -r <repository_url> -v`
+`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload -v --use-nvd`
 
 ## Testing
 
