@@ -2,7 +2,7 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
 
-def filter(adv_record: AdvisoryRecord, candidates: "list[Commit]") -> "list[Commit]":
+def prefilter_commits(adv_record: AdvisoryRecord, candidates: "list[Commit]") -> "list[Commit]":
     """
     Takes in input a set of candidate (datamodel)commits (coming from the commitdb)
     and returns in output a filtered list obtained by discarding the irrelevant

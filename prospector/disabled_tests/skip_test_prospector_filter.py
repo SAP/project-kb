@@ -468,7 +468,7 @@ def test_map_advisory_record_onto_candidate_commits_errors(advisory_record=dict(
 #
 
 
-@pytest.mark.filter
+@pytest.mark.prefilter_commits
 def test_filter_commits_on_files_changed_extensions(example_advisory_record):
     prospector_connection, prospector_cursor = database_creation.connect_with_database(
         "../data/prospector-commits.db"
