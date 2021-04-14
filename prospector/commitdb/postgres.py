@@ -40,13 +40,15 @@ class PostgresCommitDB(CommitDB):
         data = []
         try:
             cur = self.connection.cursor()
-            # TODO this returns all records, implement real query!
-            cur.execute("SELECT * FROM commits")
+            cur.execute(
+                "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
+                (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
+            )
             data = cur.fetchall()
             cur.close()
         except Exception as ex:
             print(ex)
-            # raise Exception("Could not lookup commit vector in database")
+            raise Exception("Could not lookup commit vector in database")
 
         return data
 
