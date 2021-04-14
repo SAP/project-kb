@@ -1,30 +1,31 @@
 # The main functionality of the tool
 
-import rank
-import filter
-import database
-from git.git import do_clone, Git, Commit, clone_repo_multiple
-import re
-import os
-import json
-import sqlite3
-import requests
-import time
-import datetime
 import ast
-import random
 import copy
+import datetime
+import json
+import os
+import random
+import re
+import sqlite3
 import sys
-import plac
-import pandas as pd
-import numpy as np
+import time
 from datetime import datetime, timedelta
-from joblib import load
-from tqdm import tqdm
 
+import database
+import filter
+import numpy as np
+import pandas as pd
+import plac
+import rank
+import requests
+from joblib import load
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
+from tqdm import tqdm
+
+from git.git import Commit, Git, clone_repo_multiple, do_clone
 
 current_working_directory = os.getcwd()
 # os.chdir("git_explorer")

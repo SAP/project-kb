@@ -23,26 +23,44 @@ The easiest way to set up Prospector is to clone this repository and then run th
 
 ```
 git clone https://github.com/sap/project-kb
-git checkout prospector-assuremoss
 cd project-kb/prospector
+git checkout prospector-assuremoss
 echo "GIT_CACHE=/tmp/git-cache" > .env
 echo "PYTHONPATH=." >> .env
 echo "POSTGRES_PASSWORD=example" >> .env
 mkdir /tmp/git-cache
-pipenv shell
-pipenv install
+pipenv --python 3.8
+pipenv install --dev
 pre-commit install
 python -m spacy download en_core_web_sm
 ```
 
-If you have issues with the above commands, please open a Github issue and
-explain in detail what you did and what unexpected behaviour you observed (also indicate your operating system and Python version).
+This is necessary only the first time you set up your dev. environment.
+Afterwards, you will just have to remember to activate the environment
+with `pipenv shell`.
 
-*Please note that Windows is not supported.*
+If at any time you wish to remove the virtual environment and create it from scratch
+(for example, because you want to use a different version of the python interpreter),
+just do `pipenv --rm` and the repeat the steps above.
+
+If you have issues with these steps, please open a Github issue and
+explain in detail what you did and what unexpected behaviour you observed
+(also indicate your operating system and Python version).
+
+*Please note that Windows is not supported*, WSL should be fine though.
+
 
 **IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
 your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
-black is run prior to committing anyway, but the auto-formatting might save you some time and avoid frustration.
+black is run prior to committing anyway, but the auto-formatting might save you some time
+and avoid frustration.
+
+If you use VScode, this can be achieved by pasting these lines in your configuration file:
+
+```
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+```
 
 ## Starting the backend database and the job workers
 
@@ -67,10 +85,15 @@ You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
 ## Using the CLI
 
-NOTE: this is about the "legacy" CLI. A new CLI is being developed.
+Try the following example:
 
-`python main.py <vulnerability_id> -r <repository_url> -v`
+`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload -v --use-nvd`
 
+## Testing
+
+To run the tests, run:
+
+`pytest`
 ## Credits
 
 This project was initially developed by Daan Hommersom as part of his thesis

@@ -1,13 +1,12 @@
 import os
-from fastapi import APIRouter
 
 import redis
-from rq import Queue, Connection
+from fastapi import APIRouter
+from rq import Connection, Queue
 from rq.job import Job
 
-from git.git import do_clone
-
 from api.routers.nvd_feed_update import main
+from git.git import do_clone
 
 redis_url = os.environ["REDIS_URL"]
 

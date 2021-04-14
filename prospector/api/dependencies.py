@@ -1,6 +1,7 @@
+from typing import Optional
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from typing import Optional
 from pydantic import BaseModel
 
 # ======================================
@@ -48,6 +49,7 @@ def get_user(db, username: str):
     if username in db:
         user_dict = db[username]
         return UserInDB(**user_dict)
+    return None
 
 
 def fake_decode_token(token):

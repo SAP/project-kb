@@ -2,6 +2,7 @@
 This module contains code related to users
 """
 from dataclasses import dataclass
+
 from . import BaseModel
 
 

@@ -5,11 +5,12 @@
 #  - The first one tests cases that should succeed
 #  - The second one tests the cases for which an exception should be raised
 
-import pytest
-import os
-import sys
 import json
+import os
 import random
+import sys
+
+import pytest
 import spacy
 
 nlp = spacy.load("en_core_web_sm")

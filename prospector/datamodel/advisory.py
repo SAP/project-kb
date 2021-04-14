@@ -1,10 +1,14 @@
 # from typing import Tuple
-from dataclasses import dataclass, field
 import re
+from dataclasses import dataclass, field
+
 import requests
+
+from commit_preprocessor.constants import RELEVANT_EXTENSIONS
 
 # from . import BaseModel
 
+# TODO use prospector own NVD feed endpoint
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
 
 
@@ -28,6 +32,7 @@ class AdvisoryRecord:
     versions: "list[str]" = field(default_factory=list)
     from_nvd: bool = False
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
+    paths: "list[str]" = field(default_factory=list)
 
     def __post_init__(self):
         if self.from_nvd:
@@ -37,6 +42,7 @@ class AdvisoryRecord:
             [v for v in extract_versions(self.description) if v not in self.versions]
         )
         self.affected_products = extract_products(self.description)
+        self.paths = extract_path_tokens(self.description)
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
@@ -121,6 +127,27 @@ def extract_products(text) -> "list[str]":
     regex = r"([A-Z]+[a-z\b]+)"
     result = list(set(re.findall(regex, text)))
     return [p for p in result if len(p) > 2]
+
+
+def extract_path_tokens(text: str) -> "list[str]":
+    """
+    Used to look for paths in the text (i.e. vulnerability description)
+
+    Input:
+        text (str)
+
+    Returns:
+        list: a list of paths that are found
+    """
+    return [
+        re.split(r"\.|,|/", token.rstrip(r".,;:?!\"'"))
+        for token in text.split(" ")
+        if ("/" in token.rstrip(r".,;:?!\"'") and not token.startswith("</"))
+        or (
+            "." in token.rstrip(r".,;:?!\"'")
+            and token.rstrip(r".,;:?!\"'").split(".")[-1] in RELEVANT_EXTENSIONS
+        )
+    ]
 
 
 @dataclass

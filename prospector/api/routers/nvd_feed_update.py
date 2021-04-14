@@ -17,21 +17,16 @@
 # SPDX-FileCopyrightText: Copyright (c) 2018-2020 SAP SE or an SAP affiliate company and Eclipse Steady contributors
 #
 
-import requests
+import io
+import json
+import os
+import time
 import zipfile
 from contextlib import closing
-import io
-import os
 
-# import sys
-import json
-import time
-
-# import plac
-# from tqdm import tqdm
-
-# from io import StringIO
-from pprint import pprint
+import plac
+import requests
+from tqdm import tqdm
 
 # import logging
 
@@ -41,13 +36,14 @@ DATA_PATH = os.environ.get("CVE_DATA_PATH") or "data/"
 FEED_SCHEMA_VERSION = os.environ.get("FEED_SCHEMA_VERSION") or "1.1"
 
 
-def do_update(verbose=False):
+def do_update(quiet=False):
     # read metadata of last fetch
     last_fetch_metadata = dict()
     try:
         with open(os.path.join(DATA_PATH, "metadata.json"), "r") as f:
             last_fetch_metadata = json.load(f)
-            print("[ii] last fetch: " + last_fetch_metadata["sha256"])
+            if not quiet:
+                print("[ii] last fetch: " + last_fetch_metadata["sha256"])
     except:
         last_fetch_metadata["sha256"] = ""
         print(
@@ -72,24 +68,26 @@ def do_update(verbose=False):
     for d in metadata_txt:
         d_split = d.split(":", 1)
         metadata_dict[d_split[0]] = d_split[1].strip()
-    print("[ii] current:    " + metadata_dict["sha256"])
+    if not quiet:
+        print("[ii] current:    " + metadata_dict["sha256"])
 
     # check if the new data is actually new
     if last_fetch_metadata["sha256"] == metadata_dict["sha256"]:
-        print("[ii] We already have this update, no new data to fetch.")
+        if not quiet:
+            print("[ii] We already have this update, no new data to fetch.")
         return False
-    else:
-        do_fetch("modified")
-        with open(os.path.join(DATA_PATH, "metadata.json"), "w") as f:
-            f.write(json.dumps(metadata_dict))
-        return True
+
+    do_fetch("modified")
+    with open(os.path.join(DATA_PATH, "metadata.json"), "w") as f:
+        f.write(json.dumps(metadata_dict))
+    return True
 
 
-def do_fetch_full(start_from_year=START_FROM_YEAR, verbose=False):
+def do_fetch_full(start_from_year=START_FROM_YEAR, quiet=False):
     years_to_fetch = [
-        y for y in range(int(START_FROM_YEAR), int(time.strftime("%Y")) + 1)
+        y for y in range(int(start_from_year), int(time.strftime("%Y")) + 1)
     ]
-    if verbose:
+    if not quiet:
         print("[ii] Fetching feeds: " + str(years_to_fetch))
 
     for y in years_to_fetch:
@@ -97,7 +95,7 @@ def do_fetch_full(start_from_year=START_FROM_YEAR, verbose=False):
             print("[!!] Could not fetch data for year " + str(y))
 
 
-def do_fetch(what, verbose=False):
+def do_fetch(what, quiet=False):
     """
     the 'what' parameter can be a year or 'recent' or 'modified'
     """
@@ -118,8 +116,10 @@ def do_fetch(what, verbose=False):
             print(f.filename)
             data = json.loads(archive.read(f).decode())
 
-    # pbar = tqdm(data["CVE_Items"])
-    pbar = data["CVE_Items"]
+    if not quiet:
+        pbar = tqdm(data["CVE_Items"])
+    else:
+        pbar = data["CVE_Items"]
     for v in pbar:
         CVE_id = v["cve"]["CVE_data_meta"]["ID"]
         CVE_year = CVE_id.split("-")[1]
@@ -135,33 +135,36 @@ def do_fetch(what, verbose=False):
     return True
 
 
-def need_full():
+def need_full(quiet=False):
     if os.path.exists(DATA_PATH) and os.path.isdir(DATA_PATH):
         if not os.listdir(DATA_PATH):
-            print("[ii] Data folder {} is empty".format(DATA_PATH))
+            if not quiet:
+                print("[ii] Data folder {} is empty".format(DATA_PATH))
             return True
-        else:
-            # Directory exists and is not empty
+
+        # Directory exists and is not empty
+        if not quiet:
             print("[ii] Data folder found at " + DATA_PATH)
-            return False
-    else:
-        # Directory doesn't exist
+        return False
+
+    # Directory doesn't exist
+    if not quiet:
         print("[ii] Data folder {} does not exist".format(DATA_PATH))
-        return True
+    return True
 
 
-# @plac.annotations(
-#     force=("Force a full update of all feeds", "flag", "f", bool),
-#     verbose=("Verbose mode", "flag", "v", bool),
-# )
-def main(force=False, verbose=False):
+@plac.annotations(
+    force=("Force a full update of all feeds", "flag", "f", bool),
+    quiet=("Quiet mode (outputs only exception messages)", "flag", "q", bool),
+)
+def main(force, quiet):
 
-    if force or need_full():
-        do_fetch_full(verbose=verbose)
+    if force or need_full(quiet=quiet):
+        do_fetch_full(quiet=quiet)
 
     # always do this, so that metadata are fine and so is the /status API
-    do_update(verbose=verbose)
+    do_update(quiet=quiet)
 
 
-# if __name__ == "__main__":
-#     plac.call(main)
+if __name__ == "__main__":
+    plac.call(main)
