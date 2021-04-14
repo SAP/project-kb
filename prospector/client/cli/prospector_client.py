@@ -1,20 +1,21 @@
 from pprint import pprint
 
 from datamodel.advisory import AdvisoryRecord
+from datamodel.commit import Commit
 from git.git import GIT_CACHE, Git
 
 
 def prospector(
     vulnerability_id: str,
     repository: str,
-    publication_date: str,
-    vuln_descr: str,
-    use_nvd: bool,
-    nvd_rest_endpoint: str,
+    publication_date: str = "",
+    vuln_descr: str = "",
+    use_nvd: bool = False,
+    nvd_rest_endpoint: str = "",
     git_cache: str = GIT_CACHE,
     verbose: bool = False,
     debug: bool = False,
-):
+) -> "list[Commit]":
     if verbose:
         debug = True
 
@@ -51,6 +52,8 @@ def prospector(
 
     if debug:
         pprint(advisory_record)
+
+    return []
 
 
 def select_commit_ids_based_on_vulnerability_publish_date(
