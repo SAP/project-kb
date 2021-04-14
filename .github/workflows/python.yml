@@ -65,5 +65,5 @@ jobs:
           REDIS_URL: ""
       run: |
         cd prospector
-        mkdir ./git-cache
+        [ -d ./git-cache ] || mkdir ./git-cache
         pipenv run pytest
