@@ -1,9 +1,10 @@
 import pytest
+import os
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
-from filter_rank.ranker import prefilter_commits, rank
+from filter_rank.ranker import filter_commits, rank, train
 
 
 @pytest.fixture
@@ -18,9 +19,17 @@ def candidates():
 
 def test_filter(candidates):
     ar = AdvisoryRecord("CVE-xxxx-yyyy")
-    result = prefilter_commits(ar, candidates)
+    result = filter_commits(ar, candidates)
 
 
 def test_rank(candidates):
     ar = AdvisoryRecord("CVE-xxxx-yyyy")
     result = rank(ar, candidates)
+
+
+def test_train():
+    path = train("test123")
+    assert os.path.exists(path)
+
+    if os.path.exists(path):
+        os.remove(path)

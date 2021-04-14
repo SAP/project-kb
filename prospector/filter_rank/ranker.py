@@ -1,14 +1,17 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
+from filter_rank.utils.model_loader import save_model
+from filter_rank import TRAINING_DATA
 
-def prefilter_commits(adv_record: AdvisoryRecord, candidates: "list[Commit]") -> "list[Commit]":
+def filter_commits(adv_record: AdvisoryRecord, candidates: "list[Commit]") -> "list[Commit]":
     """
-    Takes in input a set of candidate (datamodel)commits (coming from the commitdb)
+    Takes in input a set of candidate (datamodel) commits (coming from the commitdb)
     and returns in output a filtered list obtained by discarding the irrelevant
     ones based on different criteria (timestamp of commit compared to advisory record date,
     extensions of the files modified in the commit, and the like)
     """
+
     return candidates
 
 
@@ -20,10 +23,11 @@ def rank(adv_record: AdvisoryRecord, candidates: "list[Commit]") -> "list[Commit
     return candidates
 
 
-def train(model_name: str, data_filename: str) -> bool:
+def train(model_name: str, data_filename=TRAINING_DATA) -> str:
     """
     Takes in input a dataset and produces a trained model that is persisted to disk.
-    Dataset file contains triples:  (vuln_id,repository,commit_id)
+    Dataset file contains triples:  (vuln_id,fix_id,repository,commit_id)
+    Returns the path to the saved model
     """
     # read data_filename content in list of lines
     # foreach l in line:
@@ -36,5 +40,5 @@ def train(model_name: str, data_filename: str) -> bool:
     #   add augmented commit_obj to dataframe
     # fit(dataframe) --> model
     # compute metrics
-    # save model to disk (file: model_name.bin)
-    return True
+    # save model to disk (file: model_name)
+    return save_model("", model_name)
