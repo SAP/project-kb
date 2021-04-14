@@ -93,11 +93,8 @@ Try the following example:
 
 To run the tests, run:
 
-## Testing
-
-To run the tests, run:
-
 `pytest`
+
 ## Credits
 
 This project was initially developed by Daan Hommersom as part of his thesis
