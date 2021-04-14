@@ -60,10 +60,10 @@ jobs:
 #         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       env:
-          GIT_CACHE: "./git-cache"
+          GIT_CACHE: "/tmp/git-cache"
           POSTGRES_PASSWORD: "postgres"
           REDIS_URL: ""
       run: |
         cd prospector
-        [ -d ./git-cache ] || mkdir ./git-cache
+        [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
         pipenv run pytest
