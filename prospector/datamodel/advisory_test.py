@@ -24,14 +24,16 @@ ADVISORY_TEXT = """Unspecified vulnerability in Uconnect before 15.26.1, as used
 def test_adv_record_versions():
 
     record = AdvisoryRecord("CVE-2014-0050", description=ADVISORY_TEXT)
-    # print(record)
+    record.analyze()
 
     assert "15.26.1" in record.versions
     assert "15.26" not in record.versions
 
 
 def test_adv_record_nvd():
-    record = AdvisoryRecord("CVE-2014-0050", from_nvd=True)
+    record = AdvisoryRecord("CVE-2014-0050")
+
+    record.analyze(use_nvd=True)
 
     # print(record)
     assert "1.3.1" in record.versions
@@ -40,6 +42,7 @@ def test_adv_record_nvd():
 
 def test_adv_record_products():
     record = AdvisoryRecord("CVE-XXXX-YYYY", description=ADVISORY_TEXT)
+    record.analyze()
 
     # print(record)
     assert "Chrysler" in record.affected_products

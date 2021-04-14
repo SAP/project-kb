@@ -226,10 +226,10 @@ class Git:
             cmd = ["git", "rev-list"]
 
         if since:
-            cmd.append("--since=" + since)
+            cmd.append("--since=" + str(since))
 
         if until:
-            cmd.append("--until=" + until)
+            cmd.append("--until=" + str(until))
 
         if ancestors_of:
             cmd.append(ancestors_of)

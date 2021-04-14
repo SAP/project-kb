@@ -1,6 +1,7 @@
 # from typing import Tuple
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 
 import requests
 
@@ -20,8 +21,8 @@ class AdvisoryRecord:
 
     vulnerability_id: str
     repository_url: str = ""
-    published_timestamp: str = ""
-    last_modified_timestamp: str = ""
+    published_timestamp: int = ""
+    last_modified_timestamp: int = ""
     references: "list[str]" = field(default_factory=list)
     references_content: "list[str]" = field(default_factory=list)
     advisory_references: "list[str]" = field(default_factory=list)
@@ -34,7 +35,9 @@ class AdvisoryRecord:
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
     paths: "list[str]" = field(default_factory=list)
 
-    def __post_init__(self):
+    def analyze(self, use_nvd: bool = False):
+        self.from_nvd = use_nvd
+
         if self.from_nvd:
             self._get_from_nvd(self.vulnerability_id, self.nvd_rest_endpoint)
 
@@ -55,8 +58,17 @@ class AdvisoryRecord:
             if response.status_code != 200:
                 return
             data = response.json()["result"]["CVE_Items"][0]
-            self.published_timestamp = data["publishedDate"]
-            self.last_modified_timestamp = data["lastModifiedDate"]
+            self.published_timestamp = int(
+                datetime.strptime(
+                    data["publishedDate"], r"%Y-%m-%dT%H:%M%z"
+                ).timestamp()
+            )
+            self.last_modified_timestamp = int(
+                datetime.strptime(
+                    data["lastModifiedDate"], r"%Y-%m-%dT%H:%M%z"
+                ).timestamp()
+            )
+
             self.description = data["cve"]["description"]["description_data"][0][
                 "value"
             ]
