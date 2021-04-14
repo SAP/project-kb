@@ -39,6 +39,7 @@ def prospector(
         advisory_record.published_timestamp = int(
             datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
         )
+    advisory_record.published_timestamp = None
 
     advisory_record.analyze(use_nvd=True)
 
@@ -54,9 +55,12 @@ def prospector(
     print("Done retrieving %s", repository)
 
     # STEP 1: filter based on time and on file extensions
-    since = advisory_record.published_timestamp - TIME_LIMIT_BEFORE
-    until = advisory_record.published_timestamp - TIME_LIMIT_AFTER
-    candidates = repository.get_commits(since=since, until=until, filter_files="")
+    if advisory_record.published_timestamp:
+        since = advisory_record.published_timestamp - TIME_LIMIT_BEFORE
+        until = advisory_record.published_timestamp - TIME_LIMIT_AFTER
+        candidates = repository.get_commits(since=since, until=until, filter_files="")
+    else:
+        candidates = repository.get_commits()
 
     # STEP 2: filter based on commit size
 
