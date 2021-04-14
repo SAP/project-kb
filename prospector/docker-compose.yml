@@ -2,7 +2,9 @@ version: "3.1"
 
 services:
   worker:
-    build: worker
+    build:
+      context: worker
+      dockerfile: Dockerfile
     volumes:
       - .:/pythonimports
     depends_on:

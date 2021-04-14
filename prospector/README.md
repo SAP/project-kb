@@ -91,10 +91,6 @@ Try the following example:
 
 ## Testing
 
-First, you need to install pytest-cov:
-
-`pip install pytest-cov`
-
 To run the tests, run:
 
 `pytest`
