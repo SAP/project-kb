@@ -3,7 +3,7 @@ import pytest
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
-from .main import filter, rank
+from filter_rank.ranker import filter, rank
 
 
 @pytest.fixture
