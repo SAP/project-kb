@@ -41,10 +41,10 @@ class PostgresCommitDB(CommitDB):
         try:
             cur = self.connection.cursor()
             cur.execute(
-                "SELECT * FROM commits WHERE repository = %s AND id = %s;",
-                (commit_obj["repository_url"], commit_obj["commit_id"]),
+                "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
+                (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
             )
-            data = cur.fetchone()  # result should be unique
+            data = cur.fetchall()
             cur.close()
         except Exception as ex:
             print(ex)
