@@ -89,6 +89,12 @@ Try the following example:
 
 `python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload -v --use-nvd`
 
+## Testing
+
+To run the tests, run:
+
+`pytest`
+
 ## Credits
 
 This project was initially developed by Daan Hommersom as part of his thesis

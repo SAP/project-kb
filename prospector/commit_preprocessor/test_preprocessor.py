@@ -19,7 +19,7 @@ def test_proprocess_commit(repository):
 
     preprocessed_commit = preprocess_commit(commit)
 
-    assert preprocessed_commit.log_msg.startswith(
+    assert preprocessed_commit.message.startswith(
         "Merge pull request #480 from apache/WW-5117-reorders-stack [WW-5117]"
     )
 

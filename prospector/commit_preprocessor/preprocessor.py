@@ -47,12 +47,12 @@ def preprocess_commit(git_commit: gitCommit) -> Commit:
     result.diff = git_commit.get_diff()
     result.hunks = git_commit.get_hunks()
     result.hunk_count = len(result.hunks)
-    result.log_msg = git_commit.get_msg()
+    result.message = git_commit.get_msg()
 
-    result.jira_refs = list(set(extract_jira_references(result.log_msg)))
-    result.ghissue_refs = extract_ghissue_references(result.log_msg)
-    result.cve_refs = extract_cve_references(result.log_msg)
-    # result.preprocessed_log_msg = ....
+    result.jira_refs = list(set(extract_jira_references(result.message)))
+    result.ghissue_refs = extract_ghissue_references(result.message)
+    result.cve_refs = extract_cve_references(result.message)
+    # result.preprocessed_message = ....
 
     return result
 

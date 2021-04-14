@@ -8,6 +8,7 @@ from commit_preprocessor.constants import RELEVANT_EXTENSIONS
 
 # from . import BaseModel
 
+# TODO use prospector own NVD feed endpoint
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
 
 

@@ -40,13 +40,15 @@ class PostgresCommitDB(CommitDB):
         data = []
         try:
             cur = self.connection.cursor()
-            # TODO this returns all records, implement real query!
-            cur.execute("SELECT * FROM commits")
+            cur.execute(
+                "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
+                (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
+            )
             data = cur.fetchall()
             cur.close()
         except Exception as ex:
             print(ex)
-            # raise Exception("Could not lookup commit vector in database")
+            raise Exception("Could not lookup commit vector in database")
 
         return data
 
@@ -59,8 +61,22 @@ class PostgresCommitDB(CommitDB):
 
             # TODO sanitize inputs
             cur.execute(
-                "INSERT INTO commits (id, repository, feature_1) VALUES (%s, %s, %s)",
-                (commit_obj.commit_id, commit_obj.repository, commit_obj.feature_1),
+                "INSERT INTO commits (id, repository, feature_1, timestamp, hunks, hunk_count, message, diff, changed_files, message_reference_content, jira_refs, ghissue_refs, cve_refs) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    commit_obj.commit_id,
+                    commit_obj.repository,
+                    commit_obj.feature_1,
+                    commit_obj.timestamp,
+                    commit_obj.hunks,
+                    commit_obj.hunk_count,
+                    commit_obj.message,
+                    commit_obj.diff,
+                    commit_obj.changed_files,
+                    commit_obj.message_reference_content,
+                    commit_obj.jira_refs,
+                    commit_obj.ghissue_refs,
+                    commit_obj.cve_refs,
+                ),
             )
             self.connection.commit()
         except Exception as exception:

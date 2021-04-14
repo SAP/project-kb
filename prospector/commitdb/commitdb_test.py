@@ -25,18 +25,61 @@ def setupdb():
 def test_simple_write(setupdb):
     db = setupdb
     db.connect(CONNECT_STRING)
-    commit_obj = Commit("abcd1234", "https://github.com/abc/def", "A", "B")
+    commit_obj = Commit(
+        "abcd1234",
+        "https://github.com/abc/def",
+        "A",
+        1212444,
+        "hunk1",
+        1,
+        "Test commit",
+        "-",
+        "test.py",
+        "none",
+        "https://jira...com",
+        "https://ghissue...com",
+        "https://cve...com",
+    )
     db.save(commit_obj)
-    commit_obj = Commit("hijk5678", "https://github.com/opq/str", "X", "Y")
+    commit_obj = Commit(
+        "hijk5678",
+        "https://github.com/opq/str",
+        "B",
+        1535444,
+        "hunk1, hunk2",
+        2,
+        "Test commit",
+        "-",
+        "test.py",
+        "none",
+        "https://jira...com",
+        "https://ghissue...com",
+        "https://cve...com",
+    )
     db.save(commit_obj)
 
 
 def test_simple_read():
     db = PostgresCommitDB()
     db.connect(CONNECT_STRING)
-    commit_obj = Commit("abcd1234", "https://github.com/abc/def", "A", "B")
+    commit_obj = Commit(
+        "abcd1234",
+        "https://github.com/abc/def",
+        "A",
+        1212444,
+        "hunk1",
+        1,
+        "Test commit",
+        "-",
+        "test.py",
+        "none",
+        "https://jira...com",
+        "https://ghissue...com",
+        "https://cve...com",
+    )
     result = db.lookup(commit_obj)
     print(result)
+    db.reset()  # remove garbage added by tests from DB
     assert result is not None
 
 
