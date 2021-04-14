@@ -89,7 +89,7 @@ async def create_data(repository_url, commit_id, label, vulnerability_id):
 @app.get("/commits/{repository_url}")
 # async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_scheme)):
 async def get_commits(repository_url, commit_id=None):
-    commit = (commit_id, repository_url)
+    commit = {"commit_id": commit_id, "repository_url": repository_url}
     data = db.lookup(commit)
 
     return data
