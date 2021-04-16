@@ -88,8 +88,6 @@ def prospector(
     preprocessed_commits: "list[GitCommit]" = []
     pbar = tqdm(candidates)
     for commit_id in pbar:
-        if verbose:
-            pbar.set_description("Preprocessing " + commit_id)
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
     # adv_processor = AdvisoryProcessor()

@@ -51,6 +51,9 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     result.hunks = git_commit.get_hunks()
     result.hunk_count = len(result.hunks)
     result.message = git_commit.get_msg()
+    result.timestamp = git_commit.get_timestamp()
+
+    # TODO extract commit tags
 
     result.jira_refs = list(set(extract_jira_references(result.message)))
     result.ghissue_refs = extract_ghissue_references(result.message)

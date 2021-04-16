@@ -29,7 +29,7 @@ def test_simple_write(setupdb):
         commit_id="1234",
         repository="https://blabla.com/zxyufd/fdafa",
         feature_1="",
-        timestamp=0,
+        timestamp=123456789,
         hunks=[(3, 5)],
         hunk_count=1,
         message="Some random garbage",
