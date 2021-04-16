@@ -59,9 +59,17 @@ class PostgresCommitDB(CommitDB):
         try:
             cur = self.connection.cursor()
 
-            # TODO implement UPSERT
+            # NOTE: if the repo-commit pair exists, this does nothing
+            # Therefore, to update a record, it must be removed explicitly first
             cur.execute(
-                "INSERT INTO commits (id, repository, feature_1, timestamp, hunks, hunk_count, message, diff, changed_files, message_reference_content, jira_refs, ghissue_refs, cve_refs) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                """
+                INSERT INTO commits
+                    (id, repository, feature_1, timestamp,
+                    hunks, hunk_count, message, diff,
+                    changed_files, message_reference_content,
+                    jira_refs, ghissue_refs, cve_refs) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT ON CONSTRAINT commits_pkey DO NOTHING
+                """,
                 (
                     commit_obj.commit_id,
                     commit_obj.repository,
