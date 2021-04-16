@@ -379,7 +379,7 @@ class Commit:
                 )
         return self._attributes["msg"]
 
-    def get_diff(self, context_size=1, filter_files=""):
+    def get_diff(self, context_size: int = 1, filter_files: str = ""):
         if "diff" not in self._attributes:
             self._attributes["diff"] = ""
             try:

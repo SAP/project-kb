@@ -60,6 +60,7 @@ jobs:
       - name: Test with pytest
         env:
           GIT_CACHE: "/tmp/git-cache"
+          POSTGRES_USER: "postgres"
           POSTGRES_PASSWORD: "postgres"
           POSTGRES_HOST: "localhost"
           POSTGRES_PORT: "5432"
