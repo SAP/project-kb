@@ -59,7 +59,7 @@ class PostgresCommitDB(CommitDB):
         try:
             cur = self.connection.cursor()
 
-            # TODO sanitize inputs
+            # TODO implement UPSERT
             cur.execute(
                 "INSERT INTO commits (id, repository, feature_1, timestamp, hunks, hunk_count, message, diff, changed_files, message_reference_content, jira_refs, ghissue_refs, cve_refs) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
@@ -81,7 +81,7 @@ class PostgresCommitDB(CommitDB):
             self.connection.commit()
         except Exception as exception:
             print(exception)
-            raise Exception("Could not save commit vector to database")
+            # raise Exception("Could not save commit vector to database")
 
     def reset(self):
         """

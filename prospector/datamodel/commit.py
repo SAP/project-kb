@@ -1,30 +1,31 @@
-from dataclasses import dataclass, field
+from typing import List, Optional
 
-from git.git import Git
+from pydantic import BaseModel, Field
 
-from . import BaseModel
-
+# from dataclasses import dataclass, field
+# from pydantic.dataclasses import dataclass
 # from dataclasses_json import dataclass_json
 
 
+# @dataclass
 # @dataclass_json
-@dataclass
 class Commit(BaseModel):
+    # class Commit:
     commit_id: str
-    repository: Git
-    feature_1: str = ""
-    timestamp: int = 0
-    hunks: "list[list[str]]" = field(default_factory=list)
-    hunk_count: int = 0
-    message: str = ""
-    diff: "list[list[str]]" = field(default_factory=list)
-    changed_files: "list[str]" = field(default_factory=list)
-    message_reference_content: "list[str]" = field(default_factory=list)
-    jira_refs: "list[str]" = field(default_factory=list)
-    ghissue_refs: "list[str]" = field(default_factory=list)
-    cve_refs: "list[str]" = field(default_factory=list)
+    repository: str
+    feature_1: Optional[str] = ""
+    timestamp: Optional[int] = 0
+    hunks: List[List[int]] = Field(default_factory=list)
+    hunk_count: Optional[int] = 0
+    message: Optional[str] = ""
+    diff: List[str] = Field(default_factory=list)
+    changed_files: List[str] = Field(default_factory=list)
+    message_reference_content: List[str] = Field(default_factory=list)
+    jira_refs: List[str] = Field(default_factory=list)
+    ghissue_refs: List[str] = Field(default_factory=list)
+    cve_refs: List[str] = Field(default_factory=list)
 
-    def format(self):
-        out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
-        out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
-        return out
+    # def format(self):
+    #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
+    #     out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
+    #     return out

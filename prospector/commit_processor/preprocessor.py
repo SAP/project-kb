@@ -1,12 +1,12 @@
 import re
 
-from datamodel.commit import Commit
-from git.git import Commit as gitCommit
+from datamodel.commit import Commit as DatamodelCommit
+from git.git import Commit as GitCommit
 
 from .constants import RELEVANT_EXTENSIONS
 
 
-def preprocess_commit(git_commit: gitCommit) -> Commit:
+def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     """
     This function is responsible of translating a (git)Commit
     into a preprocessed-Commit, that can be saved to the DB
@@ -33,9 +33,12 @@ def preprocess_commit(git_commit: gitCommit) -> Commit:
     """
 
     commit_id = git_commit.get_id()
-    repository = git_commit._repository
+    repository_url = git_commit._repository._url
 
-    result = Commit(commit_id, repository)
+    result = DatamodelCommit(commit_id=commit_id, repository=repository_url)
+    # result = DatamodelCommit(commit_id, repository_url)
+    # result.commit_id = commit_id
+    # result.repository = repository_url
 
     # This is where all the attributes of the preprocessed commit
     # are computed and assigned.
@@ -96,7 +99,7 @@ def is_path(token: str) -> bool:
     )
 
 
-def extract_code_tokens(description) -> "list[str]":
+def extract_code_tokens(description: str) -> "list[str]":
     """
     Extract code tokens from the description: tokens that are either dot.case,
     snake_case or CamelCase and no path (paths are used in a different feature)
@@ -115,19 +118,12 @@ def extract_code_tokens(description) -> "list[str]":
     return relevant_tokens
 
 
-def camel_case_split(token):
+def camel_case_split(token: str) -> "list[str]":
     """
     Splits a CamelCase token into a list of tokens, including the original unsplit.
 
     example: 'CamelCase' --> ['CamelCase', 'camel', 'case']
     """
-    if type(token) != str:
-        raise TypeError(
-            "The provided token should be a str data type but is of type {}.".format(
-                type(token)
-            )
-        )
-
     matches = re.finditer(
         ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", token
     )
@@ -137,37 +133,24 @@ def camel_case_split(token):
     return [token] + result
 
 
-def snake_case_split(token):
+def snake_case_split(token: str) -> "list[str]":
     """
     Splits a snake_case token into a list of tokens, including the original unsplit.
 
     Example: 'snake_case' --> ['snake_case', 'snake', 'case']
     """
-    if type(token) != str:
-        raise TypeError(
-            "The provided token should be a str data type but is of type {}.".format(
-                type(token)
-            )
-        )
-
     result = token.split("_")
     if len(result) == 1:
         return []
     return [token] + result
 
 
-def dot_case_split(token):
+def dot_case_split(token: str) -> "list[str]":
     """
     Splits a dot.case token into a list of tokens, including the original unsplit.
 
     Example: 'dot.case' --> ['dot.case', 'dot', 'case']
     """
-    if type(token) != str:
-        raise TypeError(
-            "The provided token should be a str data type but is of type {}.".format(
-                type(token)
-            )
-        )
 
     result = token.split(".")
     if len(result) == 1:

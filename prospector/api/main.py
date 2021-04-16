@@ -10,7 +10,7 @@ from commitdb.postgres import PostgresCommitDB
 from datamodel.commit import Commit
 
 # from .dependencies import oauth2_scheme
-from .routers import jobs, nvd, users
+from .routers import jobs, nvd, preprocessed, users
 
 # from pprint import pprint
 
@@ -48,6 +48,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(jobs.router)
 app.include_router(nvd.router)
+app.include_router(preprocessed.router)
 
 # -----------------------------------------------------------------------------
 # Data here refers to training data, used to train ML models
