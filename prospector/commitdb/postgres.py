@@ -61,6 +61,7 @@ class PostgresCommitDB(CommitDB):
 
             # NOTE: if the repo-commit pair exists, this does nothing
             # Therefore, to update a record, it must be removed explicitly first
+            # TODO change this so that the record is updated instead
             cur.execute(
                 """
                 INSERT INTO commits
