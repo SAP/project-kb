@@ -7,4 +7,4 @@ def test_simple():
     commit_features = CommitFeatures(commit, True)
 
     assert commit_features.commit.repository == "https://github.com/abc/xyz"
-    assert commit_features.reference_to_vuln_id
+    assert commit_features.references_vuln_id

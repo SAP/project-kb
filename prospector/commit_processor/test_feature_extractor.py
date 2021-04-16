@@ -4,7 +4,7 @@ from datamodel import advisory
 from datamodel.advisory import AdvisoryRecord
 from git.git import Git
 
-from .feature_extractor import extract_features, extract_reference_to_vuln_id
+from .feature_extractor import extract_features, extract_references_vuln_id
 from .preprocessor import preprocess_commit
 
 
@@ -27,10 +27,10 @@ def test_extract_features(repository):
 
     extracted_features = extract_features(processed_commit, advisory_record)
 
-    assert extracted_features.reference_to_vuln_id
+    assert extracted_features.references_vuln_id
 
 
-def test_extract_reference_to_vuln_id():
+def test_extract_references_vuln_id():
     cve_ids = ["CVE-2020-26258", "CVE-1234-1234"]
-    result = extract_reference_to_vuln_id(cve_ids, "CVE-2020-26258")
+    result = extract_references_vuln_id(cve_ids, "CVE-2020-26258")
     assert result
