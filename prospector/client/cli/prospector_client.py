@@ -18,10 +18,10 @@ from git.git import Git
 SECS_PER_DAY = 86400
 
 # TODO make this controllable from the client
-TIME_LIMIT_BEFORE = 60 * SECS_PER_DAY
-TIME_LIMIT_AFTER = 20 * SECS_PER_DAY
+TIME_LIMIT_BEFORE = 365 * SECS_PER_DAY
+TIME_LIMIT_AFTER = 90 * SECS_PER_DAY
 
-MAX_CANDIDATES = 100
+MAX_CANDIDATES = 1000
 
 
 def prospector(
@@ -71,7 +71,7 @@ def prospector(
     # STEP 1: filter based on time and on file extensions
     if advisory_record.published_timestamp:
         since = advisory_record.published_timestamp - TIME_LIMIT_BEFORE
-        until = advisory_record.published_timestamp - TIME_LIMIT_AFTER
+        until = advisory_record.published_timestamp + TIME_LIMIT_AFTER
         candidates = repository.get_commits(since=since, until=until, filter_files="")
     else:
         candidates = repository.get_commits()
@@ -84,7 +84,7 @@ def prospector(
         sys.exit(-1)
 
     preprocessed_commits: "list[GitCommit]" = []
-    for commit_id in candidates[:10]:
+    for commit_id in candidates:
         if verbose:
             print("Preprocessing " + commit_id, flush=True)
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
@@ -99,16 +99,12 @@ def prospector(
         # pprint(candidates[:10])
         # pprint(preprocessed_commits[0])
 
-    print("preprocessed commits count: %d" % len(preprocessed_commits))
-    # sample_preprocessed_commit = preprocessed_commits[0]
+    if verbose:
+        print("preprocessed %d commits" % len(preprocessed_commits))
 
-    ###############################################################
-
-    # payload = sample_preprocessed_commit.__dict__
-
-    # payload = {"data": [c.__dict__ for c in preprocessed_commits]}
     payload = [c.__dict__ for c in preprocessed_commits]
 
+    # TODO read backend address from config file
     r = requests.post("http://localhost:8000/commits/", json=payload)
     print("Status: %d" % r.status_code)
 
