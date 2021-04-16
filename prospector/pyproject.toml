@@ -7,7 +7,8 @@ testpaths = [
     "client",
     "commit_processor",
     "git",
-    "api"
+    "api",
+    "filter_rank"
 ]
 
 [tool.isort]
