@@ -5,7 +5,7 @@ from datetime import datetime
 
 import requests
 
-from commit_preprocessor.constants import RELEVANT_EXTENSIONS
+from commit_processor.constants import RELEVANT_EXTENSIONS
 
 # from . import BaseModel
 

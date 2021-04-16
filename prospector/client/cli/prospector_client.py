@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from pprint import pprint
 
-from commit_preprocessor.preprocessor import preprocess_commit
+from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from git.git import GIT_CACHE

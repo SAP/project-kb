@@ -5,7 +5,7 @@ testpaths = [
     "commitdb",
     "datamodel",
     "client",
-    "commit_preprocessor",
+    "commit_processor",
     "git",
     "api"
 ]
