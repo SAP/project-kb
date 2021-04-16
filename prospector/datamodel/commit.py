@@ -2,13 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-# from dataclasses import dataclass, field
-# from pydantic.dataclasses import dataclass
-# from dataclasses_json import dataclass_json
 
-
-# @dataclass
-# @dataclass_json
 class Commit(BaseModel):
     # class Commit:
     commit_id: str

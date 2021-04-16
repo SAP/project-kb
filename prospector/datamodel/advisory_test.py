@@ -5,7 +5,9 @@ from datamodel.advisory import AdvisoryRecord
 
 
 def test_advisory_basic():
-    adv_rec = AdvisoryRecord("CVE-2015-5612", "https://github.com/abc/xyz")
+    adv_rec = AdvisoryRecord(
+        vulnerability_id="CVE-2015-5612", repository_url="https://github.com/abc/xyz"
+    )
 
     assert adv_rec.repository_url == "https://github.com/abc/xyz"
     # assert ar.vulnerability_id == "CVE-2015-5612"
@@ -23,7 +25,7 @@ ADVISORY_TEXT = """Unspecified vulnerability in Uconnect before 15.26.1, as used
 
 def test_adv_record_versions():
 
-    record = AdvisoryRecord("CVE-2014-0050", description=ADVISORY_TEXT)
+    record = AdvisoryRecord(vulnerability_id="CVE-2014-0050", description=ADVISORY_TEXT)
     record.analyze()
 
     assert "15.26.1" in record.versions
@@ -31,7 +33,7 @@ def test_adv_record_versions():
 
 
 def test_adv_record_nvd():
-    record = AdvisoryRecord("CVE-2014-0050")
+    record = AdvisoryRecord(vulnerability_id="CVE-2014-0050")
 
     record.analyze(use_nvd=True)
 
@@ -41,7 +43,7 @@ def test_adv_record_nvd():
 
 
 def test_adv_record_products():
-    record = AdvisoryRecord("CVE-XXXX-YYYY", description=ADVISORY_TEXT)
+    record = AdvisoryRecord(vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT)
     record.analyze()
 
     # print(record)

@@ -7,7 +7,9 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     references_vuln_id = extract_references_vuln_id(
         commit.cve_refs, advisory_record.vulnerability_id
     )
-    commit_feature = CommitFeatures(commit, references_vuln_id)
+    commit_feature = CommitFeatures(
+        commit=commit, references_vuln_id=references_vuln_id
+    )
     return commit_feature
 
 

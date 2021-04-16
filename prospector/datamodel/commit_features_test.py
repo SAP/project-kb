@@ -3,8 +3,13 @@ from datamodel.commit_features import CommitFeatures
 
 
 def test_simple():
-    commit = Commit("abcd", "https://github.com/abc/xyz", "X", "Y")
-    commit_features = CommitFeatures(commit, True)
+    commit = Commit(
+        commit_id="abcd",
+        repository="https://github.com/abc/xyz",
+        feature_1="X",
+        timestamp="124234125",
+    )
+    commit_features = CommitFeatures(commit=commit, references_vuln_id=True)
 
     assert commit_features.commit.repository == "https://github.com/abc/xyz"
     assert commit_features.references_vuln_id

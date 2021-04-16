@@ -12,7 +12,7 @@ from pprint import pprint
 
 import requests
 
-from client.cli.prospector_client import prospector
+from client.cli.prospector_client import MAX_CANDIDATES, prospector
 from datamodel.advisory import AdvisoryRecord
 from git.git import GIT_CACHE, Git
 
@@ -36,6 +36,13 @@ def parseArguments():
     )
 
     parser.add_argument("--descr", default="", help="Text of the advisory")
+
+    parser.add_argument(
+        "--max-candidates",
+        default=MAX_CANDIDATES,
+        type=int,
+        help="Maximum number of candidates to consider",
+    )
 
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
 
@@ -144,6 +151,7 @@ def main():
     publication_date = args.pub_date
     vuln_descr = args.descr
     use_nvd = args.use_nvd
+    max_candidates = args.max_candidates
 
     git_cache = GIT_CACHE
     if os.environ["GIT_CACHE"]:
@@ -173,6 +181,7 @@ def main():
         git_cache,
         verbose,
         debug,
+        limit_candidates=max_candidates,
     )
 
 

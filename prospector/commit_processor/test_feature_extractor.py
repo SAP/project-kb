@@ -1,6 +1,6 @@
 import pytest
 
-from datamodel import advisory
+# from datamodel import advisory
 from datamodel.advisory import AdvisoryRecord
 from git.git import Git
 
@@ -22,7 +22,8 @@ def test_extract_features(repository):
     processed_commit = preprocess_commit(commit)
 
     advisory_record = AdvisoryRecord(
-        "CVE-2020-26258", "https://github.com/apache/struts"
+        vulnerability_id="CVE-2020-26258",
+        repository_url="https://github.com/apache/struts",
     )
 
     extracted_features = extract_features(processed_commit, advisory_record)
