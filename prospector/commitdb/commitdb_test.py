@@ -9,22 +9,26 @@ import pytest
 from commitdb.postgres import PostgresCommitDB, parse_connect_string
 from datamodel.commit import Commit
 
-CONNECT_STRING = "HOST=127.0.0.1;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
-    os.environ["POSTGRES_PASSWORD"]
+DB_CONNECT_STRING = "HOST={};DB={};UID={};PWD={};PORT={};".format(
+    os.environ["POSTGRES_HOST"],
+    os.environ["POSTGRES_DBNAME"],
+    os.environ["POSTGRES_USER"],
+    os.environ["POSTGRES_PASSWORD"],
+    os.environ["POSTGRES_PORT"],
 )
 
 
 @pytest.fixture
 def setupdb():
     db = PostgresCommitDB()
-    db.connect(CONNECT_STRING)
+    db.connect(DB_CONNECT_STRING)
     db.reset()
     return db
 
 
 def test_simple_write(setupdb):
     db = setupdb
-    db.connect(CONNECT_STRING)
+    db.connect(DB_CONNECT_STRING)
     commit_obj = Commit(
         commit_id="1234",
         repository="https://blabla.com/zxyufd/fdafa",
@@ -76,7 +80,7 @@ def test_simple_write(setupdb):
 
 def test_simple_read():
     db = PostgresCommitDB()
-    db.connect(CONNECT_STRING)
+    db.connect(DB_CONNECT_STRING)
     commit_obj = Commit(
         commit_id="1234",
         repository="https://blabla.com/zxyufd/fdafa",
@@ -100,7 +104,7 @@ def test_simple_read():
 
 def test_parse_connect_string():
     # result = dict()
-    parsed_connect_string = parse_connect_string(CONNECT_STRING)
-    assert parsed_connect_string["host"] == "127.0.0.1"
+    parsed_connect_string = parse_connect_string(DB_CONNECT_STRING)
+    assert parsed_connect_string["host"] == "localhost"
     assert parsed_connect_string["uid"] == "postgres"
     assert parsed_connect_string["port"] == "5432"

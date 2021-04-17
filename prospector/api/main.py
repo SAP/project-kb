@@ -15,13 +15,16 @@ from .routers import jobs, nvd, preprocessed, users
 # from pprint import pprint
 
 
-db_pass = os.environ["POSTGRES_PASSWORD"]
-connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
-    db_pass
+DB_CONNECT_STRING = "HOST={};DB={};UID={};PWD={};PORT={};".format(
+    os.environ["POSTGRES_HOST"],
+    os.environ["POSTGRES_DBNAME"],
+    os.environ["POSTGRES_USER"],
+    os.environ["POSTGRES_PASSWORD"],
+    os.environ["POSTGRES_PORT"],
 )
 
 db = PostgresCommitDB()
-db.connect(connect_string)
+db.connect(DB_CONNECT_STRING)
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},

@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 from commitdb.postgres import PostgresCommitDB
 from datamodel.commit import Commit
 
-# TODO move this
 DB_CONNECT_STRING = "HOST={};DB={};UID={};PWD={};PORT={};".format(
     os.environ["POSTGRES_HOST"],
     os.environ["POSTGRES_DBNAME"],
