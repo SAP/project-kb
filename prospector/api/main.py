@@ -113,7 +113,8 @@ async def read_items():
     #     </head>
     #     <body>
     #         <h1>Prospector API</h1>
-    #         Click <a href="/docs">here</a> for docs and here for <a href="/openapi.json">OpenAPI specs</a>.
+    #         Click <a href="/docs">here</a> for docs and here for
+    #         <a href="/openapi.json">OpenAPI specs</a>.
     #     </body>
     # </html>
     # """

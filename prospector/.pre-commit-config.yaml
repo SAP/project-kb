@@ -22,10 +22,9 @@ repos:
         args: # arguments to configure flake8
           # making isort line length compatible with black
           - "--max-line-length=100"
-          - "--max-complexity=18"
-          - "--select=B,C,E,F,W,T4,B9"
-
+          # - "--max-complexity=18"
+          # - "--select=B,C,E,F,W,T4,B9"
           # these are errors that will be ignored by flake8
           # check out their meaning here
           # https://flake8.pycqa.org/en/latest/user/error-codes.html
-          - "--ignore=E203,E266,E501,W503,F403,F401,E402"
+          # - "--ignore=E203,E266,E501,W503,F403,F401,E402"

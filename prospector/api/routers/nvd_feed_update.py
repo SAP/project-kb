@@ -12,10 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# SPDX-License-Identifier: Apache-2.0
-# SPDX-FileCopyrightText: Copyright (c) 2018-2020 SAP SE or an SAP affiliate company and Eclipse Steady contributors
-#
 
 import io
 import json
@@ -47,7 +43,8 @@ def do_update(quiet=False):
     except Exception:
         last_fetch_metadata["sha256"] = ""
         print(
-            "[ii] Could not read metadata about previous fetches (this might be the first time we fetch data)."
+            "[ii] Could not read metadata about previous fetches"
+            " (this might be the first time we fetch data)."
         )
 
     # read metadata of new data from the NVD site
