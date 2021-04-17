@@ -53,6 +53,7 @@ jobs:
           pipenv install --dev
       - name: Lint with flake8
         run: |
+          pipenv install flake8
           cd prospector
           flake8 . --max-line-length=120
           # stop the build if there are Python syntax errors or undefined names
