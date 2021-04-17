@@ -36,9 +36,6 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     repository_url = git_commit._repository._url
 
     result = DatamodelCommit(commit_id=commit_id, repository=repository_url)
-    # result = DatamodelCommit(commit_id, repository_url)
-    # result.commit_id = commit_id
-    # result.repository = repository_url
 
     # This is where all the attributes of the preprocessed commit
     # are computed and assigned.
@@ -47,13 +44,14 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     # (that is, that do not depend on a particular Advisory Record)
     # should be computed here so that they can be stored in the db.
     # Space-efficiency is important.
+
     result.diff = git_commit.get_diff()
     result.hunks = git_commit.get_hunks()
     result.hunk_count = len(result.hunks)
     result.message = git_commit.get_msg()
     result.timestamp = git_commit.get_timestamp()
     result.changed_files = git_commit.get_changed_files()
-
+    result.tags = git_commit.get_tags()
     # TODO extract commit tags
 
     result.jira_refs = list(set(extract_jira_references(result.message)))

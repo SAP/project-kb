@@ -7,7 +7,6 @@ class Commit(BaseModel):
     # class Commit:
     commit_id: str
     repository: str
-    feature_1: Optional[str] = ""
     timestamp: Optional[int] = 0
     hunks: List[List[int]] = Field(default_factory=list)
     hunk_count: Optional[int] = 0
@@ -18,6 +17,7 @@ class Commit(BaseModel):
     jira_refs: List[str] = Field(default_factory=list)
     ghissue_refs: List[str] = Field(default_factory=list)
     cve_refs: List[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
 
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)

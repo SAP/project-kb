@@ -65,16 +65,15 @@ class PostgresCommitDB(CommitDB):
             cur.execute(
                 """
                 INSERT INTO commits
-                    (id, repository, feature_1, timestamp,
+                    (id, repository, timestamp,
                     hunks, hunk_count, message, diff,
                     changed_files, message_reference_content,
-                    jira_refs, ghissue_refs, cve_refs) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    jira_refs, ghissue_refs, cve_refs,tags) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT ON CONSTRAINT commits_pkey DO NOTHING
                 """,
                 (
                     commit_obj.commit_id,
                     commit_obj.repository,
-                    commit_obj.feature_1,
                     commit_obj.timestamp,
                     commit_obj.hunks,
                     commit_obj.hunk_count,
@@ -85,6 +84,7 @@ class PostgresCommitDB(CommitDB):
                     commit_obj.jira_refs,
                     commit_obj.ghissue_refs,
                     commit_obj.cve_refs,
+                    commit_obj.tags,
                 ),
             )
             self.connection.commit()

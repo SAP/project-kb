@@ -7,7 +7,6 @@ DROP TABLE IF EXISTS public.commits;
 CREATE TABLE public.commits (
 	id varchar(40) NOT NULL,
 	repository varchar NOT NULL,
-	feature_1 varchar NULL,
 	timestamp int,
 	-- preprocessed data
 	hunks varchar NULL,
@@ -19,6 +18,7 @@ CREATE TABLE public.commits (
 	jira_refs varchar NULL,
 	ghissue_refs varchar NULL,
 	cve_refs varchar NULL,
+	tags varchar NULL,
 	CONSTRAINT commits_pkey PRIMARY KEY (id, repository)
 );
 CREATE INDEX IF NOT EXISTS commit_index ON public.commits USING btree (id);
