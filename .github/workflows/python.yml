@@ -51,15 +51,19 @@ jobs:
           cd prospector
           pipenv --python 3.8
           pipenv install --dev
-      - name: Lint with flake8
-        run: |
-          #pipenv install flake8
-          cd prospector
-          flake8 . --max-line-length=120
-          # stop the build if there are Python syntax errors or undefined names
-          #flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          #flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: python-flake8
+        # You may pin to the exact commit or the version.
+        # uses: julianwachholz/flake8-action@5f8a6f59421b5bdd857439c9e05984d0017ff6cd
+        uses: julianwachholz/flake8-action@v2.0.0
+        with:
+          # The name of the check to add annotations to. Generally the same as the job that uses this action
+#           checkName: 
+          # Path to use for flake8
+          path: ./prospector
+          # Specify a config file for flake8
+#           config: # optional
+          # Used for internal tests
+#           isTest: # optional, default is false
       - name: Test with pytest
         env:
           GIT_CACHE: "/tmp/git-cache"
