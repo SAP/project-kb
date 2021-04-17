@@ -5,7 +5,6 @@ import argparse
 import configparser
 import logging
 import os
-import pprint
 import sys
 from pathlib import Path
 from pprint import pprint
@@ -13,8 +12,7 @@ from pprint import pprint
 import requests
 
 from client.cli.prospector_client import MAX_CANDIDATES, prospector
-from datamodel.advisory import AdvisoryRecord
-from git.git import GIT_CACHE, Git
+from git.git import GIT_CACHE
 
 logger = logging.getLogger("prospector")
 
@@ -112,7 +110,7 @@ def ping_server(server_url: str, verbose: bool = False):
             print("Server replied with an unexpected status: " + response.status_code)
         else:
             print("Server ok!")
-    except:
+    except Exception:
         print("Server did not reply")
 
 

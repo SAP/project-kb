@@ -44,7 +44,7 @@ def do_update(quiet=False):
             last_fetch_metadata = json.load(f)
             if not quiet:
                 print("[ii] last fetch: " + last_fetch_metadata["sha256"])
-    except:
+    except Exception:
         last_fetch_metadata["sha256"] = ""
         print(
             "[ii] Could not read metadata about previous fetches (this might be the first time we fetch data)."

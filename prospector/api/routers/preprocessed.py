@@ -1,12 +1,15 @@
 import os
-from pprint import pprint
-from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body
-from pydantic import BaseModel, Field
+# from pprint import pprint
+from typing import List
+
+from fastapi import APIRouter
 
 from commitdb.postgres import PostgresCommitDB
 from datamodel.commit import Commit
+
+# from pydantic import BaseModel, Field
+
 
 DB_CONNECT_STRING = "HOST={};DB={};UID={};PWD={};PORT={};".format(
     os.environ["POSTGRES_HOST"],

@@ -156,7 +156,7 @@ def parse_connect_string(connect_string):
         parsed_string = [e.split("=") for e in connect_string.split(";")]
         for key, value in parsed_string:
             result[key.lower()] = value
-    except:
+    except Exception:
         raise Exception("Invalid connect string: " + connect_string)
 
     return dict(result)

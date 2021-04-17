@@ -88,9 +88,9 @@ def extract_cve_references(text: str) -> "list[str]":
     return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}:?", text)]
 
 
-###
-### NOTE: the following might need to be moved closer to datamodel.advisory
-###
+#
+# NOTE: the following might need to be moved closer to datamodel.advisory
+#
 def is_path(token: str) -> bool:
     """
     Checks whether the token is a path

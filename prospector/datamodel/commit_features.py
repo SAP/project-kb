@@ -1,5 +1,3 @@
-from dataclasses import dataclass, field
-
 from pydantic import BaseModel
 
 from datamodel.commit import Commit

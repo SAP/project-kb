@@ -1,12 +1,8 @@
-import base64
-import json
-import pickle
 import sys
 from datetime import datetime
 from pprint import pprint
 
 import requests
-from fastapi.encoders import jsonable_encoder
 from tqdm import tqdm
 
 from commit_processor.preprocessor import preprocess_commit

@@ -76,7 +76,7 @@ class AdvisoryRecord(BaseModel):
                 r["url"] for r in data["cve"]["references"]["reference_data"]
             ]
 
-        except:
+        except Exception:
             print("Could not retrieve vulnerability data from NVD for " + vuln_id)
 
     # """
