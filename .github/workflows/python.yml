@@ -56,8 +56,8 @@ jobs:
         # uses: julianwachholz/flake8-action@5f8a6f59421b5bdd857439c9e05984d0017ff6cd
         uses: julianwachholz/flake8-action@v2
         with:
-          checkName: "Python"
-          path: ./prospector
+          checkName: "Flake8"
+          path: ./prospector/commitdb
 #           config: ./prospector/flake8.ini
         env:
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
