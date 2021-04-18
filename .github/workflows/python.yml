@@ -57,7 +57,7 @@ jobs:
         uses: julianwachholz/flake8-action@v2
         with:
           checkName: "Flake8"
-          path: ./prospector/commitdb
+          path: ./prospector
           config: ./prospector/.flake8
         env:
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
