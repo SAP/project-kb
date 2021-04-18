@@ -60,7 +60,7 @@ jobs:
           path: ./prospector
 #           config: ./prospector/flake8.ini
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
       - name: Test with pytest
         env:
           GIT_CACHE: "/tmp/git-cache"
