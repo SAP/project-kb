@@ -41,3 +41,5 @@ prospector/data/nvd.csv
 prospector/data/*
 prospector/cov_html/*
 prospector/.coverage
+cov_html/*
+.coverage

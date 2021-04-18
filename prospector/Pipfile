@@ -11,6 +11,7 @@ pytest = "*"
 pre-commit = "*"
 pytest-cov = "*"
 pycodestyle = "*"
+flake8 = "*"
 
 [packages]
 numpy = "==1.19.4"
@@ -41,6 +42,7 @@ rq = "==1.8.0"
 plac = "*"
 pytest = "*"
 python-levenshtein = "*"
+typing-extensions = "*"
 
 [requires]
 python_version = "3.8"

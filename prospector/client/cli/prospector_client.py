@@ -1,35 +1,62 @@
+import sys
+from datetime import datetime
 from pprint import pprint
 
+import requests
+from tqdm import tqdm
+
+from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from git.git import GIT_CACHE, Git
+from git.git import GIT_CACHE
+from git.git import Commit as GitCommit
+from git.git import Git
+
+SECS_PER_DAY = 86400
+
+# TODO make this controllable from the client
+TIME_LIMIT_BEFORE = 365 * SECS_PER_DAY
+TIME_LIMIT_AFTER = 90 * SECS_PER_DAY
+
+MAX_CANDIDATES = 1000
 
 
 def prospector(
     vulnerability_id: str,
-    repository: str,
+    repository_url: str,
     publication_date: str = "",
     vuln_descr: str = "",
     use_nvd: bool = False,
     nvd_rest_endpoint: str = "",
     git_cache: str = GIT_CACHE,
     verbose: bool = False,
-    debug: bool = False,
+    debug: bool = True,
+    limit_candidates: int = MAX_CANDIDATES,
 ) -> "list[Commit]":
-    if verbose:
-        debug = True
+
+    if debug:
+        verbose = True
 
     advisory_record = AdvisoryRecord(
-        vulnerability_id,
-        repository,
-        published_timestamp=publication_date,
+        vulnerability_id=vulnerability_id,
+        repository_url=repository_url,
         description=vuln_descr,
         from_nvd=use_nvd,
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    print("Downloading repository {} in {}..".format(repository, git_cache))
-    repository = Git(repository, git_cache)
+    if debug:
+        pprint(advisory_record)
+
+    if publication_date != "":
+        advisory_record.published_timestamp = int(
+            datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
+        )
+
+    advisory_record.analyze(use_nvd=True)
+
+    print("Downloading repository {} in {}..".format(repository_url, git_cache))
+    repository = Git(repository_url, git_cache)
     repository.clone()
     tags = repository.get_tags()
 
@@ -37,15 +64,27 @@ def prospector(
         print("Found tags:")
         print(tags)
 
-    print("Done")
+    print("Done retrieving %s" % repository_url)
 
-    # STEP 1: filter based on commit size
+    # STEP 1: filter based on time and on file extensions
+    if advisory_record.published_timestamp:
+        since = advisory_record.published_timestamp - TIME_LIMIT_BEFORE
+        until = advisory_record.published_timestamp + TIME_LIMIT_AFTER
+        candidates = repository.get_commits(since=since, until=until, filter_files="")
+    else:
+        candidates = repository.get_commits()
 
-    # STEP 2: filter based on time
+    if debug:
+        print("Collected %d candidates" % len(candidates))
 
-    # STEP 3: filter based on file extensions
+    if len(candidates) > limit_candidates:
+        print("Number of candidates exceeds %d, aborting." % limit_candidates)
+        sys.exit(-1)
 
-    # TODO take some code from legacy filter.py
+    preprocessed_commits: "list[GitCommit]" = []
+    pbar = tqdm(candidates)
+    for commit_id in pbar:
+        preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
     # adv_processor = AdvisoryProcessor()
     # advisory_record = adv_processor.process(advisory_record)
@@ -53,74 +92,20 @@ def prospector(
     if debug:
         pprint(advisory_record)
 
-    return []
+    if verbose:
+        print("preprocessed %d commits" % len(preprocessed_commits))
 
+    payload = [c.__dict__ for c in preprocessed_commits]
 
-def select_commit_ids_based_on_vulnerability_publish_date(
-    vulnerability_published_timestamp,
-    git_repo=None,
-    repo_url=None,
-    days_before=730,
-    days_after=100,
-    commits_before_cap=5215,
-    commits_after_cap=100,
-):
-    """
-    To select commit IDs based on the vulnerability publish date.
-    This can be used as a starting position for the search for fix commits.
+    # TODO read backend address from config file
+    r = requests.post("http://localhost:8000/commits/", json=payload)
+    print("Status: %d" % r.status_code)
 
-    Input:
-        vulnerability_published_timestamp (int): the timestamp at which the vulnerability is been published i.e. in the NVD
-        git_repo (git_explorer.core.Git): to use for extracting the content
-        repository_url: if git_repo is not provided, a repository url is needed to initialize the git_repo
-        days_before (int): the maximum number of days before the release timestamp (edge)
-        days_after (int): the maximum number of days after the release timestamp (edge)
-        commits_before_cap (int): the maximum number of commits before the release timestamp (edge)
-        commits_after_cap (int): the maximum number of commits after the release timestamp (edge)
+    # TODO compute actual rank
+    # This is done by a POST request that creates a "search" job
+    # whose inputs are the AdvisoryRecord, and the repository URL
+    # The API returns immediately indicating a job id. From this
+    # id, a URL can be constructed to poll the results asynchronously.
+    ranked_results = candidates
 
-    Returns:
-        list: a list of commit IDs within the interval
-    """
-
-    if git_repo == None:
-        try:
-            git_repo = Git(repo_url, cache_path=GIT_CACHE)
-            git_repo.clone(skip_existing=True)
-        except:
-            raise TypeError(
-                "git-repo should be of type git_explorer.core.Git, not {}, or repo_url should be a valid github repository url.".format(
-                    type(git_repo)
-                )
-            )
-
-    ### Add commits before NVD release
-    since, until = database.timestamp_to_timestamp_interval(
-        int(vulnerability_published_timestamp), days_before=days_before, days_after=0
-    )
-    commit_ids_to_add_before = database.get_commit_ids_between_timestamp_interval(
-        str(since), str(until), git_repo=git_repo, repository_url=repo_url
-    )
-
-    # maximum to add
-    if len(commit_ids_to_add_before) > commits_before_cap:
-        commit_ids_to_add_before = commit_ids_to_add_before[
-            :commits_before_cap
-        ]  # add the 5215 closest before the NVD release date
-
-    ### Add commits after NVD release
-    since, until = database.timestamp_to_timestamp_interval(
-        int(vulnerability_published_timestamp), days_before=0, days_after=days_after
-    )
-    commit_ids_to_add_after = database.get_commit_ids_between_timestamp_interval(
-        str(since), str(until), git_repo=git_repo, repository_url=repo_url
-    )
-
-    # maximum to add
-    if len(commit_ids_to_add_after) > commits_after_cap:
-        commit_ids_to_add_after = commit_ids_to_add_after[
-            -commits_after_cap:
-        ]  # add the 100 closest before the NVD release date
-
-    commit_ids = commit_ids_to_add_before + commit_ids_to_add_after
-
-    return commit_ids
+    return ranked_results
