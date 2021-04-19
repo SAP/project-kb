@@ -1,15 +1,14 @@
 # flake8: noqa
 
-# import logging
+import logging
 import multiprocessing
 import os
 import random
-
-# import re
+import re
 import subprocess
 import sys
 
-# import sh
+import sh
 from tqdm import tqdm
 
 from . import utils

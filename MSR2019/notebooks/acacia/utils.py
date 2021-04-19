@@ -1,10 +1,9 @@
 # flake8: noqa
 
-# import logging
-# import re
+import logging
+import re
 import subprocess
-
-# import traceback
+import traceback
 from datetime import datetime
 
 # def execute_wait(cmd, cwd='/tmp', encoding='latin-1', timeout=None):

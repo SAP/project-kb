@@ -3,12 +3,10 @@
 import os
 import sys
 from datetime import datetime
+from pprint import pprint
 
 import plac
 from acacia import git, utils
-
-# from pprint import pprint
-
 
 GIT_CACHE = "/tmp/git-cache-3"
 
