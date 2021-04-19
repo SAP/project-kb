@@ -1,6 +1,8 @@
+import random
+
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from filter_rank.utils.model_loader import save_model
+from filter_rank.utils.model_loader import save_model, load_model
 from filter_rank import TRAINING_DATA, NUM_ELEMENTS_TRAINING_DATA
 
 import re
@@ -18,12 +20,29 @@ def filter_commits(adv_record: AdvisoryRecord, candidates: "list[Commit]") -> "l
     return candidates
 
 
-def rank(adv_record: AdvisoryRecord, candidates: "list[Commit]") -> "list[Commit]":
+def rank(adv_record: AdvisoryRecord, candidates: "list[Commit]", model_name: str) -> "list[Commit]":
     """
     Takes in input a set of candidates and associates to each of them a rank (ordering) and
     a ranking vector, based on how good they match with the advisory record in input.
+    Returns the initial list of commits in the order of their ranks
     """
-    return candidates
+    scores = []
+    for candidate in candidates:
+        scores.append((predict(model_name, candidate), candidate))
+
+    return [c for _,c in sorted(scores, reverse=True)]
+
+
+def predict(model_name: str, commit: Commit) -> float:
+    """
+    The function computes the similarity score for the given commit
+    """
+    model = load_model(model_name)
+
+    # compute the actual value here
+    # value = model.predict(commit)
+
+    return random.random()*2 - 1  # currently, I am simply returning a random value in the range [-1; 1]
 
 
 def train(model_name: str, data_filename=TRAINING_DATA, num_elem_training_data=NUM_ELEMENTS_TRAINING_DATA) -> str:
