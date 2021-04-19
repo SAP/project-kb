@@ -1,5 +1,5 @@
 [flake8]
-ignore = E501
+ignore = E203, E501, W503
 exclude =
     # No need to traverse our git directory
     .git,
@@ -13,4 +13,5 @@ exclude =
     build,
     # This contains builds of flake8 that we don't want to check
     dist
-max-complexity = 10
+max-complexity = 12
+max-line-length = 100
