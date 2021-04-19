@@ -58,16 +58,11 @@ class PostgresCommitDB(CommitDB):
 
         try:
             cur = self.connection.cursor()
-
-            # NOTE: if the repo-commit pair exists, this does nothing
-            # Therefore, to update a record, it must be removed explicitly first
-            # TODO change this so that the record is updated instead
             cur.execute(
-                """
-                INSERT INTO commits
-                    (
+                """INSERT INTO commits(
                     id,
                     repository,
+                    feature_1,
                     timestamp,
                     hunks,
                     hunk_count,
@@ -79,9 +74,31 @@ class PostgresCommitDB(CommitDB):
                     ghissue_refs,
                     cve_refs,
                     tags)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT ON CONSTRAINT commits_pkey DO NOTHING
-                """,
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET (
+                        feature_1,
+                        timestamp,
+                        hunks,
+                        hunk_count,
+                        message,
+                        diff,
+                        changed_files,
+                        message_reference_content,
+                        jira_refs,
+                        ghissue_refs,
+                        cve_refs) = (
+                            EXCLUDED.feature_1,
+                            EXCLUDED.timestamp,
+                            EXCLUDED.hunks,
+                            EXCLUDED.hunk_count,
+                            EXCLUDED.message,
+                            EXCLUDED.diff,
+                            EXCLUDED.changed_files,
+                            EXCLUDED.message_reference_content,
+                            EXCLUDED.jira_refs,
+                            EXCLUDED.ghissue_refs,
+                            EXCLUDED.cve_refs,
+                            EXCLUDED.tags)""",
                 (
                     commit_obj.commit_id,
                     commit_obj.repository,
