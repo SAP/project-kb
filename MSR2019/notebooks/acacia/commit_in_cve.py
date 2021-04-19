@@ -1,3 +1,5 @@
+# flake8: noqa
+
 # from acacia import git, utils
 import os
 import sys
