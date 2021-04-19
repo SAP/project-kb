@@ -6,7 +6,6 @@ def test_simple():
     commit = Commit(
         commit_id="abcd",
         repository="https://github.com/abc/xyz",
-        feature_1="X",
         timestamp="124234125",
     )
     commit_features = CommitFeatures(commit=commit, references_vuln_id=True)
