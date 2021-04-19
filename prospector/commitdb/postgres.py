@@ -84,7 +84,8 @@ class PostgresCommitDB(CommitDB):
                         message_reference_content,
                         jira_refs,
                         ghissue_refs,
-                        cve_refs) = (
+                        cve_refs,
+                        tags) = (
                             EXCLUDED.timestamp,
                             EXCLUDED.hunks,
                             EXCLUDED.hunk_count,
