@@ -51,16 +51,10 @@ jobs:
           cd prospector
           pipenv --python 3.8
           pipenv install --dev
-      - name: python-flake8
-        # You may pin to the exact commit or the version.
-        # uses: julianwachholz/flake8-action@5f8a6f59421b5bdd857439c9e05984d0017ff6cd
-        uses: julianwachholz/flake8-action@v2
+      - name: Flake8
+        uses: TrueBrain/actions-flake8@master
         with:
-          checkName: "Flake8"
-          path: ./prospector
-          config: ./prospector/.flake8
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
+          path: prospector
       - name: Test with pytest
         env:
           GIT_CACHE: "/tmp/git-cache"
