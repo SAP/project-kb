@@ -21,11 +21,13 @@ def candidates():
 def test_filter(candidates):
     ar = AdvisoryRecord("CVE-xxxx-yyyy")
     result = filter_commits(ar, candidates)
+    assert isinstance(result, list)
 
 
 def test_rank(candidates):
     ar = AdvisoryRecord("CVE-xxxx-yyyy")
     result = rank(ar, candidates)
+    assert isinstance(result, list)
 
 
 def test_train():

@@ -71,12 +71,12 @@ def make_dataframe(data_filename=TRAINING_DATA, num_elem_training_data=NUM_ELEME
                     print('[SKIPPING] A problem occurred while reading line {}'.format(count))
                     print(str(line))
                     continue
-                cve_id = line[0]
+                # cve_id = line[0]
                 repo = line[1]
                 commit_id = line[2]
-                dash = line[3]  # column 3
-                technologies = [line[tech] for tech in range(4, len(line) - 1)]  # column 4
-                classification = line[-1]
+                # dash = line[3]  # column 3
+                # technologies = [line[tech] for tech in range(4, len(line) - 1)]  # column 4
+                # classification = line[-1]
 
                 commits.append([commit_id, repo])
                 #   if (commit_id,repo) not found in commitdb:
