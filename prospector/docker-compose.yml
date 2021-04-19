@@ -1,9 +1,27 @@
 version: "3.1"
 
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    ports:
+      - "8000:80"
+    depends_on:
+      - redis
+      - db
+    environment:
+      GIT_CACHE: /tmp
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DBNAME: postgres
+
   worker:
     build:
-      context: worker
+      context: docker/worker
       dockerfile: Dockerfile
     volumes:
       - .:/pythonimports
@@ -16,6 +34,7 @@ services:
 
   db:
     image: postgres
+    container_name: db
     restart: always
     ports:
       - "5432:5432"
