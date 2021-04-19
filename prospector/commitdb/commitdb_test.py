@@ -83,7 +83,6 @@ def test_simple_read(setupdb):
     )
     result = db.lookup(commit_obj)
     print(result)
-    db.reset()  # remove garbage added by tests from DB
     assert result is not None
 
 
@@ -106,6 +105,9 @@ def test_upsert(setupdb):
         tags=["tag1"],
     )
     db.save(commit_obj)
+    result = db.lookup(commit_obj)
+    assert result is not None
+    db.reset()  # remove garbage added by tests from DB
 
 
 def test_parse_connect_string():
