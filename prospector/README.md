@@ -23,8 +23,8 @@ The easiest way to set up Prospector is to clone this repository and then run th
 
 ```
 git clone https://github.com/sap/project-kb
-cd project-kb/prospector
 git checkout prospector-assuremoss
+cd project-kb/prospector
 cp .env-sample .env
 ```
 
