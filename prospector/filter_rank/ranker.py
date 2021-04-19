@@ -44,7 +44,7 @@ def train(model_name: str, data_filename=TRAINING_DATA, num_elem_training_data=N
     # fit(dataframe) --> model
     # compute metrics
     # save model to disk (file: model_name)
-    df = _get_training_dataframe(data_filename, num_elem_training_data)
+    df = make_dataframe(data_filename, num_elem_training_data)
     if df is None:
         return ""  # Special case, when returned dataframe is None
 
@@ -54,7 +54,7 @@ def train(model_name: str, data_filename=TRAINING_DATA, num_elem_training_data=N
     return save_model(model, model_name)
 
 
-def _get_training_dataframe(data_filename=TRAINING_DATA, num_elem_training_data=NUM_ELEMENTS_TRAINING_DATA):
+def make_dataframe(data_filename=TRAINING_DATA, num_elem_training_data=NUM_ELEMENTS_TRAINING_DATA):
     """
     This is the helper function to construct the pandas dataframe object for the training data.
     It returns pandas dataframe if succeeds and None otherwise

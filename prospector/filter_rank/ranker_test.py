@@ -5,7 +5,7 @@ import pandas as pd
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
-from filter_rank.ranker import filter_commits, rank, train, _get_training_dataframe
+from filter_rank.ranker import filter_commits, rank, train, make_dataframe
 
 
 @pytest.fixture
@@ -37,5 +37,5 @@ def test_train():
 
 
 def test_get_training_dataframe():
-    df = _get_training_dataframe()
+    df = make_dataframe()
     assert isinstance(df, pd.DataFrame)
