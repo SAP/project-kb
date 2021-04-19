@@ -2,7 +2,7 @@ import random
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from filter_rank.utils.model_loader import save_model, load_model
+from filter_rank.utils.model_loader import save_model
 from filter_rank import TRAINING_DATA, NUM_ELEMENTS_TRAINING_DATA
 
 import re
