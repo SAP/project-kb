@@ -26,8 +26,12 @@ git clone https://github.com/sap/project-kb
 cd project-kb/prospector
 git checkout prospector-assuremoss
 echo "GIT_CACHE=/tmp/git-cache" > .env
-echo "PYTHONPATH=." >> .env
-echo "POSTGRES_PASSWORD=example" >> .env
+cp .env-sample .env
+```
+
+Modify the `.env` file as you see fit, then continue with:
+
+```
 mkdir /tmp/git-cache
 pipenv --python 3.8
 pipenv install --dev
