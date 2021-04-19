@@ -31,7 +31,8 @@ cp .env-sample .env
 Modify the `.env` file as you see fit, then continue with:
 
 ```
-mkdir /tmp/git-cache
+source .env
+mkdir -p $GIT_CACHE
 pipenv --python 3.8
 pipenv install --dev
 pre-commit install
