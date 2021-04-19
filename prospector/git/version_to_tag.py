@@ -3,6 +3,8 @@
 # The following functions implement the heuristic to map a string version
 # such as "2.3.35" onto a tag such as "STRUTS_2_3_35"
 
+# flake8: noqa
+
 import difflib
 
 # pylint: disable=singleton-comparison,unidiomatic-typecheck, dangerous-default-value

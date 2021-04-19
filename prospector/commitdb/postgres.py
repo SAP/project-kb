@@ -59,13 +59,32 @@ class PostgresCommitDB(CommitDB):
         try:
             cur = self.connection.cursor()
 
-            # TODO sanitize inputs
+            # NOTE: if the repo-commit pair exists, this does nothing
+            # Therefore, to update a record, it must be removed explicitly first
+            # TODO change this so that the record is updated instead
             cur.execute(
-                "INSERT INTO commits (id, repository, feature_1, timestamp, hunks, hunk_count, message, diff, changed_files, message_reference_content, jira_refs, ghissue_refs, cve_refs) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                """
+                INSERT INTO commits
+                    (
+                    id,
+                    repository,
+                    timestamp,
+                    hunks,
+                    hunk_count,
+                    message,
+                    diff,
+                    changed_files,
+                    message_reference_content,
+                    jira_refs,
+                    ghissue_refs,
+                    cve_refs,
+                    tags)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT ON CONSTRAINT commits_pkey DO NOTHING
+                """,
                 (
                     commit_obj.commit_id,
                     commit_obj.repository,
-                    commit_obj.feature_1,
                     commit_obj.timestamp,
                     commit_obj.hunks,
                     commit_obj.hunk_count,
@@ -76,12 +95,13 @@ class PostgresCommitDB(CommitDB):
                     commit_obj.jira_refs,
                     commit_obj.ghissue_refs,
                     commit_obj.cve_refs,
+                    commit_obj.tags,
                 ),
             )
             self.connection.commit()
         except Exception as exception:
             print(exception)
-            raise Exception("Could not save commit vector to database")
+            # raise Exception("Could not save commit vector to database")
 
     def reset(self):
         """
@@ -147,7 +167,7 @@ def parse_connect_string(connect_string):
         parsed_string = [e.split("=") for e in connect_string.split(";")]
         for key, value in parsed_string:
             result[key.lower()] = value
-    except:
+    except Exception:
         raise Exception("Invalid connect string: " + connect_string)
 
     return dict(result)

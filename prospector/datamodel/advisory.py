@@ -1,40 +1,43 @@
 # from typing import Tuple
+# from datamodel import BaseModel
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List, Optional
 
 import requests
+from pydantic import BaseModel, Field
 
-from commit_preprocessor.constants import RELEVANT_EXTENSIONS
-
-# from . import BaseModel
+from commit_processor.constants import RELEVANT_EXTENSIONS
 
 # TODO use prospector own NVD feed endpoint
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
 
 
-@dataclass
-class AdvisoryRecord:
+class AdvisoryRecord(BaseModel):
     """
     The advisory record captures all relevant information on the vulnerability advisory
     """
 
     vulnerability_id: str
     repository_url: str = ""
-    published_timestamp: str = ""
-    last_modified_timestamp: str = ""
-    references: "list[str]" = field(default_factory=list)
-    references_content: "list[str]" = field(default_factory=list)
-    advisory_references: "list[str]" = field(default_factory=list)
-    affected_products: "list[str]" = field(default_factory=list)
-    description: str = ""
+    published_timestamp: int = ""
+    last_modified_timestamp: int = ""
+    references: List[str] = Field(default_factory=list)
+    references_content: List[str] = Field(default_factory=list)
+    advisory_references: List[str] = Field(default_factory=list)
+    affected_products: List[str] = Field(default_factory=list)
+    description: Optional[str] = ""
     preprocessed_vulnerability_description: str = ""
-    relevant_tags: "list[str]" = None
-    versions: "list[str]" = field(default_factory=list)
+    relevant_tags: List[str] = None
+    versions: List[str] = Field(default_factory=list)
     from_nvd: bool = False
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
-    paths: "list[str]" = field(default_factory=list)
+    paths: List[str] = Field(default_factory=list)
 
-    def __post_init__(self):
+    def analyze(self, use_nvd: bool = False):
+        self.from_nvd = use_nvd
+
         if self.from_nvd:
             self._get_from_nvd(self.vulnerability_id, self.nvd_rest_endpoint)
 
@@ -55,8 +58,17 @@ class AdvisoryRecord:
             if response.status_code != 200:
                 return
             data = response.json()["result"]["CVE_Items"][0]
-            self.published_timestamp = data["publishedDate"]
-            self.last_modified_timestamp = data["lastModifiedDate"]
+            self.published_timestamp = int(
+                datetime.strptime(
+                    data["publishedDate"], r"%Y-%m-%dT%H:%M%z"
+                ).timestamp()
+            )
+            self.last_modified_timestamp = int(
+                datetime.strptime(
+                    data["lastModifiedDate"], r"%Y-%m-%dT%H:%M%z"
+                ).timestamp()
+            )
+
             self.description = data["cve"]["description"]["description_data"][0][
                 "value"
             ]
@@ -64,7 +76,7 @@ class AdvisoryRecord:
                 r["url"] for r in data["cve"]["references"]["reference_data"]
             ]
 
-        except:
+        except Exception:
             print("Could not retrieve vulnerability data from NVD for " + vuln_id)
 
     # """

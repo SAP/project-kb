@@ -14,8 +14,8 @@ router = APIRouter(
     prefix="/jobs", tags=["jobs"], responses={404: {"description": "Not found"}},
 )
 
+
 # -----------------------------------------------------------------------------
-#
 @router.post("/clone", tags=["jobs"])
 async def create_clone_job(repository):
     with Connection(redis.from_url(redis_url)):

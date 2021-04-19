@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 
 import difflib
 import hashlib
@@ -226,10 +227,10 @@ class Git:
             cmd = ["git", "rev-list"]
 
         if since:
-            cmd.append("--since=" + since)
+            cmd.append("--since=" + str(since))
 
         if until:
-            cmd.append("--until=" + until)
+            cmd.append("--until=" + str(until))
 
         if ancestors_of:
             cmd.append(ancestors_of)
@@ -379,7 +380,7 @@ class Commit:
                 )
         return self._attributes["msg"]
 
-    def get_diff(self, context_size=1, filter_files=""):
+    def get_diff(self, context_size: int = 1, filter_files: str = ""):
         if "diff" not in self._attributes:
             self._attributes["diff"] = ""
             try:

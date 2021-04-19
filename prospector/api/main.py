@@ -10,18 +10,21 @@ from commitdb.postgres import PostgresCommitDB
 from datamodel.commit import Commit
 
 # from .dependencies import oauth2_scheme
-from .routers import jobs, nvd, users
+from .routers import jobs, nvd, preprocessed, users
 
 # from pprint import pprint
 
 
-db_pass = os.environ["POSTGRES_PASSWORD"]
-connect_string = "HOST=localhost;DB=postgres;UID=postgres;PWD={};PORT=5432;".format(
-    db_pass
+DB_CONNECT_STRING = "HOST={};DB={};UID={};PWD={};PORT={};".format(
+    os.environ["POSTGRES_HOST"],
+    os.environ["POSTGRES_DBNAME"],
+    os.environ["POSTGRES_USER"],
+    os.environ["POSTGRES_PASSWORD"],
+    os.environ["POSTGRES_PORT"],
 )
 
 db = PostgresCommitDB()
-db.connect(connect_string)
+db.connect(DB_CONNECT_STRING)
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},
@@ -48,6 +51,8 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(jobs.router)
 app.include_router(nvd.router)
+app.include_router(preprocessed.router)
+
 
 # -----------------------------------------------------------------------------
 # Data here refers to training data, used to train ML models
@@ -108,7 +113,8 @@ async def read_items():
     #     </head>
     #     <body>
     #         <h1>Prospector API</h1>
-    #         Click <a href="/docs">here</a> for docs and here for <a href="/openapi.json">OpenAPI specs</a>.
+    #         Click <a href="/docs">here</a> for docs and here for
+    #         <a href="/openapi.json">OpenAPI specs</a>.
     #     </body>
     # </html>
     # """
