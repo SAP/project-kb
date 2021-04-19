@@ -62,7 +62,6 @@ class PostgresCommitDB(CommitDB):
                 """INSERT INTO commits(
                     id,
                     repository,
-                    feature_1,
                     timestamp,
                     hunks,
                     hunk_count,
@@ -74,9 +73,8 @@ class PostgresCommitDB(CommitDB):
                     ghissue_refs,
                     cve_refs,
                     tags)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET (
-                        feature_1,
                         timestamp,
                         hunks,
                         hunk_count,
@@ -87,7 +85,6 @@ class PostgresCommitDB(CommitDB):
                         jira_refs,
                         ghissue_refs,
                         cve_refs) = (
-                            EXCLUDED.feature_1,
                             EXCLUDED.timestamp,
                             EXCLUDED.hunks,
                             EXCLUDED.hunk_count,
@@ -142,34 +139,6 @@ class PostgresCommitDB(CommitDB):
 
         cursor = self.connection.cursor()
         cursor.execute(ddl)
-        # cursor.execute("DROP TABLE IF EXISTS commits;")
-        # cursor.execute(
-        #     """CREATE TABLE commits (
-        #     id varchar(40),
-        #     repository varchar,
-        #     feature_1 varchar,
-        #     feature_2 varchar,
-        #     timestamp text,
-        #     message varchar,
-        #     changed_files varchar,
-        #     diff varchar,
-        #     hunks varchar,
-        #     commit_message_reference_content varchar,
-        #     preprocessed_message varchar,
-        #     preprocessed_diff varchar,
-        #     preprocessed_changed_files varchar,
-        #     preprocessed_commit_message_reference_content varchar,
-        #     PRIMARY KEY (id, repository)
-        # )"""
-        # )
-
-        # cursor.execute("CREATE INDEX IF NOT EXISTS commit_index ON commits(id)")
-        # cursor.execute(
-        #     "CREATE INDEX IF NOT EXISTS repository_index ON commits(repository)"
-        # )
-        # cursor.execute(
-        #     "CREATE UNIQUE INDEX IF NOT EXISTS commit_repository_index ON commits(id, repository)"
-        # )
         self.connection.commit()
 
         cursor.close()
