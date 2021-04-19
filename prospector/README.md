@@ -83,6 +83,12 @@ This also starts a convenient DB administration tool at http://localhost:8080
 You can then point your browser to `http://127.0.0.1:8000` to access the API.
 You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
+*Alternatively*, you can execute the RESTful server explicitly with:
+
+`python api/main.py`
+
+which is equivalent but more convenient for debugging.
+
 ## Using the CLI
 
 Try the following example:
