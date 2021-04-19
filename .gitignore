@@ -30,3 +30,6 @@ prospector/.env
 prospector/workspace.code-workspace
 prospector/.env
 .vscode/settings.json
+cov_html/**
+.coverage
+prospector/cov_html/**
