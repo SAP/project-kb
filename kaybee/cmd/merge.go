@@ -17,13 +17,8 @@ import (
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
 	Short: "Merges statements from local clones of upstream source repositories",
-	Long: `(CAUTION! OBSOLETE DESCRIPTION) Displays from a list of different source repositories a table of
-cves which are possibly conflicting, attempts a soft merge and displays
-each as mergeable or not along with the conflicting slices.
-
-	kbsync merge -r [REPO_URL_1] -r [REPO_URL_2] -r ...
-`,
-	Run: doMerge,
+	Long:  `Merges statements from local clones of upstream source repositories`,
+	Run:   doMerge,
 }
 
 var (

@@ -7,6 +7,7 @@ import (
 
 	"github.com/sap/project-kb/kaybee/internal/conf"
 	"github.com/sap/project-kb/kaybee/internal/model"
+	"github.com/sap/project-kb/kaybee/internal/reconcile"
 	"github.com/sap/project-kb/kaybee/internal/repository"
 )
 
@@ -14,9 +15,11 @@ import (
 // conflicts using a set of pre-defined policies.
 type MergeTask struct {
 	BaseTask
-	policy  model.Policy
+	policy  reconcile.Policy
 	sources []conf.Source
 }
+
+const mergeLogDir = ".kaybee/merged/"
 
 // NewMergeTask constructs a new MergeTask
 func NewMergeTask() (mergeTask *MergeTask) {
@@ -32,14 +35,19 @@ func (t *MergeTask) WithPolicy(p conf.Policy) *MergeTask {
 		if t.verbose {
 			fmt.Println("Using policy: STRICT")
 		}
-		t.policy = model.NewStrictPolicy()
+		t.policy = reconcile.NewStrictPolicy()
+	case conf.Interactive:
+		if t.verbose {
+			fmt.Println("Using policy: INTERACTIVE")
+		}
+		t.policy = reconcile.NewInteractivePolicy()
 	case conf.Soft:
 		if t.verbose {
 			fmt.Println("Using policy: SOFT")
 		}
-		t.policy = model.NewSoftPolicy()
+		t.policy = reconcile.NewSoftPolicy()
 	default:
-		log.Fatalf("Invalid merge policy -- ABORTING")
+		log.Fatalf("**Invalid merge policy: " + p.String() + " -- ABORTING")
 	}
 	return t
 }
@@ -51,7 +59,7 @@ func (t *MergeTask) WithSources(sources []conf.Source) *MergeTask {
 }
 
 func (t *MergeTask) validate() (ok bool) {
-	if (t.policy == model.Policy{}) {
+	if (t.policy == reconcile.Policy{}) {
 		log.Fatalln("Invalid policy. Aborting.")
 		return false
 	}
@@ -107,20 +115,20 @@ func (t *MergeTask) Execute() (success bool) {
 	}
 
 	// fmt.Printf("Merged:\n%v", mergedStatements)
-	os.RemoveAll(".kaybee/merged/")
+	os.RemoveAll(mergeLogDir)
 
 	for _, st := range mergedStatements {
 		// log.Printf("%+v\n", st)
 		if len(st) != 1 {
 			log.Fatal("WEIRD! After merging, there are still multiple statements for the same vulnerability!")
 		}
-		st[0].ToFile(".kaybee/merged/")
+		st[0].ToFile(mergeLogDir)
 	}
 
 	fmt.Printf("Merged %d sources (%d statements): yielded %d statements.\n", len(t.sources), inputStatementCount, len(mergedStatements))
 
-	os.MkdirAll(".kaybee/merged/", os.ModePerm)
-	mergeLog.Dump(".kaybee/merged/")
+	os.MkdirAll(mergeLogDir, os.ModePerm)
+	mergeLog.Dump(mergeLogDir)
 
 	// if verbose {
 	// 	fmt.Println("Merge log:")

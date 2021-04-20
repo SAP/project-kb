@@ -45,8 +45,7 @@ const (
 	None Policy = iota
 	Strict
 	Soft
-	Latest
-	Oldest
+	Interactive
 )
 
 // PolicyFromString converts a policy name into a Policy instance
@@ -57,10 +56,9 @@ func PolicyFromString(p string) Policy {
 		return Strict
 	case "soft":
 		return Soft
-	case "latest":
-		return Latest
-	case "oldest":
-		return Oldest
+	case "interactive":
+		return Interactive
+
 	}
 	return None
 }
@@ -71,10 +69,9 @@ func (p Policy) String() string {
 		return "Strict"
 	case Soft:
 		return "Soft"
-	case Latest:
-		return "Latest"
-	case Oldest:
-		return "Oldest"
+	case Interactive:
+		return "Interactive"
+
 	}
 	return "None"
 }

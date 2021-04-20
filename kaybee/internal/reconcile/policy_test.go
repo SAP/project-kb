@@ -1,25 +1,27 @@
-package model
+package reconcile
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/sap/project-kb/kaybee/internal/model"
 )
 
 var (
-	s1 Statement = Statement{
+	s1 model.Statement = model.Statement{
 		VulnerabilityID: "cve_id1",
-		Aliases: []Alias{
+		Aliases: []model.Alias{
 			"bug-01",
 			"bug-02",
 		},
-		Notes: []Note{
+		Notes: []model.Note{
 			{Links: []string{"ref_1"}, Text: "Text_1"},
 			{Links: []string{"ref_2"}, Text: "Text_2"},
 		},
-		Fixes: []Fix{
+		Fixes: []model.Fix{
 			{
 				ID: "DEFAULT_BRANCH",
-				Commits: []Commit{
+				Commits: []model.Commit{
 					{
 						ID:            "abcd1234",
 						RepositoryURL: "https://github.com/abc/def",
@@ -27,22 +29,22 @@ var (
 				},
 			},
 		},
-		Metadata: Metadata{
+		Metadata: model.Metadata{
 			Origin:     "contrib_1",
 			OriginRank: 3,
 		},
 	}
 
-	s2 Statement = Statement{
+	s2 model.Statement = model.Statement{
 		VulnerabilityID: "cve_id2",
-		Notes: []Note{
+		Notes: []model.Note{
 			{Links: []string{"ref_1"}, Text: "Text_1"},
 			{Links: []string{"ref_2"}, Text: "Text_2"},
 		},
-		Fixes: []Fix{
+		Fixes: []model.Fix{
 			{
 				ID: "DEFAULT_BRANCH",
-				Commits: []Commit{
+				Commits: []model.Commit{
 					{
 						ID:            "abcd1234",
 						RepositoryURL: "https://github.com/abc/def",
@@ -52,19 +54,19 @@ var (
 		},
 	}
 
-	s3 Statement = Statement{
+	s3 model.Statement = model.Statement{
 		VulnerabilityID: "cve_id3",
-		Aliases: []Alias{
+		Aliases: []model.Alias{
 			"bug-A",
 		},
-		Notes: []Note{
+		Notes: []model.Note{
 			{Links: []string{"ref_1"}, Text: "Text_3"},
 			{Links: []string{"ref_2"}, Text: "Text_5"},
 		},
-		Fixes: []Fix{
+		Fixes: []model.Fix{
 			{
 				ID: "DEFAULT_BRANCH",
-				Commits: []Commit{
+				Commits: []model.Commit{
 					{
 						ID:            "abcd1234",
 						RepositoryURL: "https://github.com/abc/def",
@@ -74,20 +76,20 @@ var (
 		},
 	}
 
-	s4 Statement = Statement{
+	s4 model.Statement = model.Statement{
 		VulnerabilityID: "cve_id1",
-		Aliases: []Alias{
+		Aliases: []model.Alias{
 			"bug-A",
 			"bug-B",
 		},
-		Notes: []Note{
+		Notes: []model.Note{
 			{Links: []string{"ref_8"}, Text: "Text_8"},
 			{Links: []string{"ref_6"}, Text: "Text_6"},
 		},
-		Fixes: []Fix{
+		Fixes: []model.Fix{
 			{
 				ID: "2.x",
-				Commits: []Commit{
+				Commits: []model.Commit{
 					{
 						ID:            "abcd1234",
 						RepositoryURL: "https://github.com/abc/def",
@@ -103,25 +105,25 @@ var (
 				},
 			},
 		},
-		Metadata: Metadata{
+		Metadata: model.Metadata{
 			Origin:     "repo_1",
 			OriginRank: 3,
 			Branch:     "master",
 		},
 	}
 
-	s5 Statement = Statement{
+	s5 model.Statement = model.Statement{
 		VulnerabilityID: "cve_id5",
-		Notes: []Note{
+		Notes: []model.Note{
 			{Links: []string{"ref_1"}, Text: "Text_1"},
 			{Links: []string{"ref_2"}, Text: "Text_2"},
 			{Links: []string{"ref_3"}, Text: "Text_3"},
 			{Links: []string{"ref_4"}, Text: "Text_4"},
 		},
-		Fixes: []Fix{
+		Fixes: []model.Fix{
 			{
 				ID: "DEFAULT_BRANCH",
-				Commits: []Commit{
+				Commits: []model.Commit{
 					{
 						ID:            "abcd1234",
 						RepositoryURL: "https://github.com/abc/def",
@@ -129,26 +131,26 @@ var (
 				},
 			},
 		},
-		Metadata: Metadata{
+		Metadata: model.Metadata{
 			Origin:     "repo_2",
 			OriginRank: 4,
 			Branch:     "master",
 		},
 	}
 
-	s6 Statement = Statement{
+	s6 model.Statement = model.Statement{
 		VulnerabilityID: "cve_id6",
-		Notes: []Note{
+		Notes: []model.Note{
 			{Links: []string{"ref_1"}, Text: "Text_1000"},
 			{Links: []string{"ref_2"}, Text: "Text_2000"},
 			{Links: []string{"ref_3"}, Text: "Text_3"},
 			{Links: []string{"ref_4"}, Text: "Text_4"},
 			{Links: []string{"ref_5"}, Text: "Text_5"},
 		},
-		Fixes: []Fix{
+		Fixes: []model.Fix{
 			{
 				ID: "DEFAULT_BRANCH",
-				Commits: []Commit{
+				Commits: []model.Commit{
 					{
 						ID:            "abcd1234",
 						RepositoryURL: "https://github.com/abc/def",
@@ -156,7 +158,7 @@ var (
 				},
 			},
 		},
-		Metadata: Metadata{
+		Metadata: model.Metadata{
 			Origin:     "repo_3",
 			OriginRank: 6,
 			LocalPath:  "repo_3",
@@ -166,7 +168,7 @@ var (
 )
 
 func TestSoftPolicy(t *testing.T) {
-	statementsToMerge := map[string][]Statement{
+	statementsToMerge := map[string][]model.Statement{
 		s1.VulnerabilityID: {s1},
 		s2.VulnerabilityID: {s2},
 		s3.VulnerabilityID: {s3},
@@ -200,7 +202,7 @@ func TestSoftPolicy(t *testing.T) {
 func TestStrictPolicy(t *testing.T) {
 	var s Policy
 	s = NewStrictPolicy()
-	statementsToMerge := map[string][]Statement{
+	statementsToMerge := map[string][]model.Statement{
 		s1.VulnerabilityID: {s1},
 		s2.VulnerabilityID: {s2},
 		s3.VulnerabilityID: {s3},
@@ -224,7 +226,7 @@ func TestStrictPolicy(t *testing.T) {
 func TestSmartPolicy(t *testing.T) {
 	var s Policy
 	s = NewSmartPolicy()
-	statementsToMerge := map[string][]Statement{
+	statementsToMerge := map[string][]model.Statement{
 		s1.VulnerabilityID: {s1},
 		s2.VulnerabilityID: {s2},
 		s3.VulnerabilityID: {s3},
@@ -248,7 +250,7 @@ func TestSmartPolicy(t *testing.T) {
 func TestNullPolicy(t *testing.T) {
 	var s Policy
 	s = NewNullPolicy()
-	reconcileResults := s.Reconcile([]Statement{s1, s2})
+	reconcileResults := s.Reconcile([]model.Statement{s1, s2})
 	fmt.Printf("Merged: %v", reconcileResults.reconciledStatement)
 }
 

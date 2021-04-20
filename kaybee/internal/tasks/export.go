@@ -14,12 +14,13 @@ import (
 	"github.com/sap/project-kb/kaybee/internal/conf"
 	"github.com/sap/project-kb/kaybee/internal/filesystem"
 	"github.com/sap/project-kb/kaybee/internal/model"
+	"github.com/sap/project-kb/kaybee/internal/reconcile"
 )
 
 // ExportTask is the task that generates a script to import statements into 3rd-party systems
 type ExportTask struct {
 	BaseTask
-	policy     []model.Policy
+	policy     []reconcile.Policy
 	source     string
 	target     string
 	outputFile string

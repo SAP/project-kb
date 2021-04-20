@@ -57,7 +57,7 @@ func TestMergeTask(t *testing.T) {
 	pullTask.Execute()
 
 	task := NewMergeTask().
-		WithPolicy(conf.Policies()[0]).
+		WithPolicy(conf.Policies()[2]).
 		WithSources(conf.Sources())
 	task.Execute()
 }
