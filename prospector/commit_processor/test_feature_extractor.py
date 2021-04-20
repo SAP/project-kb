@@ -5,10 +5,10 @@ from datamodel.advisory import AdvisoryRecord
 from git.git import Git
 
 from .feature_extractor import (
+    extract_changes_relevant_path,
     extract_features,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
-    extract_changes_relevant_path,
 )
 from .preprocessor import preprocess_commit
 
