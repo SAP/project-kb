@@ -58,14 +58,8 @@ class PostgresCommitDB(CommitDB):
 
         try:
             cur = self.connection.cursor()
-
-            # NOTE: if the repo-commit pair exists, this does nothing
-            # Therefore, to update a record, it must be removed explicitly first
-            # TODO change this so that the record is updated instead
             cur.execute(
-                """
-                INSERT INTO commits
-                    (
+                """INSERT INTO commits(
                     id,
                     repository,
                     timestamp,
@@ -80,8 +74,29 @@ class PostgresCommitDB(CommitDB):
                     cve_refs,
                     tags)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT ON CONSTRAINT commits_pkey DO NOTHING
-                """,
+                    ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET (
+                        timestamp,
+                        hunks,
+                        hunk_count,
+                        message,
+                        diff,
+                        changed_files,
+                        message_reference_content,
+                        jira_refs,
+                        ghissue_refs,
+                        cve_refs,
+                        tags) = (
+                            EXCLUDED.timestamp,
+                            EXCLUDED.hunks,
+                            EXCLUDED.hunk_count,
+                            EXCLUDED.message,
+                            EXCLUDED.diff,
+                            EXCLUDED.changed_files,
+                            EXCLUDED.message_reference_content,
+                            EXCLUDED.jira_refs,
+                            EXCLUDED.ghissue_refs,
+                            EXCLUDED.cve_refs,
+                            EXCLUDED.tags)""",
                 (
                     commit_obj.commit_id,
                     commit_obj.repository,
@@ -125,34 +140,6 @@ class PostgresCommitDB(CommitDB):
 
         cursor = self.connection.cursor()
         cursor.execute(ddl)
-        # cursor.execute("DROP TABLE IF EXISTS commits;")
-        # cursor.execute(
-        #     """CREATE TABLE commits (
-        #     id varchar(40),
-        #     repository varchar,
-        #     feature_1 varchar,
-        #     feature_2 varchar,
-        #     timestamp text,
-        #     message varchar,
-        #     changed_files varchar,
-        #     diff varchar,
-        #     hunks varchar,
-        #     commit_message_reference_content varchar,
-        #     preprocessed_message varchar,
-        #     preprocessed_diff varchar,
-        #     preprocessed_changed_files varchar,
-        #     preprocessed_commit_message_reference_content varchar,
-        #     PRIMARY KEY (id, repository)
-        # )"""
-        # )
-
-        # cursor.execute("CREATE INDEX IF NOT EXISTS commit_index ON commits(id)")
-        # cursor.execute(
-        #     "CREATE INDEX IF NOT EXISTS repository_index ON commits(repository)"
-        # )
-        # cursor.execute(
-        #     "CREATE UNIQUE INDEX IF NOT EXISTS commit_repository_index ON commits(id, repository)"
-        # )
         self.connection.commit()
 
         cursor.close()

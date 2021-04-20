@@ -21,7 +21,7 @@ logger = logging.getLogger("prospector")
 # print(SCRIPT_PATH)
 
 
-def parseArguments():
+def parseArguments(args):
     parser = argparse.ArgumentParser(description="Prospector CLI")
     parser.add_argument(
         "vulnerability_id", nargs="?", help="ID of the vulnerability to analyze"
@@ -40,6 +40,13 @@ def parseArguments():
         default=MAX_CANDIDATES,
         type=int,
         help="Maximum number of candidates to consider",
+    )
+
+    parser.add_argument(
+        "--tag-interval",
+        default="",
+        type=str,
+        help="Tag interval (X,Y) to consider (the commit must be reachabla from Y but not from X, and must not be older than X)",
     )
 
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
@@ -61,7 +68,7 @@ def parseArguments():
         action="store_true",
     )
 
-    return parser.parse_args()
+    return parser.parse_args(args[1:])
 
 
 def getConfiguration(customConfigFile=None):
@@ -93,7 +100,7 @@ def getConfiguration(customConfigFile=None):
     return config
 
 
-def ping_server(server_url: str, verbose: bool = False):
+def ping_server(server_url: str, verbose: bool = False) -> bool:
     """Tries to contact backend server
 
     Args:
@@ -108,19 +115,36 @@ def ping_server(server_url: str, verbose: bool = False):
         response = requests.get(server_url)
         if response.status_code != 200:
             print("Server replied with an unexpected status: " + response.status_code)
+            return False
         else:
             print("Server ok!")
+            return True
     except Exception:
         print("Server did not reply")
+        return False
 
 
-def main():
-    args = parseArguments()
+def display_results(results, verbose=False):
+    for r in results:
+        if verbose:
+            print(r)
+            print(r.get_diff())
+        else:
+            print(r.get_msg())
+
+        print("{}/commit/{}\n-----\n".format(r.get_repository(), r.get_id()))
+
+    print("-----")
+    print("Found %d candidates" % len(results))
+
+
+def main(argv):
+    args = parseArguments(argv)
     configuration = getConfiguration(args.conf)
 
     if configuration is None:
         print("Invalid configuration, exiting.")
-        sys.exit(-1)
+        return False
 
     verbose = configuration["global"].getboolean("verbose")
     if args.verbose:
@@ -138,17 +162,18 @@ def main():
 
     if args.ping:
         srv = configuration["global"]["server"]
-        ping_server(srv, verbose)
+        return ping_server(srv, verbose)
 
     if args.vulnerability_id is None:
         print("No vulnerability id was specified. Cannot proceed.")
-        sys.exit(-1)
+        return False
 
     vulnerability_id = args.vulnerability_id
-    repository = args.repository
+    repository_url = args.repository
     publication_date = args.pub_date
     vuln_descr = args.descr
     use_nvd = args.use_nvd
+    tag_interval = args.tag_interval
     max_candidates = args.max_candidates
 
     git_cache = GIT_CACHE
@@ -169,19 +194,24 @@ def main():
     if verbose:
         print("Vulnerability ID: " + vulnerability_id)
 
-    prospector(
-        vulnerability_id,
-        repository,
-        publication_date,
-        vuln_descr,
-        use_nvd,
-        nvd_rest_endpoint,
-        git_cache,
-        verbose,
-        debug,
+    results = prospector(
+        vulnerability_id=vulnerability_id,
+        repository_url=repository_url,
+        publication_date=publication_date,
+        vuln_descr=vuln_descr,
+        tag_interval=tag_interval,
+        use_nvd=use_nvd,
+        nvd_rest_endpoint=nvd_rest_endpoint,
+        git_cache=git_cache,
+        verbose=verbose,
+        debug=debug,
         limit_candidates=max_candidates,
     )
 
+    display_results(results, verbose=verbose)
+
+    return True
+
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    main(sys.argv)

@@ -49,7 +49,7 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     result.hunks = git_commit.get_hunks()
     result.hunk_count = len(result.hunks)
     result.message = git_commit.get_msg()
-    result.timestamp = git_commit.get_timestamp()
+    result.timestamp = int(git_commit.get_timestamp())
     result.changed_files = git_commit.get_changed_files()
     result.tags = git_commit.get_tags()
     # TODO extract commit tags

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+# flake8: noqa
+
 import subprocess
 import sys
-from pprint import pprint
+
+# from pprint import pprint
 
 project_slug = "sap/project-kb"
 
@@ -113,12 +116,11 @@ def render_link_to_detailed_changes():
 def render_changelog(log):
     changes_by_type = dict()
 
-    output = ""
-    for l in log:
-        if commit_types[l["type"]] in changes_by_type:
-            changes_by_type[commit_types[l["type"]]].append(l)
+    for entry in log:
+        if commit_types[entry["type"]] in changes_by_type:
+            changes_by_type[commit_types[entry["type"]]].append(entry)
         else:
-            changes_by_type[commit_types[l["type"]]] = [l]
+            changes_by_type[commit_types[entry["type"]]] = [entry]
 
     for t in changes_by_type:
         print("\n### " + t)

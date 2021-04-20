@@ -23,12 +23,16 @@ The easiest way to set up Prospector is to clone this repository and then run th
 
 ```
 git clone https://github.com/sap/project-kb
-cd project-kb/prospector
 git checkout prospector-assuremoss
-echo "GIT_CACHE=/tmp/git-cache" > .env
-echo "PYTHONPATH=." >> .env
-echo "POSTGRES_PASSWORD=example" >> .env
-mkdir /tmp/git-cache
+cd project-kb/prospector
+cp .env-sample .env
+```
+
+Modify the `.env` file as you see fit, then continue with:
+
+```
+source .env
+mkdir -p $GIT_CACHE
 pipenv --python 3.8
 pipenv install --dev
 pre-commit install
@@ -82,6 +86,12 @@ This also starts a convenient DB administration tool at http://localhost:8080
 
 You can then point your browser to `http://127.0.0.1:8000` to access the API.
 You might also want to take a look at `http://127.0.0.1:8000/docs`.
+
+*Alternatively*, you can execute the RESTful server explicitly with:
+
+`python api/main.py`
+
+which is equivalent but more convenient for debugging.
 
 ## Using the CLI
 
