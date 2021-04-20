@@ -1,33 +1,31 @@
-import pytest
 import os
+
 import pandas as pd
+import pytest
 
-from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-
-from filter_rank.ranker import filter_commits, rank, train, make_dataframe, predict
+from datamodel.commit_features import CommitFeatures
+from filter_rank.ranker import filter_commits, make_dataframe, predict, rank, train
 
 
 @pytest.fixture
 def candidates():
     return [
-        Commit("repo", "423423423"),
-        Commit("repo", "423423423"),
-        Commit("repo", "423423423"),
-        Commit("repo", "423423423"),
+        CommitFeatures(Commit("repo", "423423423")),
+        CommitFeatures(Commit("repo", "423423423")),
+        CommitFeatures(Commit("repo", "423423423")),
+        CommitFeatures(Commit("repo", "423423423")),
     ]
 
 
 def test_filter(candidates):
-    ar = AdvisoryRecord("CVE-xxxx-yyyy")
-    result = filter_commits(ar, candidates)
+    result = filter_commits(candidates)
     assert isinstance(result, list)
 
 
 def test_rank(candidates):
-    ar = AdvisoryRecord("CVE-xxxx-yyyy")
     model_name = "LR_15_components"
-    result = rank(ar, candidates, model_name)
+    result = rank(candidates, model_name)
     assert isinstance(result, list)
 
 

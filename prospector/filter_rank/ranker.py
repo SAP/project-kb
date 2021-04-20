@@ -1,17 +1,14 @@
 import random
-
-from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit
-from filter_rank.utils.model_loader import save_model
-from filter_rank import TRAINING_DATA, NUM_ELEMENTS_TRAINING_DATA
-
 import re
+
 import pandas as pd
 
+from datamodel.commit_features import CommitFeatures
+from filter_rank import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
+from filter_rank.utils.model_loader import save_model
 
-def filter_commits(
-    adv_record: AdvisoryRecord, candidates: "list[Commit]"
-) -> "list[Commit]":
+
+def filter_commits(candidates: "list[CommitFeatures]") -> "list[CommitFeatures]":
     """
     Takes in input a set of candidate (datamodel) commits (coming from the commitdb)
     and returns in output a filtered list obtained by discarding the irrelevant
@@ -22,9 +19,7 @@ def filter_commits(
     return candidates
 
 
-def rank(
-    adv_record: AdvisoryRecord, candidates: "list[Commit]", model_name: str
-) -> "list[Commit]":
+def rank(candidates: "list[CommitFeatures]", model_name: str) -> "list[CommitFeatures]":
     """
     Takes in input a set of candidates and associates to each of them a rank (ordering) and
     a ranking vector, based on how good they match with the advisory record in input.
@@ -37,14 +32,14 @@ def rank(
     return [c for _, c in sorted(scores, reverse=True)]
 
 
-def predict(model_name: str, commit: Commit) -> float:
+def predict(model_name: str, commit_features: CommitFeatures) -> float:
     """
     The function computes the similarity score for the given commit
     """
     # model = load_model(model_name)
 
     # compute the actual value here
-    # value = model.predict(commit)
+    # value = model.predict(commit_features)
 
     return (
         random.random() * 2 - 1
