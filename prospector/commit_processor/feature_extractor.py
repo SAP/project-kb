@@ -37,4 +37,8 @@ def extract_time_between_commit_and_advisory_record(
 def extract_changes_relevant_path(
     relevant_paths: "list[str]", changed_paths: "list[str]"
 ) -> bool:
+    """
+    Decides whether any of the changed paths (by a commit) are in the list
+    of relevant paths (mentioned in the advisory record)
+    """
     return any([changed_path in relevant_paths for changed_path in changed_paths])
