@@ -124,6 +124,20 @@ def ping_server(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
+def display_results(results, verbose=False):
+    for r in results:
+        if verbose:
+            print(r)
+            print(r.get_diff())
+        else:
+            print(r.get_msg())
+
+        print("{}/commit/{}\n-----\n".format(r.get_repository(), r.get_id()))
+
+    print("-----")
+    print("Found %d candidates" % len(results))
+
+
 def main(argv):
     args = parseArguments(argv)
     configuration = getConfiguration(args.conf)
@@ -194,17 +208,7 @@ def main(argv):
         limit_candidates=max_candidates,
     )
 
-    for r in results:
-        if verbose:
-            print(r)
-            print(r.get_diff())
-        else:
-            print(r.get_msg())
-
-        print("{}/commit/{}\n-----\n".format(repository_url, r.get_id()))
-
-    print("-----")
-    print("Found %d candidates" % len(results))
+    display_results(results, verbose=verbose)
 
 
 if __name__ == "__main__":  # pragma: no cover

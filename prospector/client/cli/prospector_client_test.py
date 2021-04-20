@@ -1,8 +1,6 @@
-from pprint import pprint
-
-from .prospector_client import prospector
 from .main import main
 
+# from .prospector_client import prospector
 
 # def test_prospector_client():
 #     results = prospector(

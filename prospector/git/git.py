@@ -367,6 +367,9 @@ class Commit:
                 )
         return self._attributes["full_id"]
 
+    def get_repository(self):
+        return self._repository._url
+
     def get_msg(self):
         if "msg" not in self._attributes:
             self._attributes["msg"] = ""
@@ -618,11 +621,10 @@ class Commit:
             self.get_timestamp(date_format="%Y-%m-%d %H:%M:%S"),
             self.get_timestamp(),
             self._repository.get_url(),
-            self.get_msg()[0],
+            self.get_msg(),
             len(self.get_hunks()),
             len(self.get_changed_paths()),
             self.get_next_tag()[0],
-            ", ".join(self.get_tags()),
             "\n".join(self.get_changed_paths()),
         )
         return """
@@ -631,7 +633,6 @@ class Commit:
         Repository:        {}
         Message:           {}
         hunks: {},  changed files: {},  (oldest) tag: {}
-        tags: {}
         {}""".format(
             *data
         )
