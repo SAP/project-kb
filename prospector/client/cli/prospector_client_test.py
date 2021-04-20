@@ -23,6 +23,6 @@ def test_main():
     main(args)
 
 
-def test_main_ping_server():
-    args = ["PROGRAM_NAME", "--verbose", "--ping"]
-    assert main(args)
+# def test_main_ping_server():
+#     args = ["PROGRAM_NAME", "--verbose", "--ping"]
+#     assert main(args)
