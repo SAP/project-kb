@@ -25,4 +25,4 @@ def test_main():
 
 def test_main_ping_server():
     args = ["PROGRAM_NAME", "--verbose", "--ping"]
-    main(args)
+    assert main(args)

@@ -7,11 +7,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from commitdb.postgres import PostgresCommitDB
-from datamodel.commit import Commit
-
 # from .dependencies import oauth2_scheme
 from api.routers import jobs, nvd, preprocessed, users
+from commitdb.postgres import PostgresCommitDB
+from datamodel.commit import Commit
 
 # from pprint import pprint
 

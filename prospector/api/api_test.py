@@ -1,8 +1,7 @@
 from fastapi.testclient import TestClient
-from datamodel.commit import Commit
-
 
 from api.main import app
+from datamodel.commit import Commit
 
 client = TestClient(app)
 

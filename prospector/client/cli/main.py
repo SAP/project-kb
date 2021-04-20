@@ -144,7 +144,7 @@ def main(argv):
 
     if configuration is None:
         print("Invalid configuration, exiting.")
-        sys.exit(-1)
+        return False
 
     verbose = configuration["global"].getboolean("verbose")
     if args.verbose:
@@ -166,7 +166,7 @@ def main(argv):
 
     if args.vulnerability_id is None:
         print("No vulnerability id was specified. Cannot proceed.")
-        sys.exit(-1)
+        return False
 
     vulnerability_id = args.vulnerability_id
     repository_url = args.repository
@@ -209,6 +209,8 @@ def main(argv):
     )
 
     display_results(results, verbose=verbose)
+
+    return True
 
 
 if __name__ == "__main__":  # pragma: no cover
