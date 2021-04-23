@@ -6,9 +6,13 @@ from git.git import Git
 
 from .feature_extractor import (
     extract_changes_relevant_path,
+    extract_commit_falls_in_interval_based_on_advisory_publicatation_date,
+    extract_commit_in_given_inverval,
+    extract_commit_in_invertal,
     extract_features,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
+    extract_timestamp_from_version,
 )
 from .preprocessor import preprocess_commit
 
@@ -71,4 +75,66 @@ def test_extract_changes_relevant_path():
     )
     assert not extract_changes_relevant_path(
         relevant_paths=[path_1, path_2], changed_paths=[]
+    )
+
+
+def test_extract_timestamp_from_version(repository):
+    repo = repository
+    assert extract_timestamp_from_version("STRUTS_2_3_9", repo) == 1359961896
+    assert extract_timestamp_from_version("INVALID_VERSION_1_0_0", repo) is None
+
+
+def test_extract_commit_in_invertal():
+    assert extract_commit_in_invertal(1359961896, 1359961897, 1359961896)
+    assert extract_commit_in_invertal(1359961896, 1359961896, 1359961896)
+    assert not extract_commit_in_invertal(1359961896, 1359961897, 1359961897)
+    assert not extract_commit_in_invertal(1359961896, 1359961897, 1359961898)
+
+
+def test_extract_commit_in_given_invertal():
+    assert extract_commit_in_given_inverval(1359961896, 1359961896, 0)
+    assert extract_commit_in_given_inverval(1359961896, 1360047896, 1)
+    assert extract_commit_in_given_inverval(1359961896, 1359875896, -1)
+    assert not extract_commit_in_given_inverval(1359961896, 1359871896, -1)
+    assert not extract_commit_in_given_inverval(1359961896, 1360051896, 1)
+
+
+def test_extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+    repository,
+):
+
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-26258",
+        repository_url="https://github.com/apache/struts",
+        paths=["pom.xml"],
+        published_timestamp=1000000,
+        versions=["STRUTS_2_1_3", "STRUTS_2_3_9"],
+    )
+
+    assert extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        1000000, advisory_record, 1, 1
+    )
+    assert not extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        1086401, advisory_record, 1, 1
+    )
+    assert not extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        913598, advisory_record, 1, 1
+    )
+    assert extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        1000000, advisory_record, 0, 0
+    )
+    assert not extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        1000001, advisory_record, 0, 0
+    )
+    assert extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        1086398, advisory_record, 0, 1
+    )
+    assert not extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        1086401, advisory_record, 0, 1
+    )
+    assert not extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        913598, advisory_record, 1, 0
+    )
+    assert extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+        913601, advisory_record, 1, 0
     )
