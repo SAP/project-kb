@@ -1,7 +1,6 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitFeatures
-from git.git import Git
 
 
 def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitFeatures:
@@ -46,8 +45,8 @@ def extract_changes_relevant_path(
 
 
 # Return true if the commit falls in between the two timestamp
-def extract_commit_in_invertal(
-    lower_version_timestamp: int, higher_version_timestamp: int, commit_timestamp: int
+def timestamp_in_interval(
+    commit_timestamp: int, lower_version_timestamp: int, higher_version_timestamp: int
 ) -> bool:
     return commit_timestamp >= lower_version_timestamp and (
         commit_timestamp < higher_version_timestamp
@@ -64,13 +63,13 @@ def extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
 ) -> bool:
     timestamp = advisory_record.published_timestamp
 
-    return extract_commit_in_given_inverval(
+    return extract_commit_in_given_interval(
         timestamp, commit_timestamp, -days_before
-    ) or extract_commit_in_given_inverval(timestamp, commit_timestamp, days_after)
+    ) or extract_commit_in_given_interval(timestamp, commit_timestamp, days_after)
 
 
 # Return True if the commit is in the given interval before or after the timestamp
-def extract_commit_in_given_inverval(
+def extract_commit_in_given_interval(
     version_timestamp: int, commit_timestamp: int, day_interval: int
 ) -> bool:
     DAY_IN_SECONDS = 86400
@@ -87,15 +86,3 @@ def extract_commit_in_given_inverval(
             version_timestamp + day_interval * DAY_IN_SECONDS <= commit_timestamp
             and version_timestamp >= commit_timestamp
         )
-
-
-# Return the timestamp for given a version if version exist or None
-def extract_timestamp_from_version(version: str, repo: Git) -> int:
-    tag = repo.get_tag_for_version(version)
-
-    if tag[1] < 1:
-        return None
-
-    commit_id = repo.get_commit_id_for_tag(tag[0])
-    commit = repo.get_commit(commit_id)
-    return int(commit.get_timestamp())

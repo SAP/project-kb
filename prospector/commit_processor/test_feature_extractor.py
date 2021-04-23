@@ -7,12 +7,11 @@ from git.git import Git
 from .feature_extractor import (
     extract_changes_relevant_path,
     extract_commit_falls_in_interval_based_on_advisory_publicatation_date,
-    extract_commit_in_given_inverval,
-    extract_commit_in_invertal,
+    extract_commit_in_given_interval,
     extract_features,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
-    extract_timestamp_from_version,
+    timestamp_in_interval,
 )
 from .preprocessor import preprocess_commit
 
@@ -78,25 +77,19 @@ def test_extract_changes_relevant_path():
     )
 
 
-def test_extract_timestamp_from_version(repository):
-    repo = repository
-    assert extract_timestamp_from_version("STRUTS_2_3_9", repo) == 1359961896
-    assert extract_timestamp_from_version("INVALID_VERSION_1_0_0", repo) is None
+def test_extract_commit_in_interval():
+    assert timestamp_in_interval(1359961896, 1359961896, 1359961897)
+    assert timestamp_in_interval(1359961896, 1359961896, 1359961896)
+    assert not timestamp_in_interval(1359961897, 1359961896, 1359961897)
+    assert not timestamp_in_interval(1359961898, 1359961896, 1359961897)
 
 
-def test_extract_commit_in_invertal():
-    assert extract_commit_in_invertal(1359961896, 1359961897, 1359961896)
-    assert extract_commit_in_invertal(1359961896, 1359961896, 1359961896)
-    assert not extract_commit_in_invertal(1359961896, 1359961897, 1359961897)
-    assert not extract_commit_in_invertal(1359961896, 1359961897, 1359961898)
-
-
-def test_extract_commit_in_given_invertal():
-    assert extract_commit_in_given_inverval(1359961896, 1359961896, 0)
-    assert extract_commit_in_given_inverval(1359961896, 1360047896, 1)
-    assert extract_commit_in_given_inverval(1359961896, 1359875896, -1)
-    assert not extract_commit_in_given_inverval(1359961896, 1359871896, -1)
-    assert not extract_commit_in_given_inverval(1359961896, 1360051896, 1)
+def test_extract_commit_in_given_interval():
+    assert extract_commit_in_given_interval(1359961896, 1359961896, 0)
+    assert extract_commit_in_given_interval(1359961896, 1360047896, 1)
+    assert extract_commit_in_given_interval(1359961896, 1359875896, -1)
+    assert not extract_commit_in_given_interval(1359961896, 1359871896, -1)
+    assert not extract_commit_in_given_interval(1359961896, 1360051896, 1)
 
 
 def test_extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
