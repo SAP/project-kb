@@ -46,7 +46,7 @@ def extract_changes_relevant_path(
     return any([changed_path in relevant_paths for changed_path in changed_paths])
 
 
-def extract_avg_hunk_size(hunks: "list[list[int]]") -> int:
+def extract_avg_hunk_size(hunks: "list[tuple[int]]") -> int:
     n_hunks = len(hunks)
 
     if n_hunks == 0:
