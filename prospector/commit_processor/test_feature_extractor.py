@@ -7,6 +7,7 @@ from git.git import Git
 from .feature_extractor import (
     extract_changes_relevant_path,
     extract_features,
+    extract_n_changed_files,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
 )
@@ -38,6 +39,7 @@ def test_extract_features(repository):
     assert extracted_features.references_vuln_id
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
     assert extracted_features.changes_relevant_path
+    assert extracted_features.n_changed_files == 1
 
 
 def test_extract_references_vuln_id():
@@ -72,3 +74,7 @@ def test_extract_changes_relevant_path():
     assert not extract_changes_relevant_path(
         relevant_paths=[path_1, path_2], changed_paths=[]
     )
+
+
+def test_extract_n_changed_files():
+    assert extract_n_changed_files(["a.java", "b.py", "c.php"]) == 3
