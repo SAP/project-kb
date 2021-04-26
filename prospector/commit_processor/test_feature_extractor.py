@@ -7,6 +7,7 @@ from git.git import Git
 from .feature_extractor import (
     extract_changes_relevant_path,
     extract_features,
+    extract_other_CVE_in_message,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
 )
@@ -38,6 +39,7 @@ def test_extract_features(repository):
     assert extracted_features.references_vuln_id
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
     assert extracted_features.changes_relevant_path
+    assert not extracted_features.other_CVE_in_message
 
 
 def test_extract_references_vuln_id():
@@ -72,3 +74,9 @@ def test_extract_changes_relevant_path():
     assert not extract_changes_relevant_path(
         relevant_paths=[path_1, path_2], changed_paths=[]
     )
+
+
+def test_extract_other_CVE_in_message():
+    cve_ids = ["CVE-2020-26258", "CVE-1234-1234"]
+    assert extract_other_CVE_in_message(cve_ids, "CVE-2020-4321")
+    assert not extract_other_CVE_in_message(cve_ids, "CVE-2020-26258")
