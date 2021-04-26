@@ -15,11 +15,13 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     changes_relevant_path = extract_changes_relevant_path(
         advisory_record.paths, commit.changed_files
     )
+    references_ghissue = extract_references_ghissue(commit.ghissue_refs)
     commit_feature = CommitFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
+        references_ghissue=references_ghissue,
     )
     return commit_feature
 
@@ -42,3 +44,7 @@ def extract_changes_relevant_path(
     of relevant paths (mentioned in the advisory record)
     """
     return any([changed_path in relevant_paths for changed_path in changed_paths])
+
+
+def extract_references_ghissue(referenced_ghissues: "list[str]") -> bool:
+    return len(referenced_ghissues) > 0

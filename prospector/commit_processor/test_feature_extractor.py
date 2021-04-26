@@ -7,6 +7,7 @@ from git.git import Git
 from .feature_extractor import (
     extract_changes_relevant_path,
     extract_features,
+    extract_references_ghissue,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
 )
@@ -38,6 +39,7 @@ def test_extract_features(repository):
     assert extracted_features.references_vuln_id
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
     assert extracted_features.changes_relevant_path
+    assert not extracted_features.references_ghissue
 
 
 def test_extract_references_vuln_id():
@@ -72,3 +74,8 @@ def test_extract_changes_relevant_path():
     assert not extract_changes_relevant_path(
         relevant_paths=[path_1, path_2], changed_paths=[]
     )
+
+
+def test_extract_references_ghissue():
+    assert extract_references_ghissue(["#12"])
+    assert not extract_references_ghissue([])
