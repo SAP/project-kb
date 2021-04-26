@@ -8,3 +8,4 @@ class CommitFeatures(BaseModel):
     references_vuln_id: bool = False
     time_between_commit_and_advisory_record: int = 0
     changes_relevant_path: bool = False
+    n_hunks: int = 0

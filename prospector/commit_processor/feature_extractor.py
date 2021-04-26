@@ -15,11 +15,13 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     changes_relevant_path = extract_changes_relevant_path(
         advisory_record.paths, commit.changed_files
     )
+    n_hunks = extract_n_hunks(commit.hunk_count)
     commit_feature = CommitFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
+        n_hunks=n_hunks,
     )
     return commit_feature
 
@@ -42,3 +44,7 @@ def extract_changes_relevant_path(
     of relevant paths (mentioned in the advisory record)
     """
     return any([changed_path in relevant_paths for changed_path in changed_paths])
+
+
+def extract_n_hunks(hunk_count: int) -> int:
+    return hunk_count
