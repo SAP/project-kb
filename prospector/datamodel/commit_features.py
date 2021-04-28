@@ -9,3 +9,4 @@ class CommitFeatures(BaseModel):
     time_between_commit_and_advisory_record: int = 0
     changes_relevant_path: bool = False
     n_changed_files: int = 0
+    contains_jira_reference: bool = False

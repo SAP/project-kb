@@ -6,6 +6,7 @@ from git.git import Git
 
 from .feature_extractor import (
     extract_changes_relevant_path,
+    extract_contains_jira_reference,
     extract_features,
     extract_n_changed_files,
     extract_references_vuln_id,
@@ -40,6 +41,7 @@ def test_extract_features(repository):
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
     assert extracted_features.changes_relevant_path
     assert extracted_features.n_changed_files == 1
+    assert extracted_features.contains_jira_reference
 
 
 def test_extract_references_vuln_id():
@@ -78,3 +80,8 @@ def test_extract_changes_relevant_path():
 
 def test_extract_n_changed_files():
     assert extract_n_changed_files(["a.java", "b.py", "c.php"]) == 3
+
+
+def test_extract_contains_jira_reference():
+    assert extract_contains_jira_reference(["NAME-213"])
+    assert not extract_contains_jira_reference([])
