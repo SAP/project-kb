@@ -5,6 +5,7 @@ from datamodel.advisory import AdvisoryRecord
 from git.git import Git
 
 from .feature_extractor import (
+    extract_avg_hunk_size,
     extract_changes_relevant_path,
     extract_contains_jira_reference,
     extract_features,
@@ -42,6 +43,7 @@ def test_extract_features(repository):
     assert extracted_features.references_vuln_id
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
     assert extracted_features.changes_relevant_path
+    assert extracted_features.avg_hunk_size == 2
     assert extracted_features.n_hunks == 1
     assert not extracted_features.references_ghissue
     assert extracted_features.n_changed_files == 1
@@ -80,6 +82,11 @@ def test_extract_changes_relevant_path():
     assert not extract_changes_relevant_path(
         relevant_paths=[path_1, path_2], changed_paths=[]
     )
+
+
+def test_extract_avg_hunk_size():
+    assert extract_avg_hunk_size([(3, 6)]) == 3
+    assert extract_avg_hunk_size([(1, 3), (6, 11)]) == 3.5
 
 
 def test_extract_n_hunks():

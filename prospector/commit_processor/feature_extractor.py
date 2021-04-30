@@ -15,6 +15,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     changes_relevant_path = extract_changes_relevant_path(
         advisory_record.paths, commit.changed_files
     )
+    avg_hunk_size = extract_avg_hunk_size(commit.hunks)
     n_hunks = extract_n_hunks(commit.hunk_count)
     references_ghissue = extract_references_ghissue(commit.ghissue_refs)
     n_changed_files = extract_n_changed_files(commit.changed_files)
@@ -24,6 +25,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         references_vuln_id=references_vuln_id,
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
+        avg_hunk_size=avg_hunk_size,
         n_hunks=n_hunks,
         references_ghissue=references_ghissue,
         n_changed_files=n_changed_files,
@@ -50,6 +52,16 @@ def extract_changes_relevant_path(
     of relevant paths (mentioned in the advisory record)
     """
     return any([changed_path in relevant_paths for changed_path in changed_paths])
+
+
+def extract_avg_hunk_size(hunks: "list[tuple[int]]") -> int:
+    n_hunks = len(hunks)
+
+    if n_hunks == 0:
+        return 0
+
+    lengths = [hunk[1] - hunk[0] for hunk in hunks]
+    return sum(lengths) / n_hunks
 
 
 def extract_n_hunks(hunk_count: int) -> int:
