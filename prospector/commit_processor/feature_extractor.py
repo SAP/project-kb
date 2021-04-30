@@ -16,12 +16,20 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         advisory_record.paths, commit.changed_files
     )
     avg_hunk_size = extract_avg_hunk_size(commit.hunks)
+    n_hunks = extract_n_hunks(commit.hunk_count)
+    references_ghissue = extract_references_ghissue(commit.ghissue_refs)
+    n_changed_files = extract_n_changed_files(commit.changed_files)
+    contains_jira_reference = extract_contains_jira_reference(commit.jira_refs)
     commit_feature = CommitFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
         avg_hunk_size=avg_hunk_size,
+        n_hunks=n_hunks,
+        references_ghissue=references_ghissue,
+        n_changed_files=n_changed_files,
+        contains_jira_reference=contains_jira_reference,
     )
     return commit_feature
 
@@ -54,3 +62,19 @@ def extract_avg_hunk_size(hunks: "list[tuple[int]]") -> int:
 
     lengths = [hunk[1] - hunk[0] for hunk in hunks]
     return sum(lengths) / n_hunks
+
+
+def extract_n_hunks(hunk_count: int) -> int:
+    return hunk_count
+
+
+def extract_references_ghissue(referenced_ghissues: "list[str]") -> bool:
+    return len(referenced_ghissues) > 0
+
+
+def extract_n_changed_files(changed_files: "list[str]") -> int:
+    return len(changed_files)
+
+
+def extract_contains_jira_reference(jira_references: "list[str]") -> bool:
+    return len(jira_references) > 0

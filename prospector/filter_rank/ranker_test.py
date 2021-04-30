@@ -11,10 +11,10 @@ from filter_rank.ranker import filter_commits, make_dataframe, predict, rank, tr
 @pytest.fixture
 def candidates():
     return [
-        CommitFeatures(Commit("repo", "423423423")),
-        CommitFeatures(Commit("repo", "423423423")),
-        CommitFeatures(Commit("repo", "423423423")),
-        CommitFeatures(Commit("repo", "423423423")),
+        CommitFeatures(commit=Commit(repository="repo", commit_id="423423423")),
+        CommitFeatures(commit=Commit(repository="repo", commit_id="423423423")),
+        CommitFeatures(commit=Commit(repository="repo", commit_id="423423423")),
+        CommitFeatures(commit=Commit(repository="repo", commit_id="423423423")),
     ]
 
 
