@@ -11,7 +11,6 @@ from .feature_extractor import (
     extract_features,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
-    timestamp_in_interval,
 )
 from .preprocessor import preprocess_commit
 
@@ -41,6 +40,9 @@ def test_extract_features(repository):
     assert extracted_features.references_vuln_id
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
     assert extracted_features.changes_relevant_path
+    assert (
+        extracted_features.commit_falls_in_given_interval_based_on_advisory_publicatation_date
+    )
 
 
 def test_extract_references_vuln_id():
@@ -75,13 +77,6 @@ def test_extract_changes_relevant_path():
     assert not extract_changes_relevant_path(
         relevant_paths=[path_1, path_2], changed_paths=[]
     )
-
-
-def test_extract_commit_in_interval():
-    assert timestamp_in_interval(1359961896, 1359961896, 1359961897)
-    assert timestamp_in_interval(1359961896, 1359961896, 1359961896)
-    assert not timestamp_in_interval(1359961897, 1359961896, 1359961897)
-    assert not timestamp_in_interval(1359961898, 1359961896, 1359961897)
 
 
 def test_extract_commit_in_given_interval():

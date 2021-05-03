@@ -12,6 +12,11 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
             commit.timestamp, advisory_record.published_timestamp
         )
     )
+    commit_falls_in_given_interval_based_on_advisory_publicatation_date = (
+        extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
+            commit.timestamp, advisory_record, 180, 365
+        )
+    )
     changes_relevant_path = extract_changes_relevant_path(
         advisory_record.paths, commit.changed_files
     )
@@ -20,6 +25,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         references_vuln_id=references_vuln_id,
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
+        commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
     )
     return commit_feature
 
@@ -44,23 +50,15 @@ def extract_changes_relevant_path(
     return any([changed_path in relevant_paths for changed_path in changed_paths])
 
 
-# Return true if the commit falls in between the two timestamp
-def timestamp_in_interval(
-    commit_timestamp: int, lower_version_timestamp: int, higher_version_timestamp: int
-) -> bool:
-    return commit_timestamp >= lower_version_timestamp and (
-        commit_timestamp < higher_version_timestamp
-        or commit_timestamp == lower_version_timestamp
-    )
-
-
-# Return True if the given commit falls in the given interval from advisory record publication date
 def extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
     commit_timestamp: int,
     advisory_record: AdvisoryRecord,
     days_before: int,
     days_after: int,
 ) -> bool:
+    """
+    Return True if the given commit falls in the given interval from advisory record publication date
+    """
     timestamp = advisory_record.published_timestamp
 
     return extract_commit_in_given_interval(
@@ -68,10 +66,12 @@ def extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
     ) or extract_commit_in_given_interval(timestamp, commit_timestamp, days_after)
 
 
-# Return True if the commit is in the given interval before or after the timestamp
 def extract_commit_in_given_interval(
     version_timestamp: int, commit_timestamp: int, day_interval: int
 ) -> bool:
+    """
+    Return True if the commit is in the given interval before or after the timestamp
+    """
     DAY_IN_SECONDS = 86400
 
     if day_interval == 0:
