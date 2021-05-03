@@ -2,6 +2,10 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitFeatures
 
+DAYS_BEFORE = 180
+DAYS_AFTER = 365
+DAY_IN_SECONDS = 86400
+
 
 def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitFeatures:
     references_vuln_id = extract_references_vuln_id(
@@ -13,8 +17,8 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         )
     )
     commit_falls_in_given_interval_based_on_advisory_publicatation_date = (
-        extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
-            commit.timestamp, advisory_record, 180, 365
+        extract_is_close_to_advisory_date(
+            commit, advisory_record, DAYS_BEFORE, DAYS_AFTER
         )
     )
     changes_relevant_path = extract_changes_relevant_path(
@@ -60,8 +64,8 @@ def extract_changes_relevant_path(
     return any([changed_path in relevant_paths for changed_path in changed_paths])
 
 
-def extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
-    commit_timestamp: int,
+def extract_is_close_to_advisory_date(
+    commit: Commit,
     advisory_record: AdvisoryRecord,
     days_before: int,
     days_after: int,
@@ -71,18 +75,17 @@ def extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
     """
     timestamp = advisory_record.published_timestamp
 
-    return extract_commit_in_given_interval(
-        timestamp, commit_timestamp, -days_before
-    ) or extract_commit_in_given_interval(timestamp, commit_timestamp, days_after)
+    return is_commit_in_given_interval(
+        timestamp, commit.timestamp, -days_before
+    ) or is_commit_in_given_interval(timestamp, commit.timestamp, days_after)
 
 
-def extract_commit_in_given_interval(
+def is_commit_in_given_interval(
     version_timestamp: int, commit_timestamp: int, day_interval: int
 ) -> bool:
     """
     Return True if the commit is in the given interval before or after the timestamp
     """
-    DAY_IN_SECONDS = 86400
 
     if day_interval == 0:
         return version_timestamp == commit_timestamp
