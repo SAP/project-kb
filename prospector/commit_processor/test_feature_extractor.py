@@ -5,10 +5,15 @@ from datamodel.advisory import AdvisoryRecord
 from git.git import Git
 
 from .feature_extractor import (
+    extract_avg_hunk_size,
     extract_changes_relevant_path,
     extract_commit_falls_in_interval_based_on_advisory_publicatation_date,
     extract_commit_in_given_interval,
+    extract_contains_jira_reference,
     extract_features,
+    extract_n_changed_files,
+    extract_n_hunks,
+    extract_references_ghissue,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
 )
@@ -43,6 +48,11 @@ def test_extract_features(repository):
     assert (
         extracted_features.commit_falls_in_given_interval_based_on_advisory_publicatation_date
     )
+    assert extracted_features.avg_hunk_size == 2
+    assert extracted_features.n_hunks == 1
+    assert not extracted_features.references_ghissue
+    assert extracted_features.n_changed_files == 1
+    assert extracted_features.contains_jira_reference
 
 
 def test_extract_references_vuln_id():
@@ -126,3 +136,26 @@ def test_extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
     assert extract_commit_falls_in_interval_based_on_advisory_publicatation_date(
         913601, advisory_record, 1, 0
     )
+
+
+def test_extract_avg_hunk_size():
+    assert extract_avg_hunk_size([(3, 6)]) == 3
+    assert extract_avg_hunk_size([(1, 3), (6, 11)]) == 3.5
+
+
+def test_extract_n_hunks():
+    assert extract_n_hunks(12) == 12
+
+
+def test_extract_references_ghissue():
+    assert extract_references_ghissue(["#12"])
+    assert not extract_references_ghissue([])
+
+
+def test_extract_n_changed_files():
+    assert extract_n_changed_files(["a.java", "b.py", "c.php"]) == 3
+
+
+def test_extract_contains_jira_reference():
+    assert extract_contains_jira_reference(["NAME-213"])
+    assert not extract_contains_jira_reference([])
