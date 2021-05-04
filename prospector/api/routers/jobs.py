@@ -11,7 +11,9 @@ from git.git import do_clone
 redis_url = os.environ["REDIS_URL"]
 
 router = APIRouter(
-    prefix="/jobs", tags=["jobs"], responses={404: {"description": "Not found"}},
+    prefix="/jobs",
+    tags=["jobs"],
+    responses={404: {"description": "Not found"}},
 )
 
 
@@ -22,7 +24,10 @@ async def create_clone_job(repository):
         queue = Queue()
         job = Job.create(
             do_clone,
-            (repository, "/tmp",),
+            (
+                repository,
+                "/tmp",
+            ),
             description="clone job " + repository,
             result_ttl=1000,
         )
@@ -71,7 +76,11 @@ async def get_job(job_id):
 async def create_update_feed_job():
     with Connection(redis.from_url(redis_url)):
         queue = Queue()
-        job = Job.create(main, description="update nvd feed", result_ttl=1000,)
+        job = Job.create(
+            main,
+            description="update nvd feed",
+            result_ttl=1000,
+        )
         queue.enqueue_job(job)
 
     response_object = {

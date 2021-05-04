@@ -32,7 +32,6 @@ def test_simple_write(setupdb):
     commit_obj = Commit(
         commit_id="1234",
         repository="https://blabla.com/zxyufd/fdafa",
-        feature_1="",
         timestamp=123456789,
         hunks=[(3, 5)],
         hunk_count=1,
@@ -49,7 +48,6 @@ def test_simple_write(setupdb):
     commit_obj = Commit(
         commit_id="42423b2423",
         repository="https://fasfasdfasfasd.com/rewrwe/rwer",
-        feature_1="xxxxxxxxx",
         timestamp=121422430,
         hunks=[(3, 5)],
         hunk_count=1,
@@ -71,7 +69,6 @@ def test_simple_read(setupdb):
     commit_obj = Commit(
         commit_id="1234",
         repository="https://blabla.com/zxyufd/fdafa",
-        feature_1="",
         timestamp=0,
         hunks=[(3, 5)],
         hunk_count=1,
@@ -86,7 +83,6 @@ def test_simple_read(setupdb):
     )
     result = db.lookup(commit_obj)
     print(result)
-    db.reset()  # remove garbage added by tests from DB
     assert result is not None
 
 
@@ -96,7 +92,6 @@ def test_upsert(setupdb):
     commit_obj = Commit(
         commit_id="42423b2423",
         repository="https://fasfasdfasfasd.com/rewrwe/rwer",
-        feature_1="xxxxxxxxx",
         timestamp=1214212430,
         hunks=[(3, 3)],
         hunk_count=3,
@@ -110,6 +105,9 @@ def test_upsert(setupdb):
         tags=["tag1"],
     )
     db.save(commit_obj)
+    result = db.lookup(commit_obj)
+    assert result is not None
+    db.reset()  # remove garbage added by tests from DB
 
 
 def test_parse_connect_string():

@@ -28,6 +28,13 @@ def test_get_commits_in_time_interval_filter_extension():
     assert len(results) == 5
 
 
+def test_extract_timestamp_from_version():
+    repo = Git("https://github.com/apache/struts")
+    repo.clone()
+    assert repo.extract_timestamp_from_version("STRUTS_2_3_9") == 1359961896
+    assert repo.extract_timestamp_from_version("INVALID_VERSION_1_0_0") is None
+
+
 def test_legacy_mapping_version_to_tag_1():
     repo = Git("https://github.com/apache/struts")
     repo.clone()

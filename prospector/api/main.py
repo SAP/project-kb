@@ -1,16 +1,16 @@
 import os
 
+import uvicorn
 from fastapi import FastAPI
 
 # from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+# from .dependencies import oauth2_scheme
+from api.routers import jobs, nvd, preprocessed, users
 from commitdb.postgres import PostgresCommitDB
 from datamodel.commit import Commit
-
-# from .dependencies import oauth2_scheme
-from .routers import jobs, nvd, preprocessed, users
 
 # from pprint import pprint
 
@@ -124,3 +124,7 @@ async def read_items():
 @app.get("/status")
 async def get_status():
     return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

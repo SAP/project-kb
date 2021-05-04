@@ -16,7 +16,7 @@ SECS_PER_DAY = 86400
 
 # TODO make this controllable from the client
 TIME_LIMIT_BEFORE = 365 * SECS_PER_DAY
-TIME_LIMIT_AFTER = 90 * SECS_PER_DAY
+TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 
 MAX_CANDIDATES = 1000
 
@@ -26,6 +26,7 @@ def prospector(
     repository_url: str,
     publication_date: str = "",
     vuln_descr: str = "",
+    tag_interval: str = "",
     use_nvd: bool = False,
     nvd_rest_endpoint: str = "",
     git_cache: str = GIT_CACHE,
@@ -53,7 +54,7 @@ def prospector(
             datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
         )
 
-    advisory_record.analyze(use_nvd=True)
+    advisory_record.analyze(use_nvd=use_nvd)
 
     print("Downloading repository {} in {}..".format(repository_url, git_cache))
     repository = Git(repository_url, git_cache)
@@ -66,13 +67,26 @@ def prospector(
 
     print("Done retrieving %s" % repository_url)
 
-    # STEP 1: filter based on time and on file extensions
+    prev_tag = None
+    following_tag = None
+    if tag_interval != "":
+        prev_tag, following_tag = tag_interval.split(":")
+
+    since = None
+    until = None
     if advisory_record.published_timestamp:
         since = advisory_record.published_timestamp - TIME_LIMIT_BEFORE
         until = advisory_record.published_timestamp + TIME_LIMIT_AFTER
-        candidates = repository.get_commits(since=since, until=until, filter_files="")
-    else:
-        candidates = repository.get_commits()
+
+    candidates = repository.get_commits(
+        since=since,
+        until=until,
+        ancestors_of=following_tag,
+        exclude_ancestors_of=prev_tag,
+        filter_files="*.java",
+    )
+
+    # end of filtering
 
     if debug:
         print("Collected %d candidates" % len(candidates))
@@ -88,6 +102,9 @@ def prospector(
 
     # adv_processor = AdvisoryProcessor()
     # advisory_record = adv_processor.process(advisory_record)
+
+    # get CommitFeatures
+    # invoke predict
 
     if debug:
         pprint(advisory_record)
@@ -106,6 +123,6 @@ def prospector(
     # whose inputs are the AdvisoryRecord, and the repository URL
     # The API returns immediately indicating a job id. From this
     # id, a URL can be constructed to poll the results asynchronously.
-    ranked_results = candidates
+    ranked_results = [repository.get_commit(c) for c in candidates]
 
     return ranked_results
