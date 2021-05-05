@@ -99,6 +99,12 @@ Try the following example:
 
 `python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload -v --use-nvd`
 
+or, specifying the tag interval to restrict the retrieval of candidate commits:
+
+`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload -v --use-nvd --tag-interval FILEUPLOAD_1_3:FILEUPLOAD_1_3_1`
+
+The tag interval has been chosen by considering the text of the advisory ("MultipartStream.java in Apache Commons FileUpload before 1.3.1 [...]") and the set of available tags in the repository. *HEADS-UP*: Prospector has the capability to "guess" tag names from version intervals, but that functionality is not yet exposed to the command line client (it will be in the future). If you are curious to know how that works, please see the last page of [this paper](https://arxiv.org/pdf/2103.13375).
+
 ## Testing
 
 To run the tests, run:
