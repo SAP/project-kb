@@ -292,6 +292,17 @@ class Git:
 
         return best_match
 
+    # Return the timestamp for given a version if version exist or None
+    def extract_timestamp_from_version(self, version: str) -> int:
+        tag = self.get_tag_for_version(version)
+
+        if tag[1] < 1:
+            return None
+
+        commit_id = self.get_commit_id_for_tag(tag[0])
+        commit = self.get_commit(commit_id)
+        return int(commit.get_timestamp())
+
     # def pretty_print_tag_ref(self, ref):
     #     return ref.split('/')[-1]
 
