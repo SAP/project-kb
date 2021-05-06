@@ -96,16 +96,11 @@ def test_extract_other_CVE_in_message():
     commit = Commit(
         commit_id="test_commit",
         repository="test_repository",
-        cve_refs=["one_advisory_record", "another_advisory_record"],
+        cve_refs=["CVE-2021-29425", "CVE-2021-21251"],
     )
-    advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record")
+    advisory_record = AdvisoryRecord(vulnerability_id="CVE-2020-31284")
     assert extract_other_CVE_in_message(commit, advisory_record)
-    commit = Commit(
-        commit_id="test_commit",
-        repository="test_repository",
-        cve_refs=["test_advisory_record", "another_advisory_record"],
-    )
-    advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record")
+    advisory_record = AdvisoryRecord(vulnerability_id="CVE-2021-29425")
     assert not extract_other_CVE_in_message(commit, advisory_record)
 
 
