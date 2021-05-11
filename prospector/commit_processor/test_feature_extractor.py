@@ -16,6 +16,7 @@ from .feature_extractor import (
     extract_other_CVE_in_message,
     extract_references_ghissue,
     extract_references_vuln_id,
+    extract_referred_to_by_advisories,
     extract_time_between_commit_and_advisory_record,
     is_commit_in_given_interval,
 )
@@ -40,6 +41,7 @@ def test_extract_features(repository):
         repository_url="https://github.com/apache/struts",
         published_timestamp=1607532756,
         paths=["pom.xml"],
+        description="Sample description for testing purposes. Intentionally referes to commit 7532d2f.",
     )
 
     extracted_features = extract_features(processed_commit, advisory_record)
@@ -56,6 +58,7 @@ def test_extract_features(repository):
     assert not extracted_features.references_ghissue
     assert extracted_features.n_changed_files == 1
     assert extracted_features.contains_jira_reference
+    assert extracted_features.referred_to_by_advisories
 
 
 def test_extract_references_vuln_id():
@@ -177,3 +180,18 @@ def test_extract_n_changed_files():
 def test_extract_contains_jira_reference():
     assert extract_contains_jira_reference(["NAME-213"])
     assert not extract_contains_jira_reference([])
+
+
+def test_extract_referred_to_by_advisories(repository):
+    commit = Commit(
+        commit_id="abcd1234qwert79843",
+        repository="test_repository",
+    )
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-31284", description="bla bla abcd123 bla bla"
+    )
+    assert extract_referred_to_by_advisories(commit, advisory_record)
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-31284", description="bla bla efgh678 bla bla"
+    )
+    assert not extract_referred_to_by_advisories(commit, advisory_record)

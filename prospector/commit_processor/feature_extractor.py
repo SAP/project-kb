@@ -30,6 +30,9 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     references_ghissue = extract_references_ghissue(commit.ghissue_refs)
     n_changed_files = extract_n_changed_files(commit.changed_files)
     contains_jira_reference = extract_contains_jira_reference(commit.jira_refs)
+    referred_to_by_advisories = extract_referred_to_by_advisories(
+        commit, advisory_record
+    )
     commit_feature = CommitFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
@@ -42,6 +45,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         references_ghissue=references_ghissue,
         n_changed_files=n_changed_files,
         contains_jira_reference=contains_jira_reference,
+        referred_to_by_advisories=referred_to_by_advisories,
     )
     return commit_feature
 
@@ -136,3 +140,12 @@ def extract_n_changed_files(changed_files: "list[str]") -> int:
 
 def extract_contains_jira_reference(jira_references: "list[str]") -> bool:
     return len(jira_references) > 0
+
+
+def extract_referred_to_by_advisories(
+    commit: Commit, advisory_record: AdvisoryRecord
+) -> bool:
+    return (
+        not advisory_record.from_nvd
+        and commit.commit_id[:7] in advisory_record.description
+    )
