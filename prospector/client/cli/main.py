@@ -194,7 +194,7 @@ def main(argv):
     if verbose:
         print("Vulnerability ID: " + vulnerability_id)
 
-    results = prospector(
+    results, _ = prospector(
         vulnerability_id=vulnerability_id,
         repository_url=repository_url,
         publication_date=publication_date,

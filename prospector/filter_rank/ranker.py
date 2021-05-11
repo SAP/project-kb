@@ -132,3 +132,18 @@ def make_dataframe(
         )  # This line needs to be updated to correspond to
         # the actual features
     return
+
+
+def apply_rules(candidates: "list[CommitFeatures]") -> "list[CommitFeatures]":
+    """
+    This applies a set of hand-crafted rules and returns a list of pairs:
+
+    (commit_features_obj, reason)
+
+    where 'reason' describes the rule that matched for that commit
+    """
+    # TODO this is dummy code
+    commit_features_obj = candidates[0]
+    # NOTE: the CommitFeatures object has a handy member variable "commit"
+    # which gives access to the underlying "raw" commit object
+    return [(commit_features_obj, "CVE id is mentioned in the commit message")]

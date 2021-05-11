@@ -8,6 +8,7 @@ from tqdm import tqdm
 from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
+from filter_rank.ranker import apply_rules
 from git.git import GIT_CACHE
 from git.git import Commit as GitCommit
 from git.git import Git
@@ -18,10 +19,10 @@ SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 365 * SECS_PER_DAY
 TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 
-MAX_CANDIDATES = 1000
+MAX_CANDIDATES = 10000
 
 
-def prospector(
+def prospector(  # noqa: C901
     vulnerability_id: str,
     repository_url: str,
     publication_date: str = "",
@@ -115,14 +116,24 @@ def prospector(
     payload = [c.__dict__ for c in preprocessed_commits]
 
     # TODO read backend address from config file
-    r = requests.post("http://localhost:8000/commits/", json=payload)
-    print("Status: %d" % r.status_code)
+    try:
+        r = requests.post("http://localhost:8000/commits/", json=payload)
+        print("Status: %d" % r.status_code)
+    except requests.exceptions.ConnectionError:
+        print("Could not reach backend, is it running?")
+        print("The result of commit pre-processing will not be saved.")
 
     # TODO compute actual rank
     # This is done by a POST request that creates a "search" job
     # whose inputs are the AdvisoryRecord, and the repository URL
     # The API returns immediately indicating a job id. From this
     # id, a URL can be constructed to poll the results asynchronously.
-    ranked_results = [repository.get_commit(c) for c in candidates]
 
-    return ranked_results
+    # if apply_rules:
+    # here we get the candidates that are "positives" based on rules
+    positives_based_on_rules = apply_rules(preprocessed_commits)
+
+    # here we rank all the candidates based on ML (to be done)
+    ranked_results = [repository.get_commit(c) for c in preprocessed_commits]
+
+    return positives_based_on_rules, ranked_results
