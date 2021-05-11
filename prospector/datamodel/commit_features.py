@@ -15,3 +15,4 @@ class CommitFeatures(BaseModel):
     n_hunks: int = 0
     n_changed_files: int = 0
     contains_jira_reference: bool = False
+    referred_to_by_nvd: bool = False
