@@ -1,3 +1,5 @@
+import requests
+
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitFeatures
@@ -141,6 +143,10 @@ def extract_contains_jira_reference(jira_references: "list[str]") -> bool:
 
 
 def extract_referred_to_by_nvd(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
-    return (
-        advisory_record.from_nvd and commit.commit_id[:7] in advisory_record.description
+    response = requests.get(
+        "http://127.0.0.1:8000/nvd/vulnerabilities/" + advisory_record.vulnerability_id
+    ).json()
+    references = response["cve"]["references"]["reference_data"]
+    return any(
+        filter(lambda reference: commit.commit_id in reference["url"], references)
     )
