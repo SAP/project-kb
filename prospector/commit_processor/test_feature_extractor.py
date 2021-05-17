@@ -10,6 +10,7 @@ from .feature_extractor import (
     extract_contains_jira_reference,
     extract_features,
     extract_is_close_to_advisory_date,
+    extract_other_CVE_in_message,
     extract_references_ghissue,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
@@ -43,6 +44,7 @@ def test_extract_features(repository):
     assert extracted_features.references_vuln_id
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
     assert extracted_features.changes_relevant_path
+    assert not extracted_features.other_CVE_in_message
     assert (
         extracted_features.commit_falls_in_given_interval_based_on_advisory_publicatation_date
     )
@@ -132,6 +134,18 @@ def test_extract_changes_relevant_path():
     )
     advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record", paths=[])
     assert not extract_changes_relevant_path(commit, advisory_record)
+
+
+def test_extract_other_CVE_in_message():
+    commit = Commit(
+        commit_id="test_commit",
+        repository="test_repository",
+        cve_refs=["CVE-2021-29425", "CVE-2021-21251"],
+    )
+    advisory_record = AdvisoryRecord(vulnerability_id="CVE-2020-31284")
+    assert extract_other_CVE_in_message(commit, advisory_record)
+    advisory_record = AdvisoryRecord(vulnerability_id="CVE-2021-29425")
+    assert not extract_other_CVE_in_message(commit, advisory_record)
 
 
 def test_is_commit_in_given_interval():

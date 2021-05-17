@@ -20,11 +20,13 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     references_ghissue = extract_references_ghissue(commit)
     contains_jira_reference = extract_contains_jira_reference(commit)
+    other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
     commit_feature = CommitFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
+        other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
         references_ghissue=references_ghissue,
         contains_jira_reference=contains_jira_reference,
@@ -51,6 +53,15 @@ def extract_changes_relevant_path(
     """
     return any(
         [changed_path in advisory_record.paths for changed_path in commit.changed_files]
+    )
+
+
+def extract_other_CVE_in_message(
+    commit: Commit, advisory_record: AdvisoryRecord
+) -> bool:
+    return (
+        len(commit.cve_refs) > 0
+        and advisory_record.vulnerability_id not in commit.cve_refs
     )
 
 

@@ -68,6 +68,11 @@ If you use VScode, this can be achieved by pasting these lines in your configura
 
 ## Starting the backend database and the job workers
 
+THIS STEP IS OPTIONAL: if the client is invoked but the backend is not running,
+you will just get a warning and miss out on opportunities to have faster response times
+if you make multiple queries. If you only intend to try out the client, feel free to skip
+this section and the next and go straight to "Using the CLI".
+
 Note: this section and the following assume you have performed succesfully the
 steps in the *setup* section above.
 
@@ -97,7 +102,15 @@ which is equivalent but more convenient for debugging.
 
 Try the following example:
 
-`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload -v --use-nvd`
+`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd`
+
+or, specifying the tag interval to restrict the retrieval of candidate commits:
+
+`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd --tag-interval FILEUPLOAD_1_3:FILEUPLOAD_1_3_1`
+
+In the example above, the tag interval has been chosen by considering the text of the advisory ("MultipartStream.java in Apache Commons FileUpload before 1.3.1 [...]") and comparing it with the set of tags found  in the git repository.
+
+*HEADS-UP*: Prospector has the capability to "guess" tag names from version intervals, but that functionality is not yet exposed to the command line client (it will be in the future). If you are curious to know how that works, please see the last page of [this paper](https://arxiv.org/pdf/2103.13375).
 
 ## Testing
 
