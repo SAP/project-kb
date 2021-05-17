@@ -18,10 +18,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         )
     )
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
-    avg_hunk_size = extract_avg_hunk_size(commit)
-    n_hunks = extract_n_hunks(commit)
     references_ghissue = extract_references_ghissue(commit)
-    n_changed_files = extract_n_changed_files(commit)
     contains_jira_reference = extract_contains_jira_reference(commit)
     commit_feature = CommitFeatures(
         commit=commit,
@@ -29,10 +26,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
-        avg_hunk_size=avg_hunk_size,
-        n_hunks=n_hunks,
         references_ghissue=references_ghissue,
-        n_changed_files=n_changed_files,
         contains_jira_reference=contains_jira_reference,
     )
     return commit_feature
@@ -97,26 +91,8 @@ def is_commit_in_given_interval(
         )
 
 
-def extract_avg_hunk_size(commit: Commit) -> int:
-    n_hunks = len(commit.hunks)
-
-    if n_hunks == 0:
-        return 0
-
-    lengths = [hunk[1] - hunk[0] for hunk in commit.hunks]
-    return sum(lengths) / n_hunks
-
-
-def extract_n_hunks(commit: Commit) -> int:
-    return commit.hunk_count
-
-
 def extract_references_ghissue(commit: Commit) -> bool:
     return len(commit.ghissue_refs) > 0
-
-
-def extract_n_changed_files(commit: Commit) -> int:
-    return len(commit.changed_files)
 
 
 def extract_contains_jira_reference(commit: Commit) -> bool:

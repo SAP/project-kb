@@ -6,13 +6,10 @@ from datamodel.commit import Commit
 from git.git import Git
 
 from .feature_extractor import (
-    extract_avg_hunk_size,
     extract_changes_relevant_path,
     extract_contains_jira_reference,
     extract_features,
     extract_is_close_to_advisory_date,
-    extract_n_changed_files,
-    extract_n_hunks,
     extract_references_ghissue,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
@@ -189,24 +186,6 @@ def test_extract_is_close_to_advisory_date(
     assert extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 0)
 
 
-def test_extract_avg_hunk_size():
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", hunks=[(3, 6)]
-    )
-    assert extract_avg_hunk_size(commit) == 3
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", hunks=[(1, 3), (6, 11)]
-    )
-    assert extract_avg_hunk_size(commit) == 3.5
-
-
-def test_extract_n_hunks():
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", hunk_count=12
-    )
-    assert extract_n_hunks(commit) == 12
-
-
 def test_extract_references_ghissue():
     commit = Commit(
         commit_id="test_commit", repository="test_repository", ghissue_refs=["#12"]
@@ -216,15 +195,6 @@ def test_extract_references_ghissue():
         commit_id="test_commit", repository="test_repository", ghissue_refs=[]
     )
     assert not extract_references_ghissue(commit)
-
-
-def test_extract_n_changed_files():
-    commit = Commit(
-        commit_id="test_commit",
-        repository="test_repository",
-        changed_files=["a.java", "b.py", "c.php"],
-    )
-    assert extract_n_changed_files(commit) == 3
 
 
 def test_extract_contains_jira_reference():

@@ -7,6 +7,9 @@ def test_simple():
         commit_id="abcd",
         repository="https://github.com/abc/xyz",
         timestamp="124234125",
+        hunk_count=3,
+        hunks=[(1, 5), (3, 8), (3, 9)],
+        changed_files=["pom.xml", "one.java", "two.php"],
     )
     commit_features = CommitFeatures(
         commit=commit,
@@ -14,10 +17,7 @@ def test_simple():
         time_between_commit_and_advisory_record=42,
         changes_relevant_path=True,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=True,
-        avg_hunk_size=10,
-        n_hunks=12,
         references_ghissue=True,
-        n_changed_files=44,
         contains_jira_reference=True,
     )
 
@@ -28,8 +28,8 @@ def test_simple():
     assert (
         commit_features.commit_falls_in_given_interval_based_on_advisory_publicatation_date
     )
-    assert commit_features.avg_hunk_size == 10
-    assert commit_features.n_hunks == 12
+    assert commit_features.avg_hunk_size == 5
+    assert commit_features.n_hunks == 3
     assert commit_features.references_ghissue
-    assert commit_features.n_changed_files == 44
+    assert commit_features.n_changed_files == 3
     assert commit_features.contains_jira_reference
