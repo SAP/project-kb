@@ -41,7 +41,6 @@ def test_extract_features(repository):
         repository_url="https://github.com/apache/struts",
         published_timestamp=1607532756,
         paths=["pom.xml"],
-        description="Sample description for testing purposes. Intentionally referes to commit 7532d2f.",
     )
 
     extracted_features = extract_features(processed_commit, advisory_record)
