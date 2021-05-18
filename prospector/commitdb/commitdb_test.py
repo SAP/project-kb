@@ -9,13 +9,13 @@ import pytest
 from commitdb.postgres import PostgresCommitDB, parse_connect_string
 from datamodel.commit import Commit
 
-DB_CONNECT_STRING = "HOST={};DB={};UID={};PWD={};PORT={};".format(
-    os.environ["POSTGRES_HOST"],
-    os.environ["POSTGRES_DBNAME"],
+DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
     os.environ["POSTGRES_USER"],
     os.environ["POSTGRES_PASSWORD"],
+    os.environ["POSTGRES_HOST"],
     os.environ["POSTGRES_PORT"],
-)
+    os.environ["POSTGRES_DBNAME"],
+).lower()
 
 
 @pytest.fixture
@@ -113,5 +113,5 @@ def test_upsert(setupdb):
 def test_parse_connect_string():
     parsed_connect_string = parse_connect_string(DB_CONNECT_STRING)
     assert parsed_connect_string["host"] == "localhost"
-    assert parsed_connect_string["uid"] == "postgres"
+    assert parsed_connect_string["user"] == "postgres"
     assert parsed_connect_string["port"] == "5432"
