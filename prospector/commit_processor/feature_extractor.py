@@ -32,7 +32,9 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     references_ghissue = extract_references_ghissue(commit.ghissue_refs)
     n_changed_files = extract_n_changed_files(commit.changed_files)
     contains_jira_reference = extract_contains_jira_reference(commit.jira_refs)
-    referred_to_by_nvd = extract_referred_to_by_nvd(commit, advisory_record)
+    referred_to_by_nvd = extract_referred_to_by_nvd(
+        commit, advisory_record, "http://127.0.0.1:8000"
+    )
     commit_feature = CommitFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
@@ -142,9 +144,11 @@ def extract_contains_jira_reference(jira_references: "list[str]") -> bool:
     return len(jira_references) > 0
 
 
-def extract_referred_to_by_nvd(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
+def extract_referred_to_by_nvd(
+    commit: Commit, advisory_record: AdvisoryRecord, nvd_rest_endpoint: str
+) -> bool:
     response = requests.get(
-        "http://127.0.0.1:8000/nvd/vulnerabilities/" + advisory_record.vulnerability_id
+        nvd_rest_endpoint + "/nvd/vulnerabilities/" + advisory_record.vulnerability_id
     ).json()
     references = response["cve"]["references"]["reference_data"]
     return any(

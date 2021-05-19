@@ -187,9 +187,11 @@ def test_extract_referred_to_by_nvd(repository):
         repository="test_repository",
     )
     advisory_record = AdvisoryRecord(vulnerability_id="CVE-2020-26258")
-    assert extract_referred_to_by_nvd(commit, advisory_record)
+    assert extract_referred_to_by_nvd(commit, advisory_record, "http://127.0.0.1:8000")
     commit = Commit(
         commit_id="f4d2eabd921cbd8808b9d923ee63d44538b4154f",
         repository="test_repository",
     )
-    assert not extract_referred_to_by_nvd(commit, advisory_record)
+    assert not extract_referred_to_by_nvd(
+        commit, advisory_record, "http://127.0.0.1:8000"
+    )
