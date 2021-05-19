@@ -10,6 +10,8 @@ def test_simple():
         hunk_count=3,
         hunks=[(1, 5), (3, 8), (3, 9)],
         changed_files=["pom.xml", "one.java", "two.php"],
+        ghissue_refs=["#365", "#42"],
+        jira_refs=["ABC-123", "CBA-456"],
     )
     commit_features = CommitFeatures(
         commit=commit,
@@ -18,8 +20,6 @@ def test_simple():
         changes_relevant_path=True,
         other_CVE_in_message=True,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=True,
-        references_ghissue=True,
-        contains_jira_reference=True,
     )
 
     assert commit_features.commit.repository == "https://github.com/abc/xyz"
