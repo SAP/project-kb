@@ -30,3 +30,7 @@ class CommitFeatures(BaseModel):
             self.avg_hunk_size = 0
 
         self.n_changed_files = len(self.commit.changed_files)
+
+        self.references_ghissue = len(self.commit.ghissue_refs) > 0
+
+        self.contains_jira_reference = len(self.commit.jira_refs) > 0

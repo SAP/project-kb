@@ -18,8 +18,6 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         )
     )
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
-    references_ghissue = extract_references_ghissue(commit)
-    contains_jira_reference = extract_contains_jira_reference(commit)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
     commit_feature = CommitFeatures(
         commit=commit,
@@ -28,8 +26,6 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         changes_relevant_path=changes_relevant_path,
         other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
-        references_ghissue=references_ghissue,
-        contains_jira_reference=contains_jira_reference,
     )
     return commit_feature
 
@@ -100,11 +96,3 @@ def is_commit_in_given_interval(
             version_timestamp + day_interval * DAY_IN_SECONDS <= commit_timestamp
             and version_timestamp >= commit_timestamp
         )
-
-
-def extract_references_ghissue(commit: Commit) -> bool:
-    return len(commit.ghissue_refs) > 0
-
-
-def extract_contains_jira_reference(commit: Commit) -> bool:
-    return len(commit.jira_refs) > 0

@@ -7,11 +7,9 @@ from git.git import Git
 
 from .feature_extractor import (
     extract_changes_relevant_path,
-    extract_contains_jira_reference,
     extract_features,
     extract_is_close_to_advisory_date,
     extract_other_CVE_in_message,
-    extract_references_ghissue,
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
     is_commit_in_given_interval,
@@ -198,23 +196,3 @@ def test_extract_is_close_to_advisory_date(
 
     test_commit.timestamp = 913601
     assert extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 0)
-
-
-def test_extract_references_ghissue():
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", ghissue_refs=["#12"]
-    )
-    assert extract_references_ghissue(commit)
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", ghissue_refs=[]
-    )
-    assert not extract_references_ghissue(commit)
-
-
-def test_extract_contains_jira_reference():
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", jira_refs=["NAME-213"]
-    )
-    assert extract_contains_jira_reference(commit)
-    commit = Commit(commit_id="test_commit", repository="test_repository", jira_refs=[])
-    assert not extract_contains_jira_reference(commit)
