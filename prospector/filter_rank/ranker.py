@@ -143,12 +143,18 @@ def apply_rules(candidates: "list[CommitFeatures]") -> "list[CommitFeatures]":
 
     where 'reason' describes the rule that matched for that candidate
     """
-    # TODO this is a dummy code
     commits_ruled = dict()
+    # Below goes the code to initialize the lists for a particular rule
+    # To add a new rule, one needs to add a line in the following form:
+    # commits_ruled["Rule name"] = []
     commits_ruled["Vuln ID is mentioned"] = []
     commits_ruled["GitHub issue is mentioned"] = []
     commits_ruled["Relevant path has been changed"] = []
     for candidate in candidates:
+        # Below goes the code to extract commits that correspond to a particular rule
+        # To add a new rule, one needs to add the following code snippet:
+        # if <condition>:
+        #    commits_ruled["Rule name"].append(candidate)
         if candidate.references_vuln_id:
             commits_ruled["Vuln ID is mentioned"].append(candidate)
         if candidate.references_ghissue:
