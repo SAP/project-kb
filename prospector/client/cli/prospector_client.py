@@ -51,13 +51,14 @@ def prospector(  # noqa: C901
         pprint(advisory_record)
 
     advisory_record.analyze(use_nvd=use_nvd)
+    print(advisory_record.code_tokens)
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
             datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
         )
 
-    print(advisory_record.paths)
+    # print(advisory_record.paths)
 
     print("Downloading repository {} in {}..".format(repository_url, git_cache))
     repository = Git(repository_url, git_cache)
@@ -89,7 +90,24 @@ def prospector(  # noqa: C901
         filter_files="*.java",
     )
 
+    print("found %d candidates" % len(candidates))
+    # if some code_tokens were found in the advisory text, require
+    # that candidate commits touch some file whose path contains those tokens
+    # NOTE: this works quite well for Java, not sure how general this criterion is
+
+    if advisory_record.code_tokens != []:
+        print(
+            "Detected tokens in advisory text, searching for files whose path contains those tokens"
+        )
+        print(advisory_record.code_tokens)
+
+    if modified_files == [""]:
+        modified_files = advisory_record.code_tokens
+    else:
+        modified_files.extend(advisory_record.code_tokens)
+
     candidates = filter_by_changed_files(candidates, modified_files, repository)
+
     # end of filtering
 
     if debug:
@@ -103,12 +121,6 @@ def prospector(  # noqa: C901
     pbar = tqdm(candidates)
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
-
-    # adv_processor = AdvisoryProcessor()
-    # advisory_record = adv_processor.process(advisory_record)
-
-    # get CommitFeatures
-    # invoke predict
 
     if debug:
         pprint(advisory_record)
@@ -145,6 +157,7 @@ def filter_by_changed_files(
     in "modified_files"
 
     """
+    modified_files = [f.lower() for f in modified_files if f != ""]
     filtered_candidates = []
     if len(modified_files) != 0:
         for commit_id in candidates:
@@ -152,8 +165,10 @@ def filter_by_changed_files(
             commit_changed_files = commit_obj.get_changed_files()
             for ccf in commit_changed_files:
                 for f in modified_files:
+                    ccf = ccf.lower()
                     if f in ccf:
+                        # if f in [e.lower() for e in ccf]:
+                        # print(f, commit_obj.get_id())
                         filtered_candidates.append(commit_obj.get_id())
 
-            # if any(f in modified_files for f in commit_obj.get_changed_paths()):
     return list(set(filtered_candidates))

@@ -196,8 +196,8 @@ def main(argv):  # noqa: C901
         publication_date = args.pub_date + "T00:00Z"
         # if the date is forced manually, the time interval can
         # be restricted
-        time_limit_before = int(time_limit_before / 5)
-        time_limit_after = int(time_limit_after / 2)
+        # time_limit_before = int(time_limit_before / 5)
+        # time_limit_after = int(time_limit_after / 2)
 
     git_cache = GIT_CACHE
     if os.environ["GIT_CACHE"]:
