@@ -136,18 +136,40 @@ def ping_server(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
-def display_results(results, verbose=False):
-    for r in results:
+def display_results(rule_filtered_results, ranked_results, verbose=False):
+    print("-" * 80)
+    print("Rule filtered results")
+    print("-" * 80)
+    count = 0
+    for reason, datamodel_commit in rule_filtered_results:
+        count += 1
+        print(
+            "{}/commit/{}    :  {}\n-----\n".format(
+                datamodel_commit.commit.get_repository(),
+                datamodel_commit.commit.get_id(),
+                reason,
+            )
+        )
+
+    print("-----")
+    print("Found {} candidates".format(count))
+
+    print("-" * 80)
+    print("Ranked results")
+    print("-" * 80)
+    for r in ranked_results:
         if verbose:
             print(r)
             # print(r.get_diff())
         else:
             print(r.get_msg())
 
-        print("{}/commit/{}\n-----\n".format(r.get_repository(), r.get_id()))
+        print(
+            "{}/commit/{}\n-----\n".format(r.commit.get_repository(), r.commit.get_id())
+        )
 
     print("-----")
-    print("Found %d candidates" % len(results))
+    print("Found %d candidates" % len(ranked_results))
 
 
 def main(argv):  # noqa: C901
@@ -219,7 +241,7 @@ def main(argv):  # noqa: C901
         print("time-limit before: " + str(time_limit_before))
         print("time-limit after: " + str(time_limit_after))
 
-    results = prospector(
+    rule_filtered_results, ranked_results = prospector(
         vulnerability_id=vulnerability_id,
         repository_url=repository_url,
         publication_date=publication_date,
@@ -236,7 +258,7 @@ def main(argv):  # noqa: C901
         limit_candidates=max_candidates,
     )
 
-    display_results(results, verbose=verbose)
+    display_results(rule_filtered_results, ranked_results, verbose=verbose)
 
     return True
 

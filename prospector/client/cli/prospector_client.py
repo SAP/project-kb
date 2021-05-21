@@ -5,9 +5,11 @@ from pprint import pprint
 import requests
 from tqdm import tqdm
 
+from commit_processor.feature_extractor import extract_features
 from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
+from filter_rank.ranker import apply_rules, rank
 from git.git import GIT_CACHE
 from git.git import Commit as GitCommit
 from git.git import Git
@@ -110,6 +112,13 @@ def prospector(  # noqa: C901
     # get CommitFeatures
     # invoke predict
 
+    # TODO here the preprocessed commits should be saved into the database
+    commit_features = []
+    for datamodel_commit in tqdm(preprocessed_commits):
+        commit_features.append(extract_features(datamodel_commit, advisory_record))
+
+    rule_filtered_commits = apply_rules(commit_features)
+
     if debug:
         pprint(advisory_record)
 
@@ -133,7 +142,9 @@ def prospector(  # noqa: C901
     # id, a URL can be constructed to poll the results asynchronously.
     ranked_results = [repository.get_commit(c) for c in candidates]
 
-    return ranked_results
+    ranked_results = rank(commit_features)
+
+    return rule_filtered_commits, ranked_results
 
 
 def filter_by_changed_files(
