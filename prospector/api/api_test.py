@@ -1,3 +1,5 @@
+import json
+
 from fastapi.testclient import TestClient
 
 from api.main import app
@@ -24,3 +26,13 @@ def test_post_preprocessed_commits():
     commits = [commit_1, commit_2]
     response = client.post("/commits/", json=commits)
     assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_get_commits():
+    repository = "xxx"
+    commit_id = "yyy"
+    response = client.get("/commits/" + repository)
+    print(response.json())
+    assert response.status_code == 200
+    assert json.loads(response.json())[0]["id"] == commit_id

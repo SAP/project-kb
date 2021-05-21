@@ -36,4 +36,4 @@ async def upload_preprocessed_commit(payload: List[Commit]):
     for commit in payload:
         db.save(commit)
 
-    return payload
+    return {"status": "ok"}
