@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 from datamodel.commit import Commit
@@ -15,3 +17,20 @@ class CommitFeatures(BaseModel):
     n_hunks: int = 0
     n_changed_files: int = 0
     contains_jira_reference: bool = False
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+
+        self.n_hunks = self.commit.hunk_count
+
+        if self.n_hunks > 0:
+            hunk_lengths = [hunk[1] - hunk[0] for hunk in self.commit.hunks]
+            self.avg_hunk_size = sum(hunk_lengths) / self.n_hunks
+        else:
+            self.avg_hunk_size = 0
+
+        self.n_changed_files = len(self.commit.changed_files)
+
+        self.references_ghissue = len(self.commit.ghissue_refs) > 0
+
+        self.contains_jira_reference = len(self.commit.jira_refs) > 0
