@@ -5,7 +5,8 @@ import pandas as pd
 
 from datamodel.commit_features import CommitFeatures
 from filter_rank import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
-from filter_rank.utils.model_loader import save_model
+
+from .utils.model_loader import save_model
 
 
 def filter_commits(candidates: "list[CommitFeatures]") -> "list[CommitFeatures]":
@@ -136,14 +137,24 @@ def make_dataframe(
 
 def apply_rules(candidates: "list[CommitFeatures]") -> "list[CommitFeatures]":
     """
-    This applies a set of hand-crafted rules and returns a list of pairs:
+    This applies a set of hand-crafted rules and returns a dict in the following form:
 
-    (commit_features_obj, reason)
+    commits_ruled["reason"] = [candidates]
 
-    where 'reason' describes the rule that matched for that commit
+    where 'reason' describes the rule that matched for that candidate
     """
-    # TODO this is dummy code
-    commit_features_obj = candidates[0]
+    # TODO this is a dummy code
+    commits_ruled = dict()
+    commits_ruled["Vuln ID is mentioned"] = []
+    commits_ruled["GitHub issue is mentioned"] = []
+    commits_ruled["Relevant path has been changed"] = []
+    for candidate in candidates:
+        if candidate.references_vuln_id:
+            commits_ruled["Vuln ID is mentioned"].append(candidate)
+        if candidate.references_ghissue:
+            commits_ruled["GitHub issue is mentioned"].append(candidate)
+        if candidate.changes_relevant_path:
+            commits_ruled["Relevant path has been changed"].append(candidate)
     # NOTE: the CommitFeatures object has a handy member variable "commit"
     # which gives access to the underlying "raw" commit object
-    return [(commit_features_obj, "CVE id is mentioned in the commit message")]
+    return commits_ruled
