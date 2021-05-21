@@ -18,6 +18,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DBNAME: postgres
+    volumes:
+      - ${CVE_DATA_PATH:-./cve_data}:/cve_data
 
   worker:
     build:

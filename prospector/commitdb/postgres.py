@@ -3,7 +3,7 @@ This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
 import psycopg2
-from psycopg2.extras import NamedTupleCursor
+from psycopg2.extensions import parse_dsn
 
 from datamodel.commit import Commit
 
@@ -22,16 +22,8 @@ class PostgresCommitDB(CommitDB):
         self.connection = None
 
     def connect(self, connect_string=None):
-        self.connect_string = connect_string.rstrip(";")
-        self.connection_data = parse_connect_string(self.connect_string)
-
-        self.connection = psycopg2.connect(
-            host=self.connection_data["host"],
-            dbname=self.connection_data["db"],
-            user=self.connection_data["uid"],
-            password=self.connection_data["pwd"],
-            cursor_factory=NamedTupleCursor,
-        )
+        parse_connect_string(connect_string)
+        self.connection = psycopg2.connect(connect_string)
 
     def lookup(self, commit_obj: Commit):
         if not self.connection:
@@ -146,15 +138,12 @@ class PostgresCommitDB(CommitDB):
 
 
 def parse_connect_string(connect_string):
-    # TODO convert to better connection string format
+    # According to:
     # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
-    result = dict()
-    connect_string = connect_string.rstrip(";")
+
     try:
-        parsed_string = [e.split("=") for e in connect_string.split(";")]
-        for key, value in parsed_string:
-            result[key.lower()] = value
+        parsed_string = parse_dsn(connect_string)
     except Exception:
         raise Exception("Invalid connect string: " + connect_string)
 
-    return dict(result)
+    return parsed_string
