@@ -13,8 +13,6 @@ from git.git import Commit as GitCommit
 from git.git import Git
 
 SECS_PER_DAY = 86400
-
-# TODO make this controllable from the client
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
 TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 
