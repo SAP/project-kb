@@ -158,6 +158,9 @@ def filter_by_changed_files(
 
     """
     modified_files = [f.lower() for f in modified_files if f != ""]
+    if len(modified_files) == 0:
+        return candidates
+
     filtered_candidates = []
     if len(modified_files) != 0:
         for commit_id in candidates:
