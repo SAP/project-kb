@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
@@ -8,7 +8,7 @@ class Commit(BaseModel):
     commit_id: str
     repository: str
     timestamp: Optional[int] = 0
-    hunks: List[List[int]] = Field(default_factory=list)
+    hunks: List[Tuple[int, int]] = Field(default_factory=list)
     hunk_count: Optional[int] = 0
     message: Optional[str] = ""
     diff: List[str] = Field(default_factory=list)
