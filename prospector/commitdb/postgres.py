@@ -5,6 +5,7 @@ the underlying database where pre-processed commits are stored
 import json
 
 import psycopg2
+import psycopg2.sql
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import RealDictCursor
 
@@ -47,7 +48,7 @@ class PostgresCommitDB(CommitDB):
 
         return data
 
-    def lookup_json(self, commit_obj: Commit):
+    def lookup_json(self, commit_obj: Commit, details):
         # Returns the results of the query in json format
         if not self.connection:
             raise Exception("Invalid connection")
@@ -55,10 +56,24 @@ class PostgresCommitDB(CommitDB):
         data = {}
         try:
             cur = self.connection.cursor(cursor_factory=RealDictCursor)
-            cur.execute(
-                "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
-                (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
-            )
+            if details:
+                cur.execute(
+                    "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
+                    (
+                        commit_obj.repository,
+                        commit_obj.commit_id,
+                        commit_obj.commit_id,
+                    ),
+                )
+            else:
+                cur.execute(
+                    "SELECT id FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
+                    (
+                        commit_obj.repository,
+                        commit_obj.commit_id,
+                        commit_obj.commit_id,
+                    ),
+                )
             data = json.dumps(cur.fetchall())
             cur.close()
         except Exception as ex:
