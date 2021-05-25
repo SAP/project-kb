@@ -151,39 +151,45 @@ def apply_rules(
         # To add a new rule, one needs to add the following code snippet:
         # if rules == "ALL" or "Rule name" in rules:
         #    apply_rule(candidate, rule_application_result)
+
         if rules == "ALL" or "REF_VULN_ID" in rules:
-            apply_rule_references_vuln_id(candidate, rule_application_result)
+            rule_explanation = apply_rule_references_vuln_id(candidate)
+            if rule_explanation:
+                if candidate not in rule_application_result:
+                    rule_application_result[candidate] = []
+                rule_application_result[candidate].append(rule_explanation)
+
         if rules == "ALL" or "REF_GH_ISSUE" in rules:
-            apply_rule_references_ghissue(candidate, rule_application_result)
+            rule_explanation = apply_rule_references_ghissue(candidate)
+            if rule_explanation:
+                if candidate not in rule_application_result:
+                    rule_application_result[candidate] = []
+                rule_application_result[candidate].append(rule_explanation)
+
         if rules == "ALL" or "CH_REL_PATH" in rules:
-            apply_rule_changes_relevant_path(candidate, rule_application_result)
+            rule_explanation = apply_rule_changes_relevant_path(candidate)
+            if rule_explanation:
+                if candidate not in rule_application_result:
+                    rule_application_result[candidate] = []
+                rule_application_result[candidate].append(rule_explanation)
     # NOTE: the CommitFeatures object has a handy member variable "commit"
     # which gives access to the underlying "raw" commit object
     return rule_application_result
 
 
-def apply_rule_references_vuln_id(
-    candidate: CommitFeatures, rule_application_result: dict
-):
+def apply_rule_references_vuln_id(candidate: CommitFeatures):
     if candidate.references_vuln_id:
-        if candidate not in rule_application_result:
-            rule_application_result[candidate] = []
-        rule_application_result[candidate].append("Vuln ID is mentioned")
+        return "Vuln ID is mentioned"
+    return None
 
 
-def apply_rule_references_ghissue(
-    candidate: CommitFeatures, rule_application_result: dict
-):
+def apply_rule_references_ghissue(candidate: CommitFeatures):
     if candidate.references_ghissue:
-        if candidate not in rule_application_result:
-            rule_application_result[candidate] = []
-        rule_application_result[candidate].append("GitHub issue is mentioned")
+        return "GitHub issue is mentioned"
+    return None
 
 
-def apply_rule_changes_relevant_path(
-    candidate: CommitFeatures, rule_application_result: dict
-):
+def apply_rule_changes_relevant_path(candidate: CommitFeatures):
     if candidate.changes_relevant_path:
-        if candidate not in rule_application_result:
-            rule_application_result[candidate] = []
-        rule_application_result[candidate].append("Relevant path has been changed")
+        return "Relevant path has been changed"
+    return None
