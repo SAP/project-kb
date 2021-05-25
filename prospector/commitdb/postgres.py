@@ -2,8 +2,12 @@
 This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
+import json
+
 import psycopg2
+import psycopg2.sql
 from psycopg2.extensions import parse_dsn
+from psycopg2.extras import RealDictCursor
 
 from datamodel.commit import Commit
 
@@ -37,6 +41,40 @@ class PostgresCommitDB(CommitDB):
                 (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
             )
             data = cur.fetchall()
+            cur.close()
+        except Exception as ex:
+            print(ex)
+            raise Exception("Could not lookup commit vector in database")
+
+        return data
+
+    def lookup_json(self, commit_obj: Commit, details):
+        # Returns the results of the query in json format
+        if not self.connection:
+            raise Exception("Invalid connection")
+
+        data = {}
+        try:
+            cur = self.connection.cursor(cursor_factory=RealDictCursor)
+            if details:
+                cur.execute(
+                    "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
+                    (
+                        commit_obj.repository,
+                        commit_obj.commit_id,
+                        commit_obj.commit_id,
+                    ),
+                )
+            else:
+                cur.execute(
+                    "SELECT id FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
+                    (
+                        commit_obj.repository,
+                        commit_obj.commit_id,
+                        commit_obj.commit_id,
+                    ),
+                )
+            data = json.dumps(cur.fetchall())
             cur.close()
         except Exception as ex:
             print(ex)

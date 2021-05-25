@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
@@ -94,9 +95,16 @@ async def create_data(repository_url, commit_id, label, vulnerability_id):
 # -----------------------------------------------------------------------------
 @app.get("/commits/{repository_url}")
 # async def get_commits(repository_url, commit_id=None, token=Depends(oauth2_scheme)):
-async def get_commits(repository_url, commit_id=None):
-    commit = Commit(commit_id, repository_url)
-    data = db.lookup(commit)
+async def get_commits(
+    repository_url: str,
+    commit_id: Optional[str] = None,
+    details: Optional[bool] = False,
+):
+    commit = Commit(commit_id=commit_id, repository=repository_url)
+    # use case: if a particular commit is queried, details should be returned
+    if commit_id:
+        details = True
+    data = db.lookup_json(commit, details)
 
     return data
 
