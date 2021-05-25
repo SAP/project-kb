@@ -135,32 +135,55 @@ def make_dataframe(
     return
 
 
-def apply_rules(candidates: "list[CommitFeatures]") -> "list[CommitFeatures]":
+def apply_rules(
+    candidates: "list[CommitFeatures]", rules="ALL"
+) -> "list[CommitFeatures]":
     """
     This applies a set of hand-crafted rules and returns a dict in the following form:
 
-    commits_ruled["reason"] = [candidates]
+    commits_ruled[candidate] = ["explanation1"]
 
     where 'reason' describes the rule that matched for that candidate
     """
-    commits_ruled = dict()
-    # Below goes the code to initialize the lists for a particular rule
-    # To add a new rule, one needs to add a line in the following form:
-    # commits_ruled["Rule name"] = []
-    commits_ruled["Vuln ID is mentioned"] = []
-    commits_ruled["GitHub issue is mentioned"] = []
-    commits_ruled["Relevant path has been changed"] = []
+    rule_application_result = dict()
     for candidate in candidates:
         # Below goes the code to extract commits that correspond to a particular rule
         # To add a new rule, one needs to add the following code snippet:
-        # if <condition>:
-        #    commits_ruled["Rule name"].append(candidate)
-        if candidate.references_vuln_id:
-            commits_ruled["Vuln ID is mentioned"].append(candidate)
-        if candidate.references_ghissue:
-            commits_ruled["GitHub issue is mentioned"].append(candidate)
-        if candidate.changes_relevant_path:
-            commits_ruled["Relevant path has been changed"].append(candidate)
+        # if rules == "ALL" or "Rule name" in rules:
+        #    apply_rule(candidate, rule_application_result)
+        if rules == "ALL" or "REF_VULN_ID" in rules:
+            apply_rule_references_vuln_id(candidate, rule_application_result)
+        if rules == "ALL" or "REF_GH_ISSUE" in rules:
+            apply_rule_references_ghissue(candidate, rule_application_result)
+        if rules == "ALL" or "CH_REL_PATH" in rules:
+            apply_rule_changes_relevant_path(candidate, rule_application_result)
     # NOTE: the CommitFeatures object has a handy member variable "commit"
     # which gives access to the underlying "raw" commit object
-    return commits_ruled
+    return rule_application_result
+
+
+def apply_rule_references_vuln_id(
+    candidate: CommitFeatures, rule_application_result: dict
+):
+    if candidate.references_vuln_id:
+        if candidate not in rule_application_result:
+            rule_application_result[candidate] = []
+        rule_application_result[candidate].append("Vuln ID is mentioned")
+
+
+def apply_rule_references_ghissue(
+    candidate: CommitFeatures, rule_application_result: dict
+):
+    if candidate.references_ghissue:
+        if candidate not in rule_application_result:
+            rule_application_result[candidate] = []
+        rule_application_result[candidate].append("GitHub issue is mentioned")
+
+
+def apply_rule_changes_relevant_path(
+    candidate: CommitFeatures, rule_application_result: dict
+):
+    if candidate.changes_relevant_path:
+        if candidate not in rule_application_result:
+            rule_application_result[candidate] = []
+        rule_application_result[candidate].append("Relevant path has been changed")

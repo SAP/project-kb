@@ -15,3 +15,8 @@ class CommitFeatures(BaseModel):
     n_hunks: int = 0
     n_changed_files: int = 0
     contains_jira_reference: bool = False
+
+    def __hash__(self) -> int:
+        # this function is needed to make the CommitFeatures object hashable
+        # in particular, this is used in the filter_rank module
+        return hash(self.commit.commit_id)

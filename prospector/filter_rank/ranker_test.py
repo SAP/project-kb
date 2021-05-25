@@ -84,22 +84,24 @@ def test_predict(candidates):
 
 def test_apply_rules(candidates):
     rules_filtered = apply_rules(candidates=candidates)
-    assert candidates[0] in rules_filtered["Vuln ID is mentioned"]
-    assert candidates[0] in rules_filtered["GitHub issue is mentioned"]
-    assert candidates[0] in rules_filtered["Relevant path has been changed"]
+    assert candidates[0] in rules_filtered
+    assert "Vuln ID is mentioned" in rules_filtered[candidates[0]]
+    assert "GitHub issue is mentioned" in rules_filtered[candidates[0]]
+    assert "Relevant path has been changed" in rules_filtered[candidates[0]]
 
-    assert candidates[1] in rules_filtered["Vuln ID is mentioned"]
-    assert candidates[1] not in rules_filtered["GitHub issue is mentioned"]
-    assert candidates[1] not in rules_filtered["Relevant path has been changed"]
+    assert candidates[1] in rules_filtered
+    assert "Vuln ID is mentioned" in rules_filtered[candidates[1]]
+    assert "GitHub issue is mentioned" not in rules_filtered[candidates[1]]
+    assert "Relevant path has been changed" not in rules_filtered[candidates[1]]
 
-    assert candidates[2] not in rules_filtered["Vuln ID is mentioned"]
-    assert candidates[2] in rules_filtered["GitHub issue is mentioned"]
-    assert candidates[2] not in rules_filtered["Relevant path has been changed"]
+    assert candidates[2] in rules_filtered
+    assert "Vuln ID is mentioned" not in rules_filtered[candidates[2]]
+    assert "GitHub issue is mentioned" in rules_filtered[candidates[2]]
+    assert "Relevant path has been changed" not in rules_filtered[candidates[2]]
 
-    assert candidates[3] not in rules_filtered["Vuln ID is mentioned"]
-    assert candidates[3] not in rules_filtered["GitHub issue is mentioned"]
-    assert candidates[3] in rules_filtered["Relevant path has been changed"]
+    assert candidates[3] in rules_filtered
+    assert "Vuln ID is mentioned" not in rules_filtered[candidates[3]]
+    assert "GitHub issue is mentioned" not in rules_filtered[candidates[3]]
+    assert "Relevant path has been changed" in rules_filtered[candidates[3]]
 
-    assert candidates[4] not in rules_filtered["Vuln ID is mentioned"]
-    assert candidates[4] not in rules_filtered["GitHub issue is mentioned"]
-    assert candidates[4] not in rules_filtered["Relevant path has been changed"]
+    assert candidates[4] not in rules_filtered
