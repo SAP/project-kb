@@ -11,7 +11,12 @@ from pprint import pprint
 
 import requests
 
-from client.cli.prospector_client import MAX_CANDIDATES, prospector
+from client.cli.prospector_client import (
+    MAX_CANDIDATES,
+    TIME_LIMIT_AFTER,
+    TIME_LIMIT_BEFORE,
+    prospector,
+)
 from git.git import GIT_CACHE
 
 logger = logging.getLogger("prospector")
@@ -47,6 +52,13 @@ def parseArguments(args):
         default="",
         type=str,
         help="Tag interval (X,Y) to consider (the commit must be reachabla from Y but not from X, and must not be older than X)",
+    )
+
+    parser.add_argument(
+        "--modified-files",
+        default="",
+        type=str,
+        help="Files (partial names are ok, comma separated) that the candidate commits are supposed to touch",
     )
 
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
@@ -128,7 +140,7 @@ def display_results(results, verbose=False):
     for r in results:
         if verbose:
             print(r)
-            print(r.get_diff())
+            # print(r.get_diff())
         else:
             print(r.get_msg())
 
@@ -138,7 +150,7 @@ def display_results(results, verbose=False):
     print("Found %d candidates" % len(results))
 
 
-def main(argv):
+def main(argv):  # noqa: C901
     args = parseArguments(argv)
     configuration = getConfiguration(args.conf)
 
@@ -170,11 +182,22 @@ def main(argv):
 
     vulnerability_id = args.vulnerability_id
     repository_url = args.repository
-    publication_date = args.pub_date
+
     vuln_descr = args.descr
     use_nvd = args.use_nvd
     tag_interval = args.tag_interval
+    time_limit_before = TIME_LIMIT_BEFORE
+    time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
+    modified_files = args.modified_files.split(",")
+
+    publication_date = ""
+    if args.pub_date != "":
+        publication_date = args.pub_date + "T00:00Z"
+        # if the date is forced manually, the time interval can
+        # be restricted
+        # time_limit_before = int(time_limit_before / 5)
+        # time_limit_after = int(time_limit_after / 2)
 
     git_cache = GIT_CACHE
     if os.environ["GIT_CACHE"]:
@@ -193,6 +216,8 @@ def main(argv):
 
     if verbose:
         print("Vulnerability ID: " + vulnerability_id)
+        print("time-limit before: " + str(time_limit_before))
+        print("time-limit after: " + str(time_limit_after))
 
     results = prospector(
         vulnerability_id=vulnerability_id,
@@ -200,6 +225,9 @@ def main(argv):
         publication_date=publication_date,
         vuln_descr=vuln_descr,
         tag_interval=tag_interval,
+        modified_files=modified_files,
+        time_limit_before=time_limit_before,
+        time_limit_after=time_limit_after,
         use_nvd=use_nvd,
         nvd_rest_endpoint=nvd_rest_endpoint,
         git_cache=git_cache,
