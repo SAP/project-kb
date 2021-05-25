@@ -19,9 +19,9 @@ from filter_rank.ranker import (
 def candidates():
     return [
         CommitFeatures(
-            commit=Commit(repository="repo1", commit_id="1"),
+            commit=Commit(repository="repo1", commit_id="1", ghissue_refs=["example"]),
             references_vuln_id=True,
-            references_ghissue=True,
+            # references_ghissue=True,
             changes_relevant_path=True,
         ),
         CommitFeatures(
@@ -31,9 +31,9 @@ def candidates():
             changes_relevant_path=False,
         ),
         CommitFeatures(
-            commit=Commit(repository="repo3", commit_id="3"),
+            commit=Commit(repository="repo3", commit_id="3", ghissue_refs=["example"]),
             references_vuln_id=False,
-            references_ghissue=True,
+            # references_ghissue=True,
             changes_relevant_path=False,
         ),
         CommitFeatures(
@@ -84,6 +84,7 @@ def test_predict(candidates):
 
 def test_apply_rules(candidates):
     rules_filtered = apply_rules(candidates=candidates)
+    print(rules_filtered)
     assert candidates[0] in rules_filtered
     assert "Vuln ID is mentioned" in rules_filtered[candidates[0]]
     assert "GitHub issue is mentioned" in rules_filtered[candidates[0]]

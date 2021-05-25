@@ -141,9 +141,9 @@ def apply_rules(
     """
     This applies a set of hand-crafted rules and returns a dict in the following form:
 
-    commits_ruled[candidate] = ["explanation1"]
+    commits_ruled[candidate] = ["explanation"]
 
-    where 'reason' describes the rule that matched for that candidate
+    where 'explanation' describes the rule that matched for that candidate
     """
     rule_application_result = dict()
     for candidate in candidates:
