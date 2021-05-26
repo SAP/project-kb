@@ -6,15 +6,10 @@ from datamodel.commit import Commit
 from git.git import Git
 
 from .feature_extractor import (
-    extract_avg_hunk_size,
     extract_changes_relevant_path,
-    extract_contains_jira_reference,
     extract_features,
     extract_is_close_to_advisory_date,
-    extract_n_changed_files,
-    extract_n_hunks,
     extract_other_CVE_in_message,
-    extract_references_ghissue,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
     extract_time_between_commit_and_advisory_record,
@@ -61,37 +56,84 @@ def test_extract_features(repository):
 
 
 def test_extract_references_vuln_id():
-    cve_ids = ["CVE-2020-26258", "CVE-1234-1234"]
-    result = extract_references_vuln_id(cve_ids, "CVE-2020-26258")
+    commit = Commit(
+        commit_id="test_commit",
+        repository="test_repository",
+        cve_refs=["test_advisory_record", "another_advisory_record"],
+    )
+    advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record")
+    result = extract_references_vuln_id(commit, advisory_record)
     assert result
 
 
 def test_time_between_commit_and_advisory_record():
-    assert extract_time_between_commit_and_advisory_record(142, 100) == 42
+    commit = Commit(
+        commit_id="test_commit", repository="test_repository", timestamp=142
+    )
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="test_advisory_record", published_timestamp=100
+    )
+    assert (
+        extract_time_between_commit_and_advisory_record(commit, advisory_record) == 42
+    )
 
 
 def test_extract_changes_relevant_path():
     path_1 = "a/b.py"
     path_2 = "a/c.py"
     path_3 = "a/d.py"
-    assert extract_changes_relevant_path(
-        relevant_paths=[path_1], changed_paths=[path_1, path_2]
+
+    commit = Commit(
+        commit_id="test_commit", repository="test_repository", changed_files=[path_1]
     )
-    assert extract_changes_relevant_path(
-        relevant_paths=[path_1, path_2], changed_paths=[path_2]
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
-    assert not extract_changes_relevant_path(
-        relevant_paths=[path_3], changed_paths=[path_1, path_2]
+    assert extract_changes_relevant_path(commit, advisory_record)
+
+    commit = Commit(
+        commit_id="test_commit",
+        repository="test_repository",
+        changed_files=[path_1, path_2],
     )
-    assert not extract_changes_relevant_path(
-        relevant_paths=[path_1, path_2], changed_paths=[path_3]
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="test_advisory_record", paths=[path_2]
     )
-    assert not extract_changes_relevant_path(
-        relevant_paths=[], changed_paths=[path_1, path_2]
+    assert extract_changes_relevant_path(commit, advisory_record)
+
+    commit = Commit(
+        commit_id="test_commit", repository="test_repository", changed_files=[path_3]
     )
-    assert not extract_changes_relevant_path(
-        relevant_paths=[path_1, path_2], changed_paths=[]
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
+    assert not extract_changes_relevant_path(commit, advisory_record)
+
+    commit = Commit(
+        commit_id="test_commit",
+        repository="test_repository",
+        changed_files=[path_1, path_2],
+    )
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="test_advisory_record", paths=[path_3]
+    )
+    assert not extract_changes_relevant_path(commit, advisory_record)
+
+    commit = Commit(
+        commit_id="test_commit", repository="test_repository", changed_files=[]
+    )
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="test_advisory_record", paths=[path_1, path_2]
+    )
+    assert not extract_changes_relevant_path(commit, advisory_record)
+
+    commit = Commit(
+        commit_id="test_commit",
+        repository="test_repository",
+        changed_files=[path_1, path_2],
+    )
+    advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record", paths=[])
+    assert not extract_changes_relevant_path(commit, advisory_record)
 
 
 def test_extract_other_CVE_in_message():
@@ -156,29 +198,6 @@ def test_extract_is_close_to_advisory_date(
 
     test_commit.timestamp = 913601
     assert extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 0)
-
-
-def test_extract_avg_hunk_size():
-    assert extract_avg_hunk_size([(3, 6)]) == 3
-    assert extract_avg_hunk_size([(1, 3), (6, 11)]) == 3.5
-
-
-def test_extract_n_hunks():
-    assert extract_n_hunks(12) == 12
-
-
-def test_extract_references_ghissue():
-    assert extract_references_ghissue(["#12"])
-    assert not extract_references_ghissue([])
-
-
-def test_extract_n_changed_files():
-    assert extract_n_changed_files(["a.java", "b.py", "c.php"]) == 3
-
-
-def test_extract_contains_jira_reference():
-    assert extract_contains_jira_reference(["NAME-213"])
-    assert not extract_contains_jira_reference([])
 
 
 def test_extract_referred_to_by_nvd(repository):
