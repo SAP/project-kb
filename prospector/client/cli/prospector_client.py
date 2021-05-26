@@ -36,6 +36,8 @@ def prospector(  # noqa: C901
     verbose: bool = False,
     debug: bool = True,
     limit_candidates: int = MAX_CANDIDATES,
+    handcrafted_rules: "list[str]" = ["ALL"],
+    model_name: str = "",
 ) -> "list[Commit]":
 
     if debug:
@@ -131,11 +133,11 @@ def prospector(  # noqa: C901
     # invoke predict
 
     # TODO here the preprocessed commits should be saved into the database
-    commit_features = []
+    commit_with_features = []
     for datamodel_commit in tqdm(preprocessed_commits):
-        commit_features.append(extract_features(datamodel_commit, advisory_record))
+        commit_with_features.append(extract_features(datamodel_commit, advisory_record))
 
-    rule_filtered_commits = apply_rules(commit_features)
+    rule_application_result = apply_rules(commit_with_features, rules=handcrafted_rules)
 
     if debug:
         pprint(advisory_record)
@@ -160,9 +162,9 @@ def prospector(  # noqa: C901
     # id, a URL can be constructed to poll the results asynchronously.
     ranked_results = [repository.get_commit(c) for c in candidates]
 
-    ranked_results = rank(commit_features)
+    ranked_results = rank(commit_with_features, model_name=model_name)
 
-    return rule_filtered_commits, ranked_results
+    return rule_application_result, ranked_results
 
 
 def filter_by_changed_files(

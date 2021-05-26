@@ -141,13 +141,13 @@ def display_results(rule_filtered_results, ranked_results, verbose=False):
     print("Rule filtered results")
     print("-" * 80)
     count = 0
-    for reason, datamodel_commit in rule_filtered_results:
+    for datamodel_commit, explanation in rule_filtered_results:
         count += 1
         print(
             "{}/commit/{}    :  {}\n-----\n".format(
                 datamodel_commit.commit.get_repository(),
                 datamodel_commit.commit.get_id(),
-                reason,
+                explanation,
             )
         )
 

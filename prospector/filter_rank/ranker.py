@@ -136,7 +136,7 @@ def make_dataframe(
 
 
 def apply_rules(
-    candidates: "list[CommitFeatures]", rules="ALL"
+    candidates: "list[CommitFeatures]", rules=["ALL"]
 ) -> "list[CommitFeatures]":
     """
     This applies a set of hand-crafted rules and returns a dict in the following form:
@@ -152,21 +152,21 @@ def apply_rules(
         # if rules == "ALL" or "Rule name" in rules:
         #    apply_rule(candidate, rule_application_result)
 
-        if rules == "ALL" or "REF_VULN_ID" in rules:
+        if "ALL" in rules or "REF_VULN_ID" in rules:
             rule_explanation = apply_rule_references_vuln_id(candidate)
             if rule_explanation:
                 if candidate not in rule_application_result:
                     rule_application_result[candidate] = []
                 rule_application_result[candidate].append(rule_explanation)
 
-        if rules == "ALL" or "REF_GH_ISSUE" in rules:
+        if "ALL" in rules or "REF_GH_ISSUE" in rules:
             rule_explanation = apply_rule_references_ghissue(candidate)
             if rule_explanation:
                 if candidate not in rule_application_result:
                     rule_application_result[candidate] = []
                 rule_application_result[candidate].append(rule_explanation)
 
-        if rules == "ALL" or "CH_REL_PATH" in rules:
+        if "ALL" in rules or "CH_REL_PATH" in rules:
             rule_explanation = apply_rule_changes_relevant_path(candidate)
             if rule_explanation:
                 if candidate not in rule_application_result:
