@@ -184,14 +184,17 @@ def test_extract_contains_jira_reference():
 
 def test_extract_referred_to_by_advisories(repository):
     commit = Commit(
-        commit_id="abcd1234qwert79843",
+        commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
         repository="test_repository",
     )
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="CVE-2020-31284", description="bla bla abcd123 bla bla"
+    advisory_record = AdvisoryRecord(vulnerability_id="CVE-2020-26258")
+    assert extract_referred_to_by_advisories(
+        commit, advisory_record, "http://127.0.0.1:8000"
     )
-    assert extract_referred_to_by_advisories(commit, advisory_record)
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="CVE-2020-31284", description="bla bla efgh678 bla bla"
+    commit = Commit(
+        commit_id="f4d2eabd921cbd8808b9d923ee63d44538b4154f",
+        repository="test_repository",
     )
-    assert not extract_referred_to_by_advisories(commit, advisory_record)
+    assert not extract_referred_to_by_advisories(
+        commit, advisory_record, "http://127.0.0.1:8000"
+    )
