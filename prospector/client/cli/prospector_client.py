@@ -9,7 +9,7 @@ from commit_processor.feature_extractor import extract_features
 from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from filter_rank.ranker import apply_rules, rank
+from filter_rank.rank import apply_rules, rank
 from git.git import GIT_CACHE
 from git.git import Commit as GitCommit
 from git.git import Git
@@ -126,13 +126,6 @@ def prospector(  # noqa: C901
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
-    # adv_processor = AdvisoryProcessor()
-    # advisory_record = adv_processor.process(advisory_record)
-
-    # get CommitFeatures
-    # invoke predict
-
-    # TODO here the preprocessed commits should be saved into the database
     commit_with_features = []
     for datamodel_commit in tqdm(preprocessed_commits):
         commit_with_features.append(extract_features(datamodel_commit, advisory_record))

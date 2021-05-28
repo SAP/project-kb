@@ -5,7 +5,7 @@ import pytest
 
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitFeatures
-from filter_rank.ranker import (
+from filter_rank.rank import (
     apply_rules,
     filter_commits,
     make_dataframe,
