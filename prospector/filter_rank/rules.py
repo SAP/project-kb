@@ -1,9 +1,9 @@
-from datamodel.commit_features import CommitFeatures
+from datamodel.commit_features import CommitWithFeatures
 
 
 def apply_rules(
-    candidates: "list[CommitFeatures]", rules=["ALL"]
-) -> "list[CommitFeatures]":
+    candidates: "list[CommitWithFeatures]", rules=["ALL"]
+) -> "list[CommitWithFeatures]":
     """
     This applies a set of hand-crafted rules and returns a dict in the following form:
 
@@ -38,24 +38,24 @@ def apply_rules(
                 if candidate not in rule_application_result:
                     rule_application_result[candidate] = []
                 rule_application_result[candidate].append(rule_explanation)
-    # NOTE: the CommitFeatures object has a handy member variable "commit"
+    # NOTE: the CommitWithFeatures object has a handy member variable "commit"
     # which gives access to the underlying "raw" commit object
     return rule_application_result
 
 
-def apply_rule_references_vuln_id(candidate: CommitFeatures):
+def apply_rule_references_vuln_id(candidate: CommitWithFeatures):
     if candidate.references_vuln_id:
         return "Vuln ID is mentioned"
     return None
 
 
-def apply_rule_references_ghissue(candidate: CommitFeatures):
+def apply_rule_references_ghissue(candidate: CommitWithFeatures):
     if candidate.references_ghissue:
         return "GitHub issue is mentioned"
     return None
 
 
-def apply_rule_changes_relevant_path(candidate: CommitFeatures):
+def apply_rule_changes_relevant_path(candidate: CommitWithFeatures):
     if candidate.changes_relevant_path:
         return "Relevant path has been changed"
     return None

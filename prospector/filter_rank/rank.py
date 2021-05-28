@@ -3,13 +3,15 @@ import re
 
 import pandas as pd
 
-from datamodel.commit_features import CommitFeatures
+from datamodel.commit_features import CommitWithFeatures
 from filter_rank import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
 
 from .utils.model_loader import save_model
 
 
-def rank(candidates: "list[CommitFeatures]", model_name: str) -> "list[CommitFeatures]":
+def rank(
+    candidates: "list[CommitWithFeatures]", model_name: str
+) -> "list[CommitWithFeatures]":
     """
     Takes in input a set of candidates and associates to each of them a rank (ordering) and
     a ranking vector, based on how good they match with the advisory record in input.
@@ -22,7 +24,7 @@ def rank(candidates: "list[CommitFeatures]", model_name: str) -> "list[CommitFea
     return [c for _, c in sorted(scores, reverse=True)]
 
 
-def predict(model_name: str, commit_features: CommitFeatures) -> float:
+def predict(model_name: str, commit_features: CommitWithFeatures) -> float:
     """
     The function computes the similarity score for the given commit
     """

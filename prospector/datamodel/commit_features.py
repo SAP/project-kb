@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from datamodel.commit import Commit
 
 
-class CommitFeatures(BaseModel):
+class CommitWithFeatures(BaseModel):
     commit: Commit
     references_vuln_id: bool = False
     references_ghissue: bool = False
@@ -36,6 +36,6 @@ class CommitFeatures(BaseModel):
         self.contains_jira_reference = len(self.commit.jira_refs) > 0
 
     def __hash__(self) -> int:
-        # this function is needed to make the CommitFeatures object hashable
+        # this function is needed to make the CommitWithFeatures object hashable
         # in particular, this is used in the filter_rank module
         return hash(self.commit.commit_id)

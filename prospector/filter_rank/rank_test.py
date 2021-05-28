@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from datamodel.commit import Commit
-from datamodel.commit_features import CommitFeatures
+from datamodel.commit_features import CommitWithFeatures
 from filter_rank.filter import filter_commits
 from filter_rank.rank import make_dataframe, predict, rank, train
 from filter_rank.rules import apply_rules
@@ -13,31 +13,31 @@ from filter_rank.rules import apply_rules
 @pytest.fixture
 def candidates():
     return [
-        CommitFeatures(
+        CommitWithFeatures(
             commit=Commit(repository="repo1", commit_id="1", ghissue_refs=["example"]),
             references_vuln_id=True,
             # references_ghissue=True,
             changes_relevant_path=True,
         ),
-        CommitFeatures(
+        CommitWithFeatures(
             commit=Commit(repository="repo2", commit_id="2"),
             references_vuln_id=True,
             references_ghissue=False,
             changes_relevant_path=False,
         ),
-        CommitFeatures(
+        CommitWithFeatures(
             commit=Commit(repository="repo3", commit_id="3", ghissue_refs=["example"]),
             references_vuln_id=False,
             # references_ghissue=True,
             changes_relevant_path=False,
         ),
-        CommitFeatures(
+        CommitWithFeatures(
             commit=Commit(repository="repo4", commit_id="4"),
             references_vuln_id=False,
             references_ghissue=False,
             changes_relevant_path=True,
         ),
-        CommitFeatures(
+        CommitWithFeatures(
             commit=Commit(repository="repo5", commit_id="5"),
             references_vuln_id=False,
             references_ghissue=False,

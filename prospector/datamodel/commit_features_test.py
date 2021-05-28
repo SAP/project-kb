@@ -1,5 +1,5 @@
 from datamodel.commit import Commit
-from datamodel.commit_features import CommitFeatures
+from datamodel.commit_features import CommitWithFeatures
 
 
 def test_simple():
@@ -13,7 +13,7 @@ def test_simple():
         ghissue_refs=["#365", "#42"],
         jira_refs=["ABC-123", "CBA-456"],
     )
-    commit_features = CommitFeatures(
+    commit_features = CommitWithFeatures(
         commit=commit,
         references_vuln_id=True,
         time_between_commit_and_advisory_record=42,
