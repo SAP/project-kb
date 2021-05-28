@@ -160,7 +160,7 @@ def prospector(  # noqa: C901
     # whose inputs are the AdvisoryRecord, and the repository URL
     # The API returns immediately indicating a job id. From this
     # id, a URL can be constructed to poll the results asynchronously.
-    ranked_results = [repository.get_commit(c) for c in candidates]
+    ranked_results = [repository.get_commit(c) for c in preprocessed_commits]
 
     ranked_results = rank(commit_with_features, model_name=model_name)
 

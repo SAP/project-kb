@@ -141,13 +141,13 @@ def display_results(rule_filtered_results, ranked_results, verbose=False):
     print("Rule filtered results")
     print("-" * 80)
     count = 0
-    for datamodel_commit, explanation in rule_filtered_results:
+    for commit in rule_filtered_results:
         count += 1
         print(
             "{}/commit/{}    :  {}\n-----\n".format(
-                datamodel_commit.commit.get_repository(),
-                datamodel_commit.commit.get_id(),
-                explanation,
+                commit.commit.repository,
+                commit.commit.commit_id,
+                rule_filtered_results[commit],
             )
         )
 
@@ -162,11 +162,9 @@ def display_results(rule_filtered_results, ranked_results, verbose=False):
             print(r)
             # print(r.get_diff())
         else:
-            print(r.get_msg())
+            print(r.commit.message)
 
-        print(
-            "{}/commit/{}\n-----\n".format(r.commit.get_repository(), r.commit.get_id())
-        )
+        print("{}/commit/{}\n-----\n".format(r.commit.repository, r.commit.commit_id))
 
     print("-----")
     print("Found %d candidates" % len(ranked_results))
@@ -259,6 +257,7 @@ def main(argv):  # noqa: C901
     )
 
     display_results(rule_filtered_results, ranked_results, verbose=verbose)
+    # print(rule_filtered_results)
 
     return True
 
