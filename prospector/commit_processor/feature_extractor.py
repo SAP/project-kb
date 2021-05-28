@@ -1,6 +1,7 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitFeatures
+from git.git import Git
 
 DAYS_BEFORE = 180
 DAYS_AFTER = 365
@@ -99,6 +100,24 @@ def is_commit_in_given_interval(
             version_timestamp + day_interval * DAY_IN_SECONDS <= commit_timestamp
             and version_timestamp >= commit_timestamp
         )
+
+
+def is_commit_reachable_from_given_tag(
+    commit: Commit, advisory_record: AdvisoryRecord, version_tag: str
+) -> bool:
+    """
+    Return True if the commit is reachable from the given tag
+    """
+    repo = Git(advisory_record.repository_url)
+    repo.clone()
+    if not repo.get_commits_between_two_commit(
+        commit.commit_id, repo.get_commit_id_for_tag(version_tag)
+    ) and not repo.get_commits_between_two_commit(
+        commit.commit_id, repo.get_commit_id_for_tag(version_tag)
+    ):
+        return False
+
+    return True
 
 
 def extract_avg_hunk_size(hunks: "list[tuple[int]]") -> int:
