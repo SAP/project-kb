@@ -5,14 +5,9 @@ import pytest
 
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitFeatures
-from filter_rank.rank import (
-    apply_rules,
-    filter_commits,
-    make_dataframe,
-    predict,
-    rank,
-    train,
-)
+from filter_rank.filter import filter_commits
+from filter_rank.rank import make_dataframe, predict, rank, train
+from filter_rank.rules import apply_rules
 
 
 @pytest.fixture

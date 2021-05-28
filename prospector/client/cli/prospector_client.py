@@ -9,7 +9,8 @@ from commit_processor.feature_extractor import extract_features
 from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from filter_rank.rank import apply_rules, rank
+from filter_rank.rank import rank
+from filter_rank.rules import apply_rules
 from git.git import GIT_CACHE
 from git.git import Commit as GitCommit
 from git.git import Git
