@@ -19,6 +19,8 @@ from client.cli.prospector_client import (
 )
 from git.git import GIT_CACHE
 
+DEFAULT_BACKEND = "http://localhost:8080"
+
 logger = logging.getLogger("prospector")
 
 # VERSION = '0.1.0'
@@ -62,6 +64,10 @@ def parseArguments(args):
     )
 
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
+
+    parser.add_argument(
+        "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
+    )
 
     parser.add_argument("-c", "--conf", help="specify configuration file")
 
@@ -112,7 +118,7 @@ def getConfiguration(customConfigFile=None):
     return config
 
 
-def ping_server(server_url: str, verbose: bool = False) -> bool:
+def ping_backend(server_url: str, verbose: bool = False) -> bool:
     """Tries to contact backend server
 
     Args:
@@ -174,17 +180,21 @@ def main(argv):  # noqa: C901
     args = parseArguments(argv)
     configuration = getConfiguration(args.conf)
 
+    if args.vulnerability_id is None:
+        print("No vulnerability id was specified. Cannot proceed.")
+        return False
+
     if configuration is None:
         print("Invalid configuration, exiting.")
         return False
 
-    verbose = configuration["global"].getboolean("verbose")
-    if args.verbose:
-        verbose = args.verbose
-
     debug = configuration["global"].getboolean("debug")
     if args.debug:
         debug = args.debug
+
+    verbose = configuration["global"].getboolean("verbose")
+    if args.verbose:
+        verbose = args.verbose
 
     if debug:
         verbose = True
@@ -192,13 +202,12 @@ def main(argv):  # noqa: C901
     if configuration["global"].get("nvd_rest_endpoint"):
         nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
 
-    if args.ping:
-        srv = configuration["global"]["server"]
-        return ping_server(srv, verbose)
+    backend = configuration["global"].getboolean("backend") or DEFAULT_BACKEND
+    if args.backend:
+        backend = args.backend
 
-    if args.vulnerability_id is None:
-        print("No vulnerability id was specified. Cannot proceed.")
-        return False
+    if args.ping:
+        return ping_backend(backend, verbose)
 
     vulnerability_id = args.vulnerability_id
     repository_url = args.repository
@@ -250,6 +259,7 @@ def main(argv):  # noqa: C901
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
         nvd_rest_endpoint=nvd_rest_endpoint,
+        backend_address=backend,
         git_cache=git_cache,
         verbose=verbose,
         debug=debug,

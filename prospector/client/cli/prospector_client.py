@@ -33,17 +33,21 @@ def prospector(  # noqa: C901
     time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = False,
     nvd_rest_endpoint: str = "",
+    backend_address: str = "",
     git_cache: str = GIT_CACHE,
     verbose: bool = False,
-    debug: bool = True,
+    debug: bool = False,
     limit_candidates: int = MAX_CANDIDATES,
-    handcrafted_rules: "list[str]" = ["ALL"],
+    rules: "list[str]" = ["ALL"],
     model_name: str = "",
 ) -> "list[Commit]":
 
     if debug:
         verbose = True
 
+    # -------------------------------------------------------------------------
+    # advisory record extraction
+    # -------------------------------------------------------------------------
     advisory_record = AdvisoryRecord(
         vulnerability_id=vulnerability_id,
         repository_url=repository_url,
@@ -65,6 +69,9 @@ def prospector(  # noqa: C901
 
     # print(advisory_record.paths)
 
+    # -------------------------------------------------------------------------
+    # retrieval of commit candidates
+    # -------------------------------------------------------------------------
     print("Downloading repository {} in {}..".format(repository_url, git_cache))
     repository = Git(repository_url, git_cache)
     repository.clone()
@@ -100,6 +107,12 @@ def prospector(  # noqa: C901
     # that candidate commits touch some file whose path contains those tokens
     # NOTE: this works quite well for Java, not sure how general this criterion is
 
+    # -------------------------------------------------------------------------
+    # commit filtering
+    #
+    # Here we apply additional criteria to discard commits from the initial
+    # set extracted from the repository
+    # -------------------------------------------------------------------------
     if advisory_record.code_tokens != []:
         print(
             "Detected tokens in advisory text, searching for files whose path contains those tokens"
@@ -113,8 +126,6 @@ def prospector(  # noqa: C901
 
     candidates = filter_by_changed_files(candidates, modified_files, repository)
 
-    # end of filtering
-
     if debug:
         print("Collected %d candidates" % len(candidates))
 
@@ -122,16 +133,30 @@ def prospector(  # noqa: C901
         print("Number of candidates exceeds %d, aborting." % limit_candidates)
         sys.exit(-1)
 
+    # -------------------------------------------------------------------------
+    # commit preprocessing
+    # -------------------------------------------------------------------------
+
+    # TODO exploit the preprocessed commits already stored in the backend
+    #      and only process those that are missing
+    # TODO add an endpoint that takes as input (repository, set_of_ids) and returns
+    #      the full data of those commits (if available), and None for those that are
+    #      not available
+
+    try:
+        # TODO read backend address from config file
+        r = requests.get(backend_address + "/commits/" + repository_url)
+        print("The backend returned status '%d'" % r.status_code)
+        if r.status_code == 404:
+            print("This is weird...Continuing anyway.")
+    except requests.exceptions.ConnectionError:
+        print("Could not reach backend, is it running?")
+        print("The result of commit pre-processing will not be saved.")
+
     preprocessed_commits: "list[GitCommit]" = []
     pbar = tqdm(candidates)
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
-
-    commit_with_features = []
-    for datamodel_commit in tqdm(preprocessed_commits):
-        commit_with_features.append(extract_features(datamodel_commit, advisory_record))
-
-    rule_application_result = apply_rules(commit_with_features, rules=handcrafted_rules)
 
     if debug:
         pprint(advisory_record)
@@ -141,20 +166,32 @@ def prospector(  # noqa: C901
 
     payload = [c.__dict__ for c in preprocessed_commits]
 
-    # TODO read backend address from config file
+    # -------------------------------------------------------------------------
+    # save preprocessed commits to backend
+    # -------------------------------------------------------------------------
     try:
-        r = requests.post("http://localhost:8000/commits/", json=payload)
+        r = requests.post(backend_address + "/commits/", json=payload)
         print("Status: %d" % r.status_code)
     except requests.exceptions.ConnectionError:
         print("Could not reach backend, is it running?")
         print("The result of commit pre-processing will not be saved.")
+        print("Continuing anyway.....")
 
     # TODO compute actual rank
-    # This is done by a POST request that creates a "search" job
+    # This can be done by a POST request that creates a "search" job
     # whose inputs are the AdvisoryRecord, and the repository URL
     # The API returns immediately indicating a job id. From this
     # id, a URL can be constructed to poll the results asynchronously.
-    ranked_results = [repository.get_commit(c) for c in preprocessed_commits]
+    # ranked_results = [repository.get_commit(c) for c in preprocessed_commits]
+
+    # -------------------------------------------------------------------------
+    # analyze candidates by applying rules and ML predictor
+    # -------------------------------------------------------------------------
+    commit_with_features = []
+    for datamodel_commit in tqdm(preprocessed_commits):
+        commit_with_features.append(extract_features(datamodel_commit, advisory_record))
+
+    rule_application_result = apply_rules(commit_with_features, rules=rules)
 
     ranked_results = rank(commit_with_features, model_name=model_name)
 
