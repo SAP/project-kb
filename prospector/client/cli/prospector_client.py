@@ -14,6 +14,7 @@ from filter_rank.rules import apply_rules
 from git.git import GIT_CACHE
 from git.git import Commit as GitCommit
 from git.git import Git
+from git.version_to_tag import get_tag_for_version
 
 SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
@@ -28,6 +29,7 @@ def prospector(  # noqa: C901
     publication_date: str = "",
     vuln_descr: str = "",
     tag_interval: str = "",
+    version_interval: str = "",
     modified_files: "list[str]" = [],
     time_limit_before: int = TIME_LIMIT_BEFORE,
     time_limit_after: int = TIME_LIMIT_AFTER,
@@ -87,6 +89,10 @@ def prospector(  # noqa: C901
     following_tag = None
     if tag_interval != "":
         prev_tag, following_tag = tag_interval.split(":")
+    elif version_interval != "":
+        vuln_version, fixed_version = version_interval.split(":")
+        prev_tag = get_tag_for_version(tags, vuln_version)[0]
+        following_tag = get_tag_for_version(tags, fixed_version)[0]
 
     since = None
     until = None
@@ -137,14 +143,10 @@ def prospector(  # noqa: C901
     # commit preprocessing
     # -------------------------------------------------------------------------
 
-    # TODO exploit the preprocessed commits already stored in the backend
-    #      and only process those that are missing
-    # TODO add an endpoint that takes as input (repository, set_of_ids) and returns
-    #      the full data of those commits (if available), and None for those that are
-    #      not available
-
     try:
-        # TODO read backend address from config file
+        # TODO exploit the preprocessed commits already stored in the backend
+        #      and only process those that are missing. Note: the endpoint
+        #      does not exist (yet)
         r = requests.get(backend_address + "/commits/" + repository_url)
         print("The backend returned status '%d'" % r.status_code)
         if r.status_code == 404:
@@ -187,15 +189,14 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
-    commit_with_features = []
-    for datamodel_commit in tqdm(preprocessed_commits):
-        commit_with_features.append(extract_features(datamodel_commit, advisory_record))
+    commits_with_features = []
+    for commit in tqdm(preprocessed_commits):
+        commits_with_features.append(extract_features(commit, advisory_record))
 
-    rule_application_result = apply_rules(commit_with_features, rules=rules)
+    annotated_candidates = apply_rules(commits_with_features, rules=rules)
+    annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
-    ranked_results = rank(commit_with_features, model_name=model_name)
-
-    return rule_application_result, ranked_results
+    return annotated_candidates
 
 
 def filter_by_changed_files(

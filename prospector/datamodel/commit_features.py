@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Any, Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from datamodel.commit import Commit
 
@@ -17,6 +17,7 @@ class CommitWithFeatures(BaseModel):
     n_hunks: int = 0
     n_changed_files: int = 0
     contains_jira_reference: bool = False
+    annotations: Dict[str, str] = Field(default_factory=dict)
 
     def __init__(self, **data: Any):
         super().__init__(**data)

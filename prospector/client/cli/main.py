@@ -53,7 +53,14 @@ def parseArguments(args):
         "--tag-interval",
         default="",
         type=str,
-        help="Tag interval (X,Y) to consider (the commit must be reachabla from Y but not from X, and must not be older than X)",
+        help="Tag interval (X,Y) to consider (the commit must be reachable from Y but not from X, and must not be older than X)",
+    )
+
+    parser.add_argument(
+        "--version-interval",
+        default="",
+        type=str,
+        help="Version interval (X,Y) to consider (the corresponding tags will be inferred automatically, and the commit must be reachable from Y but not from X, and must not be older than X)",
     )
 
     parser.add_argument(
@@ -142,38 +149,23 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
-def display_results(rule_filtered_results, ranked_results, verbose=False):
+def display_results(results, verbose=False):
     print("-" * 80)
     print("Rule filtered results")
     print("-" * 80)
     count = 0
-    for commit in rule_filtered_results:
+    for commit in results:
         count += 1
         print(
-            "{}/commit/{}    :  {}\n-----\n".format(
+            "{}/commit/{}\n-----\n".format(
                 commit.commit.repository,
                 commit.commit.commit_id,
-                rule_filtered_results[commit],
+                # results[commit],
             )
         )
 
     print("-----")
     print("Found {} candidates".format(count))
-
-    print("-" * 80)
-    print("Ranked results")
-    print("-" * 80)
-    for r in ranked_results:
-        if verbose:
-            print(r)
-            # print(r.get_diff())
-        else:
-            print(r.commit.message)
-
-        print("{}/commit/{}\n-----\n".format(r.commit.repository, r.commit.commit_id))
-
-    print("-----")
-    print("Found %d candidates" % len(ranked_results))
 
 
 def main(argv):  # noqa: C901
@@ -202,7 +194,7 @@ def main(argv):  # noqa: C901
     if configuration["global"].get("nvd_rest_endpoint"):
         nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
 
-    backend = configuration["global"].getboolean("backend") or DEFAULT_BACKEND
+    backend = configuration["global"].get("backend") or DEFAULT_BACKEND
     if args.backend:
         backend = args.backend
 
@@ -215,6 +207,7 @@ def main(argv):  # noqa: C901
     vuln_descr = args.descr
     use_nvd = args.use_nvd
     tag_interval = args.tag_interval
+    version_interval = args.version_interval
     time_limit_before = TIME_LIMIT_BEFORE
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
@@ -248,12 +241,13 @@ def main(argv):  # noqa: C901
         print("time-limit before: " + str(time_limit_before))
         print("time-limit after: " + str(time_limit_after))
 
-    rule_filtered_results, ranked_results = prospector(
+    results = prospector(
         vulnerability_id=vulnerability_id,
         repository_url=repository_url,
         publication_date=publication_date,
         vuln_descr=vuln_descr,
         tag_interval=tag_interval,
+        version_interval=version_interval,
         modified_files=modified_files,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
@@ -266,7 +260,7 @@ def main(argv):  # noqa: C901
         limit_candidates=max_candidates,
     )
 
-    display_results(rule_filtered_results, ranked_results, verbose=verbose)
+    display_results(results, verbose=verbose)
     # print(rule_filtered_results)
 
     return True
