@@ -110,11 +110,13 @@ def is_commit_reachable_from_given_tag(
     """
     repo = Git(advisory_record.repository_url)
     repo.clone()
+
+    commit_id = commit.commit_id
+    tag_id = repo.get_commit_id_for_tag(version_tag)
+
     if not repo.get_commits_between_two_commit(
-        commit.commit_id, repo.get_commit_id_for_tag(version_tag)
-    ) and not repo.get_commits_between_two_commit(
-        commit.commit_id, repo.get_commit_id_for_tag(version_tag)
-    ):
+        commit_id, tag_id
+    ) and not repo.get_commits_between_two_commit(commit_id, tag_id):
         return False
 
     return True
