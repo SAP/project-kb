@@ -5,18 +5,8 @@ import json
 # import logging
 import os
 
-# import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-
-# from ..dependencies import (
-#     User,
-#     UserInDB,
-#     fake_hash_password,
-#     fake_users_db,
-#     get_current_active_user,
-#     oauth2_scheme,
-# )
 
 router = APIRouter(
     prefix="/nvd",

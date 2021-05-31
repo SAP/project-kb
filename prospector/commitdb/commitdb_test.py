@@ -2,20 +2,11 @@
 Unit tests for database-related functionality
 
 """
-import os
-
 import pytest
 
+from api import DB_CONNECT_STRING
 from commitdb.postgres import PostgresCommitDB, parse_connect_string
 from datamodel.commit import Commit
-
-DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
-    os.environ["POSTGRES_USER"],
-    os.environ["POSTGRES_PASSWORD"],
-    os.environ["POSTGRES_HOST"],
-    os.environ["POSTGRES_PORT"],
-    os.environ["POSTGRES_DBNAME"],
-).lower()
 
 
 @pytest.fixture
