@@ -22,6 +22,13 @@ ADVISORY_TEXT = """Unspecified vulnerability in Uconnect before 15.26.1, as used
     of the CAN bus due to insufficient \\"Radio security protection,\\" as
     demonstrated on a 2014 Jeep Cherokee Limited FWD."""
 
+ADVISORY_TEXT_2 = """
+In Apache Commons IO before 2.7, When invoking the method FileNameUtils.normalize
+with an improper input string, like "//../foo", or "\\..\foo", the result would be
+the same value, thus possibly providing access to files in the parent directory,
+but not further above (thus "limited" path traversal), if the calling code would
+use the result to construct a path value."""
+
 
 def test_adv_record_versions():
 
@@ -48,3 +55,13 @@ def test_adv_record_products():
 
     # print(record)
     assert "Chrysler" in record.affected_products
+
+
+def test_adv_record_code_tokens():
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
+    )
+    record.analyze()
+
+    print(record)
+    assert "FileNameUtils" in record.code_tokens
