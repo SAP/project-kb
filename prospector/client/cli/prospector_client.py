@@ -5,9 +5,11 @@ from pprint import pprint
 import requests
 from tqdm import tqdm
 
+from commit_processor.feature_extractor import extract_features
 from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
+from filter_rank.ranker import apply_rules, rank
 from git.git import GIT_CACHE
 from git.git import Commit as GitCommit
 from git.git import Git
@@ -34,6 +36,8 @@ def prospector(  # noqa: C901
     verbose: bool = False,
     debug: bool = True,
     limit_candidates: int = MAX_CANDIDATES,
+    handcrafted_rules: "list[str]" = ["ALL"],
+    model_name: str = "",
 ) -> "list[Commit]":
 
     if debug:
@@ -122,6 +126,19 @@ def prospector(  # noqa: C901
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
+    # adv_processor = AdvisoryProcessor()
+    # advisory_record = adv_processor.process(advisory_record)
+
+    # get CommitFeatures
+    # invoke predict
+
+    # TODO here the preprocessed commits should be saved into the database
+    commit_with_features = []
+    for datamodel_commit in tqdm(preprocessed_commits):
+        commit_with_features.append(extract_features(datamodel_commit, advisory_record))
+
+    rule_application_result = apply_rules(commit_with_features, rules=handcrafted_rules)
+
     if debug:
         pprint(advisory_record)
 
@@ -143,9 +160,11 @@ def prospector(  # noqa: C901
     # whose inputs are the AdvisoryRecord, and the repository URL
     # The API returns immediately indicating a job id. From this
     # id, a URL can be constructed to poll the results asynchronously.
-    ranked_results = [repository.get_commit(c) for c in candidates]
+    ranked_results = [repository.get_commit(c) for c in preprocessed_commits]
 
-    return ranked_results
+    ranked_results = rank(commit_with_features, model_name=model_name)
+
+    return rule_application_result, ranked_results
 
 
 def filter_by_changed_files(

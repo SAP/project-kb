@@ -35,3 +35,8 @@ class CommitFeatures(BaseModel):
         self.references_ghissue = len(self.commit.ghissue_refs) > 0
 
         self.contains_jira_reference = len(self.commit.jira_refs) > 0
+
+    def __hash__(self) -> int:
+        # this function is needed to make the CommitFeatures object hashable
+        # in particular, this is used in the filter_rank module
+        return hash(self.commit.commit_id)
