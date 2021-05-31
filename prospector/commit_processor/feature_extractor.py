@@ -18,6 +18,13 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
             commit, advisory_record, DAYS_BEFORE, DAYS_AFTER
         )
     )
+
+    commit_reachable_from_given_tag = False
+    for version_tag in advisory_record.versions:
+        if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag):
+            commit_reachable_from_given_tag = True
+            break
+
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
     commit_feature = CommitFeatures(
@@ -27,6 +34,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         changes_relevant_path=changes_relevant_path,
         other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
+        commit_reachable_from_given_tag=commit_reachable_from_given_tag,
     )
     return commit_feature
 
@@ -117,29 +125,3 @@ def is_commit_reachable_from_given_tag(
         return False
 
     return True
-
-
-def extract_avg_hunk_size(hunks: "list[tuple[int]]") -> int:
-    n_hunks = len(hunks)
-
-    if n_hunks == 0:
-        return 0
-
-    lengths = [hunk[1] - hunk[0] for hunk in hunks]
-    return sum(lengths) / n_hunks
-
-
-def extract_n_hunks(hunk_count: int) -> int:
-    return hunk_count
-
-
-def extract_references_ghissue(referenced_ghissues: "list[str]") -> bool:
-    return len(referenced_ghissues) > 0
-
-
-def extract_n_changed_files(changed_files: "list[str]") -> int:
-    return len(changed_files)
-
-
-def extract_contains_jira_reference(jira_references: "list[str]") -> bool:
-    return len(jira_references) > 0
