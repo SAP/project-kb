@@ -113,7 +113,7 @@ def is_commit_reachable_from_given_tag(
 
     if not repo.get_commits_between_two_commit(
         commit_id, tag_id
-    ) and not repo.get_commits_between_two_commit(commit_id, tag_id):
+    ) and not repo.get_commits_between_two_commit(tag_id, commit_id):
         return False
 
     return True
