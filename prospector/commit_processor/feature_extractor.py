@@ -2,7 +2,7 @@ import requests
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from datamodel.commit_features import CommitFeatures
+from datamodel.commit_features import CommitWithFeatures
 from git.git import Git
 
 DAYS_BEFORE = 180
@@ -10,7 +10,9 @@ DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
 
-def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitFeatures:
+def extract_features(
+    commit: Commit, advisory_record: AdvisoryRecord
+) -> CommitWithFeatures:
     references_vuln_id = extract_references_vuln_id(commit, advisory_record)
     time_between_commit_and_advisory_record = (
         extract_time_between_commit_and_advisory_record(commit, advisory_record)
@@ -32,7 +34,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
     referred_to_by_nvd = extract_referred_to_by_nvd(
         commit, advisory_record, "http://127.0.0.1:8000"
     )
-    commit_feature = CommitFeatures(
+    commit_feature = CommitWithFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
