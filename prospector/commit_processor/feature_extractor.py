@@ -1,6 +1,7 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitFeatures
+from git.git import Git
 
 DAYS_BEFORE = 180
 DAYS_AFTER = 365
@@ -17,6 +18,13 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
             commit, advisory_record, DAYS_BEFORE, DAYS_AFTER
         )
     )
+
+    commit_reachable_from_given_tag = False
+    for version_tag in advisory_record.versions:
+        if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag):
+            commit_reachable_from_given_tag = True
+            break
+
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
     commit_feature = CommitFeatures(
@@ -26,6 +34,7 @@ def extract_features(commit: Commit, advisory_record: AdvisoryRecord) -> CommitF
         changes_relevant_path=changes_relevant_path,
         other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
+        commit_reachable_from_given_tag=commit_reachable_from_given_tag,
     )
     return commit_feature
 
@@ -96,3 +105,23 @@ def is_commit_in_given_interval(
             version_timestamp + day_interval * DAY_IN_SECONDS <= commit_timestamp
             and version_timestamp >= commit_timestamp
         )
+
+
+def is_commit_reachable_from_given_tag(
+    commit: Commit, advisory_record: AdvisoryRecord, version_tag: str
+) -> bool:
+    """
+    Return True if the commit is reachable from the given tag
+    """
+    repo = Git(advisory_record.repository_url)
+    repo.clone()
+
+    commit_id = commit.commit_id
+    tag_id = repo.get_commit_id_for_tag(version_tag)
+
+    if not repo.get_commits_between_two_commit(
+        commit_id, tag_id
+    ) and not repo.get_commits_between_two_commit(tag_id, commit_id):
+        return False
+
+    return True

@@ -13,6 +13,7 @@ from .feature_extractor import (
     extract_references_vuln_id,
     extract_time_between_commit_and_advisory_record,
     is_commit_in_given_interval,
+    is_commit_reachable_from_given_tag,
 )
 from .preprocessor import preprocess_commit
 
@@ -196,3 +197,29 @@ def test_extract_is_close_to_advisory_date(
 
     test_commit.timestamp = 913601
     assert extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 0)
+
+
+def test_is_commit_reachable_from_given_tag(repository):
+
+    repo = repository
+    commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
+    print(commit)
+    test_commit = preprocess_commit(commit)
+
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-26258",
+        repository_url="https://github.com/apache/struts",
+        paths=["pom.xml"],
+        published_timestamp=1000000,
+        versions=["STRUTS_2_1_3", "STRUTS_2_3_9"],
+    )
+
+    assert not is_commit_reachable_from_given_tag(
+        test_commit, advisory_record, advisory_record.versions[0]
+    )
+
+    assert is_commit_reachable_from_given_tag(
+        preprocess_commit(repo.get_commit("2e19fc6670a70c13c08a3ed0927abc7366308bb1")),
+        advisory_record,
+        advisory_record.versions[1],
+    )
