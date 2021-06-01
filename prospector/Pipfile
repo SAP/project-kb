@@ -43,6 +43,7 @@ plac = "*"
 pytest = "*"
 python-levenshtein = "*"
 typing-extensions = "*"
+requests-mock = "*"
 
 [requires]
 python_version = "3.8"
