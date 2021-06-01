@@ -10,11 +10,12 @@ router = APIRouter(
     prefix="/commits",
     tags=["preprocessed_commits"],
     responses={404: {"description": "Not found"}},
+    redirect_slashes=False,
 )
 
 
 # -----------------------------------------------------------------------------
-@router.get("/{repository_url}", tags=["preprocessed_commits"])
+@router.get("/{repository_url:path}", tags=["preprocessed_commits"])
 async def get_commits(
     repository_url: str,
     commit_id: Optional[str] = None,
