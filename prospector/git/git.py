@@ -257,6 +257,25 @@ class Git:
         out = [l.strip() for l in out]
         return out
 
+    def get_commits_between_two_commit(self, commit_id_from: str, commit_id_to: str):
+        """
+        Return the commits between the start commit and the end commmit if there are path between them or empty list
+        """
+        try:
+            cmd = [
+                "git",
+                "rev-list",
+                "--ancestry-path",
+                commit_id_from + ".." + commit_id_to,
+            ]
+            path = self._exec.run(cmd)
+            path.pop(0)
+            path.reverse()
+            return path
+        except:
+            print("Failed to obtain commits")
+            return []
+
     def get_commit(self, key, by="id"):
         if by == "id":
             return Commit(self, key, self._verbose)
@@ -377,6 +396,23 @@ class Commit:
                     % (self._id, self._exec._workdir)
                 )
         return self._attributes["full_id"]
+
+    def get_parent_id(self):
+        """
+        Returns the list of parents commits
+        """
+        if "parent_id" not in self._attributes:
+            try:
+                cmd = ["git", "log", "--format=%P", "-n1", self._id]
+                parent = self._exec.run(cmd)[0]
+                parents = parent.split(" ")
+                self._attributes["parent_id"] = parents
+            except:
+                print(
+                    "Failed to obtain parent id for: %s in dir: %s"
+                    % (self._id, self._exec._workdir)
+                )
+        return self._attributes["parent_id"]
 
     def get_repository(self):
         return self._repository._url
