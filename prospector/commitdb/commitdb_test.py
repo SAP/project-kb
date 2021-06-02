@@ -57,22 +57,7 @@ def test_simple_write(setupdb):
 def test_simple_read(setupdb):
     db = setupdb
     db.connect(DB_CONNECT_STRING)
-    commit_obj = Commit(
-        commit_id="1234",
-        repository="https://blabla.com/zxyufd/fdafa",
-        timestamp=0,
-        hunks=[(3, 5)],
-        hunk_count=1,
-        message="Some random garbage",
-        diff=["fasdfasfa", "asf90hfasdfads", "fasd0fasdfas"],
-        changed_files=["fadsfasd/fsdafasd/fdsafafdsa.ifd"],
-        message_reference_content=[],
-        jira_refs=[],
-        ghissue_refs=[],
-        cve_refs=["fasdfads", "fsfasf"],
-        tags=["tag2"],
-    )
-    result = db.lookup(commit_obj)
+    result = db.lookup("https://blabla.com/zxyufd/fdafa", "1234", True)
     print(result)
     assert result is not None
 
@@ -96,7 +81,7 @@ def test_upsert(setupdb):
         tags=["tag1"],
     )
     db.save(commit_obj)
-    result = db.lookup(commit_obj)
+    result = db.lookup(commit_obj.repository, commit_obj.commit_id, True)
     assert result is not None
     db.reset()  # remove garbage added by tests from DB
 

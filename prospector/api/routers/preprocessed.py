@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 from api import DB_CONNECT_STRING
 from commitdb.postgres import PostgresCommitDB
@@ -14,7 +15,7 @@ router = APIRouter(
 
 
 # -----------------------------------------------------------------------------
-@router.get("/{repository_url}", tags=["preprocessed_commits"])
+@router.get("/{repository_url:path}", tags=["preprocessed_commits"])
 async def get_commits(
     repository_url: str,
     commit_id: Optional[str] = None,
@@ -22,13 +23,11 @@ async def get_commits(
 ):
     db = PostgresCommitDB()
     db.connect(DB_CONNECT_STRING)
-    commit = Commit(commit_id=commit_id, repository=repository_url)
     # use case: if a particular commit is queried, details should be returned
     if commit_id:
         details = True
-    data = db.lookup_json(commit, details)
-
-    return data
+    data = db.lookup(repository_url, commit_id, details)
+    return JSONResponse(data)
 
 
 # -----------------------------------------------------------------------------
