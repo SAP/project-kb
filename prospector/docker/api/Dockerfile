@@ -2,6 +2,8 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 
 
 ADD . .
+COPY docker/api/update-feeds.sh /app/update-feeds.sh
+RUN chmod +x /app/update-feeds.sh
 COPY ./api /app
 RUN pip install --upgrade pip
 RUN pip install pipenv
@@ -14,4 +16,3 @@ ENV POSTGRES_PORT 5432
 ENV POSTGRES_USER postgres
 ENV POSTGRES_DBNAME postgres
 ENV PYTHONPATH .
-RUN python api/routers/nvd_feed_update.py
