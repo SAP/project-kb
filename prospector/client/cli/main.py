@@ -19,7 +19,7 @@ from client.cli.prospector_client import (
 )
 from git.git import GIT_CACHE
 
-DEFAULT_BACKEND = "http://localhost:8080"
+DEFAULT_BACKEND = "http://localhost:8000"
 
 logger = logging.getLogger("prospector")
 
