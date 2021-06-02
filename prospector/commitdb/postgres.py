@@ -2,8 +2,6 @@
 This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
-import json
-
 import psycopg2
 import psycopg2.sql
 from psycopg2.extensions import parse_dsn
@@ -29,52 +27,49 @@ class PostgresCommitDB(CommitDB):
         parse_connect_string(connect_string)
         self.connection = psycopg2.connect(connect_string)
 
-    def lookup(self, commit_obj: Commit):
-        if not self.connection:
-            raise Exception("Invalid connection")
-
-        data = []
-        try:
-            cur = self.connection.cursor()
-            cur.execute(
-                "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
-                (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
-            )
-            data = cur.fetchall()
-            cur.close()
-        except Exception as ex:
-            print(ex)
-            raise Exception("Could not lookup commit vector in database")
-
-        return data
-
-    def lookup_json(self, commit_obj: Commit, details):
+    def lookup(self, repository: str, commit_id: str = None, details: bool = False):
         # Returns the results of the query in json format
         if not self.connection:
             raise Exception("Invalid connection")
 
-        data = {}
+        data = list()
         try:
             cur = self.connection.cursor(cursor_factory=RealDictCursor)
-            if details:
-                cur.execute(
-                    "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
-                    (
-                        commit_obj.repository,
-                        commit_obj.commit_id,
-                        commit_obj.commit_id,
-                    ),
-                )
+            if commit_id:
+                for cid in commit_id.split(","):
+                    if details:
+                        cur.execute(
+                            "SELECT * FROM commits WHERE repository = %s AND id =%s",
+                            (
+                                repository,
+                                cid,
+                            ),
+                        )
+                    else:
+                        cur.execute(
+                            "SELECT id FROM commits WHERE repository = %s AND id = %s",
+                            (
+                                repository,
+                                cid,
+                            ),
+                        )
+                    result = cur.fetchall()
+                    if len(result):
+                        data.append(result[0])
+                    else:
+                        data.append(None)
             else:
-                cur.execute(
-                    "SELECT id FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
-                    (
-                        commit_obj.repository,
-                        commit_obj.commit_id,
-                        commit_obj.commit_id,
-                    ),
-                )
-            data = json.dumps(cur.fetchall())
+                if details:
+                    cur.execute(
+                        "SELECT * FROM commits WHERE repository = %s",
+                        (repository,),
+                    )
+                else:
+                    cur.execute(
+                        "SELECT id FROM commits WHERE repository = %s",
+                        (repository,),
+                    )
+                data = cur.fetchall()
             cur.close()
         except Exception as ex:
             print(ex)
