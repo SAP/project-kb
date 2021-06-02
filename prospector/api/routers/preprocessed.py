@@ -1,24 +1,10 @@
-import os
-
-# from pprint import pprint
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter
 
+from api import DB_CONNECT_STRING
 from commitdb.postgres import PostgresCommitDB
 from datamodel.commit import Commit
-
-# from pydantic import BaseModel, Field
-
-
-DB_CONNECT_STRING = "HOST={};DB={};UID={};PWD={};PORT={};".format(
-    os.environ["POSTGRES_HOST"],
-    os.environ["POSTGRES_DBNAME"],
-    os.environ["POSTGRES_USER"],
-    os.environ["POSTGRES_PASSWORD"],
-    os.environ["POSTGRES_PORT"],
-)
-
 
 router = APIRouter(
     prefix="/commits",
@@ -27,6 +13,25 @@ router = APIRouter(
 )
 
 
+# -----------------------------------------------------------------------------
+@router.get("/{repository_url}", tags=["preprocessed_commits"])
+async def get_commits(
+    repository_url: str,
+    commit_id: Optional[str] = None,
+    details: Optional[bool] = False,
+):
+    db = PostgresCommitDB()
+    db.connect(DB_CONNECT_STRING)
+    commit = Commit(commit_id=commit_id, repository=repository_url)
+    # use case: if a particular commit is queried, details should be returned
+    if commit_id:
+        details = True
+    data = db.lookup_json(commit, details)
+
+    return data
+
+
+# -----------------------------------------------------------------------------
 @router.post("/", tags=["preprocessed_commits"])
 async def upload_preprocessed_commit(payload: List[Commit]):
 
@@ -36,4 +41,4 @@ async def upload_preprocessed_commit(payload: List[Commit]):
     for commit in payload:
         db.save(commit)
 
-    return payload
+    return {"status": "ok"}
