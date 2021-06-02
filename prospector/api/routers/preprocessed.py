@@ -9,13 +9,13 @@ from datamodel.commit import Commit
 
 router = APIRouter(
     prefix="/commits",
-    tags=["preprocessed_commits"],
+    tags=["commits"],
     responses={404: {"description": "Not found"}},
 )
 
 
 # -----------------------------------------------------------------------------
-@router.get("/{repository_url:path}", tags=["preprocessed_commits"])
+@router.get("/{repository_url}")
 async def get_commits(
     repository_url: str,
     commit_id: Optional[str] = None,
@@ -31,7 +31,7 @@ async def get_commits(
 
 
 # -----------------------------------------------------------------------------
-@router.post("/", tags=["preprocessed_commits"])
+@router.post("/")
 async def upload_preprocessed_commit(payload: List[Commit]):
 
     db = PostgresCommitDB()
