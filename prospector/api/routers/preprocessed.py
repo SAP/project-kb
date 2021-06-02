@@ -15,7 +15,7 @@ router = APIRouter(
 
 
 # -----------------------------------------------------------------------------
-@router.get("/{repository_url}")
+@router.get("/{repository_url:path}")
 async def get_commits(
     repository_url: str,
     commit_id: Optional[str] = None,
