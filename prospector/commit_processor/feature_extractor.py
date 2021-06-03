@@ -1,5 +1,3 @@
-import requests
-
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
@@ -31,9 +29,7 @@ def extract_features(
 
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
-    referred_to_by_nvd = extract_referred_to_by_nvd(
-        commit, advisory_record, "http://127.0.0.1:8000"
-    )
+    referred_to_by_nvd = extract_referred_to_by_nvd(commit, advisory_record)
     commit_feature = CommitWithFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
@@ -115,15 +111,12 @@ def is_commit_in_given_interval(
         )
 
 
-def extract_referred_to_by_nvd(
-    commit: Commit, advisory_record: AdvisoryRecord, nvd_rest_endpoint: str
-) -> bool:
-    response = requests.get(
-        nvd_rest_endpoint + "/nvd/vulnerabilities/" + advisory_record.vulnerability_id
-    ).json()
-    references = response["cve"]["references"]["reference_data"]
+def extract_referred_to_by_nvd(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
     return any(
-        filter(lambda reference: commit.commit_id in reference["url"], references)
+        filter(
+            lambda reference: commit.commit_id in reference,
+            advisory_record.references,
+        )
     )
 
 
