@@ -1,3 +1,4 @@
+import json
 import sys
 from datetime import datetime
 from pprint import pprint
@@ -8,7 +9,7 @@ from tqdm import tqdm
 from commit_processor.feature_extractor import extract_features
 from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit, create_commit_object
+from datamodel.commit import Commit
 from filter_rank.rank import rank
 from filter_rank.rules import apply_rules
 from git.git import GIT_CACHE, Git
@@ -149,7 +150,8 @@ def prospector(  # noqa: C901
             backend_address
             + "/commits/"
             + repository_url
-            + candidates
+            + "?commit_id="
+            + ",".join(candidates)
             + "?details=true"
         )
         print("The backend returned status '%d'" % r.status_code)
@@ -161,11 +163,11 @@ def prospector(  # noqa: C901
 
     preprocessed_commits: "list[Commit]" = []
     missing = []
-    for idx, commit in enumerate(r.text):
+    for idx, commit in enumerate(json.loads(r.text)):
         if (
             commit
-        ):  # None results are not in the DB, collect them to missing list, they need local preporcessing
-            preprocessed_commits.append(create_commit_object(commit))
+        ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
+            preprocessed_commits.append(Commit(commit))
         else:
             missing.append(candidates[idx])
 
