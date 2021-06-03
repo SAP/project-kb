@@ -11,6 +11,7 @@ from .feature_extractor import (
     extract_is_close_to_advisory_date,
     extract_other_CVE_in_message,
     extract_references_vuln_id,
+    extract_referred_to_by_nvd,
     extract_time_between_commit_and_advisory_record,
     is_commit_in_given_interval,
     is_commit_reachable_from_given_tag,
@@ -26,7 +27,6 @@ def repository():
 
 
 def test_extract_features(repository):
-
     repo = repository
     commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
     processed_commit = preprocess_commit(commit)
@@ -35,6 +35,9 @@ def test_extract_features(repository):
         vulnerability_id="CVE-2020-26258",
         repository_url="https://github.com/apache/struts",
         published_timestamp=1607532756,
+        references=[
+            "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
+        ],
         paths=["pom.xml"],
     )
 
@@ -52,6 +55,7 @@ def test_extract_features(repository):
     assert not extracted_features.references_ghissue
     assert extracted_features.n_changed_files == 1
     assert extracted_features.contains_jira_reference
+    assert extracted_features.referred_to_by_nvd
 
 
 def test_extract_references_vuln_id():
@@ -197,6 +201,27 @@ def test_extract_is_close_to_advisory_date(
 
     test_commit.timestamp = 913601
     assert extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 0)
+
+
+def test_extract_referred_to_by_nvd(repository):
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-26258",
+        references=[
+            "https://lists.apache.org/thread.html/r97993e3d78e1f5389b7b172ba9f308440830ce5f051ee62714a0aa34@%3Ccommits.struts.apache.org%3E"
+        ],
+    )
+
+    commit = Commit(
+        commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
+        repository="test_repository",
+    )
+    assert extract_referred_to_by_nvd(commit, advisory_record)
+
+    commit = Commit(
+        commit_id="f4d2eabd921cbd8808b9d923ee63d44538b4154f",
+        repository="test_repository",
+    )
+    assert not extract_referred_to_by_nvd(commit, advisory_record)
 
 
 def test_is_commit_reachable_from_given_tag(repository):

@@ -1,7 +1,7 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from git.git import Git
 from datamodel.commit_features import CommitWithFeatures
+from git.git import Git
 
 DAYS_BEFORE = 180
 DAYS_AFTER = 365
@@ -29,6 +29,7 @@ def extract_features(
 
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
+    referred_to_by_nvd = extract_referred_to_by_nvd(commit, advisory_record)
     commit_feature = CommitWithFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
@@ -36,6 +37,7 @@ def extract_features(
         changes_relevant_path=changes_relevant_path,
         other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
+        referred_to_by_nvd=referred_to_by_nvd,
         commit_reachable_from_given_tag=commit_reachable_from_given_tag,
     )
     return commit_feature
@@ -107,6 +109,15 @@ def is_commit_in_given_interval(
             version_timestamp + day_interval * DAY_IN_SECONDS <= commit_timestamp
             and version_timestamp >= commit_timestamp
         )
+
+
+def extract_referred_to_by_nvd(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
+    return any(
+        filter(
+            lambda reference: commit.commit_id in reference,
+            advisory_record.references,
+        )
+    )
 
 
 def is_commit_reachable_from_given_tag(
