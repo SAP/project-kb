@@ -12,7 +12,6 @@ pre-commit = "*"
 pytest-cov = "*"
 pycodestyle = "*"
 flake8 = "*"
-requests-mock = "*"
 
 [packages]
 numpy = "==1.19.4"
@@ -44,6 +43,7 @@ plac = "*"
 pytest = "*"
 python-levenshtein = "*"
 typing-extensions = "*"
+requests-mock = "*"
 
 [requires]
 python_version = "3.8"
