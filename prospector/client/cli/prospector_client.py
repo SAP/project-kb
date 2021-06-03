@@ -1,3 +1,4 @@
+import json
 import sys
 from datetime import datetime
 from pprint import pprint
@@ -11,9 +12,7 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from filter_rank.rank import rank
 from filter_rank.rules import apply_rules
-from git.git import GIT_CACHE
-from git.git import Commit as GitCommit
-from git.git import Git
+from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 
 SECS_PER_DAY = 86400
@@ -144,10 +143,17 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
 
     try:
-        # TODO exploit the preprocessed commits already stored in the backend
+        # Exploit the preprocessed commits already stored in the backend
         #      and only process those that are missing. Note: the endpoint
         #      does not exist (yet)
-        r = requests.get(backend_address + "/commits/" + repository_url)
+        r = requests.get(
+            backend_address
+            + "/commits/"
+            + repository_url
+            + "?commit_id="
+            + ",".join(candidates)
+            + "?details=true"
+        )
         print("The backend returned status '%d'" % r.status_code)
         if r.status_code == 404:
             print("This is weird...Continuing anyway.")
@@ -155,8 +161,18 @@ def prospector(  # noqa: C901
         print("Could not reach backend, is it running?")
         print("The result of commit pre-processing will not be saved.")
 
-    preprocessed_commits: "list[GitCommit]" = []
-    pbar = tqdm(candidates)
+    preprocessed_commits: "list[Commit]" = []
+    missing = []
+    for idx, commit in enumerate(json.loads(r.text)):
+        if (
+            commit
+        ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
+            preprocessed_commits.append(Commit(commit))
+        else:
+            missing.append(candidates[idx])
+
+    first_missing = len(preprocessed_commits)
+    pbar = tqdm(missing)
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
@@ -166,7 +182,7 @@ def prospector(  # noqa: C901
     if verbose:
         print("preprocessed %d commits" % len(preprocessed_commits))
 
-    payload = [c.__dict__ for c in preprocessed_commits]
+    payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
 
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
