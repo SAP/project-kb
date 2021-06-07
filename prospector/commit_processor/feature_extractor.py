@@ -34,6 +34,7 @@ def extract_features(
     referred_to_by_advisories = extract_referred_to_by_advisories(
         commit, advisory_record, "http://127.0.0.1:8000"
     )
+    referred_to_by_nvd = extract_referred_to_by_nvd(commit, advisory_record)
     commit_feature = CommitWithFeatures(
         commit=commit,
         references_vuln_id=references_vuln_id,
@@ -42,6 +43,7 @@ def extract_features(
         other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
         referred_to_by_advisories=referred_to_by_advisories,
+        referred_to_by_nvd=referred_to_by_nvd,
         commit_reachable_from_given_tag=commit_reachable_from_given_tag,
     )
     return commit_feature
@@ -113,6 +115,15 @@ def is_commit_in_given_interval(
             version_timestamp + day_interval * DAY_IN_SECONDS <= commit_timestamp
             and version_timestamp >= commit_timestamp
         )
+
+
+def extract_referred_to_by_nvd(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
+    return any(
+        filter(
+            lambda reference: commit.commit_id in reference,
+            advisory_record.references,
+        )
+    )
 
 
 def is_commit_reachable_from_given_tag(

@@ -18,6 +18,7 @@ class CommitWithFeatures(BaseModel):
     n_changed_files: int = 0
     contains_jira_reference: bool = False
     referred_to_by_advisories: bool = False
+    referred_to_by_nvd: bool = False
     annotations: Dict[str, str] = Field(default_factory=dict)
 
     def __init__(self, **data: Any):

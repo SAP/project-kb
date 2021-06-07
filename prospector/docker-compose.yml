@@ -18,6 +18,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DBNAME: postgres
+      PRE_START_PATH: /app/update-feeds.sh
     volumes:
       - ${CVE_DATA_PATH:-./cve_data}:/cve_data
 

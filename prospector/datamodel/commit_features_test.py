@@ -21,6 +21,7 @@ def test_simple():
         other_CVE_in_message=True,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=True,
         referred_to_by_advisories=True,
+        referred_to_by_nvd=True,
     )
 
     assert commit_features.commit.repository == "https://github.com/abc/xyz"
@@ -37,3 +38,4 @@ def test_simple():
     assert commit_features.n_changed_files == 3
     assert commit_features.contains_jira_reference
     assert commit_features.referred_to_by_advisories
+    assert commit_features.referred_to_by_nvd
