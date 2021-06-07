@@ -32,9 +32,7 @@ def extract_features(
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
     referred_to_by_pages_linked_from_advisories = (
-        extract_referred_to_by_pages_linked_from_advisories(
-            commit, advisory_record, "http://127.0.0.1:8000"
-        )
+        extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
     )
     referred_to_by_nvd = extract_referred_to_by_nvd(commit, advisory_record)
     commit_feature = CommitWithFeatures(
@@ -149,18 +147,11 @@ def is_commit_reachable_from_given_tag(
 
 
 def extract_referred_to_by_pages_linked_from_advisories(
-    commit: Commit, advisory_record: AdvisoryRecord, nvd_rest_endpoint: str
+    commit: Commit, advisory_record: AdvisoryRecord
 ) -> bool:
-    response = requests.get(
-        nvd_rest_endpoint + "/nvd/vulnerabilities/" + advisory_record.vulnerability_id
-    ).json()
-    references = list(
-        map(
-            lambda reference: reference["url"],
-            response["cve"]["references"]["reference_data"],
-        )
-    )
-
     return any(
-        [commit.commit_id in requests.get(reference) for reference in references]
+        filter(
+            lambda reference: commit.commit_id in requests.get(reference).text,
+            advisory_record.references,
+        )
     )

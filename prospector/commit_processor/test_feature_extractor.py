@@ -37,7 +37,8 @@ def test_extract_features(repository):
         repository_url="https://github.com/apache/struts",
         published_timestamp=1607532756,
         references=[
-            "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
+            "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
+            "https://apache.googlesource.com/struts/+/f2540192bf560892cdfb7d6a49b97684a0c2cf48",
         ],
         paths=["pom.xml"],
         description="Sample description for testing purposes. Intentionally referes to commit 7532d2f.",
@@ -254,18 +255,21 @@ def test_is_commit_reachable_from_given_tag(repository):
 
 
 def test_extract_referred_to_by_pages_linked_from_advisories(repository):
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-26258",
+        references=["https://nvd.nist.gov/vuln/detail/CVE-2020-26258"],
+    )
+
     commit = Commit(
         commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
         repository="test_repository",
     )
-    advisory_record = AdvisoryRecord(vulnerability_id="CVE-2020-26258")
-    assert extract_referred_to_by_pages_linked_from_advisories(
-        commit, advisory_record, "http://127.0.0.1:8000"
-    )
+    assert extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
+
     commit = Commit(
         commit_id="f4d2eabd921cbd8808b9d923ee63d44538b4154f",
         repository="test_repository",
     )
     assert not extract_referred_to_by_pages_linked_from_advisories(
-        commit, advisory_record, "http://127.0.0.1:8000"
+        commit, advisory_record
     )
