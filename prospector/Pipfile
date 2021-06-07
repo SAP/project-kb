@@ -12,6 +12,7 @@ pre-commit = "*"
 pytest-cov = "*"
 pycodestyle = "*"
 flake8 = "*"
+requests-mock = "*"
 
 [packages]
 numpy = "==1.19.4"

@@ -27,7 +27,15 @@ def repository():
     return repo
 
 
-def test_extract_features(repository):
+def test_extract_features(repository, requests_mock):
+    requests_mock.get(
+        "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
+    )
+    requests_mock.get(
+        "https://some.site/containing_commit_id_in_text",
+        text="some text 7532d2fb0d6081a12c2a48ec854a81a8b718be62 blah",
+    )
+
     repo = repository
     commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
     processed_commit = preprocess_commit(commit)
@@ -38,7 +46,7 @@ def test_extract_features(repository):
         published_timestamp=1607532756,
         references=[
             "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
-            "https://apache.googlesource.com/struts/+/f2540192bf560892cdfb7d6a49b97684a0c2cf48",
+            "https://some.site/containing_commit_id_in_text",
         ],
         paths=["pom.xml"],
         description="Sample description for testing purposes. Intentionally referes to commit 7532d2f.",
@@ -254,10 +262,15 @@ def test_is_commit_reachable_from_given_tag(repository):
     )
 
 
-def test_extract_referred_to_by_pages_linked_from_advisories(repository):
+def test_extract_referred_to_by_pages_linked_from_advisories(repository, requests_mock):
+    requests_mock.get(
+        "https://some.site/containing_commit_id_in_text",
+        text="some text r97993e3d78e1f5389b7b172ba9f308440830ce5 blah",
+    )
+
     advisory_record = AdvisoryRecord(
         vulnerability_id="CVE-2020-26258",
-        references=["https://nvd.nist.gov/vuln/detail/CVE-2020-26258"],
+        references=["https://some.site/containing_commit_id_in_text"],
     )
 
     commit = Commit(
