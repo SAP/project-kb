@@ -20,7 +20,7 @@ def test_simple():
         changes_relevant_path=True,
         other_CVE_in_message=True,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=True,
-        referred_to_by_advisories=True,
+        referred_to_by_pages_linked_from_advisories=True,
         referred_to_by_nvd=True,
     )
 
