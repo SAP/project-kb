@@ -44,6 +44,7 @@ plac = "*"
 pytest = "*"
 python-levenshtein = "*"
 typing-extensions = "*"
+requests-cache = "*"
 
 [requires]
 python_version = "3.8"

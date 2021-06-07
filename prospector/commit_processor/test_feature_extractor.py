@@ -264,13 +264,13 @@ def test_is_commit_reachable_from_given_tag(repository):
 
 def test_extract_referred_to_by_pages_linked_from_advisories(repository, requests_mock):
     requests_mock.get(
-        "https://some.site/containing_commit_id_in_text",
+        "https://some-other.site/containing_commit_id_in_text",
         text="some text r97993e3d78e1f5389b7b172ba9f308440830ce5 blah",
     )
 
     advisory_record = AdvisoryRecord(
         vulnerability_id="CVE-2020-26258",
-        references=["https://some.site/containing_commit_id_in_text"],
+        references=["https://some-other.site/containing_commit_id_in_text"],
     )
 
     commit = Commit(

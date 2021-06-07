@@ -1,4 +1,4 @@
-import requests
+import requests_cache
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -149,9 +149,10 @@ def is_commit_reachable_from_given_tag(
 def extract_referred_to_by_pages_linked_from_advisories(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> bool:
+    session = requests_cache.CachedSession("requests-cache")
     return any(
         filter(
-            lambda reference: commit.commit_id in requests.get(reference).text,
+            lambda reference: commit.commit_id in session.get(reference).text,
             advisory_record.references,
         )
     )
