@@ -166,7 +166,7 @@ def prospector(  # noqa: C901
         if (
             commit
         ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
-            preprocessed_commits.append(Commit(commit))
+            preprocessed_commits.append(Commit.parse_obj(commit))
         else:
             missing.append(candidates[idx])
 
