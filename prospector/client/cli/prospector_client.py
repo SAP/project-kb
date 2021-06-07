@@ -152,7 +152,6 @@ def prospector(  # noqa: C901
             + repository_url
             + "?commit_id="
             + ",".join(candidates)
-            + "?details=true"
         )
         print("The backend returned status '%d'" % r.status_code)
         if r.status_code == 404:

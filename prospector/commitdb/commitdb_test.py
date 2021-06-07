@@ -57,8 +57,7 @@ def test_simple_write(setupdb):
 def test_simple_read(setupdb):
     db = setupdb
     db.connect(DB_CONNECT_STRING)
-    result = db.lookup("https://blabla.com/zxyufd/fdafa", "1234", True)
-    print(result)
+    result = db.lookup("https://blabla.com/zxyufd/fdafa", "1234")
     assert result is not None
 
 
@@ -81,7 +80,7 @@ def test_upsert(setupdb):
         tags=["tag1"],
     )
     db.save(commit_obj)
-    result = db.lookup(commit_obj.repository, commit_obj.commit_id, True)
+    result = db.lookup(commit_obj.repository, commit_obj.commit_id)
     assert result is not None
     db.reset()  # remove garbage added by tests from DB
 
