@@ -49,7 +49,6 @@ def test_extract_features(repository, requests_mock):
             "https://some.site/containing_commit_id_in_text",
         ],
         paths=["pom.xml"],
-        description="Sample description for testing purposes. Intentionally referes to commit 7532d2f.",
     )
 
     extracted_features = extract_features(processed_commit, advisory_record)
