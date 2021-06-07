@@ -37,5 +37,5 @@ def test_simple():
     assert commit_features.references_ghissue
     assert commit_features.n_changed_files == 3
     assert commit_features.contains_jira_reference
-    assert commit_features.referred_to_by_advisories
+    assert commit_features.referred_to_by_pages_linked_from_advisories
     assert commit_features.referred_to_by_nvd

@@ -31,8 +31,10 @@ def extract_features(
 
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
-    referred_to_by_advisories = extract_referred_to_by_advisories(
-        commit, advisory_record, "http://127.0.0.1:8000"
+    referred_to_by_pages_linked_from_advisories = (
+        extract_referred_to_by_pages_linked_from_advisories(
+            commit, advisory_record, "http://127.0.0.1:8000"
+        )
     )
     referred_to_by_nvd = extract_referred_to_by_nvd(commit, advisory_record)
     commit_feature = CommitWithFeatures(
@@ -42,7 +44,7 @@ def extract_features(
         changes_relevant_path=changes_relevant_path,
         other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
-        referred_to_by_advisories=referred_to_by_advisories,
+        referred_to_by_pages_linked_from_advisories=referred_to_by_pages_linked_from_advisories,
         referred_to_by_nvd=referred_to_by_nvd,
         commit_reachable_from_given_tag=commit_reachable_from_given_tag,
     )
@@ -146,7 +148,7 @@ def is_commit_reachable_from_given_tag(
     return True
 
 
-def extract_referred_to_by_advisories(
+def extract_referred_to_by_pages_linked_from_advisories(
     commit: Commit, advisory_record: AdvisoryRecord, nvd_rest_endpoint: str
 ) -> bool:
     response = requests.get(
