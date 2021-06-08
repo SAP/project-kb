@@ -77,27 +77,30 @@ def test_predict(candidates):
     assert isinstance(score, float)
 
 
-def test_apply_rules(candidates):
-    rules_filtered = apply_rules(candidates=candidates)
-    print(rules_filtered)
-    assert candidates[0] in rules_filtered
-    assert "Vuln ID is mentioned" in rules_filtered[candidates[0]]
-    assert "GitHub issue is mentioned" in rules_filtered[candidates[0]]
-    assert "Relevant path has been changed" in rules_filtered[candidates[0]]
+def test_apply_rules(candidates: "list[CommitWithFeatures]"):
+    print(type(candidates))
+    annotated_candidates = apply_rules(candidates=candidates)
+    print(annotated_candidates)
+    print(type(annotated_candidates))
 
-    assert candidates[1] in rules_filtered
-    assert "Vuln ID is mentioned" in rules_filtered[candidates[1]]
-    assert "GitHub issue is mentioned" not in rules_filtered[candidates[1]]
-    assert "Relevant path has been changed" not in rules_filtered[candidates[1]]
+    assert len(annotated_candidates[0].annotations) > 0
+    assert "Vuln ID is mentioned" in annotated_candidates[0].annotations
+    assert "GitHub issue is mentioned" in annotated_candidates[0].annotations
+    assert "Relevant path has been changed" in annotated_candidates[0].annotations
 
-    assert candidates[2] in rules_filtered
-    assert "Vuln ID is mentioned" not in rules_filtered[candidates[2]]
-    assert "GitHub issue is mentioned" in rules_filtered[candidates[2]]
-    assert "Relevant path has been changed" not in rules_filtered[candidates[2]]
+    assert len(annotated_candidates[1].annotations) > 0
+    assert "Vuln ID is mentioned" in annotated_candidates[1].annotations
+    assert "GitHub issue is mentioned" not in annotated_candidates[1].annotations
+    assert "Relevant path has been changed" not in annotated_candidates[1].annotations
 
-    assert candidates[3] in rules_filtered
-    assert "Vuln ID is mentioned" not in rules_filtered[candidates[3]]
-    assert "GitHub issue is mentioned" not in rules_filtered[candidates[3]]
-    assert "Relevant path has been changed" in rules_filtered[candidates[3]]
+    assert len(annotated_candidates[2].annotations) > 0
+    assert "Vuln ID is mentioned" not in annotated_candidates[2].annotations
+    assert "GitHub issue is mentioned" in annotated_candidates[2].annotations
+    assert "Relevant path has been changed" not in annotated_candidates[2].annotations
 
-    assert candidates[4] not in rules_filtered
+    assert len(annotated_candidates[3].annotations) > 0
+    assert "Vuln ID is mentioned" not in annotated_candidates[3].annotations
+    assert "GitHub issue is mentioned" not in annotated_candidates[3].annotations
+    assert "Relevant path has been changed" in annotated_candidates[3].annotations
+
+    assert len(annotated_candidates[4].annotations) == 0
