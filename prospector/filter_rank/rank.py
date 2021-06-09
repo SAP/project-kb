@@ -13,15 +13,11 @@ def rank(
     candidates: "list[CommitWithFeatures]", model_name: str
 ) -> "list[CommitWithFeatures]":
     """
-    Takes in input a set of candidates and associates to each of them a rank (ordering) and
-    a ranking vector, based on how good they match with the advisory record in input.
-    Returns the initial list of commits in the order of their ranks
+    Takes in input a list of CommitWithFeatures and augments them with ML generated annotations.
+    Returns the initial list of CommitWithFeatures augmented with annotations.
     """
-    scores = []
-    for candidate in candidates:
-        scores.append((predict(model_name, candidate), candidate))
 
-    return [c for _, c in sorted(scores, reverse=True)]
+    return candidates
 
 
 def predict(model_name: str, commit_features: CommitWithFeatures) -> float:
