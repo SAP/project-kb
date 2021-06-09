@@ -7,7 +7,6 @@ from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
 from filter_rank.filter import filter_commits
 from filter_rank.rank import make_dataframe, predict, rank, train
-from filter_rank.rules import apply_rules
 
 
 @pytest.fixture
@@ -75,32 +74,3 @@ def test_predict(candidates):
     commit = candidates[0]
     score = predict(model_name, commit)
     assert isinstance(score, float)
-
-
-def test_apply_rules(candidates: "list[CommitWithFeatures]"):
-    print(type(candidates))
-    annotated_candidates = apply_rules(candidates=candidates)
-    print(annotated_candidates)
-    print(type(annotated_candidates))
-
-    assert len(annotated_candidates[0].annotations) > 0
-    assert "Vuln ID is mentioned" in annotated_candidates[0].annotations
-    assert "GitHub issue is mentioned" in annotated_candidates[0].annotations
-    assert "Relevant path has been changed" in annotated_candidates[0].annotations
-
-    assert len(annotated_candidates[1].annotations) > 0
-    assert "Vuln ID is mentioned" in annotated_candidates[1].annotations
-    assert "GitHub issue is mentioned" not in annotated_candidates[1].annotations
-    assert "Relevant path has been changed" not in annotated_candidates[1].annotations
-
-    assert len(annotated_candidates[2].annotations) > 0
-    assert "Vuln ID is mentioned" not in annotated_candidates[2].annotations
-    assert "GitHub issue is mentioned" in annotated_candidates[2].annotations
-    assert "Relevant path has been changed" not in annotated_candidates[2].annotations
-
-    assert len(annotated_candidates[3].annotations) > 0
-    assert "Vuln ID is mentioned" not in annotated_candidates[3].annotations
-    assert "GitHub issue is mentioned" not in annotated_candidates[3].annotations
-    assert "Relevant path has been changed" in annotated_candidates[3].annotations
-
-    assert len(annotated_candidates[4].annotations) == 0
