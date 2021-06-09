@@ -19,15 +19,19 @@ router = APIRouter(
 async def get_commits(
     repository_url: str,
     commit_id: Optional[str] = None,
-    details: Optional[bool] = False,
 ):
     db = PostgresCommitDB()
     db.connect(DB_CONNECT_STRING)
     # use case: if a particular commit is queried, details should be returned
-    if commit_id:
-        details = True
-    data = db.lookup(repository_url, commit_id, details)
-    return JSONResponse(data)
+    data = db.lookup(repository_url, commit_id)
+    res = []
+    if len(data):
+        for d in data:
+            if d:
+                res.append(d.dict())
+            else:
+                res.append(None)
+    return JSONResponse(res)
 
 
 # -----------------------------------------------------------------------------

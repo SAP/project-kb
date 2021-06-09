@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 
 class Commit(BaseModel):
     # class Commit:
-    commit_id: Optional[str] = ""
-    repository: str
+    commit_id: str = ""
+    repository: str = ""
     timestamp: Optional[int] = 0
     hunks: List[Tuple[int, int]] = Field(default_factory=list)
     hunk_count: Optional[int] = 0

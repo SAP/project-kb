@@ -39,19 +39,12 @@ def test_get_specific_commit():
     commit_id = "yyy"
     response = client.get("/commits/" + repository + "?commit_id=" + commit_id)
     assert response.status_code == 200
-    assert response.json()[0]["id"] == commit_id
-
-
-def test_get_commits_by_repository_in_detail():
-    repository = "https://github.com/apache/dubbo"
-    response = client.get("/commits/" + repository + "?details=true")
-    assert response.status_code == 200
-    assert response.json()[0]["id"] == "yyy"
-    assert response.json()[1]["id"] == "zzz"
+    assert response.json()[0]["commit_id"] == commit_id
 
 
 def test_get_commits_by_repository():
     repository = "https://github.com/apache/dubbo"
     response = client.get("/commits/" + repository)
     assert response.status_code == 200
-    assert response.json() == [{"id": "yyy"}, {"id": "zzz"}]
+    assert response.json()[0]["commit_id"] == "yyy"
+    assert response.json()[1]["commit_id"] == "zzz"

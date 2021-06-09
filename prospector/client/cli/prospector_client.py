@@ -152,7 +152,6 @@ def prospector(  # noqa: C901
             + repository_url
             + "?commit_id="
             + ",".join(candidates)
-            + "?details=true"
         )
         print("The backend returned status '%d'" % r.status_code)
         if r.status_code == 404:
@@ -167,7 +166,7 @@ def prospector(  # noqa: C901
         if (
             commit
         ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
-            preprocessed_commits.append(Commit(commit))
+            preprocessed_commits.append(Commit.parse_obj(commit))
         else:
             missing.append(candidates[idx])
 
