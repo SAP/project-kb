@@ -47,10 +47,11 @@ class PostgresCommitDB(CommitDB):
 
                     result = cur.fetchall()
                     if len(result):
-                        # TODO do better than eval
+                        # Workaround for unmarshaling hunks
                         lis = []
                         for r in result[0]["hunks"]:
-                            lis.append(eval(r))
+                            a, b = r.strip("()").split(",")
+                            lis.append((int(a), int(b)))
                         result[0]["hunks"] = lis
                         parsed_commit = Commit.parse_obj(result[0])
                         data.append(parsed_commit)
@@ -64,10 +65,11 @@ class PostgresCommitDB(CommitDB):
                 result = cur.fetchall()
                 if len(result):
                     for res in result:
+                        # Workaround for unmarshaling hunks
                         lis = []
                         for r in res[3]:
-                            # TODO do better than eval
-                            lis.append(eval(r))
+                            a, b = r.strip("()").split(",")
+                            lis.append((int(a), int(b)))
                         res[3] = lis
                         parsed_commit = Commit.parse_obj(res)
                         data.append(parsed_commit)
