@@ -7,7 +7,7 @@ from datamodel.commit import Commit
 
 class CommitWithFeatures(BaseModel):
     commit: Commit
-    references_vuln_id: bool = False
+    references_vuln_id: str = ""
     references_ghissue: bool = False
     time_between_commit_and_advisory_record: int = 0
     changes_relevant_path: bool = False
@@ -18,7 +18,7 @@ class CommitWithFeatures(BaseModel):
     n_changed_files: int = 0
     contains_jira_reference: bool = False
     referred_to_by_nvd: bool = False
-    annotations = []
+    annotations = [(str, str)]
 
     def __init__(self, **data: Any):
         super().__init__(**data)
