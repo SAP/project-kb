@@ -1,13 +1,13 @@
-from typing import Any
+from typing import Any, Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from datamodel.commit import Commit
 
 
 class CommitWithFeatures(BaseModel):
     commit: Commit
-    references_vuln_id: str = ""
+    references_vuln_id: bool = False
     references_ghissue: bool = False
     time_between_commit_and_advisory_record: int = 0
     changes_relevant_path: bool = False
@@ -18,7 +18,7 @@ class CommitWithFeatures(BaseModel):
     n_changed_files: int = 0
     contains_jira_reference: bool = False
     referred_to_by_nvd: bool = False
-    annotations = [(str, str)]
+    annotations: Dict[str, str] = Field(default_factory=dict)
 
     def __init__(self, **data: Any):
         super().__init__(**data)

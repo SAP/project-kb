@@ -43,10 +43,8 @@ def extract_features(
     return commit_feature
 
 
-def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> str:
-    if advisory_record.vulnerability_id in commit.cve_refs:
-        return advisory_record.vulnerability_id
-    return ""
+def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
+    return advisory_record.vulnerability_id in commit.cve_refs
 
 
 def extract_time_between_commit_and_advisory_record(
