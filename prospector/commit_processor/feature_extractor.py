@@ -1,3 +1,5 @@
+import requests_cache
+
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
@@ -29,6 +31,9 @@ def extract_features(
 
     changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
+    referred_to_by_pages_linked_from_advisories = (
+        extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
+    )
     referred_to_by_nvd = extract_referred_to_by_nvd(commit, advisory_record)
     commit_feature = CommitWithFeatures(
         commit=commit,
@@ -37,6 +42,7 @@ def extract_features(
         changes_relevant_path=changes_relevant_path,
         other_CVE_in_message=other_CVE_in_message,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
+        referred_to_by_pages_linked_from_advisories=referred_to_by_pages_linked_from_advisories,
         referred_to_by_nvd=referred_to_by_nvd,
         commit_reachable_from_given_tag=commit_reachable_from_given_tag,
     )
@@ -138,3 +144,15 @@ def is_commit_reachable_from_given_tag(
         return False
 
     return True
+
+
+def extract_referred_to_by_pages_linked_from_advisories(
+    commit: Commit, advisory_record: AdvisoryRecord
+) -> bool:
+    session = requests_cache.CachedSession("requests-cache")
+    return any(
+        filter(
+            lambda reference: commit.commit_id in session.get(reference).text,
+            advisory_record.references,
+        )
+    )

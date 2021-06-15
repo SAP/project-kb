@@ -44,3 +44,4 @@ prospector/.coverage
 cov_html/*
 .coverage
 prospector/prospector.code-workspace
+prospector/requests-cache.sqlite
