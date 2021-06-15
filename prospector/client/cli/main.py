@@ -17,7 +17,10 @@ from client.cli.prospector_client import (
     TIME_LIMIT_BEFORE,
     prospector,
 )
+from datamodel.commit_features import CommitWithFeatures
 from git.git import GIT_CACHE
+
+DEFAULT_BACKEND = "http://localhost:8000"
 
 logger = logging.getLogger("prospector")
 
@@ -51,7 +54,14 @@ def parseArguments(args):
         "--tag-interval",
         default="",
         type=str,
-        help="Tag interval (X,Y) to consider (the commit must be reachabla from Y but not from X, and must not be older than X)",
+        help="Tag interval (X,Y) to consider (the commit must be reachable from Y but not from X, and must not be older than X)",
+    )
+
+    parser.add_argument(
+        "--version-interval",
+        default="",
+        type=str,
+        help="Version interval (X,Y) to consider (the corresponding tags will be inferred automatically, and the commit must be reachable from Y but not from X, and must not be older than X)",
     )
 
     parser.add_argument(
@@ -62,6 +72,10 @@ def parseArguments(args):
     )
 
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
+
+    parser.add_argument(
+        "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
+    )
 
     parser.add_argument("-c", "--conf", help="specify configuration file")
 
@@ -112,7 +126,7 @@ def getConfiguration(customConfigFile=None):
     return config
 
 
-def ping_server(server_url: str, verbose: bool = False) -> bool:
+def ping_backend(server_url: str, verbose: bool = False) -> bool:
     """Tries to contact backend server
 
     Args:
@@ -136,35 +150,44 @@ def ping_server(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
-def display_results(results, verbose=False):
-    for r in results:
-        if verbose:
-            print(r)
-            # print(r.get_diff())
-        else:
-            print(r.get_msg())
-
-        print("{}/commit/{}\n-----\n".format(r.get_repository(), r.get_id()))
+def display_results(results: "list[CommitWithFeatures]", verbose=False):
+    print("-" * 80)
+    print("Rule filtered results")
+    print("-" * 80)
+    count = 0
+    for commit in results:
+        count += 1
+        print(
+            "{}/commit/{}\n-----\n".format(
+                commit.commit.repository,
+                commit.commit.commit_id,
+                # results[commit],
+            )
+        )
 
     print("-----")
-    print("Found %d candidates" % len(results))
+    print("Found {} candidates".format(count))
 
 
 def main(argv):  # noqa: C901
     args = parseArguments(argv)
     configuration = getConfiguration(args.conf)
 
+    if args.vulnerability_id is None:
+        print("No vulnerability id was specified. Cannot proceed.")
+        return False
+
     if configuration is None:
         print("Invalid configuration, exiting.")
         return False
 
-    verbose = configuration["global"].getboolean("verbose")
-    if args.verbose:
-        verbose = args.verbose
-
     debug = configuration["global"].getboolean("debug")
     if args.debug:
         debug = args.debug
+
+    verbose = configuration["global"].getboolean("verbose")
+    if args.verbose:
+        verbose = args.verbose
 
     if debug:
         verbose = True
@@ -172,13 +195,12 @@ def main(argv):  # noqa: C901
     if configuration["global"].get("nvd_rest_endpoint"):
         nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
 
-    if args.ping:
-        srv = configuration["global"]["server"]
-        return ping_server(srv, verbose)
+    backend = configuration["global"].get("backend") or DEFAULT_BACKEND
+    if args.backend:
+        backend = args.backend
 
-    if args.vulnerability_id is None:
-        print("No vulnerability id was specified. Cannot proceed.")
-        return False
+    if args.ping:
+        return ping_backend(backend, verbose)
 
     vulnerability_id = args.vulnerability_id
     repository_url = args.repository
@@ -186,6 +208,7 @@ def main(argv):  # noqa: C901
     vuln_descr = args.descr
     use_nvd = args.use_nvd
     tag_interval = args.tag_interval
+    version_interval = args.version_interval
     time_limit_before = TIME_LIMIT_BEFORE
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
@@ -225,11 +248,13 @@ def main(argv):  # noqa: C901
         publication_date=publication_date,
         vuln_descr=vuln_descr,
         tag_interval=tag_interval,
+        version_interval=version_interval,
         modified_files=modified_files,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
         nvd_rest_endpoint=nvd_rest_endpoint,
+        backend_address=backend,
         git_cache=git_cache,
         verbose=verbose,
         debug=debug,
@@ -237,6 +262,7 @@ def main(argv):  # noqa: C901
     )
 
     display_results(results, verbose=verbose)
+    # print(rule_filtered_results)
 
     return True
 

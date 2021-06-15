@@ -1,5 +1,5 @@
 from datamodel.commit import Commit
-from datamodel.commit_features import CommitFeatures
+from datamodel.commit_features import CommitWithFeatures
 
 
 def test_simple():
@@ -13,13 +13,15 @@ def test_simple():
         ghissue_refs=["#365", "#42"],
         jira_refs=["ABC-123", "CBA-456"],
     )
-    commit_features = CommitFeatures(
+    commit_features = CommitWithFeatures(
         commit=commit,
         references_vuln_id=True,
         time_between_commit_and_advisory_record=42,
         changes_relevant_path=True,
         other_CVE_in_message=True,
         commit_falls_in_given_interval_based_on_advisory_publicatation_date=True,
+        referred_to_by_pages_linked_from_advisories=True,
+        referred_to_by_nvd=True,
     )
 
     assert commit_features.commit.repository == "https://github.com/abc/xyz"
@@ -35,3 +37,5 @@ def test_simple():
     assert commit_features.references_ghissue
     assert commit_features.n_changed_files == 3
     assert commit_features.contains_jira_reference
+    assert commit_features.referred_to_by_pages_linked_from_advisories
+    assert commit_features.referred_to_by_nvd

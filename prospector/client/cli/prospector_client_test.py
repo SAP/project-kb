@@ -1,3 +1,8 @@
+import pytest
+
+from api import DB_CONNECT_STRING
+from commitdb.postgres import PostgresCommitDB
+
 from .main import main
 
 # from .prospector_client import prospector
@@ -12,7 +17,17 @@ from .main import main
 #     pprint(results)
 
 
-def test_main():
+@pytest.fixture
+def setupdb():
+    db = PostgresCommitDB()
+    db.connect(DB_CONNECT_STRING)
+    db.reset()
+    return db
+
+
+def test_main_runonce(setupdb):
+    db = setupdb
+    db.connect(DB_CONNECT_STRING)
     args = [
         "PROGRAM_NAME",
         "CVE-2019-11278",
@@ -21,8 +36,24 @@ def test_main():
         "--tag-interval=v74.0.0:v74.1.0",
     ]
     main(args)
+    db.reset()
 
 
-def test_main_ping_server():
-    args = ["PROGRAM_NAME", "--verbose", "--ping"]
-    assert main(args)
+def test_main_runtwice(setupdb):
+    db = setupdb
+    db.connect(DB_CONNECT_STRING)
+    args = [
+        "PROGRAM_NAME",
+        "CVE-2019-11278",
+        "--repository",
+        "https://github.com/cloudfoundry/uaa",
+        "--tag-interval=v74.0.0:v74.1.0",
+    ]
+    main(args)
+    main(args)
+    db.reset()
+
+
+# def test_main_ping_server():
+#     args = ["PROGRAM_NAME", "--verbose", "--ping"]
+#     assert main(args)

@@ -2,11 +2,10 @@
 This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
-import json
-
 import psycopg2
+import psycopg2.sql
 from psycopg2.extensions import parse_dsn
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import DictCursor
 
 from datamodel.commit import Commit
 
@@ -28,38 +27,52 @@ class PostgresCommitDB(CommitDB):
         parse_connect_string(connect_string)
         self.connection = psycopg2.connect(connect_string)
 
-    def lookup(self, commit_obj: Commit):
+    def lookup(self, repository: str, commit_id: str = None):
+        # Returns the results of the query as list of Commit objects
         if not self.connection:
             raise Exception("Invalid connection")
 
         data = []
         try:
-            cur = self.connection.cursor()
-            cur.execute(
-                "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
-                (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
-            )
-            data = cur.fetchall()
-            cur.close()
-        except Exception as ex:
-            print(ex)
-            raise Exception("Could not lookup commit vector in database")
+            cur = self.connection.cursor(cursor_factory=DictCursor)
+            if commit_id:
+                for cid in commit_id.split(","):
+                    cur.execute(
+                        "SELECT * FROM commits WHERE repository = %s AND commit_id =%s",
+                        (
+                            repository,
+                            cid,
+                        ),
+                    )
 
-        return data
-
-    def lookup_json(self, commit_obj: Commit):
-        # Returns the results of the query in json format
-        if not self.connection:
-            raise Exception("Invalid connection")
-
-        data = {}
-        try:
-            cur = self.connection.cursor(cursor_factory=RealDictCursor)
-            cur.execute(
-                "SELECT * FROM commits WHERE repository = %s AND (%s IS NULL OR id = %s)",
-                (commit_obj.repository, commit_obj.commit_id, commit_obj.commit_id),
-            )
-            data = json.dumps(cur.fetchall())
+                    result = cur.fetchall()
+                    if len(result):
+                        # Workaround for unmarshaling hunks
+                        lis = []
+                        for r in result[0]["hunks"]:
+                            a, b = r.strip("()").split(",")
+                            lis.append((int(a), int(b)))
+                        result[0]["hunks"] = lis
+                        parsed_commit = Commit.parse_obj(result[0])
+                        data.append(parsed_commit)
+                    else:
+                        data.append(None)
+            else:
+                cur.execute(
+                    "SELECT * FROM commits WHERE repository = %s",
+                    (repository,),
+                )
+                result = cur.fetchall()
+                if len(result):
+                    for res in result:
+                        # Workaround for unmarshaling hunks
+                        lis = []
+                        for r in res[3]:
+                            a, b = r.strip("()").split(",")
+                            lis.append((int(a), int(b)))
+                        res[3] = lis
+                        parsed_commit = Commit.parse_obj(res)
+                        data.append(parsed_commit)
             cur.close()
         except Exception as ex:
             print(ex)
@@ -75,9 +88,8 @@ class PostgresCommitDB(CommitDB):
             cur = self.connection.cursor()
             cur.execute(
                 """INSERT INTO commits(
-                    id,
+                    commit_id,
                     repository,
-                    feature_1,
                     timestamp,
                     hunks,
                     hunk_count,

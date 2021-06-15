@@ -1,5 +1,3 @@
-import json
-
 from fastapi.testclient import TestClient
 
 from api.main import app
@@ -21,18 +19,32 @@ def test_status():
 
 
 def test_post_preprocessed_commits():
-    commit_1 = Commit(repository="xxx", commit_id="yyy").__dict__
-    commit_2 = Commit(repository="aaa", commit_id="bbb").__dict__
-    commits = [commit_1, commit_2]
+    commit_1 = Commit(
+        repository="https://github.com/apache/dubbo", commit_id="yyy"
+    ).__dict__
+    commit_2 = Commit(
+        repository="https://github.com/apache/dubbo", commit_id="zzz"
+    ).__dict__
+    commit_3 = Commit(
+        repository="https://github.com/apache/struts", commit_id="bbb"
+    ).__dict__
+    commits = [commit_1, commit_2, commit_3]
     response = client.post("/commits/", json=commits)
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_get_commits():
-    repository = "xxx"
+def test_get_specific_commit():
+    repository = "https://github.com/apache/dubbo"
     commit_id = "yyy"
-    response = client.get("/commits/" + repository)
-    print(response.json())
+    response = client.get("/commits/" + repository + "?commit_id=" + commit_id)
     assert response.status_code == 200
-    assert json.loads(response.json())[0]["id"] == commit_id
+    assert response.json()[0]["commit_id"] == commit_id
+
+
+def test_get_commits_by_repository():
+    repository = "https://github.com/apache/dubbo"
+    response = client.get("/commits/" + repository)
+    assert response.status_code == 200
+    assert response.json()[0]["commit_id"] == "yyy"
+    assert response.json()[1]["commit_id"] == "zzz"
