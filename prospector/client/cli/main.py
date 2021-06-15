@@ -17,6 +17,7 @@ from client.cli.prospector_client import (
     TIME_LIMIT_BEFORE,
     prospector,
 )
+from datamodel.commit_features import CommitWithFeatures
 from git.git import GIT_CACHE
 
 DEFAULT_BACKEND = "http://localhost:8000"
@@ -149,7 +150,7 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
-def display_results(results, verbose=False):
+def display_results(results: "list[CommitWithFeatures]", verbose=False):
     print("-" * 80)
     print("Rule filtered results")
     print("-" * 80)

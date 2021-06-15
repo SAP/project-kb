@@ -177,6 +177,14 @@ def prospector(  # noqa: C901
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
+    # adv_processor = AdvisoryProcessor()
+    # advisory_record = adv_processor.process(advisory_record)
+
+    # get CommitFeatures
+    # invoke predict
+
+    # TODO here the preprocessed commits should be saved into the database
+
     if debug:
         pprint(advisory_record)
 
@@ -206,11 +214,11 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
-    commits_with_features = []
+    annotated_candidates = []
     for commit in tqdm(preprocessed_commits):
-        commits_with_features.append(extract_features(commit, advisory_record))
+        annotated_candidates.append(extract_features(commit, advisory_record))
 
-    annotated_candidates = apply_rules(commits_with_features, rules=rules)
+    annotated_candidates = apply_rules(annotated_candidates, rules=rules)
     annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
     return annotated_candidates
