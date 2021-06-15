@@ -142,6 +142,7 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
 
     raw_commit_data = dict()
+    missing = []
     try:
         # Exploit the preprocessed commits already stored in the backend
         #      and only process those that are missing. Note: the endpoint
@@ -154,16 +155,17 @@ def prospector(  # noqa: C901
             + ",".join(candidates)
         )
         print("The backend returned status '%d'" % r.status_code)
-        if r.status_code == 404:
+        if r.status_code != 200:
             print("This is weird...Continuing anyway.")
+            missing = candidates
         else:
             raw_commit_data = r.json()
     except requests.exceptions.ConnectionError:
         print("Could not reach backend, is it running?")
         print("The result of commit pre-processing will not be saved.")
+        missing = candidates
 
     preprocessed_commits: "list[Commit]" = []
-    missing = []
     for idx, commit in enumerate(raw_commit_data):
         if (
             commit
