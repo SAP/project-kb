@@ -151,6 +151,16 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
 
 
 def display_results(results: "list[CommitWithFeatures]", verbose=False):
+    def format_annotations(commit: CommitWithFeatures) -> str:
+        out = ""
+        if verbose:
+            for tag in commit.annotations:
+                out += " - [{}] {}".format(tag, commit.annotations[tag])
+        else:
+            out = ",".join(commit.annotations.keys())
+
+        return out
+
     print("-" * 80)
     print("Rule filtered results")
     print("-" * 80)
@@ -158,12 +168,11 @@ def display_results(results: "list[CommitWithFeatures]", verbose=False):
     for commit in results:
         count += 1
         print(
-            "{}/commit/{}\n-----\n".format(
-                commit.commit.repository,
-                commit.commit.commit_id,
-                # results[commit],
+            "\n----------\n{}/commit/{}\n".format(
+                commit.commit.repository, commit.commit.commit_id
             )
         )
+        print(format_annotations(commit))
 
     print("-----")
     print("Found {} candidates".format(count))
