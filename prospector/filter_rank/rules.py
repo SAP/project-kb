@@ -40,7 +40,6 @@ def apply_rules(
             if tag:
                 candidate.annotations[tag] = rule_explanation
 
-        # annotated_candidates.append(candidate)
     # NOTE: the CommitWithFeatures object has a handy member variable "commit"
     # which gives access to the underlying "raw" commit object
     return candidates
@@ -51,8 +50,9 @@ def apply_rule_references_vuln_id(
 ):
     rule_tag = "REF_ADV_VULN_ID"
     if candidate.references_vuln_id:
-        explanation_template = "This commit message contains the string '{}' that is the \
-        vulnerability identifier mentioned in the advisory"
+        explanation_template = (
+            "The commit message mentions the vulnerability identifier '{}'"
+        )
         explanation = explanation_template.format(advisory_record.vulnerability_id)
         return rule_tag, explanation
     return None, None
@@ -62,7 +62,7 @@ def apply_rule_references_ghissue(candidate: CommitWithFeatures):
     rule_tag = "REF_GH_ISSUE"
     if candidate.references_ghissue:
         explanation_template = (
-            "This commit has references to the following GitHub issues: '{}'"
+            "The commit message refers to the following GitHub issues: '{}'"
         )
         explanation = explanation_template.format(str(candidate.commit.ghissue_refs))
         return rule_tag, explanation
