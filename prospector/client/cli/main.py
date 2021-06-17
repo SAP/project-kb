@@ -77,6 +77,12 @@ def parseArguments(args):
         "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
     )
 
+    parser.add_argument(
+        "--report",
+        default="console",
+        help="how to show the results (options: console, json, html)",
+    )
+
     parser.add_argument("-c", "--conf", help="specify configuration file")
 
     parser.add_argument(
@@ -150,7 +156,17 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
-def display_results(results: "list[CommitWithFeatures]", verbose=False):
+def make_report_json(results: "list[CommitWithFeatures]"):
+    filename = "prospector-report.json"
+    print("Writing results to " + filename)
+
+
+def make_report_html(results: "list[CommitWithFeatures]"):
+    filename = "prospector-report.html"
+    print("Writing results to " + filename)
+
+
+def make_report_console(results: "list[CommitWithFeatures]", verbose=False):
     def format_annotations(commit: CommitWithFeatures) -> str:
         out = ""
         if verbose:
@@ -172,6 +188,8 @@ def display_results(results: "list[CommitWithFeatures]", verbose=False):
                 commit.commit.repository, commit.commit.commit_id
             )
         )
+        print(commit.commit.changed_files)
+        print(commit.commit.message + "\n")
         print(format_annotations(commit))
 
     print("-----")
@@ -197,6 +215,10 @@ def main(argv):  # noqa: C901
     verbose = configuration["global"].getboolean("verbose")
     if args.verbose:
         verbose = args.verbose
+
+    report = configuration["global"].getboolean("report")
+    if args.report:
+        report = args.report
 
     if debug:
         verbose = True
@@ -270,8 +292,15 @@ def main(argv):  # noqa: C901
         limit_candidates=max_candidates,
     )
 
-    display_results(results, verbose=verbose)
-    # print(rule_filtered_results)
+    if report == "console":
+        make_report_console(results, verbose=verbose)
+    elif report == "json":
+        make_report_json(results)
+    elif report == "html":
+        make_report_html(results)
+    else:
+        print("Invalid report type specified, using 'console'")
+        make_report_console(results, verbose=verbose)
 
     return True
 
