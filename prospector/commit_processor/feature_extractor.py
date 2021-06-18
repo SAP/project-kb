@@ -28,8 +28,8 @@ def extract_features(
     repo.clone()
 
     for version in advisory_record.versions:
-        version_tag = repo.get_tag_for_version(version[0])
-        if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag):
+        version_tag = repo.get_tag_for_version(version)
+        if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag[0]):
             commit_reachable_from_given_tag = True
             break
 
