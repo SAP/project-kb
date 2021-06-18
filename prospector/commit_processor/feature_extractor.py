@@ -24,7 +24,11 @@ def extract_features(
     )
 
     commit_reachable_from_given_tag = False
-    for version_tag in advisory_record.versions:
+    repo = Git(advisory_record.repository_url)
+    repo.clone()
+
+    for version in advisory_record.versions:
+        version_tag = repo.get_tag_for_version(version[0])
         if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag):
             commit_reachable_from_given_tag = True
             break
