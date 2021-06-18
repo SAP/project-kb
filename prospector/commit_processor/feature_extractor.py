@@ -152,7 +152,7 @@ def extract_referred_to_by_pages_linked_from_advisories(
     session = requests_cache.CachedSession("requests-cache")
     return any(
         filter(
-            lambda reference: commit.commit_id in session.get(reference).text,
+            lambda reference: commit.commit_id[:8] in session.get(reference).text,
             advisory_record.references,
         )
     )
