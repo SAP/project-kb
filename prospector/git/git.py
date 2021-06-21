@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import sys
+import traceback
 from datetime import datetime
 
 # from pprint import pprint
@@ -273,7 +274,8 @@ class Git:
             path.reverse()
             return path
         except:
-            print("Failed to obtain commits")
+            print("Failed to obtain commits, details below:")
+            traceback.print_exc()
             return []
 
     def get_commit(self, key, by="id"):

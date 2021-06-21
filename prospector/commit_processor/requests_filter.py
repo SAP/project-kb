@@ -3,4 +3,5 @@ ALLOWED_SITES = [
     "lists.apache.org",
     "just.an.example.site",
     "one.more.example.site",
+    "jvndb.jvm.jp",  # for testing only
 ]
