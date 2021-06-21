@@ -1,3 +1,4 @@
+import functools
 from urllib.parse import urlparse
 
 import requests_cache
@@ -158,9 +159,13 @@ def extract_referred_to_by_pages_linked_from_advisories(
         advisory_record.references,
     )
     session = requests_cache.CachedSession("requests-cache")
+
+    def is_commit_cited_in(reference: str, commit_id: str):
+        return commit.commit_id[:8] in session.get(reference).text
+
     return any(
         filter(
-            lambda reference: commit.commit_id[:8] in session.get(reference).text,
+            functools.partial(is_commit_cited_in, commit_id=commit.commit_id[:8]),
             allowed_references,
         )
     )
