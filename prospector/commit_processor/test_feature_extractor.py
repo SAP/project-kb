@@ -239,7 +239,6 @@ def test_is_commit_reachable_from_given_tag(repository):
 
     repo = repository
     commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
-    print(commit)
     test_commit = preprocess_commit(commit)
 
     advisory_record = AdvisoryRecord(
