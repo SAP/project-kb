@@ -1,3 +1,4 @@
+import traceback
 from urllib.parse import urlparse
 
 import requests_cache
@@ -164,6 +165,11 @@ def extract_referred_to_by_pages_linked_from_advisories(
     session = requests_cache.CachedSession("requests-cache")
 
     def is_commit_cited_in(reference: str):
-        return commit.commit_id[:8] in session.get(reference).text
+        try:
+            return commit.commit_id[:8] in session.get(reference).text
+        except Exception:
+            print(f"can not retrive site: {reference}")
+            traceback.print_exc()  # TODO: shoud be at debug level logging, but it requires some logging system
+            return False
 
     return any(filter(is_commit_cited_in, allowed_references))

@@ -275,7 +275,7 @@ class Git:
             return path
         except:
             print("Failed to obtain commits, details below:")
-            traceback.print_exc()
+            traceback.print_exc()  # TODO: shoud be at debug level logging, but it requires some logging system
             return []
 
     def get_commit(self, key, by="id"):
