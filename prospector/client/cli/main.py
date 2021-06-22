@@ -165,8 +165,10 @@ def make_report_json(results: "list[CommitWithFeatures]"):
 def make_report_html(results: "list[CommitWithFeatures]"):
     filename = "prospector-report.html"
     print("Writing results to " + filename)
+    # TODO: extract to a new module for HTML
     environment = jinja2.Environment(
-        loader=jinja2.PackageLoader(__name__), autoescape=jinja2.select_autoescape()
+        loader=jinja2.FileSystemLoader(os.path.join("client", "cli", "templates")),
+        autoescape=jinja2.select_autoescape(),
     )
     template = environment.get_template("results.html")
     print(template.render())
