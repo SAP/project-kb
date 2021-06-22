@@ -32,7 +32,7 @@ def extract_features(
             commit_reachable_from_given_tag = True
             break
 
-    changes_relevant_path = extract_changes_relevant_path(commit, advisory_record)
+    changes_relevant_path = extract_changed_relevant_paths(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
     referred_to_by_pages_linked_from_advisories = (
         extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
@@ -61,11 +61,11 @@ def extract_time_between_commit_and_advisory_record(
     return commit.timestamp - advisory_record.published_timestamp
 
 
-def extract_changes_relevant_path(
+def extract_changed_relevant_paths(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> Set[str]:
     """
-    Decides whether any of the changed paths (by a commit) are in the list
+    Return the list of the changed paths (by a commit) which are in the list
     of relevant paths (mentioned in the advisory record)
     """
     return set(advisory_record.paths) & set(commit.changed_files)

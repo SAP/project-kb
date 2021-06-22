@@ -6,7 +6,7 @@ from datamodel.commit import Commit
 from git.git import Git
 
 from .feature_extractor import (
-    extract_changes_relevant_path,
+    extract_changed_relevant_paths,
     extract_features,
     extract_other_CVE_in_message,
     extract_references_vuln_id,
@@ -111,7 +111,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
-    assert extract_changes_relevant_path(commit, advisory_record) == {
+    assert extract_changed_relevant_paths(commit, advisory_record) == {
         path_1,
     }
 
@@ -123,7 +123,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_2]
     )
-    assert extract_changes_relevant_path(commit, advisory_record) == {
+    assert extract_changed_relevant_paths(commit, advisory_record) == {
         path_2,
     }
 
@@ -133,7 +133,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
-    assert extract_changes_relevant_path(commit, advisory_record) == set()
+    assert extract_changed_relevant_paths(commit, advisory_record) == set()
 
     commit = Commit(
         commit_id="test_commit",
@@ -143,7 +143,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_3]
     )
-    assert extract_changes_relevant_path(commit, advisory_record) == set()
+    assert extract_changed_relevant_paths(commit, advisory_record) == set()
 
     commit = Commit(
         commit_id="test_commit", repository="test_repository", changed_files=[]
@@ -151,7 +151,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
-    assert extract_changes_relevant_path(commit, advisory_record) == set()
+    assert extract_changed_relevant_paths(commit, advisory_record) == set()
 
     commit = Commit(
         commit_id="test_commit",
@@ -159,7 +159,7 @@ def test_extract_changes_relevant_path():
         changed_files=[path_1, path_2],
     )
     advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record", paths=[])
-    assert extract_changes_relevant_path(commit, advisory_record) == set()
+    assert extract_changed_relevant_paths(commit, advisory_record) == set()
 
 
 def test_extract_other_CVE_in_message():
