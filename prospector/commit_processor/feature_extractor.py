@@ -1,9 +1,13 @@
+from urllib.parse import urlparse
+
 import requests_cache
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
 from git.git import Git
+
+from .requests_filter import ALLOWED_SITES
 
 DAYS_BEFORE = 180
 DAYS_AFTER = 365
@@ -24,8 +28,12 @@ def extract_features(
     )
 
     commit_reachable_from_given_tag = False
-    for version_tag in advisory_record.versions:
-        if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag):
+    repo = Git(advisory_record.repository_url)
+    repo.clone()
+
+    for version in advisory_record.versions:
+        version_tag = repo.get_tag_for_version(version)
+        if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag[0]):
             commit_reachable_from_given_tag = True
             break
 
@@ -149,10 +157,14 @@ def is_commit_reachable_from_given_tag(
 def extract_referred_to_by_pages_linked_from_advisories(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> bool:
+    allowed_references = filter(
+        lambda reference: urlparse(reference).hostname in ALLOWED_SITES,
+        advisory_record.references,
+    )
     session = requests_cache.CachedSession("requests-cache")
     return any(
         filter(
-            lambda reference: commit.commit_id in session.get(reference).text,
-            advisory_record.references,
+            lambda reference: commit.commit_id[:8] in session.get(reference).text,
+            allowed_references,
         )
     )
