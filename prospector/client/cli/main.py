@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from pprint import pprint
 
+import jinja2
 import requests
 
 from client.cli.prospector_client import (
@@ -164,6 +165,11 @@ def make_report_json(results: "list[CommitWithFeatures]"):
 def make_report_html(results: "list[CommitWithFeatures]"):
     filename = "prospector-report.html"
     print("Writing results to " + filename)
+    environment = jinja2.Environment(
+        loader=jinja2.PackageLoader(__name__), autoescape=jinja2.select_autoescape()
+    )
+    template = environment.get_template("results.html")
+    print(template.render())
 
 
 def make_report_console(results: "list[CommitWithFeatures]", verbose=False):
@@ -301,7 +307,6 @@ def main(argv):  # noqa: C901
     else:
         print("Invalid report type specified, using 'console'")
         make_report_console(results, verbose=verbose)
-
     return True
 
 
