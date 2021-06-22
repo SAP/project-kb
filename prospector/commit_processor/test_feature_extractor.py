@@ -8,7 +8,6 @@ from git.git import Git
 from .feature_extractor import (
     extract_changes_relevant_path,
     extract_features,
-    extract_is_close_to_advisory_date,
     extract_other_CVE_in_message,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
@@ -168,50 +167,6 @@ def test_is_commit_in_given_interval():
     assert is_commit_in_given_interval(1359961896, 1359875896, -1)
     assert not is_commit_in_given_interval(1359961896, 1359871896, -1)
     assert not is_commit_in_given_interval(1359961896, 1360051896, 1)
-
-
-def test_extract_is_close_to_advisory_date(
-    repository,
-):
-
-    repo = repository
-    commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
-    test_commit = preprocess_commit(commit)
-
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="CVE-2020-26258",
-        repository_url="https://github.com/apache/struts",
-        paths=["pom.xml"],
-        published_timestamp=1000000,
-        versions=["STRUTS_2_1_3", "STRUTS_2_3_9"],
-    )
-
-    test_commit.timestamp = 1000000
-    assert extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 1)
-
-    test_commit.timestamp = 1086401
-    assert not extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 1)
-
-    test_commit.timestamp = 913598
-    assert not extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 1)
-
-    test_commit.timestamp = 1000000
-    assert extract_is_close_to_advisory_date(test_commit, advisory_record, 0, 0)
-
-    test_commit.timestamp = 1000001
-    assert not extract_is_close_to_advisory_date(test_commit, advisory_record, 0, 0)
-
-    test_commit.timestamp = 1086398
-    assert extract_is_close_to_advisory_date(test_commit, advisory_record, 0, 1)
-
-    test_commit.timestamp = 1086401
-    assert not extract_is_close_to_advisory_date(test_commit, advisory_record, 0, 1)
-
-    test_commit.timestamp = 913598
-    assert not extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 0)
-
-    test_commit.timestamp = 913601
-    assert extract_is_close_to_advisory_date(test_commit, advisory_record, 1, 0)
 
 
 def test_extract_referred_to_by_nvd(repository):

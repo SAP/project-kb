@@ -1,3 +1,4 @@
+from typing import Tuple
 from urllib.parse import urlparse
 
 import requests_cache
@@ -21,12 +22,6 @@ def extract_features(
     time_between_commit_and_advisory_record = (
         extract_time_between_commit_and_advisory_record(commit, advisory_record)
     )
-    commit_falls_in_given_interval_based_on_advisory_publicatation_date = (
-        extract_is_close_to_advisory_date(
-            commit, advisory_record, DAYS_BEFORE, DAYS_AFTER
-        )
-    )
-
     commit_reachable_from_given_tag = False
     repo = Git(advisory_record.repository_url)
     repo.clone()
@@ -49,7 +44,6 @@ def extract_features(
         time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
         changes_relevant_path=changes_relevant_path,
         other_CVE_in_message=other_CVE_in_message,
-        commit_falls_in_given_interval_based_on_advisory_publicatation_date=commit_falls_in_given_interval_based_on_advisory_publicatation_date,
         referred_to_by_pages_linked_from_advisories=referred_to_by_pages_linked_from_advisories,
         referred_to_by_nvd=referred_to_by_nvd,
         commit_reachable_from_given_tag=commit_reachable_from_given_tag,
@@ -69,39 +63,18 @@ def extract_time_between_commit_and_advisory_record(
 
 def extract_changes_relevant_path(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> bool:
+) -> Tuple[str]:
     """
     Decides whether any of the changed paths (by a commit) are in the list
     of relevant paths (mentioned in the advisory record)
     """
-    return any(
-        [changed_path in advisory_record.paths for changed_path in commit.changed_files]
-    )
+    return tuple(set(advisory_record.paths) & set(commit.changed_files))
 
 
 def extract_other_CVE_in_message(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> bool:
-    return (
-        len(commit.cve_refs) > 0
-        and advisory_record.vulnerability_id not in commit.cve_refs
-    )
-
-
-def extract_is_close_to_advisory_date(
-    commit: Commit,
-    advisory_record: AdvisoryRecord,
-    days_before: int,
-    days_after: int,
-) -> bool:
-    """
-    Return True if the given commit falls in the given interval from advisory record publication date
-    """
-    timestamp = advisory_record.published_timestamp
-
-    return is_commit_in_given_interval(
-        timestamp, commit.timestamp, -days_before
-    ) or is_commit_in_given_interval(timestamp, commit.timestamp, days_after)
+) -> Tuple[str]:
+    return tuple(set(commit.cve_refs) - {advisory_record.vulnerability_id})
 
 
 def is_commit_in_given_interval(
@@ -125,11 +98,12 @@ def is_commit_in_given_interval(
         )
 
 
-def extract_referred_to_by_nvd(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
-    return any(
+def extract_referred_to_by_nvd(
+    commit: Commit, advisory_record: AdvisoryRecord
+) -> Tuple[str]:
+    return tuple(
         filter(
-            lambda reference: commit.commit_id in reference,
-            advisory_record.references,
+            lambda reference: commit.commit_id in reference, advisory_record.references
         )
     )
 
@@ -156,13 +130,13 @@ def is_commit_reachable_from_given_tag(
 
 def extract_referred_to_by_pages_linked_from_advisories(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> bool:
+) -> Tuple[str]:
     allowed_references = filter(
         lambda reference: urlparse(reference).hostname in ALLOWED_SITES,
         advisory_record.references,
     )
     session = requests_cache.CachedSession("requests-cache")
-    return any(
+    return tuple(
         filter(
             lambda reference: commit.commit_id[:8] in session.get(reference).text,
             allowed_references,
