@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Set
 from urllib.parse import urlparse
 
 import requests_cache
@@ -63,18 +63,18 @@ def extract_time_between_commit_and_advisory_record(
 
 def extract_changes_relevant_path(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> Tuple[str]:
+) -> Set[str]:
     """
     Decides whether any of the changed paths (by a commit) are in the list
     of relevant paths (mentioned in the advisory record)
     """
-    return tuple(set(advisory_record.paths) & set(commit.changed_files))
+    return set(advisory_record.paths) & set(commit.changed_files)
 
 
 def extract_other_CVE_in_message(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> Tuple[str]:
-    return tuple(set(commit.cve_refs) - {advisory_record.vulnerability_id})
+) -> Set[str]:
+    return set(commit.cve_refs) - {advisory_record.vulnerability_id}
 
 
 def is_commit_in_given_interval(
@@ -100,8 +100,8 @@ def is_commit_in_given_interval(
 
 def extract_referred_to_by_nvd(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> Tuple[str]:
-    return tuple(
+) -> Set[str]:
+    return set(
         filter(
             lambda reference: commit.commit_id in reference, advisory_record.references
         )
@@ -130,13 +130,13 @@ def is_commit_reachable_from_given_tag(
 
 def extract_referred_to_by_pages_linked_from_advisories(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> Tuple[str]:
+) -> Set[str]:
     allowed_references = filter(
         lambda reference: urlparse(reference).hostname in ALLOWED_SITES,
         advisory_record.references,
     )
     session = requests_cache.CachedSession("requests-cache")
-    return tuple(
+    return set(
         filter(
             lambda reference: commit.commit_id[:8] in session.get(reference).text,
             allowed_references,

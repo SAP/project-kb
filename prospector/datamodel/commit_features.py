@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Set
 
 from pydantic import BaseModel, Field
 
@@ -10,14 +10,14 @@ class CommitWithFeatures(BaseModel):
     references_vuln_id: bool = False
     references_ghissue: bool = False
     time_between_commit_and_advisory_record: int = 0
-    changes_relevant_path: Tuple[str] = ()
-    other_CVE_in_message: Tuple[str] = ()
+    changes_relevant_path: Set[str] = ()
+    other_CVE_in_message: Set[str] = ()
     avg_hunk_size: int = 0
     n_hunks: int = 0
     n_changed_files: int = 0
     contains_jira_reference: bool = False
-    referred_to_by_pages_linked_from_advisories: Tuple[str] = ()
-    referred_to_by_nvd: Tuple[str] = ()
+    referred_to_by_pages_linked_from_advisories: Set[str] = ()
+    referred_to_by_nvd: Set[str] = ()
     annotations: Dict[str, str] = Field(default_factory=dict)
 
     def __init__(self, **data: Any):

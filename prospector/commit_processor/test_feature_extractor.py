@@ -52,31 +52,40 @@ def test_extract_features(repository, requests_mock):
 
     extracted_features = extract_features(processed_commit, advisory_record)
 
-    assert extracted_features.references_vuln_id
+    assert extracted_features.references_vuln_id is True
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
-    assert extracted_features.changes_relevant_path
-    assert not extracted_features.other_CVE_in_message
-    assert (
-        extracted_features.commit_falls_in_given_interval_based_on_advisory_publicatation_date
-    )
+    assert extracted_features.changes_relevant_path == {
+        "pom.xml",
+    }
+    assert extracted_features.other_CVE_in_message == {
+        "CVE-2020-26259",
+    }
     assert extracted_features.avg_hunk_size == 2
     assert extracted_features.n_hunks == 1
-    assert not extracted_features.references_ghissue
+    assert extracted_features.references_ghissue is False
     assert extracted_features.n_changed_files == 1
-    assert extracted_features.contains_jira_reference
-    assert extracted_features.referred_to_by_pages_linked_from_advisories
-    assert extracted_features.referred_to_by_nvd
+    assert extracted_features.contains_jira_reference is True
+    assert extracted_features.referred_to_by_pages_linked_from_advisories == {
+        "https://for.testing.purposes/containing_commit_id_in_text",
+    }
+    assert extracted_features.referred_to_by_nvd == {
+        "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
+    }
 
 
 def test_extract_references_vuln_id():
     commit = Commit(
         commit_id="test_commit",
         repository="test_repository",
-        cve_refs=["test_advisory_record", "another_advisory_record"],
+        cve_refs=[
+            "test_advisory_record",
+            "another_advisory_record",
+            "yet_another_advisory_record",
+        ],
     )
     advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record")
     result = extract_references_vuln_id(commit, advisory_record)
-    assert result
+    assert result is True
 
 
 def test_time_between_commit_and_advisory_record():
@@ -102,7 +111,9 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
-    assert extract_changes_relevant_path(commit, advisory_record)
+    assert extract_changes_relevant_path(commit, advisory_record) == {
+        path_1,
+    }
 
     commit = Commit(
         commit_id="test_commit",
@@ -112,7 +123,9 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_2]
     )
-    assert extract_changes_relevant_path(commit, advisory_record)
+    assert extract_changes_relevant_path(commit, advisory_record) == {
+        path_2,
+    }
 
     commit = Commit(
         commit_id="test_commit", repository="test_repository", changed_files=[path_3]
@@ -120,7 +133,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
-    assert not extract_changes_relevant_path(commit, advisory_record)
+    assert extract_changes_relevant_path(commit, advisory_record) == set()
 
     commit = Commit(
         commit_id="test_commit",
@@ -130,7 +143,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_3]
     )
-    assert not extract_changes_relevant_path(commit, advisory_record)
+    assert extract_changes_relevant_path(commit, advisory_record) == set()
 
     commit = Commit(
         commit_id="test_commit", repository="test_repository", changed_files=[]
@@ -138,7 +151,7 @@ def test_extract_changes_relevant_path():
     advisory_record = AdvisoryRecord(
         vulnerability_id="test_advisory_record", paths=[path_1, path_2]
     )
-    assert not extract_changes_relevant_path(commit, advisory_record)
+    assert extract_changes_relevant_path(commit, advisory_record) == set()
 
     commit = Commit(
         commit_id="test_commit",
@@ -146,7 +159,7 @@ def test_extract_changes_relevant_path():
         changed_files=[path_1, path_2],
     )
     advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record", paths=[])
-    assert not extract_changes_relevant_path(commit, advisory_record)
+    assert extract_changes_relevant_path(commit, advisory_record) == set()
 
 
 def test_extract_other_CVE_in_message():
@@ -156,9 +169,15 @@ def test_extract_other_CVE_in_message():
         cve_refs=["CVE-2021-29425", "CVE-2021-21251"],
     )
     advisory_record = AdvisoryRecord(vulnerability_id="CVE-2020-31284")
-    assert extract_other_CVE_in_message(commit, advisory_record)
+    assert extract_other_CVE_in_message(commit, advisory_record) == {
+        "CVE-2021-29425",
+        "CVE-2021-21251",
+    }
     advisory_record = AdvisoryRecord(vulnerability_id="CVE-2021-29425")
-    assert not extract_other_CVE_in_message(commit, advisory_record)
+    result = extract_other_CVE_in_message(commit, advisory_record)
+    assert result == {
+        "CVE-2021-21251",
+    }
 
 
 def test_is_commit_in_given_interval():
@@ -173,7 +192,8 @@ def test_extract_referred_to_by_nvd(repository):
     advisory_record = AdvisoryRecord(
         vulnerability_id="CVE-2020-26258",
         references=[
-            "https://lists.apache.org/thread.html/r97993e3d78e1f5389b7b172ba9f308440830ce5f051ee62714a0aa34@%3Ccommits.struts.apache.org%3E"
+            "https://lists.apache.org/thread.html/r97993e3d78e1f5389b7b172ba9f308440830ce5f051ee62714a0aa34@%3Ccommits.struts.apache.org%3E",
+            "https://other.com",
         ],
     )
 
@@ -181,13 +201,15 @@ def test_extract_referred_to_by_nvd(repository):
         commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
         repository="test_repository",
     )
-    assert extract_referred_to_by_nvd(commit, advisory_record)
+    assert extract_referred_to_by_nvd(commit, advisory_record) == {
+        "https://lists.apache.org/thread.html/r97993e3d78e1f5389b7b172ba9f308440830ce5f051ee62714a0aa34@%3Ccommits.struts.apache.org%3E",
+    }
 
     commit = Commit(
         commit_id="f4d2eabd921cbd8808b9d923ee63d44538b4154f",
         repository="test_repository",
     )
-    assert not extract_referred_to_by_nvd(commit, advisory_record)
+    assert extract_referred_to_by_nvd(commit, advisory_record) == set()
 
 
 def test_is_commit_reachable_from_given_tag(repository):
@@ -230,12 +252,17 @@ def test_extract_referred_to_by_pages_linked_from_advisories(repository, request
         commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
         repository="test_repository",
     )
-    assert extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
+    assert extract_referred_to_by_pages_linked_from_advisories(
+        commit, advisory_record
+    ) == {
+        "https://for.testing.purposes/containing_commit_id_in_text_2",
+    }
 
     commit = Commit(
         commit_id="f4d2eabd921cbd8808b9d923ee63d44538b4154f",
         repository="test_repository",
     )
-    assert not extract_referred_to_by_pages_linked_from_advisories(
-        commit, advisory_record
+    assert (
+        extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
+        == set()
     )
