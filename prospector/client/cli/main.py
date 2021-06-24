@@ -9,16 +9,17 @@ import sys
 from pathlib import Path
 from pprint import pprint
 
-import jinja2
 import requests
 
+from client.cli.console_report import report_on_console
+from client.cli.html_report import report_as_html
+from client.cli.json_report import report_as_json
 from client.cli.prospector_client import (
     MAX_CANDIDATES,
     TIME_LIMIT_AFTER,
     TIME_LIMIT_BEFORE,
     prospector,
 )
-from datamodel.commit_features import CommitWithFeatures
 from git.git import GIT_CACHE
 
 DEFAULT_BACKEND = "http://localhost:8000"
@@ -157,53 +158,6 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
-def make_report_json(results: "list[CommitWithFeatures]"):
-    filename = "prospector-report.json"
-    print("Writing results to " + filename)
-
-
-def make_report_html(results: "list[CommitWithFeatures]"):
-    filename = "prospector-report.html"
-    print("Writing results to " + filename)
-    # TODO: extract to a new module for HTML
-    environment = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(os.path.join("client", "cli", "templates")),
-        autoescape=jinja2.select_autoescape(),
-    )
-    template = environment.get_template("results.html")
-    print(template.render())
-
-
-def make_report_console(results: "list[CommitWithFeatures]", verbose=False):
-    def format_annotations(commit: CommitWithFeatures) -> str:
-        out = ""
-        if verbose:
-            for tag in commit.annotations:
-                out += " - [{}] {}".format(tag, commit.annotations[tag])
-        else:
-            out = ",".join(commit.annotations.keys())
-
-        return out
-
-    print("-" * 80)
-    print("Rule filtered results")
-    print("-" * 80)
-    count = 0
-    for commit in results:
-        count += 1
-        print(
-            "\n----------\n{}/commit/{}\n".format(
-                commit.commit.repository, commit.commit.commit_id
-            )
-        )
-        print(commit.commit.changed_files)
-        print(commit.commit.message + "\n")
-        print(format_annotations(commit))
-
-    print("-----")
-    print("Found {} candidates".format(count))
-
-
 def main(argv):  # noqa: C901
     args = parseArguments(argv)
     configuration = getConfiguration(args.conf)
@@ -301,14 +255,14 @@ def main(argv):  # noqa: C901
     )
 
     if report == "console":
-        make_report_console(results, verbose=verbose)
+        report_on_console(results, verbose=verbose)
     elif report == "json":
-        make_report_json(results)
+        report_as_json(results)
     elif report == "html":
-        make_report_html(results)
+        report_as_html(results)
     else:
         print("Invalid report type specified, using 'console'")
-        make_report_console(results, verbose=verbose)
+        report_on_console(results, verbose=verbose)
     return True
 
 
