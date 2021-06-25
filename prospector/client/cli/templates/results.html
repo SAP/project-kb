@@ -31,11 +31,18 @@
             <div id="candidatebody{{ loop.index }}" class="collapse" aria-labelledby="candidateheader{{ loop.index }}"
                 data-parent="#accordion">
                 <div class="card-body">
-                    <h5 class="card-title">{{ commit_with_feature.commit.commit_id }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">{{ commit_with_feature.commit.repository }}</h6>
-                    <p class="card-text">{{ commit_with_feature.commit.message }}</p>
-                    <a href="#" class="card-link">Card link</a>
-                    <a href="#" class="card-link">Another link</a>
+                    <h5 class="card-title"><i class="fas fa-code-branch"></i> {{ commit_with_feature.commit.commit_id }}
+                    </h5>
+                    <h6 class="card-subtitle mb-2 text-muted"><i class="fab fa-git-alt"></i> {{
+                        commit_with_feature.commit.repository }} <a href="{{ commit_with_feature.commit.repository }}"
+                            target="_blank" class="btn btn-primary btn-sm">Open</a></h6>
+                    <p class="card-text"><i class="fas fa-quote-left"></i> {{ commit_with_feature.commit.message
+                        }} <i class="fas fa-quote-right"></i></p>
+                    <p><i class="fas fa-shield-alt"></i>
+                        {% for cve in commit_with_feature.other_CVE_in_message %}
+                        <span class="badge bg-secondary">{{ cve }}</span>
+                        {% endfor %}
+                    </p>
                 </div>
             </div>
         </div>
