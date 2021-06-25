@@ -62,7 +62,12 @@ SUFFIX = [".hu", ".com", ".org", ".ru", ".fr", ".de"]
 def random_url(max_length: int):
     return (
         choice(PROTOCOLS)
-        + "/".join(random_list_of_strs(min_count=1, max_count=max_length))
+        + "/".join(
+            map(
+                lambda s: s.lower().replace(" ", "-"),
+                random_list_of_strs(min_count=1, max_count=max_length),
+            )
+        )
         + choice(SUFFIX)
     )
 
@@ -88,7 +93,11 @@ def test_report_generation():
     candidates = []
     for _ in range(100):
         commit_with_feature = CommitWithFeatures(
-            commit=Commit(commit_id=random_commit_hash(), repository=random_url(4)),
+            commit=Commit(
+                commit_id=random_commit_hash(),
+                repository=random_url(4),
+                message=" ".join(random_list_of_strs(100)),
+            ),
             references_vuln_id=random_bool(),
             references_ghissue=random_bool(),
             time_between_commit_and_advisory_record=randint(0, 42),

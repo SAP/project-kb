@@ -16,6 +16,6 @@ def report_as_html(
     )
     template = environment.get_template("results.html")
     with open(filename, "w", encoding="utf8") as html_file:
-        for content in template.generate():
+        for content in template.generate(candidates=results):
             html_file.write(content)
     return filename

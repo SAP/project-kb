@@ -1,6 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="container">
     <h1>Prospector Report</h1>
+    <div id="accordion">
+        {% for commit_with_feature in candidates %}
+        <div class="card">
+            <div class="card-header" id="candidateheader{{ loop.index }}">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <h5 class="mb-0">
+                                {{ commit_with_feature.commit.message | truncate(40) }}
+                                {% if not commit_with_feature.commit.message %}
+                                (no commit message specified)
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="col col-auto">
+                            <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#candidatebody{{ loop.index }}" aria-expanded="false"
+                                aria-controls="collapseExample">
+                                <i class="fas fa-low-vision"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="candidatebody{{ loop.index }}" class="collapse" aria-labelledby="candidateheader{{ loop.index }}"
+                data-parent="#accordion">
+                <div class="card-body">
+                    <h5 class="card-title">{{ commit_with_feature.commit.commit_id }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ commit_with_feature.commit.repository }}</h6>
+                    <p class="card-text">{{ commit_with_feature.commit.message }}</p>
+                    <a href="#" class="card-link">Card link</a>
+                    <a href="#" class="card-link">Another link</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
