@@ -6,8 +6,9 @@ import jinja2
 from datamodel.commit_features import CommitWithFeatures
 
 
-def report_as_html(results: List[CommitWithFeatures]):
-    filename = "prospector-report.html"
+def report_as_html(
+    results: List[CommitWithFeatures], filename: str = "prospector-report.html"
+):
     print("Writing results to " + filename)
     environment = jinja2.Environment(
         loader=jinja2.FileSystemLoader(os.path.join("client", "cli", "templates")),
@@ -17,3 +18,4 @@ def report_as_html(results: List[CommitWithFeatures]):
     with open(filename, "w", encoding="utf8") as html_file:
         for content in template.generate():
             html_file.write(content)
+    return filename

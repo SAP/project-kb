@@ -1,4 +1,3 @@
-import random
 import sys
 from datetime import datetime
 from pprint import pprint
@@ -215,20 +214,12 @@ def prospector(  # noqa: C901
     # id, a URL can be constructed to poll the results asynchronously.
     # ranked_results = [repository.get_commit(c) for c in preprocessed_commits]
 
-    EXTRACTION_DROP_RATIO = 0.95  # should be 0 in production, remove some commits from the feature extraction to speed up debugging process
-    if EXTRACTION_DROP_RATIO > 0:
-        print(
-            f"Features are not extracted from {EXTRACTION_DROP_RATIO:.0%} of the commits to speed up the debugging process.\n"
-            "If you see this in a production environment please reduce the EXTRACTION_DROP_RATIO to 0."
-        )
-
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
     annotated_candidates = []
     for commit in tqdm(preprocessed_commits):
-        if random.random() > EXTRACTION_DROP_RATIO:
-            annotated_candidates.append(extract_features(commit, advisory_record))
+        annotated_candidates.append(extract_features(commit, advisory_record))
 
     annotated_candidates = apply_rules(
         annotated_candidates, advisory_record, rules=rules

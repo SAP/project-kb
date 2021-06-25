@@ -46,3 +46,4 @@ cov_html/*
 prospector/prospector.code-workspace
 prospector/requests-cache.sqlite
 prospector/prospector-report.html
+prospector/test_report.html

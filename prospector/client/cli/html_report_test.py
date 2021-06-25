@@ -1,6 +1,8 @@
+import os
 import os.path
 from random import choice, choices, getrandbits, randint
 
+from client.cli.html_report import report_as_html
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
 
@@ -100,4 +102,9 @@ def test_report_generation():
             referred_to_by_nvd=set(random_list_of_url(4, 42)),
         )
         candidates.append(commit_with_feature)
-    print()
+
+    filename = "test_report.html"
+    if os.path.isfile(filename):
+        os.remove(filename)
+    generated_report = report_as_html(candidates, filename)
+    assert os.path.isfile(generated_report)
