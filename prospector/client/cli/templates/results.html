@@ -11,7 +11,7 @@
                     <div class="row">
                         <div class="col">
                             <h5 class="mb-0">
-                                {{ commit_with_feature.commit.message | truncate(40) }}
+                                {{ commit_with_feature.commit.message | truncate(100) }}
                                 {% if not commit_with_feature.commit.message %}
                                 (no commit message specified)
                                 {% endif %}
@@ -28,8 +28,8 @@
                 </div>
             </div>
 
-            <div id="candidatebody{{ loop.index }}" class="collapse" aria-labelledby="candidateheader{{ loop.index }}"
-                data-parent="#accordion">
+            <div id="candidatebody{{ loop.index }}" class="collapse show"
+                aria-labelledby="candidateheader{{ loop.index }}" data-parent="#accordion">
                 <div class="card-body">
                     <h5 class="card-title"><i class="fas fa-code-branch"></i> {{ commit_with_feature.commit.commit_id }}
                     </h5>
@@ -38,10 +38,34 @@
                             target="_blank" class="btn btn-primary btn-sm">Open</a></h6>
                     <p class="card-text"><i class="fas fa-quote-left"></i> {{ commit_with_feature.commit.message
                         }} <i class="fas fa-quote-right"></i></p>
-                    <p><i class="fas fa-shield-alt"></i>
-                        {% for cve in commit_with_feature.other_CVE_in_message %}
-                        <span class="badge bg-secondary">{{ cve }}</span>
+
+                    <h5 class="card-title"><i class="fas fa-shield-alt"></i> Other CVEs mentioned in message</h5>
+                    <p>{% for cve in commit_with_feature.other_CVE_in_message %}
+                        <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name={{ cve }}" target="_blank"
+                            class="btn btn-outline-primary btn-sm" style="margin: 2pt;">{{
+                            cve }}</a>
                         {% endfor %}
+                    </p>
+
+                    <h5 class="card-title"><i class="fas fa-file-signature"></i> Path relevant for changes</h5>
+                    <p>{% for path in commit_with_feature.changes_relevant_path %}
+                        <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{
+                            path }}</span>
+                        {% endfor %}
+                    </p>
+
+                    <h5 class="card-title"><i class="fab fa-jira"></i> Contains Jira reference </h5>
+                    {% if commit_with_feature.contains_jira_reference %}
+                    <i class="fas fa-check-circle text-success"></i> Yes
+                    {% else %}
+                    <i class="fas fa-times-circle text-danger"></i> No
+                    {% endif %}
+
+                    <h5 class="card-title"><i class="fas fa-link"></i> Referred by pages linked from
+                        advisories</h5>
+                    <p>{% for page in commit_with_feature.referred_to_by_pages_linked_from_advisories %}
+                        <a href="{{ page }}" class="btn btn-outline-primary btn-sm" style="margin: 2pt;">{{
+                            page }}</a> {% endfor %}
                     </p>
                 </div>
             </div>
