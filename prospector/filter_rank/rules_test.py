@@ -12,31 +12,36 @@ def candidates():
         CommitWithFeatures(
             commit=Commit(repository="repo1", commit_id="1", ghissue_refs=["example"]),
             references_vuln_id=True,
+            # TODO: https://github.com/SAP/project-kb/issues/201
             # references_ghissue=True,
             changes_relevant_path={"foo/bar/otherthing.xml", "pom.xml"},
         ),
         CommitWithFeatures(
             commit=Commit(repository="repo2", commit_id="2"),
             references_vuln_id=True,
-            references_ghissue=False,
+            # TODO: https://github.com/SAP/project-kb/issues/201
+            # references_ghissue=False,
             changes_relevant_path=set(),
         ),
         CommitWithFeatures(
             commit=Commit(repository="repo3", commit_id="3", ghissue_refs=["example"]),
             references_vuln_id=False,
+            # TODO: https://github.com/SAP/project-kb/issues/201
             # references_ghissue=True,
             changes_relevant_path=set(),
         ),
         CommitWithFeatures(
             commit=Commit(repository="repo4", commit_id="4"),
             references_vuln_id=False,
-            references_ghissue=False,
+            # TODO: https://github.com/SAP/project-kb/issues/201
+            # references_ghissue=False,
             changes_relevant_path={"foo/bar/otherthing.xml", "pom.xml"},
         ),
         CommitWithFeatures(
             commit=Commit(repository="repo5", commit_id="5"),
             references_vuln_id=False,
-            references_ghissue=False,
+            # TODO: https://github.com/SAP/project-kb/issues/201
+            # references_ghissue=False,
             changes_relevant_path=set(),
         ),
     ]
