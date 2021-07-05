@@ -19,7 +19,8 @@ def init_local_logger():
     logger = logging.getLogger(logger_name)
     logger.setLevel(log.config.level)
     formatter = logging.Formatter(
-        "[%(levelname)s FROM %(name)s] %(message)s"
+        "%(message)s"
+        "\n\tOF %(levelname)s FROM %(name)s"
         "\n\tIN %(funcName)s (%(filename)s:%(lineno)d)"
         "\n\tAT %(asctime)s",
         "%Y-%m-%d %H:%M:%S",

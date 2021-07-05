@@ -202,8 +202,6 @@ def main(argv):  # noqa: C901
     logger = log.util.init_local_logger()
     logger.info(f"global log level is set to {logging.getLevelName(log.config.level)}")
 
-    logger.error("something")
-
     if args.vulnerability_id is None:
         logger.error("No vulnerability id was specified. Cannot proceed.")
         return False
