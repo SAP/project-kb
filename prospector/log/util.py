@@ -1,5 +1,6 @@
 import inspect
 import logging
+import logging.handlers
 from pprint import pformat
 
 import log.config
@@ -17,16 +18,30 @@ def init_local_logger():
         logger_name = inspect.getmodule(previous_frame).__name__
     logger = logging.getLogger(logger_name)
     logger.setLevel(log.config.level)
-    handler = logging.StreamHandler()
-    handler.setFormatter(
-        logging.Formatter(
-            "[%(levelname)s FROM %(name)s] %(message)s"
-            "\n\tIN %(funcName)s (%(filename)s:%(lineno)d)"
-            "\n\tAT %(asctime)s",
-            "%Y-%m-%d %H:%M:%S",
-        )
+    formatter = logging.Formatter(
+        "[%(levelname)s FROM %(name)s] %(message)s"
+        "\n\tIN %(funcName)s (%(filename)s:%(lineno)d)"
+        "\n\tAT %(asctime)s",
+        "%Y-%m-%d %H:%M:%S",
     )
-    logger.addHandler(handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    error_file = logging.handlers.TimedRotatingFileHandler(
+        "error.log", when="h", backupCount=5
+    )
+    error_file.setLevel(logging.ERROR)
+    error_file.setFormatter(formatter)
+    logger.addHandler(error_file)
+
+    all_file = logging.handlers.TimedRotatingFileHandler(
+        "all.log", when="h", backupCount=5
+    )
+    all_file.setLevel(logging.DEBUG)
+    all_file.setFormatter(formatter)
+    logger.addHandler(all_file)
 
     setattr(logging.Logger, pretty_log.__name__, pretty_log)
 
