@@ -1,7 +1,6 @@
 import logging
 import sys
 from datetime import datetime
-from pprint import pprint
 
 import requests
 from tqdm import tqdm
@@ -58,8 +57,7 @@ def prospector(  # noqa: C901
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    if logger.isEnabledFor(logging.DEBUG):
-        pprint(advisory_record)
+    logger.pretty_log(advisory_record)
 
     advisory_record.analyze(use_nvd=use_nvd)
     print(advisory_record.code_tokens)
@@ -186,10 +184,7 @@ def prospector(  # noqa: C901
     # invoke predict
 
     # TODO here the preprocessed commits should be saved into the database
-
-    if logger.isEnabledFor(logging.DEBUG):
-        # TODO: pprint has to be extracted into logging util
-        pprint(advisory_record)
+    logger.pretty_log(advisory_record)
 
     logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
 

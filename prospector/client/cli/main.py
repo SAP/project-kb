@@ -7,7 +7,6 @@ import logging
 import os
 import sys
 from pathlib import Path
-from pprint import pprint
 
 import requests
 
@@ -201,6 +200,7 @@ def main(argv):  # noqa: C901
         log.config.level = getattr(logging, args.log_level)
 
     logger = log.util.init_local_logger()
+    logger.info(f"global log level is set to {logging.getLevelName(log.config.level)}")
 
     if args.vulnerability_id is None:
         logger.error("No vulnerability id was specified. Cannot proceed.")
@@ -250,19 +250,14 @@ def main(argv):  # noqa: C901
     if configuration["global"].get("git_cache"):
         git_cache = configuration["global"].get("git_cache")
 
-    if log.config.level < logging.INFO:
-        print("Using the following configuration:")
-        pprint(
-            {
-                section: dict(configuration[section])
-                for section in configuration.sections()
-            }
-        )
+    logger.debug("Using the following configuration:")
+    logger.pretty_log(
+        {section: dict(configuration[section]) for section in configuration.sections()}
+    )
 
-    if log.config.level < logging.INFO:
-        print("Vulnerability ID: " + vulnerability_id)
-        print("time-limit before: " + str(time_limit_before))
-        print("time-limit after: " + str(time_limit_after))
+    logger.debug("Vulnerability ID: " + vulnerability_id)
+    logger.debug("time-limit before: " + str(time_limit_before))
+    logger.debug("time-limit after: " + str(time_limit_after))
 
     results = prospector(
         vulnerability_id=vulnerability_id,
