@@ -298,3 +298,18 @@ def test_extract_referred_to_by_pages_linked_from_advisories(repository, request
         extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
         == set()
     )
+
+
+def test_extract_referred_to_by_pages_linked_from_advisories_wrong_url(repository):
+    advisory_record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-26258",
+        references=["https://non-existing-url.com"],
+    )
+
+    commit = Commit(
+        commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
+        repository="test_repository",
+    )
+    assert not extract_referred_to_by_pages_linked_from_advisories(
+        commit, advisory_record
+    )

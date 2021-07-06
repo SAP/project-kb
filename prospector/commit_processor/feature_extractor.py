@@ -1,3 +1,4 @@
+import traceback
 from typing import Set
 from urllib.parse import urlparse
 
@@ -93,13 +94,15 @@ def is_commit_in_given_interval(
         return version_timestamp == commit_timestamp
     elif day_interval > 0:
         return (
-            version_timestamp + day_interval * DAY_IN_SECONDS >= commit_timestamp
-            and version_timestamp <= commit_timestamp
+            version_timestamp + day_interval * DAY_IN_SECONDS
+            >= commit_timestamp
+            >= version_timestamp
         )
     else:
         return (
-            version_timestamp + day_interval * DAY_IN_SECONDS <= commit_timestamp
-            and version_timestamp >= commit_timestamp
+            version_timestamp + day_interval * DAY_IN_SECONDS
+            <= commit_timestamp
+            <= version_timestamp
         )
 
 
@@ -141,9 +144,13 @@ def extract_referred_to_by_pages_linked_from_advisories(
         advisory_record.references,
     )
     session = requests_cache.CachedSession("requests-cache")
-    return set(
-        filter(
-            lambda reference: commit.commit_id[:8] in session.get(reference).text,
-            allowed_references,
-        )
-    )
+
+    def is_commit_cited_in(reference: str):
+        try:
+            return commit.commit_id[:8] in session.get(reference).text
+        except Exception:
+            print(f"can not retrive site: {reference}")
+            traceback.print_exc()  # TODO: shoud be at debug level logging, but it requires some logging system
+            return False
+
+    return set(filter(is_commit_cited_in, allowed_references))
