@@ -68,7 +68,12 @@ def extract_changed_relevant_paths(
     Return the list of the changed paths (by a commit) which are in the list
     of relevant paths (mentioned in the advisory record)
     """
-    return set(advisory_record.paths) & set(commit.changed_files)
+    relevant_paths = []
+    for advisory_path in advisory_record.paths:
+        relevant_paths += filter(
+            lambda path: advisory_path in path, commit.changed_files
+        )
+    return set(relevant_paths)
 
 
 def extract_other_CVE_in_message(

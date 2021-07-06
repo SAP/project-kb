@@ -100,66 +100,98 @@ def test_time_between_commit_and_advisory_record():
     )
 
 
-def test_extract_changes_relevant_path():
-    path_1 = "a/b.py"
-    path_2 = "a/c.py"
-    path_3 = "a/d.py"
+@pytest.fixture
+def paths():
+    return [
+        "fire-nation/zuko/lightning.png",
+        "water-bending/katara/necklace.gif",
+        "air-nomad/aang/littlefoot.jpg",
+        "earth-kingdom/toph/metal.png",
+    ]
 
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", changed_files=[path_1]
-    )
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="test_advisory_record", paths=[path_1, path_2]
-    )
-    assert extract_changed_relevant_paths(commit, advisory_record) == {
-        path_1,
-    }
 
-    commit = Commit(
-        commit_id="test_commit",
-        repository="test_repository",
-        changed_files=[path_1, path_2],
-    )
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="test_advisory_record", paths=[path_2]
-    )
-    assert extract_changed_relevant_paths(commit, advisory_record) == {
-        path_2,
-    }
+@pytest.fixture
+def sub_paths():
+    return [
+        "lightning.png",
+        "zuko/lightning.png",
+        "fire-nation/zuko",
+        "water-bending",
+    ]
 
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", changed_files=[path_3]
-    )
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="test_advisory_record", paths=[path_1, path_2]
-    )
-    assert extract_changed_relevant_paths(commit, advisory_record) == set()
 
-    commit = Commit(
-        commit_id="test_commit",
-        repository="test_repository",
-        changed_files=[path_1, path_2],
-    )
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="test_advisory_record", paths=[path_3]
-    )
-    assert extract_changed_relevant_paths(commit, advisory_record) == set()
+class TestExtractChangedRelevantPaths:
+    @staticmethod
+    def test_sub_path_matching(paths, sub_paths):
+        commit = Commit(
+            commit_id="test_commit", repository="test_repository", changed_files=paths
+        )
+        advisory_record = AdvisoryRecord(
+            vulnerability_id="test_advisory_record", paths=sub_paths
+        )
 
-    commit = Commit(
-        commit_id="test_commit", repository="test_repository", changed_files=[]
-    )
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="test_advisory_record", paths=[path_1, path_2]
-    )
-    assert extract_changed_relevant_paths(commit, advisory_record) == set()
+        matched_paths = {
+            "fire-nation/zuko/lightning.png",
+            "water-bending/katara/necklace.gif",
+        }
 
-    commit = Commit(
-        commit_id="test_commit",
-        repository="test_repository",
-        changed_files=[path_1, path_2],
-    )
-    advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record", paths=[])
-    assert extract_changed_relevant_paths(commit, advisory_record) == set()
+        assert extract_changed_relevant_paths(commit, advisory_record) == matched_paths
+
+    @staticmethod
+    def test_same_path_only(paths):
+        commit = Commit(
+            commit_id="test_commit", repository="test_repository", changed_files=paths
+        )
+        advisory_record = AdvisoryRecord(
+            vulnerability_id="test_advisory_record", paths=paths[:2]
+        )
+        assert extract_changed_relevant_paths(commit, advisory_record) == set(paths[:2])
+
+    @staticmethod
+    def test_same_path_and_others(paths):
+        commit = Commit(
+            commit_id="test_commit",
+            repository="test_repository",
+            changed_files=[paths[0]],
+        )
+        advisory_record = AdvisoryRecord(
+            vulnerability_id="test_advisory_record", paths=paths[:2]
+        )
+        assert extract_changed_relevant_paths(commit, advisory_record) == {
+            paths[0],
+        }
+
+    @staticmethod
+    def test_no_match(paths):
+        commit = Commit(
+            commit_id="test_commit",
+            repository="test_repository",
+            changed_files=paths[:1],
+        )
+        advisory_record = AdvisoryRecord(
+            vulnerability_id="test_advisory_record", paths=paths[2:]
+        )
+        assert extract_changed_relevant_paths(commit, advisory_record) == set()
+
+    @staticmethod
+    def test_empty_list(paths):
+        commit = Commit(
+            commit_id="test_commit", repository="test_repository", changed_files=[]
+        )
+        advisory_record = AdvisoryRecord(
+            vulnerability_id="test_advisory_record", paths=paths
+        )
+        assert extract_changed_relevant_paths(commit, advisory_record) == set()
+
+        commit = Commit(
+            commit_id="test_commit",
+            repository="test_repository",
+            changed_files=paths,
+        )
+        advisory_record = AdvisoryRecord(
+            vulnerability_id="test_advisory_record", paths=[]
+        )
+        assert extract_changed_relevant_paths(commit, advisory_record) == set()
 
 
 def test_extract_other_CVE_in_message():
