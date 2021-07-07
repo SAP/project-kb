@@ -1,6 +1,6 @@
+import logging
 import sys
 from datetime import datetime
-from pprint import pprint
 
 import requests
 from tqdm import tqdm
@@ -13,6 +13,7 @@ from filter_rank.rank import rank
 from filter_rank.rules import apply_rules
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
+from log.util import init_local_logger
 
 SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
@@ -35,15 +36,15 @@ def prospector(  # noqa: C901
     nvd_rest_endpoint: str = "",
     backend_address: str = "",
     git_cache: str = GIT_CACHE,
-    verbose: bool = False,
-    debug: bool = False,
+    log_level: int = logging.INFO,
     limit_candidates: int = MAX_CANDIDATES,
     rules: "list[str]" = ["ALL"],
     model_name: str = "",
 ) -> "list[Commit]":
 
-    if debug:
-        verbose = True
+    logger = init_local_logger()
+
+    logger.info("begin main commit and CVE processing")
 
     # -------------------------------------------------------------------------
     # advisory record extraction
@@ -56,8 +57,7 @@ def prospector(  # noqa: C901
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    if debug:
-        pprint(advisory_record)
+    logger.pretty_log(advisory_record)
 
     advisory_record.analyze(use_nvd=use_nvd)
     print(advisory_record.code_tokens)
@@ -77,9 +77,7 @@ def prospector(  # noqa: C901
     repository.clone()
     tags = repository.get_tags()
 
-    if debug:
-        print("Found tags:")
-        print(tags)
+    logger.debug(f"Found tags: {tags}")
 
     print("Done retrieving %s" % repository_url)
 
@@ -130,8 +128,7 @@ def prospector(  # noqa: C901
 
     candidates = filter_by_changed_files(candidates, modified_files, repository)
 
-    if debug:
-        print("Collected %d candidates" % len(candidates))
+    logger.debug(f"Collected {len(candidates)} candidates")
 
     if len(candidates) > limit_candidates:
         print("Number of candidates exceeds %d, aborting." % limit_candidates)
@@ -187,12 +184,9 @@ def prospector(  # noqa: C901
     # invoke predict
 
     # TODO here the preprocessed commits should be saved into the database
+    logger.pretty_log(advisory_record)
 
-    if debug:
-        pprint(advisory_record)
-
-    if verbose:
-        print("preprocessed %d commits" % len(preprocessed_commits))
+    logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
 
     payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
 
