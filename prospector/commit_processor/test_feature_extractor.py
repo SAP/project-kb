@@ -60,11 +60,6 @@ def test_extract_features(repository, requests_mock):
     assert extracted_features.other_CVE_in_message == {
         "CVE-2020-26259",
     }
-    assert extracted_features.avg_hunk_size == 2
-    assert extracted_features.n_hunks == 1
-    assert extracted_features.references_ghissue is False
-    assert extracted_features.n_changed_files == 1
-    assert extracted_features.contains_jira_reference is True
     assert extracted_features.referred_to_by_pages_linked_from_advisories == {
         "https://for.testing.purposes/containing_commit_id_in_text",
     }

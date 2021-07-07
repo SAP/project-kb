@@ -34,11 +34,6 @@ def test_simple():
         "pom.xml",
     }
     assert commit_features.other_CVE_in_message == {"CVE-2021-42", "CVE-2021-20210514"}
-    assert commit_features.avg_hunk_size == 5
-    assert commit_features.n_hunks == 3
-    assert commit_features.references_ghissue is True
-    assert commit_features.n_changed_files == 3
-    assert commit_features.contains_jira_reference is True
     assert commit_features.referred_to_by_pages_linked_from_advisories == {
         "http://foo.com",
         "http://bar.hu",

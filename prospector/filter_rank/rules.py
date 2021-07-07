@@ -60,7 +60,7 @@ def apply_rule_references_vuln_id(
 
 def apply_rule_references_ghissue(candidate: CommitWithFeatures):
     rule_tag = "REF_GH_ISSUE"
-    if candidate.references_ghissue:
+    if len(candidate.commit.ghissue_refs) > 0:
         explanation_template = (
             "The commit message refers to the following GitHub issues: '{}'"
         )
