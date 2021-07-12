@@ -113,7 +113,7 @@ def extract_camelcase_tokens(text) -> "list[str]":
     # return["blaHlafaHlsafs"]
 
 
-def extract_path_tokens(text: str) -> "list[str]":
+def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]:
     """
     Used to look for paths in the text (i.e. vulnerability description)
 
@@ -123,15 +123,28 @@ def extract_path_tokens(text: str) -> "list[str]":
     Returns:
         list: a list of paths that are found
     """
-    return [
-        re.split(r"\.|,|/", token.rstrip(r".,;:?!\"'"))
-        for token in text.split(" ")
-        if ("/" in token.rstrip(r".,;:?!\"'") and not token.startswith("</"))
-        or (
-            "." in token.rstrip(r".,;:?!\"'")
-            and token.rstrip(r".,;:?!\"'").split(".")[-1] in RELEVANT_EXTENSIONS
+    tokens = re.split(r"\s+", text)  # split the text into words
+    tokens = [
+        token.strip(",.:;-+!?)]}'\"") for token in tokens
+    ]  # removing common punctuation marks
+    paths = []
+    for token in tokens:
+        is_contains_path_separators = ("\\" in token) or ("/" in token)
+        is_period_separated = "." in token
+        has_relevant_extension = token.split(".")[-1] in RELEVANT_EXTENSIONS
+        is_xml_tag = token.startswith("<")
+        is_property = token.endswith("=")
+
+        # if strict_extensions:
+        # it will always match tokens with (back) slashes,
+        # but it will only match single file names if they have the correct extension
+        is_path_like = is_contains_path_separators or (
+            has_relevant_extension if strict_extensions else is_period_separated
         )
-    ]
+        is_path_dislike = is_xml_tag or is_property
+        if is_path_like and not is_path_dislike:
+            paths.append(token)
+    return paths
 
 
 @dataclass
