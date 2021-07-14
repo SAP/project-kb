@@ -5,7 +5,6 @@
     <h1>Prospector Report</h1>
 
     <div class="sticky-top bg-light bg-gradient p-3 mb-3 border border-secondary">
-        <h2>Filters</h2>
         <p class="text-center">
             Displaying all items with at least one <button class="btn btn-primary btn-sm">on annotation filter</button>.
             You could toggle the filters between <button class="btn btn-primary btn-sm">on</button> and
@@ -76,12 +75,16 @@
                         {% endfor %}
                     </p>
 
-                    <h5 class="card-title"><i class="fab fa-jira"></i> Contains Jira reference </h5>
-                    {% if commit_with_feature.contains_jira_reference %}
-                    <i class="fas fa-check-circle text-success"></i> Yes
-                    {% else %}
-                    <i class="fas fa-times-circle text-danger"></i> No
-                    {% endif %}
+                    <h5 class="card-title"><i class="fas fa-bullhorn"></i> Annotations </h5>
+                    <p>{% for annotation, comment in commit_with_feature.annotations.items() | sort %}
+                        <button type="button" class="btn btn-primary position-relative m-2" disabled>
+                            {{ comment }}
+                            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-light border border-primary text-primary">
+                                {{ annotation }}
+                            </span>
+                        </button>
+                        {% endfor %}
+                    </p>
 
                     <h5 class="card-title"><i class="fas fa-link"></i> Referred by pages linked from
                         advisories</h5>
