@@ -4,14 +4,20 @@
 <div class="container">
     <h1>Prospector Report</h1>
 
-    <div>
+    <div class="sticky-top bg-light bg-gradient p-3 mb-3 border border-secondary">
+        <h2>Filters</h2>
+        <p class="text-center">
+            Displaying all items with at least one <button class="btn btn-primary btn-sm">on annotation filter</button>.
+            You could toggle the filters between <button class="btn btn-primary btn-sm">on</button> and
+            <button class="btn btn-outline-primary btn-sm">off</button> states by left click on them.<br/>
         {% for annotation in present_annotations | sort %}
             <button
                     class="btn btn-primary btn-sm selector"
-                    style="margin-top: 2pt; margin-right: 2pt;"
+                    style="margin: 5pt 5pt 5pt 0;"
                     data-annotation="{{ annotation }}"
             >{{ annotation }}</button>
         {% endfor %}
+        </p>
     </div>
 
     <div id="accordion">
