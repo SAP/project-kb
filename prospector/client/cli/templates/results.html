@@ -3,9 +3,20 @@
 
 <div class="container">
     <h1>Prospector Report</h1>
+
+    <div>
+        {% for annotation in present_annotations %}
+            <button
+                    class="btn btn-primary btn-sm selector"
+                    style="margin-top: 2pt; margin-right: 2pt;"
+                    data-annotation="{{ annotation }}"
+            >{{ annotation }}</button>
+        {% endfor %}
+    </div>
+
     <div id="accordion">
         {% for commit_with_feature in candidates %}
-        <div class="card">
+        <div class="card commit d-flex" data-annotations="{{ commit_with_feature.annotations | tojson | forceescape }}">
             <div class="card-header" id="candidateheader{{ loop.index }}">
                 <div class="container">
                     <div class="row">
@@ -16,6 +27,11 @@
                                 (no commit message specified)
                                 {% endif %}
                             </h5>
+                        <p style="margin: 10pt 0 0;">
+                            {% for annotation, comment in commit_with_feature.annotations.items() %}
+                                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ annotation }}</span>
+                            {% endfor %}
+                        </p>
                         </div>
                         <div class="col col-auto">
                             <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
@@ -73,4 +89,28 @@
         {% endfor %}
     </div>
 </div>
+
+<script type="text/javascript">
+buttons = document.getElementsByClassName("selector");
+
+function toggle(selector) {
+    let commit_cards = document.getElementsByClassName('commit');
+    for (let card of commit_cards) {
+        let annotations = JSON.parse(card.dataset.annotations);
+        let relevant = annotations.hasOwnProperty(selector.dataset.annotation);
+        if (relevant) {
+            card.classList.replace('d-none', 'd-flex')
+        } else {
+            card.classList.replace('d-flex', 'd-none')
+        }
+    }
+    console.log("toggle: " + selector.dataset.annotation)
+}
+
+for (let i = 0, l = buttons.length; i < l; i++) {
+    let button = buttons[i];
+    button.addEventListener('click', function () {toggle(button);})
+}
+</script>
+
 {% endblock %}

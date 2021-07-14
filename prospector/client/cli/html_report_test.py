@@ -48,6 +48,13 @@ def random_list_of_strs(max_count: int, min_count: int = 0):
     return choices(SAMPLES, k=randint(min_count, max_count))
 
 
+def random_dict_of_strs(max_count: int, min_count: int = 0):
+    return {
+        choice(SAMPLES): item
+        for item in choices(SAMPLES, k=randint(min_count, max_count))
+    }
+
+
 def random_list_of_path(max_length: int, max_count: int):
     return [
         os.path.join(*random_list_of_strs(min_count=1, max_count=max_length))
@@ -134,6 +141,7 @@ def test_report_generation():
             other_CVE_in_message=set(random_list_of_cve(42)),
             referred_to_by_pages_linked_from_advisories=set(random_list_of_url(4, 42)),
             referred_to_by_nvd=set(random_list_of_url(4, 42)),
+            annotations=random_dict_of_strs(16),
         )
         candidates.append(commit_with_feature)
 
