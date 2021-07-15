@@ -33,6 +33,11 @@ def apply_rules(
             if tag:
                 candidate.annotations[tag] = rule_explanation
 
+        if "ALL" in rules or "REF_JIRA_ISSUE" in rules:
+            tag, rule_explanation = apply_rule_references_jira_issue(candidate)
+            if tag:
+                candidate.annotations[tag] = rule_explanation
+
         if "ALL" in rules or "CH_REL_PATH" in rules:
             tag, rule_explanation = apply_rule_changes_relevant_path(
                 candidate, advisory_record
@@ -65,6 +70,17 @@ def apply_rule_references_ghissue(candidate: CommitWithFeatures):
             "The commit message refers to the following GitHub issues: '{}'"
         )
         explanation = explanation_template.format(str(candidate.commit.ghissue_refs))
+        return rule_tag, explanation
+    return None, None
+
+
+def apply_rule_references_jira_issue(candidate: CommitWithFeatures):
+    rule_tag = "REF_JIRA_ISSUE"
+    if len(candidate.commit.jira_refs) > 0:
+        explanation_template = (
+            "The commit message refers to the following Jira issues: {}"
+        )
+        explanation = explanation_template.format(",".join(candidate.commit.jira_refs))
         return rule_tag, explanation
     return None, None
 
