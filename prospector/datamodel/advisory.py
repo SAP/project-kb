@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from commit_processor.constants import RELEVANT_EXTENSIONS
 
 # TODO use prospector own NVD feed endpoint
-NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
+NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 
 
 class AdvisoryRecord(BaseModel):
