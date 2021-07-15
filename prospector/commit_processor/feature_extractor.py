@@ -25,7 +25,7 @@ def extract_features(
     )
     commit_reachable_from_given_tag = False
     repo = Git(advisory_record.repository_url)
-    repo.clone()
+    repo.clone(skip_existing=True)
 
     for version in advisory_record.versions:
         version_tag = repo.get_tag_for_version(version)
