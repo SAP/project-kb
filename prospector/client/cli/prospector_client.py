@@ -223,7 +223,7 @@ def prospector(  # noqa: C901
     )
     annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
-    return annotated_candidates
+    return annotated_candidates, advisory_record
 
 
 def filter_by_changed_files(

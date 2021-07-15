@@ -17,6 +17,10 @@
             >{{ annotation }}</button>
         {% endfor %}
         </p>
+        <div class="advisory-record">
+            <h2>Advisory Record</h2>
+            {{ advisory_record.vulnerability_id }}
+        </div>
     </div>
 
     <div id="accordion">
@@ -29,7 +33,7 @@
                             <h5 class="mb-0">
                                 {{ commit_with_feature.commit.message | truncate(100) }}
                                 {% if not commit_with_feature.commit.message %}
-                                (no commit message specified)
+                                (no commit message found)
                                 {% endif %}
                             </h5>
                         <p style="margin: 10pt 0 0;">

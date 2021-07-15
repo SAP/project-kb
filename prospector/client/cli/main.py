@@ -221,7 +221,7 @@ def main(argv):  # noqa: C901
     logger.debug("time-limit before: " + str(time_limit_before))
     logger.debug("time-limit after: " + str(time_limit_after))
 
-    results = prospector(
+    results, advisory_record = prospector(
         vulnerability_id=vulnerability_id,
         repository_url=repository_url,
         publication_date=publication_date,
@@ -240,11 +240,11 @@ def main(argv):  # noqa: C901
     )
 
     if report == "console":
-        report_on_console(results, verbose=log.config.level < logging.INFO)
+        report_on_console(results, advisory_record, log.config.level < logging.INFO)
     elif report == "json":
-        report_as_json(results)
+        report_as_json(results, advisory_record)
     elif report == "html":
-        report_as_html(results)
+        report_as_html(results, advisory_record)
     else:
         print("Invalid report type specified, using 'console'")
         report_on_console(results, verbose=log.config.level < logging.INFO)
