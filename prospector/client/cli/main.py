@@ -247,7 +247,7 @@ def main(argv):  # noqa: C901
         report_as_html(results, advisory_record)
     else:
         print("Invalid report type specified, using 'console'")
-        report_on_console(results, verbose=log.config.level < logging.INFO)
+        report_on_console(results, advisory_record, log.config.level < logging.INFO)
     return True
 
 

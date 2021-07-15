@@ -59,7 +59,8 @@ class AdvisoryRecord(BaseModel):
             response = requests.get(nvd_rest_endpoint + vuln_id)
             if response.status_code != 200:
                 return
-            data = response.json()["result"]["CVE_Items"][0]
+            # data = response.json()["result"]["CVE_Items"][0]
+            data = response.json()
             self.published_timestamp = int(
                 datetime.strptime(
                     data["publishedDate"], r"%Y-%m-%dT%H:%M%z"
