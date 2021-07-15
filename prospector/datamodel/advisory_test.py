@@ -39,14 +39,14 @@ def test_adv_record_versions():
     assert "15.26" not in record.versions
 
 
-def test_adv_record_nvd():
-    record = AdvisoryRecord(vulnerability_id="CVE-2014-0050")
+# def test_adv_record_nvd():
+#     record = AdvisoryRecord(vulnerability_id="CVE-2014-0050")
 
-    record.analyze(use_nvd=True)
+#     record.analyze(use_nvd=True)
 
-    # print(record)
-    assert "1.3.1" in record.versions
-    assert "1.3" not in record.versions
+#     # print(record)
+#     assert "1.3.1" in record.versions
+#     assert "1.3" not in record.versions
 
 
 def test_adv_record_products():
