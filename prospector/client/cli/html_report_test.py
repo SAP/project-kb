@@ -3,6 +3,7 @@ import os.path
 from random import choice, choices, getrandbits, randint
 
 from client.cli.html_report import report_as_html
+from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
 
@@ -85,10 +86,10 @@ def random_list_of_url(max_length: int, max_count: int):
     return [random_url(max_length) for _ in range(randint(0, max_count))]
 
 
-def random_list_of_cve(max_count: int):
+def random_list_of_cve(max_count: int, min_count: int = 0):
     return [
         f"CVE-{randint(1987, 2021)}-{str(randint(10, 99)).rjust(4, '0')}"
-        for _ in range(randint(0, max_count))
+        for _ in range(randint(min_count, max_count))
     ]
 
 
@@ -150,5 +151,11 @@ def test_report_generation():
     filename = "test_report.html"
     if os.path.isfile(filename):
         os.remove(filename)
-    generated_report = report_as_html(candidates, filename)
+    generated_report = report_as_html(
+        candidates,
+        AdvisoryRecord(
+            vulnerability_id=random_list_of_cve(max_count=1, min_count=1)[0]
+        ),
+        filename,
+    )
     assert os.path.isfile(generated_report)
