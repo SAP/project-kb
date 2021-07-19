@@ -17,6 +17,16 @@
             >{{ annotation }}</button>
         {% endfor %}
         </p>
+        <div class="advisory-record">
+            <h2>Advisory Record</h2>
+            <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b>{{ advisory_record.vulnerability_id }}</b></a><br/>
+            <p>{{ advisory_record.description }}</p>
+            <p style="margin: 10pt 0 0;">
+                {% for code_token in advisory_record.code_tokens | sort %}
+                    <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ code_token }}</span>
+                {% endfor %}
+            </p>
+        </div>
     </div>
 
     <div id="accordion">
@@ -29,7 +39,7 @@
                             <h5 class="mb-0">
                                 {{ commit_with_feature.commit.message | truncate(100) }}
                                 {% if not commit_with_feature.commit.message %}
-                                (no commit message specified)
+                                (no commit message found)
                                 {% endif %}
                             </h5>
                         <p style="margin: 10pt 0 0;">

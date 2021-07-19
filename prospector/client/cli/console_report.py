@@ -1,7 +1,10 @@
+from datamodel.advisory import AdvisoryRecord
 from datamodel.commit_features import CommitWithFeatures
 
 
-def report_on_console(results: "list[CommitWithFeatures]", verbose=False):
+def report_on_console(
+    results: "list[CommitWithFeatures]", advisory_record: AdvisoryRecord, verbose=False
+):
     def format_annotations(commit: CommitWithFeatures) -> str:
         out = ""
         if verbose:
@@ -29,3 +32,5 @@ def report_on_console(results: "list[CommitWithFeatures]", verbose=False):
 
     print("-----")
     print("Found {} candidates".format(count))
+    print("Advisory record")
+    print(advisory_record)

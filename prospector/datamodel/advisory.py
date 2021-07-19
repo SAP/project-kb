@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from commit_processor.constants import RELEVANT_EXTENSIONS
 
 # TODO use prospector own NVD feed endpoint
-NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
+NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 
 
 class AdvisoryRecord(BaseModel):
@@ -59,7 +59,8 @@ class AdvisoryRecord(BaseModel):
             response = requests.get(nvd_rest_endpoint + vuln_id)
             if response.status_code != 200:
                 return
-            data = response.json()["result"]["CVE_Items"][0]
+            # data = response.json()["result"]["CVE_Items"][0]
+            data = response.json()
             self.published_timestamp = int(
                 datetime.strptime(
                     data["publishedDate"], r"%Y-%m-%dT%H:%M%z"

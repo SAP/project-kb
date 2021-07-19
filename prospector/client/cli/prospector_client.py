@@ -104,7 +104,7 @@ def prospector(  # noqa: C901
         filter_files="*.java",
     )
 
-    print("found %d candidates" % len(candidates))
+    print("Found %d candidates" % len(candidates))
     # if some code_tokens were found in the advisory text, require
     # that candidate commits touch some file whose path contains those tokens
     # NOTE: this works quite well for Java, not sure how general this criterion is
@@ -172,6 +172,7 @@ def prospector(  # noqa: C901
         else:
             missing.append(candidates[idx])
 
+    print("Preprocessing commits...")
     first_missing = len(preprocessed_commits)
     pbar = tqdm(missing)
     for commit_id in pbar:
@@ -193,9 +194,10 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
     # -------------------------------------------------------------------------
+    print("Sending preprocessing commits to backend...")
     try:
         r = requests.post(backend_address + "/commits/", json=payload)
-        print("Status: %d" % r.status_code)
+        print("Saving to backend completed (status code: %d)" % r.status_code)
     except requests.exceptions.ConnectionError:
         print("Could not reach backend, is it running?")
         print("The result of commit pre-processing will not be saved.")
@@ -211,6 +213,7 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
+    print("Extracting features from commits...")
     annotated_candidates = []
     for commit in tqdm(preprocessed_commits):
         annotated_candidates.append(extract_features(commit, advisory_record))
@@ -220,7 +223,7 @@ def prospector(  # noqa: C901
     )
     annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
-    return annotated_candidates
+    return annotated_candidates, advisory_record
 
 
 def filter_by_changed_files(
