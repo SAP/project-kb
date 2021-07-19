@@ -94,15 +94,14 @@ def random_list_of_cve(max_count: int, min_count: int = 0):
 
 
 def random_commit_hash():
-    hash = getrandbits(128)
-    print("hash value: %032x" % hash)
-    return f"{hash:032x}"
+    _hash = getrandbits(128)
+    return f"{_hash:032x}"
 
 
 def random_hunk(start: int, stop: int):
     start = randint(start, stop)
     size = randint(start, stop)
-    return (start, start + size)
+    return start, start + size
 
 
 def random_list_of_hunks(stop: int, max_count: int, start: int = 0):

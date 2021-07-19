@@ -24,6 +24,10 @@ import plac
 import requests
 from tqdm import tqdm
 
+import log.util
+
+_logger = log.util.init_local_logger()
+
 # note: The NVD has not data older than 2002
 START_FROM_YEAR = os.environ.get("CVE_DATA_AS_OF_YEAR") or "2002"
 DATA_PATH = os.environ.get("CVE_DATA_PATH") or "data/"
@@ -37,12 +41,13 @@ def do_update(quiet=False):
         with open(os.path.join(DATA_PATH, "metadata.json"), "r") as f:
             last_fetch_metadata = json.load(f)
             if not quiet:
-                print("[ii] last fetch: " + last_fetch_metadata["sha256"])
+                _logger.info("last fetch: " + last_fetch_metadata["sha256"])
     except Exception:
         last_fetch_metadata["sha256"] = ""
-        print(
-            "[ii] Could not read metadata about previous fetches"
-            " (this might be the first time we fetch data)."
+        _logger.info(
+            "Could not read metadata about previous fetches"
+            " (this might be the first time we fetch data).",
+            exc_info=True,
         )
 
     # read metadata of new data from the NVD site
@@ -51,10 +56,8 @@ def do_update(quiet=False):
     )
     r = requests.get(url)
     if r.status_code != 200:
-        print(
-            "[!!] Received status code {} when contacting {}.".format(
-                r.status_code, url
-            )
+        _logger.error(
+            "Received status code {} when contacting {}.".format(r.status_code, url)
         )
         return False
 
@@ -64,12 +67,12 @@ def do_update(quiet=False):
         d_split = d.split(":", 1)
         metadata_dict[d_split[0]] = d_split[1].strip()
     if not quiet:
-        print("[ii] current:    " + metadata_dict["sha256"])
+        _logger.info("current:    " + metadata_dict["sha256"])
 
     # check if the new data is actually new
     if last_fetch_metadata["sha256"] == metadata_dict["sha256"]:
         if not quiet:
-            print("[ii] We already have this update, no new data to fetch.")
+            _logger.info("We already have this update, no new data to fetch.")
         return False
 
     do_fetch("modified")
@@ -83,11 +86,11 @@ def do_fetch_full(start_from_year=START_FROM_YEAR, quiet=False):
         y for y in range(int(start_from_year), int(time.strftime("%Y")) + 1)
     ]
     if not quiet:
-        print("[ii] Fetching feeds: " + str(years_to_fetch))
+        _logger.info("Fetching feeds: " + str(years_to_fetch))
 
     for y in years_to_fetch:
         if not do_fetch(y):
-            print("[!!] Could not fetch data for year " + str(y))
+            _logger.error("Could not fetch data for year " + str(y))
 
 
 def do_fetch(what, quiet=False):
@@ -99,16 +102,14 @@ def do_fetch(what, quiet=False):
     )
     r = requests.get(url)
     if r.status_code != 200:
-        print(
-            "[!!] Received status code {} when contacting {}.".format(
-                r.status_code, url
-            )
+        _logger.error(
+            "Received status code {} when contacting {}.".format(r.status_code, url)
         )
         return False
 
     with closing(r), zipfile.ZipFile(io.BytesIO(r.content)) as archive:
         for f in archive.infolist():
-            print(f.filename)
+            _logger.info(f.filename)
             data = json.loads(archive.read(f).decode())
 
     if not quiet:
@@ -134,17 +135,17 @@ def need_full(quiet=False):
     if os.path.exists(DATA_PATH) and os.path.isdir(DATA_PATH):
         if not os.listdir(DATA_PATH):
             if not quiet:
-                print("[ii] Data folder {} is empty".format(DATA_PATH))
+                _logger.info("Data folder {} is empty".format(DATA_PATH))
             return True
 
         # Directory exists and is not empty
         if not quiet:
-            print("[ii] Data folder found at " + DATA_PATH)
+            _logger.info("Data folder found at " + DATA_PATH)
         return False
 
     # Directory doesn't exist
     if not quiet:
-        print("[ii] Data folder {} does not exist".format(DATA_PATH))
+        _logger.info("Data folder {} does not exist".format(DATA_PATH))
     return True
 
 

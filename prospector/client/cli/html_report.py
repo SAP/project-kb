@@ -3,8 +3,11 @@ from typing import List
 
 import jinja2
 
+import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit_features import CommitWithFeatures
+
+_logger = log.util.init_local_logger()
 
 
 def report_as_html(
@@ -16,7 +19,7 @@ def report_as_html(
     for commit_with_feature in results:
         annotations = annotations.union(commit_with_feature.annotations.keys())
 
-    print("Writing results to " + filename)
+    _logger.info("Writing results to " + filename)
     environment = jinja2.Environment(
         loader=jinja2.FileSystemLoader(os.path.join("client", "cli", "templates")),
         autoescape=jinja2.select_autoescape(),
