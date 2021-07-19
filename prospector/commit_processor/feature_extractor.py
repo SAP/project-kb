@@ -1,15 +1,17 @@
-import traceback
 from typing import Set
 from urllib.parse import urlparse
 
 import requests_cache
 
+import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
 from git.git import Git
 
 from .requests_filter import ALLOWED_SITES
+
+_logger = log.util.init_local_logger()
 
 DAYS_BEFORE = 180
 DAYS_AFTER = 365
@@ -149,8 +151,7 @@ def extract_referred_to_by_pages_linked_from_advisories(
         try:
             return commit.commit_id[:8] in session.get(reference).text
         except Exception:
-            print(f"can not retrive site: {reference}")
-            traceback.print_exc()  # TODO: shoud be at debug level logging, but it requires some logging system
+            _logger.debug(f"can not retrieve site: {reference}", exc_info=True)
             return False
 
     return set(filter(is_commit_cited_in, allowed_references))

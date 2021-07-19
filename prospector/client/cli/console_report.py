@@ -1,5 +1,8 @@
+import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit_features import CommitWithFeatures
+
+_logger = log.util.init_local_logger()
 
 
 def report_on_console(
@@ -15,22 +18,18 @@ def report_on_console(
 
         return out
 
-    print("-" * 80)
-    print("Rule filtered results")
-    print("-" * 80)
+    _logger.info("-" * 80)
+    _logger.info("Rule filtered results")
+    _logger.info("-" * 80)
     count = 0
     for commit in results:
         count += 1
-        print(
-            "\n----------\n{}/commit/{}\n".format(
-                commit.commit.repository, commit.commit.commit_id
-            )
+        _logger.info(
+            f"\n----------\n{commit.commit.repository}/commit/{commit.commit.commit_id}\n"
+            + "\n".join(commit.commit.changed_files)
+            + commit.commit.message
+            + "\n"
+            + format_annotations(commit)
         )
-        print(commit.commit.changed_files)
-        print(commit.commit.message + "\n")
-        print(format_annotations(commit))
 
-    print("-----")
-    print("Found {} candidates".format(count))
-    print("Advisory record")
-    print(advisory_record)
+    _logger.info(f"Found {count} candidates\nAdvisory record\n{advisory_record}")

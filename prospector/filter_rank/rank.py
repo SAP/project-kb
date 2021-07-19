@@ -3,10 +3,13 @@ import re
 
 import pandas as pd
 
+import log.util
 from datamodel.commit_features import CommitWithFeatures
 from filter_rank import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
 
 from .utils.model_loader import save_model
+
+_logger = log.util.init_local_logger()
 
 
 def rank(
@@ -82,12 +85,9 @@ def make_dataframe(
                 line = re.sub(r"[\['\] ]", "", line).split(",")
                 count += 1
                 if len(line) < num_elem_training_data:
-                    print(
-                        "[SKIPPING] A problem occurred while reading line {}".format(
-                            count
-                        )
+                    _logger.warning(
+                        f"SKIPPING: A problem occurred while reading line {count}, line {line}"
                     )
-                    print(str(line))
                     continue
                 # cve_id = line[0]
                 repo = line[1]
@@ -102,17 +102,13 @@ def make_dataframe(
                 #     preprocess(commit_obj)
                 #     save commit_obj to db
                 #   augment commit_obj with advisory-dependent features
-    except OSError as e:
-        print(
-            "An exception occurred while I was trying to extract information from {}".format(
-                data_filename
-            )
+    except OSError:
+        _logger.error(
+            f"An exception occurred while I was trying to extract information from {data_filename}",
+            exc_info=True,
         )
-        print(str(e))
         raise OSError(
-            "An exception occurred while I was trying to extract information from {}".format(
-                data_filename
-            )
+            f"An exception occurred while I was trying to extract information from {data_filename}"
         )
     if len(commits) > 0:
         return pd.DataFrame(
