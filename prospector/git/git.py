@@ -3,7 +3,6 @@
 
 import difflib
 import hashlib
-import logging
 import multiprocessing
 import os
 import random
@@ -14,9 +13,12 @@ import sys
 import traceback
 from datetime import datetime
 
+import log.util
+
 # from pprint import pprint
 # import pickledb
 
+_logger = log.util.init_local_logger()
 
 GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
@@ -86,14 +88,14 @@ class Git:
         Identifies the default branch of the remote repository for the local git
         repo
         """
-        logging.info("Identifiying remote branch for %s", self._path)
+        _logger.info("Identifiying remote branch for %s", self._path)
 
         try:
             cmd = "git ls-remote -q"
             # self._exec._encoding = 'utf-8'
             l_raw_output = self._exec.run(cmd)
 
-            logging.info(
+            _logger.info(
                 "Identifiying sha1 of default remote ref among %d entries.",
                 len(l_raw_output),
             )
@@ -105,15 +107,15 @@ class Git:
 
                 if ref_name == "HEAD":
                     head_sha1 = sha1
-                    logging.info("Remote head: " + sha1)
+                    _logger.info("Remote head: " + sha1)
                     break
 
         except subprocess.CalledProcessError as ex:
-            logging.error(
+            _logger.error(
                 "Exception happened while obtaining default remote branch for repository in "
                 + self._path
             )
-            logging.error(str(ex))
+            _logger.error(str(ex))
             return None
 
         # ...then search the corresponding treeish among the local references
@@ -122,7 +124,7 @@ class Git:
             # self._exec._encoding = 'utf-8'
             l_raw_output = self._exec.run(cmd)
 
-            logging.info("Processing {} references".format(len(l_raw_output)))
+            _logger.info("Processing {} references".format(len(l_raw_output)))
 
             for raw_line in l_raw_output:
                 (sha1, ref_name) = raw_line.split()
@@ -131,11 +133,11 @@ class Git:
             return None
 
         except Exception as ex:
-            logging.error(
+            _logger.error(
                 "Exception happened while obtaining default remote branch for repository in "
                 + self._path
             )
-            logging.error(str(ex))
+            _logger.error(str(ex))
             return None
 
     def clone(self, shallow=None, skip_existing=False):
@@ -147,7 +149,7 @@ class Git:
             self._shallow_clone = shallow
 
         if not self._url:
-            print("Invalid url specified.")
+            _logger.error("Invalid url specified.")
             sys.exit(-1)
 
         # TODO rearrange order of checks
@@ -274,8 +276,7 @@ class Git:
             path.reverse()
             return path
         except:
-            print("Failed to obtain commits, details below:")
-            traceback.print_exc()  # TODO: shoud be at debug level logging, but it requires some logging system
+            _logger.error("Failed to obtain commits, details below:", exc_info=True)
             return []
 
     def get_commit(self, key, by="id"):

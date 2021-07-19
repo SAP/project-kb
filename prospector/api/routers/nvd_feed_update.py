@@ -24,8 +24,6 @@ import plac
 import requests
 from tqdm import tqdm
 
-# import logging
-
 # note: The NVD has not data older than 2002
 START_FROM_YEAR = os.environ.get("CVE_DATA_AS_OF_YEAR") or "2002"
 DATA_PATH = os.environ.get("CVE_DATA_PATH") or "data/"

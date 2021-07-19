@@ -235,7 +235,6 @@ def main(argv):  # noqa: C901
         nvd_rest_endpoint=nvd_rest_endpoint,
         backend_address=backend,
         git_cache=git_cache,
-        log_level=log.config.level,
         limit_candidates=max_candidates,
     )
 

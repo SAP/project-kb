@@ -1,4 +1,3 @@
-import logging
 import sys
 from datetime import datetime
 
@@ -36,7 +35,6 @@ def prospector(  # noqa: C901
     nvd_rest_endpoint: str = "",
     backend_address: str = "",
     git_cache: str = GIT_CACHE,
-    log_level: int = logging.INFO,
     limit_candidates: int = MAX_CANDIDATES,
     rules: "list[str]" = ["ALL"],
     model_name: str = "",
