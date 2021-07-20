@@ -8,7 +8,10 @@ from typing import List, Optional
 import requests
 from pydantic import BaseModel, Field
 
+import log.util
 from commit_processor.constants import RELEVANT_EXTENSIONS
+
+_logger = log.util.init_local_logger()
 
 # TODO use prospector own NVD feed endpoint
 NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
@@ -80,7 +83,10 @@ class AdvisoryRecord(BaseModel):
             ]
 
         except Exception:
-            print("Could not retrieve vulnerability data from NVD for " + vuln_id)
+            _logger.error(
+                "Could not retrieve vulnerability data from NVD for " + vuln_id,
+                exc_info=True,
+            )
 
 
 def extract_versions(text) -> "list[str]":

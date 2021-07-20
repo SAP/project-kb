@@ -63,7 +63,6 @@ def test_adv_record_code_tokens():
     )
     record.analyze()
 
-    print(record)
     assert "FileNameUtils" in record.code_tokens
 
 

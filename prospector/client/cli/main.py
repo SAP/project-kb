@@ -23,6 +23,8 @@ from client.cli.prospector_client import (
 )
 from git.git import GIT_CACHE
 
+_logger = log.util.init_local_logger()
+
 DEFAULT_BACKEND = "http://localhost:8000"
 
 # VERSION = '0.1.0'
@@ -125,7 +127,7 @@ def getConfiguration(customConfigFile=None):
     else:
         return None
 
-    print("Loading configuration from " + configFile)
+    _logger.info("Loading configuration from " + configFile)
     config.read(configFile)
     return config
 
@@ -139,18 +141,20 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
     """
 
     if verbose:
-        print("Contacting server " + server_url)
+        _logger.info("Contacting server " + server_url)
 
     try:
         response = requests.get(server_url)
         if response.status_code != 200:
-            print("Server replied with an unexpected status: " + response.status_code)
+            _logger.error(
+                f"Server replied with an unexpected status: {response.status_code}"
+            )
             return False
         else:
-            print("Server ok!")
+            _logger.info("Server ok!")
             return True
     except Exception:
-        print("Server did not reply")
+        _logger.error("Server did not reply", exc_info=True)
         return False
 
 
@@ -161,15 +165,14 @@ def main(argv):  # noqa: C901
     if args.log_level:
         log.config.level = getattr(logging, args.log_level)
 
-    logger = log.util.init_local_logger()
-    logger.info(f"global log level is set to {logging.getLevelName(log.config.level)}")
+    _logger.info(f"global log level is set to {logging.getLevelName(log.config.level)}")
 
     if args.vulnerability_id is None:
-        logger.error("No vulnerability id was specified. Cannot proceed.")
+        _logger.error("No vulnerability id was specified. Cannot proceed.")
         return False
 
     if configuration is None:
-        logger.error("Invalid configuration, exiting.")
+        _logger.error("Invalid configuration, exiting.")
         return False
 
     report = configuration["global"].getboolean("report")
@@ -212,14 +215,14 @@ def main(argv):  # noqa: C901
     if configuration["global"].get("git_cache"):
         git_cache = configuration["global"].get("git_cache")
 
-    logger.debug("Using the following configuration:")
-    logger.pretty_log(
+    _logger.debug("Using the following configuration:")
+    _logger.pretty_log(
         {section: dict(configuration[section]) for section in configuration.sections()}
     )
 
-    logger.debug("Vulnerability ID: " + vulnerability_id)
-    logger.debug("time-limit before: " + str(time_limit_before))
-    logger.debug("time-limit after: " + str(time_limit_after))
+    _logger.debug("Vulnerability ID: " + vulnerability_id)
+    _logger.debug("time-limit before: " + str(time_limit_before))
+    _logger.debug("time-limit after: " + str(time_limit_after))
 
     results, advisory_record = prospector(
         vulnerability_id=vulnerability_id,
@@ -235,7 +238,6 @@ def main(argv):  # noqa: C901
         nvd_rest_endpoint=nvd_rest_endpoint,
         backend_address=backend,
         git_cache=git_cache,
-        log_level=log.config.level,
         limit_candidates=max_candidates,
     )
 
@@ -246,7 +248,7 @@ def main(argv):  # noqa: C901
     elif report == "html":
         report_as_html(results, advisory_record)
     else:
-        print("Invalid report type specified, using 'console'")
+        _logger.warning("Invalid report type specified, using 'console'")
         report_on_console(results, advisory_record, log.config.level < logging.INFO)
     return True
 
