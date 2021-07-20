@@ -18,18 +18,16 @@ def report_on_console(
 
         return out
 
-    _logger.info("-" * 80)
-    _logger.info("Rule filtered results")
-    _logger.info("-" * 80)
+    print("-" * 80)
+    print("Rule filtered results")
+    print("-" * 80)
     count = 0
     for commit in results:
         count += 1
-        _logger.info(
+        print(
             f"\n----------\n{commit.commit.repository}/commit/{commit.commit.commit_id}\n"
             + "\n".join(commit.commit.changed_files)
-            + commit.commit.message
-            + "\n"
-            + format_annotations(commit)
+            + f"{commit.commit.message}\n{format_annotations(commit)}"
         )
 
-    _logger.info(f"Found {count} candidates\nAdvisory record\n{advisory_record}")
+    print(f"Found {count} candidates\nAdvisory record\n{advisory_record}")
