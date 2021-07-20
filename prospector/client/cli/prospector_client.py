@@ -103,6 +103,7 @@ def prospector(  # noqa: C901
     )
 
     _logger.info("Found %d candidates" % len(candidates))
+
     # if some code_tokens were found in the advisory text, require
     # that candidate commits touch some file whose path contains those tokens
     # NOTE: this works quite well for Java, not sure how general this criterion is
@@ -113,18 +114,18 @@ def prospector(  # noqa: C901
     # Here we apply additional criteria to discard commits from the initial
     # set extracted from the repository
     # -------------------------------------------------------------------------
-    if advisory_record.code_tokens != []:
-        _logger.info(
-            "Detected tokens in advisory text, searching for files whose path contains those tokens"
-        )
-        _logger.info(advisory_record.code_tokens)
+    # if advisory_record.code_tokens != []:
+    #     _logger.info(
+    #         "Detected tokens in advisory text, searching for files whose path contains those tokens"
+    #     )
+    #     _logger.info(advisory_record.code_tokens)
 
-    if modified_files == [""]:
-        modified_files = advisory_record.code_tokens
-    else:
-        modified_files.extend(advisory_record.code_tokens)
+    # if modified_files == [""]:
+    #     modified_files = advisory_record.code_tokens
+    # else:
+    #     modified_files.extend(advisory_record.code_tokens)
 
-    candidates = filter_by_changed_files(candidates, modified_files, repository)
+    # candidates = filter_by_changed_files(candidates, modified_files, repository)
 
     _logger.debug(f"Collected {len(candidates)} candidates")
 
@@ -151,15 +152,15 @@ def prospector(  # noqa: C901
         )
         _logger.info("The backend returned status '%d'" % r.status_code)
         if r.status_code != 200:
-            _logger.error("This is weird...Continuing anyway.")
+            _logger.warn("This is weird...Continuing anyway.")
             missing = candidates
         else:
             raw_commit_data = r.json()
             _logger.info("Found {} preprocessed commits".format(len(raw_commit_data)))
     except requests.exceptions.ConnectionError:
-        _logger.error(
+        _logger.warn(
             "Could not reach backend, is it running? The result of commit pre-processing will not be saved.",
-            exc_info=True,
+            exc_info=False,
         )
         missing = candidates
 
@@ -199,11 +200,11 @@ def prospector(  # noqa: C901
         r = requests.post(backend_address + "/commits/", json=payload)
         _logger.info("Saving to backend completed (status code: %d)" % r.status_code)
     except requests.exceptions.ConnectionError:
-        _logger.error(
+        _logger.warn(
             "Could not reach backend, is it running?"
             "The result of commit pre-processing will not be saved."
             "Continuing anyway.....",
-            exc_info=True,
+            exc_info=False,
         )
 
     # TODO compute actual rank
