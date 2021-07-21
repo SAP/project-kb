@@ -74,7 +74,7 @@ def extract_changed_relevant_paths(
     relevant_paths = []
     for advisory_path in advisory_record.paths:
         relevant_paths += filter(
-            lambda path: advisory_path in path, commit.changed_files
+            lambda path: path.endswith(advisory_path), commit.changed_files
         )
     return set(relevant_paths)
 

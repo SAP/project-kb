@@ -1,5 +1,5 @@
 # from dataclasses import asdict
-from datamodel.advisory import AdvisoryRecord, extract_path_tokens
+from datamodel.advisory import AdvisoryRecord, extract_paths
 
 # import pytest
 
@@ -67,13 +67,13 @@ def test_adv_record_code_tokens():
 
 
 def test_adv_record_path_extraction_no_real_paths():
-    result = extract_path_tokens(ADVISORY_TEXT)
+    result = extract_paths(ADVISORY_TEXT)
 
     assert result == ["15.26.1", '\\"Radio', "protection,\\"]
 
 
 def test_adv_record_path_extraction_has_real_paths():
-    result = extract_path_tokens(ADVISORY_TEXT_2)
+    result = extract_paths(ADVISORY_TEXT_2)
 
     assert result == ["2.7", "FileNameUtils.normalize", "//../foo", "\\..\\foo"]
 
@@ -83,7 +83,7 @@ def test_adv_record_path_extraction_strict_extensions():
     If strict_extensions is True, it will always extract tokens with (back) slashes,
     but it will only collect single file names if they have the correct extension.
     """
-    result = extract_path_tokens(
+    result = extract_paths(
         ADVISORY_TEXT_2
         + " Developer.gery put something here to check if foo.java and bar.cpp will be found.",
         strict_extensions=True,

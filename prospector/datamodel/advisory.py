@@ -49,7 +49,7 @@ class AdvisoryRecord(BaseModel):
             [v for v in extract_versions(self.description) if v not in self.versions]
         )
         self.affected_products = extract_products(self.description)
-        self.paths = extract_path_tokens(self.description)
+        self.paths = extract_paths(self.description)
         self.code_tokens = extract_camelcase_tokens(self.description)
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
@@ -120,7 +120,7 @@ def extract_camelcase_tokens(text) -> "list[str]":
     # return["blaHlafaHlsafs"]
 
 
-def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]:
+def extract_paths(text: str, strict_extensions: bool = False) -> List[str]:
     """
     Used to look for paths in the text (i.e. vulnerability description)
 

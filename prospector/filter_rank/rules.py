@@ -89,12 +89,15 @@ def apply_rule_changes_relevant_path(
     candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
 ):
     rule_tag = "CH_REL_PATH"
-    if candidate.changes_relevant_path:
-        explanation_template = "This commit touches the following relevant paths: '{}'"
-        relevant_paths = [
-            changed_path in advisory_record.paths
-            for changed_path in candidate.commit.changed_files
-        ]
-        explanation = explanation_template.format(str(relevant_paths))
+    explanation_template = "This commit touches the following relevant paths: {}"
+    relevant_paths = []
+    for ar_p in advisory_record.paths:
+        for co_p in candidate.commit.changed_files:
+            if co_p.endswith(ar_p):
+                relevant_paths.append(co_p)
+    explanation = explanation_template.format(",".join(relevant_paths))
+
+    if len(relevant_paths) > 0:
         return rule_tag, explanation
+
     return None, None
