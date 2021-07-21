@@ -239,6 +239,7 @@ def main(argv):  # noqa: C901
         backend_address=backend,
         git_cache=git_cache,
         limit_candidates=max_candidates,
+        active_rules=["ALL"],
     )
 
     if report == "console":
