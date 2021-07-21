@@ -37,6 +37,7 @@ def apply_rules(
         "REF_ADV_VULN_ID": apply_rule_references_vuln_id,
         "TOKENS_IN_DIFF": apply_rule_code_tokens_in_diff,
         "TOKENS_IN_COMMIT_MSG": apply_rule_code_tokens_in_msg,
+        "SEC_KEYWORD_IN_COMMIT_MSG": apply_rule_security_keyword_in_msg,
         "REF_GH_ISSUE": apply_rule_references_ghissue,
         "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
         "CH_REL_PATH": apply_rule_changes_relevant_path,
@@ -164,6 +165,35 @@ def apply_rule_code_tokens_in_diff(
             for diff_line in candidate.commit.diff
             if kw in diff_line
         ]
+    )
+
+    if len(matching_keywords) > 0:
+        return explanation_template.format(", ".join(matching_keywords))
+
+    return None
+
+
+def apply_rule_security_keyword_in_msg(
+    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+) -> str:
+    """
+    This rule matches commits whose message contains one or more "security-related" keywords
+    """
+
+    SEC_KEYWORDS = [
+        "vuln",
+        "exploit",
+        "attack",
+        "secur",
+        "xxe",
+        "dos",
+        "insecur",
+        "inject",
+    ]
+    explanation_template = "The commit message includes the following keywords: {}"
+
+    matching_keywords = set(
+        [kw for kw in SEC_KEYWORDS if kw in candidate.commit.message.lower()]
     )
 
     if len(matching_keywords) > 0:

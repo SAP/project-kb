@@ -31,13 +31,16 @@ def candidates():
             commit=Commit(
                 repository="repo4",
                 commit_id="4",
+                message="Endless loop causes DoS vulnerability",
                 changed_files={"foo/bar/otherthing.xml", "pom.xml"},
             ),
             references_vuln_id=False,
             references_ghissue=False,
         ),
         CommitWithFeatures(
-            commit=Commit(repository="repo5", commit_id="5"),
+            commit=Commit(
+                repository="repo5", commit_id="5", message="Insecure deserialization"
+            ),
             references_vuln_id=False,
             references_ghissue=False,
         ),
@@ -85,5 +88,6 @@ def test_apply_rules(
     assert "REF_ADV_VULN_ID" not in annotated_candidates[3].annotations
     assert "REF_GH_ISSUE" not in annotated_candidates[3].annotations
     assert "CH_REL_PATH" in annotated_candidates[3].annotations
+    assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[3].annotations
 
-    assert len(annotated_candidates[4].annotations) == 0
+    assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[4].annotations
