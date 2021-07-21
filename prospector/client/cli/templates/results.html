@@ -37,7 +37,7 @@
                     <div class="row">
                         <div class="col">
                             <h5 class="mb-0">
-                                {{ commit_with_feature.commit.message | truncate(200) }}
+                                {{ commit_with_feature.commit.message | truncate(150) }}
                                 {% if not commit_with_feature.commit.message %}
                                 <i>(no commit message found)</i>
                                 {% endif %}
@@ -70,8 +70,8 @@
                             <a href="{{ commit_with_feature.commit.repository }}/commit/{{ commit_with_feature.commit.commit_id }}"
                             target="_blank" class="btn btn-primary btn-sm">Open (on GitHub)</a>
                         </h6>
-                    <p class="card-text"><i class="fas fa-quote-left"></i> {{ commit_with_feature.commit.message
-                        }} <i class="fas fa-quote-right"></i></p>
+                    <p class="card-text"><i class="fas fa-quote-left"></i> <pre>{{ commit_with_feature.commit.message
+                        }}</pre><i class="fas fa-quote-right"></i></p>
 
                     <h5 class="card-title"><i class="fas fa-shield-alt"></i> Other CVEs mentioned in message</h5>
                     <p>{% for cve in commit_with_feature.other_CVE_in_message %}
