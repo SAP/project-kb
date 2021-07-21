@@ -1,0 +1,495 @@
+
+{
+    "jetty.project" : {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": null,
+      "security_advisory_page": "",
+      "jira_link_template": null,
+      "git": "https://github.com/eclipse/jetty.project",
+      "search keywords": [
+        "JETTY",
+        "jetty",
+        "jetty project",
+        "jetty.project",
+        "JETTY.PROJECT",
+        "Eclipse Jetty",
+        "eclipse jetty",
+        "eclipse-jetty"
+      ]
+    },
+
+    "spring-security" : {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "SEC",
+      "security_advisory_page": "http://pivotal.io/security",
+      "jira_link_template": "https://jira.spring.io/{}",
+      "git": "https://github.com/spring-projects/spring-security",
+      "search keywords": [
+        "spring-security",
+        "SPRING-SECURITY",
+        "spring security",
+        "Spring Security"
+      ]
+    },
+
+    "spring-amqp": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "AMQP",
+      "security_advisory_page": "http://pivotal.io/security",
+      "jira_link_template": "https://jira.spring.io/{}",
+      "git": "https://github.com/spring-projects/spring-amqp",
+      "search keywords": [
+        "AMQP",
+        "spring amqp",
+        "Spring AMQP",
+        "spring-amqp"
+      ]
+    },
+
+    "axis2-java": {
+      "mailing_list_archives": "java-dev-subscribe@axis.apache.org",
+      "jira_prefix": "AXIS2",
+      "security_advisory_page": "",
+      "jira_link_template": "http://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/axis2-java",
+      "search keywords": [
+        "axis2-java"
+      ]
+    },
+
+    "myfaces": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "MYFACES",
+      "security_advisory_page": "",
+      "jira_link_template": "http://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/myfaces",
+      "search keywords": [
+        "myfaces",
+        "Myfaces",
+        "MYFACES"
+      ]
+    },
+
+     "hbase": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "HBASE",
+      "security_advisory_page": "",
+      "jira_link_template": "http://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/hbase",
+      "search keywords": [
+        "hbase",
+        "HBASE"
+      ]
+    },
+
+    "javamelody": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": "",
+      "jira_link_template": null,
+      "git": "https://github.com/javamelody/javamelody",
+      "search keywords": [
+        "javamelody"
+      ]
+    },
+
+     "esapi-java-legacy": {
+      "mailing_list_archives": "https://lists.owasp.org/mailman/listinfo/esapi-dev/",
+      "jira_prefix": "ESAPILEG",
+      "security_advisory_page": "",
+      "jira_link_template": "https://owasp-esapi.atlassian.net/{}",
+      "git": "https://github.com/ESAPI/esapi-java-legacy",
+      "search keywords": [
+        "ESAPI",
+        "java legacy"
+      ]
+    },
+
+    "mojarra": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": "",
+      "jira_link_template": null,
+      "git": "https://github.com/javaserverfaces/mojarra",
+      "search keywords": [
+        "javaserverfaces",
+        "mojarra"
+      ]
+    },
+
+     "jboss-seam": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": "",
+      "jira_link_template": null,
+      "git": "https://github.com/seam2/jboss-seam",
+      "search keywords": [
+        "JBoss Seam",
+        "jboss-seam"
+      ]
+    },
+
+    "async-http-client": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": "",
+      "jira_link_template": null,
+      "git": "https://github.com/AsyncHttpClient/async-http-client",
+      "search keywords": [
+        "AsyncHttpClient",
+        "async-http-client"
+      ]
+    },
+
+    "cxf": {
+      "mailing_list_archives": "http://cxf.apache.org/mailing-lists.html",
+      "jira_prefix": "CXF",
+      "security_advisory_page": "",
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/cxf",
+      "search keywords": [
+        "CXF",
+        "cxf"
+      ]
+    },
+
+    "hibernate-validator": {
+      "mailing_list_archives": null,
+      "jira_prefix": "HV",
+      "security_advisory_page": "",
+      "jira_link_template": "https://hibernate.atlassian.net",
+      "git": "https://github.com/hibernate/hibernate-validator",
+      "search keywords": [
+        "Hibernate Validator",
+        "hibernate-validator"
+      ]
+    },
+
+    "jbpm-designer": {
+      "mailing_list_archives": null,
+      "jira_prefix": "JBPM",
+      "security_advisory_page": "",
+      "jira_link_template": "https://issues.jboss.org/{}",
+      "git": "https://github.com/kiegroup/jbpm-designer",
+      "search keywords": [
+        "JBPM Designer",
+        "jbpm-designer"
+      ]
+    },
+
+    "java-cas-client": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": "",
+      "jira_link_template": null,
+      "git": "https://github.com/apereo/java-cas-client",
+      "search keywords": [
+        "java-cas-client"
+      ]
+    },
+
+   "elasticsearch": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/elastic/elasticsearch",
+      "search keywords": ["elastic search",
+        "elasticsearch",
+        "elastic"
+      ]
+    },
+
+    "uaa": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": "https://www.pivotaltracker.com",
+      "jira_link_template": null,
+      "git": "https://github.com/cloudfoundry/uaa",
+      "search keywords": ["uaa",
+        "cloudfoundry uaa",
+        "cloudfoundry",
+        "Cloud Foundry",
+        "UAA"
+      ]
+    },
+
+    "cordova-plugin-file-transfer": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "CB",
+      "security_advisory_page": null,
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/cordova-plugin-file-transfer",
+      "search keywords": ["cordova-plugin-file-transfer",
+        "cp file-transfer",
+        "cordova-plugin"
+      ]
+    },
+
+    "bc-java": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/bcgit/bc-java",
+      "search keywords": ["bc java",
+        "bc-java",
+        "bcgit"
+      ]
+    },
+
+    "stuts1-forever": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/kawasima/struts1-forever",
+      "search keywords": ["kawasima struts1",
+        "struts1-forever",
+        "kawasima struts1-forever",
+        "kawasima/struts1-forever"
+      ]
+    },
+
+    "okhttp": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/square/okhttp",
+      "search keywords": ["square okhttp",
+        "okhttp",
+        "square/okhttp"
+      ]
+    },
+
+    "xstream": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/x-stream/xstream",
+      "search keywords": ["xstream",
+        "x-stream",
+        "x-stream/xstream"
+      ]
+    },
+
+    "swagger-codegen": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/swagger-api/swagger-codegen",
+      "search keywords": ["swagger-api",
+        "swagger-codegen",
+        "swagger-api/swagger-codegen"
+      ]
+    },
+
+    "build-publisher-plugin": {
+      "mailing_list_archives": null,
+      "jira_prefix": null,
+      "security_advisory_page": "https://jenkins.io/security/advisories",
+      "jira_link_template": null,
+      "git": "https://github.com/jenkinsci/build-publisher-plugin",
+      "search keywords": ["build-publisher-plugin",
+        "build publisher plugin",
+        "jenkinsci/build-publisher-plugin"
+      ]
+    },
+
+    "poi": {
+      "mailing_list_archives":"http://mail-archives.apache.org",
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/apache/poi",
+      "search keywords": ["poi ",
+        "apache poi",
+        "apache/poi"
+      ]
+    },
+
+    "wicket-jquery-ui": {
+      "mailing_list_archives":null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/sebfz1/wicket-jquery-ui",
+      "search keywords": ["wicket-jquery-ui",
+        "wicket jquery-ui",
+        "sebfzl/wicket-jquery-ui"
+      ]
+    },
+
+    "jolokia": {
+      "mailing_list_archives":null,
+      "jira_prefix": null,
+      "security_advisory_page": null,
+      "jira_link_template": null,
+      "git": "https://github.com/rhuss/jolokia",
+      "search keywords": ["rhuss jolokia",
+        "jolokia",
+        "rhuss/jolokia"
+      ]
+    },
+
+    "spring-data-commons": {
+      "mailing_list_archives":null,
+      "jira_prefix": "DATACMNS",
+      "security_advisory_page": "http://pivotal.io/security/",
+      "jira_link_template": "https://jira.spring.io",
+      "git": "https://github.com/spring-projects/spring-data-commons",
+      "search keywords": ["rhuss jolokia",
+        "spring-data-commons",
+        "data-commons",
+        "spring data-commons"
+      ]
+    },
+
+     "derby": {
+      "mailing_list_archives":"http://mail-archives.apache.org",
+      "jira_prefix": "DERBY",
+      "security_advisory_page": null,
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/derby",
+      "search keywords": ["derby",
+        "apache derby",
+        "DERBY"
+      ]
+    },
+
+    "syncope": {
+      "mailing_list_archives":"http://mail-archives.apache.org",
+      "jira_prefix": "SYNCOPE",
+      "security_advisory_page": null,
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/syncope",
+      "search keywords": ["syncope",
+        "apache syncope"
+      ]
+    },
+
+    "camel": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "CAMEL",
+      "security_advisory_page": "http://camel.apache.org/security-advisories.html",
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/camel",
+      "search keywords": [
+        "camel",
+        "Camel",
+        "CAMEL"
+      ]
+    },
+
+    "struts": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "WW",
+      "security_advisory_page": "https://cwiki.apache.org/confluence/display/WW/Security+Bulletins",
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/struts",
+      "search keywords": [
+        "struts",
+        "Struts",
+        "struts2",
+        "STRUTS"
+      ]
+    },
+
+    "spring-framework": {
+      "mailing_list_archives": null,
+      "jira_prefix": "SPR",
+      "security_advisory_page": "http://pivotal.io/security/",
+      "jira_link_template": "https://jira.spring.io",
+      "git": "https://github.com/spring-projects/spring-framework",
+      "search keywords": [
+        "spring framework",
+        "spring-framework",
+        "Spring Framework",
+        "Spring-Framework",
+        "Spring",
+        "spring"
+      ]
+    },
+
+    "tomcat": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": null,
+      "security_advisory_page": "https://tomcat.apache.org/security-9.html",
+      "jira_link_template": null,
+      "git": "https://github.com/apache/tomcat",
+      "search keywords": [
+        "tomcat",
+        "TOMCAT",
+        "Tomcat"
+      ]
+    },
+
+    "jenkins": {
+      "mailing_list_archives": null,
+      "jira_prefix": "JENKINS",
+      "security_advisory_page": "https://jenkins.io/security/advisories/",
+      "jira_link_template": "https://issues.jenkins-ci.org",
+      "git": "https://github.com/jenkinsci/jenkins",
+      "search keywords": [
+        "jenkins",
+        "Jenkins",
+        "JENKINS"
+      ]
+    },
+
+    "activemq": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "AMQ",
+      "security_advisory_page": "http://activemq.apache.org/security-advisories.html",
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/activemq",
+      "search keywords": [
+        "activemq",
+        "Active MQ",
+        "ActiveMQ",
+        "activeMQ",
+        "AMQ"
+      ]
+    },
+
+    "lucene-solr": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "SOLR",
+      "security_advisory_page": "",
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/lucene-solr",
+      "search keywords": [
+        "SOLR",
+        "solr",
+        "Solr"
+      ]
+    },
+
+    "httpcomponents-client": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "HTTPCLIENT",
+      "security_advisory_page": "",
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/httpcomponents-client",
+      "search keywords": [
+        "httpclient",
+        "http-client",
+        "httpcomponents"
+      ]
+    },
+
+    "commons-fileupload": {
+      "mailing_list_archives": "http://mail-archives.apache.org",
+      "jira_prefix": "FILEUPLOAD",
+      "security_advisory_page": "",
+      "jira_link_template": "https://issues.apache.org/jira/{}",
+      "git": "https://github.com/apache/commons-fileupload",
+      "search keywords": [
+        "commons-fileupload",
+        "fileupload"
+      ]
+    }
+  }
