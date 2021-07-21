@@ -2,7 +2,7 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit_features import CommitWithFeatures
 
 
-def apply_rules(
+def apply_rules(  # noqa: C901
     candidates: "list[CommitWithFeatures]",
     advisory_record: AdvisoryRecord,
     rules=["ALL"],
@@ -45,6 +45,20 @@ def apply_rules(
             if tag:
                 candidate.annotations[tag] = rule_explanation
 
+        if "ALL" in rules or "TOKENS_IN_COMMIT_MSG" in rules:
+            tag, rule_explanation = apply_rule_code_tokens_in_msg(
+                candidate, advisory_record
+            )
+            if tag:
+                candidate.annotations[tag] = rule_explanation
+
+        if "ALL" in rules or "TOKENS_IN_DIFF" in rules:
+            tag, rule_explanation = apply_rule_code_tokens_in_diff(
+                candidate, advisory_record
+            )
+            if tag:
+                candidate.annotations[tag] = rule_explanation
+
     # NOTE: the CommitWithFeatures object has a handy member variable "commit"
     # which gives access to the underlying "raw" commit object
     return candidates
@@ -80,7 +94,7 @@ def apply_rule_references_jira_issue(candidate: CommitWithFeatures):
         explanation_template = (
             "The commit message refers to the following Jira issues: {}"
         )
-        explanation = explanation_template.format(",".join(candidate.commit.jira_refs))
+        explanation = explanation_template.format(", ".join(candidate.commit.jira_refs))
         return rule_tag, explanation
     return None, None
 
@@ -88,13 +102,76 @@ def apply_rule_references_jira_issue(candidate: CommitWithFeatures):
 def apply_rule_changes_relevant_path(
     candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
 ):
+    """
+    This rule matches commits that touch some file that is mentioned
+    in the text of the advisory.
+    """
+
     rule_tag = "CH_REL_PATH"
-    if candidate.changes_relevant_path:
-        explanation_template = "This commit touches the following relevant paths: '{}'"
-        relevant_paths = [
-            changed_path in advisory_record.paths
-            for changed_path in candidate.commit.changed_files
+    relevant_paths = []
+
+    explanation_template = "This commit touches the following relevant paths: {}"
+
+    relevant_paths = set(
+        [
+            path
+            for path in candidate.commit.changed_files
+            for adv_path in advisory_record.paths
+            if adv_path in path
         ]
-        explanation = explanation_template.format(str(relevant_paths))
+    )
+
+    if len(relevant_paths) > 0:
+        explanation = explanation_template.format(", ".join(relevant_paths))
         return rule_tag, explanation
+
+    return None, None
+
+
+def apply_rule_code_tokens_in_msg(
+    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+):
+    """
+    This rule matches commits whose commit message contain some of the special "code tokens"
+    extracted from the advisory.
+    """
+
+    rule_tag = "KEYWORDS_IN_COMMIT_MSG"
+    explanation_template = "The commit message includes the following keywords: {}"
+
+    matching_keywords = set(
+        [kw for kw in advisory_record.code_tokens if kw in candidate.commit.message]
+    )
+
+    if len(matching_keywords) > 0:
+        explanation = explanation_template.format(", ".join(matching_keywords))
+        return rule_tag, explanation
+
+    return None, None
+
+
+def apply_rule_code_tokens_in_diff(
+    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+):
+    """
+    This rule matches commits whose diff contain some of the special "code tokens"
+    extracted from the advisory.
+    """
+
+    rule_tag = "KEYWORDS_IN_DIFF"
+    explanation_template = "The commit diff includes the following keywords: {}"
+
+    matching_keywords = set(
+        [
+            kw
+            for kw in advisory_record.code_tokens
+            for diff_line in candidate.commit.diff
+            if kw in diff_line
+        ]
+    )
+
+    if len(matching_keywords) > 0:
+        explanation = explanation_template.format(", ".join(matching_keywords))
+        return rule_tag, explanation
+
     return None, None
