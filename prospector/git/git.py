@@ -261,8 +261,9 @@ class Git:
                 commit_id_from + ".." + commit_id_to,
             ]
             path = self._exec.run(cmd)
-            path.pop(0)
-            path.reverse()
+            if len(path) > 0:
+                path.pop(0)
+                path.reverse()
             return path
         except:
             _logger.error("Failed to obtain commits, details below:", exc_info=True)
