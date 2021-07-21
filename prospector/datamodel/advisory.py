@@ -1,5 +1,6 @@
 # from typing import Tuple
 # from datamodel import BaseModel
+import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -85,7 +86,7 @@ class AdvisoryRecord(BaseModel):
         except Exception:
             _logger.error(
                 "Could not retrieve vulnerability data from NVD for " + vuln_id,
-                exc_info=True,
+                exc_info=log.config.level < logging.INFO,
             )
 
 
