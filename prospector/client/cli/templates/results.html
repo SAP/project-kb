@@ -37,9 +37,9 @@
                     <div class="row">
                         <div class="col">
                             <h5 class="mb-0">
-                                {{ commit_with_feature.commit.message | truncate(100) }}
+                                {{ commit_with_feature.commit.message | truncate(200) }}
                                 {% if not commit_with_feature.commit.message %}
-                                (no commit message found)
+                                <i>(no commit message found)</i>
                                 {% endif %}
                             </h5>
                         <p style="margin: 10pt 0 0;">
@@ -50,7 +50,7 @@
                         </div>
                         <div class="col col-auto">
                             <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#candidatebody{{ loop.index }}" aria-expanded="false"
+                                data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false"
                                 aria-controls="collapseExample">
                                 <i class="fas fa-low-vision"></i>
                             </button>
@@ -59,14 +59,17 @@
                 </div>
             </div>
 
-            <div id="candidatebody{{ loop.index }}" class="collapse show"
-                aria-labelledby="candidateheader{{ loop.index }}" data-parent="#accordion">
+            <div id="candidatebody-{{ loop.index }}" class="collapse show"
+                aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
                 <div class="card-body">
                     <h5 class="card-title"><i class="fas fa-code-branch"></i> {{ commit_with_feature.commit.commit_id }}
                     </h5>
                     <h6 class="card-subtitle mb-2 text-muted"><i class="fab fa-git-alt"></i> {{
                         commit_with_feature.commit.repository }} <a href="{{ commit_with_feature.commit.repository }}"
-                            target="_blank" class="btn btn-primary btn-sm">Open</a></h6>
+                            target="_blank" class="btn btn-primary btn-sm">Open</a>
+                            <a href="{{ commit_with_feature.commit.repository }}/commit/{{ commit_with_feature.commit.commit_id }}"
+                            target="_blank" class="btn btn-primary btn-sm">Open (on GitHub)</a>
+                        </h6>
                     <p class="card-text"><i class="fas fa-quote-left"></i> {{ commit_with_feature.commit.message
                         }} <i class="fas fa-quote-right"></i></p>
 
