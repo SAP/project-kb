@@ -1,4 +1,4 @@
-from typing import Any, Dict, Set
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field
 
@@ -9,10 +9,10 @@ class CommitWithFeatures(BaseModel):
     commit: Commit
     references_vuln_id: bool = False
     time_between_commit_and_advisory_record: int = 0
-    changes_relevant_path: Set[str] = ()
-    other_CVE_in_message: Set[str] = ()
-    referred_to_by_pages_linked_from_advisories: Set[str] = ()
-    referred_to_by_nvd: Set[str] = ()
+    changes_relevant_path: List[str] = ()
+    other_CVE_in_message: List[str] = ()
+    referred_to_by_pages_linked_from_advisories: List[str] = ()
+    referred_to_by_nvd: List[str] = ()
     annotations: Dict[str, str] = Field(default_factory=dict)
 
     def __init__(self, **data: Any):

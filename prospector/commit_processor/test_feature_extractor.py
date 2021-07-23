@@ -54,18 +54,18 @@ def test_extract_features(repository, requests_mock):
 
     assert extracted_features.references_vuln_id is True
     assert extracted_features.time_between_commit_and_advisory_record == 1000000
-    assert extracted_features.changes_relevant_path == {
+    assert extracted_features.changes_relevant_path == [
         "pom.xml",
-    }
-    assert extracted_features.other_CVE_in_message == {
+    ]
+    assert extracted_features.other_CVE_in_message == [
         "CVE-2020-26259",
-    }
-    assert extracted_features.referred_to_by_pages_linked_from_advisories == {
+    ]
+    assert extracted_features.referred_to_by_pages_linked_from_advisories == [
         "https://for.testing.purposes/containing_commit_id_in_text",
-    }
-    assert extracted_features.referred_to_by_nvd == {
+    ]
+    assert extracted_features.referred_to_by_nvd == [
         "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
-    }
+    ]
 
 
 def test_extract_references_vuln_id():

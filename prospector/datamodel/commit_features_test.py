@@ -20,24 +20,30 @@ def test_simple():
         changes_relevant_path={"foo/bar/otherthing.xml", "pom.xml"},
         other_CVE_in_message={"CVE-2021-42", "CVE-2021-20210514"},
         referred_to_by_pages_linked_from_advisories={"http://foo.com", "http://bar.hu"},
-        referred_to_by_nvd={
+        referred_to_by_nvd=[
             "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
-        },
+        ],
     )
 
     # TODO: recheck these assert
     assert commit_features.commit.repository == "https://github.com/abc/xyz"
     assert commit_features.references_vuln_id is True
     assert commit_features.time_between_commit_and_advisory_record == 42
-    assert commit_features.changes_relevant_path == {
+    assert set(commit_features.changes_relevant_path) == {
         "foo/bar/otherthing.xml",
         "pom.xml",
     }
-    assert commit_features.other_CVE_in_message == {"CVE-2021-42", "CVE-2021-20210514"}
-    assert commit_features.referred_to_by_pages_linked_from_advisories == {
-        "http://foo.com",
-        "http://bar.hu",
+    assert set(commit_features.other_CVE_in_message) == {
+        "CVE-2021-42",
+        "CVE-2021-20210514",
     }
-    assert commit_features.referred_to_by_nvd == {
+    assert (
+        "http://foo.com" in commit_features.referred_to_by_pages_linked_from_advisories
+    )
+    assert (
+        "http://bar.hu" in commit_features.referred_to_by_pages_linked_from_advisories
+    )
+
+    assert commit_features.referred_to_by_nvd == [
         "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
-    }
+    ]
