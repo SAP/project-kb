@@ -167,7 +167,7 @@ def prospector(  # noqa: C901
     except requests.exceptions.ConnectionError:
         _logger.error(
             "Could not reach backend, is it running? The result of commit pre-processing will not be saved.",
-            exc_info=log.config.level < logging.INFO,
+            exc_info=log.config.level < logging.WARNING,
         )
         missing = candidates
 
@@ -186,15 +186,7 @@ def prospector(  # noqa: C901
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
-    # adv_processor = AdvisoryProcessor()
-    # advisory_record = adv_processor.process(advisory_record)
-
-    # get CommitFeatures
-    # invoke predict
-
-    # TODO here the preprocessed commits should be saved into the database
     _logger.pretty_log(advisory_record)
-
     _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
 
     payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
@@ -211,7 +203,7 @@ def prospector(  # noqa: C901
             "Could not reach backend, is it running?"
             "The result of commit pre-processing will not be saved."
             "Continuing anyway.....",
-            exc_info=log.config.level < logging.INFO,
+            exc_info=log.config.level < logging.WARNING,
         )
 
     # TODO compute actual rank
