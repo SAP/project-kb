@@ -37,6 +37,7 @@ def apply_rules(
         "REF_ADV_VULN_ID": apply_rule_references_vuln_id,
         "TOKENS_IN_DIFF": apply_rule_code_tokens_in_diff,
         "TOKENS_IN_COMMIT_MSG": apply_rule_code_tokens_in_msg,
+        "TOKENS_IN_MODIFIED_PATHS": apply_rule_code_token_in_paths,
         "SEC_KEYWORD_IN_COMMIT_MSG": apply_rule_security_keyword_in_msg,
         "REF_GH_ISSUE": apply_rule_references_ghissue,
         "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
@@ -198,5 +199,35 @@ def apply_rule_security_keyword_in_msg(
 
     if len(matching_keywords) > 0:
         return explanation_template.format(", ".join(matching_keywords))
+
+    return None
+
+
+def apply_rule_code_token_in_paths(
+    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+) -> str:
+    """
+    This rule matches commits that modify paths that correspond to a code token extracted
+    from the advisory.
+    """
+
+    explanation_template = "The commit modifies the following paths: {}"
+
+    matches = set(
+        [
+            (p, token)
+            for p in candidate.commit.changed_files
+            for token in advisory_record.code_tokens
+            if token in p
+        ]
+    )
+
+    if len(matches) > 0:
+        explained_matches = []
+
+        for m in matches:
+            explained_matches.append("{} ({})".format(m[0], m[1]))
+
+        return explanation_template.format(", ".join(explained_matches))
 
     return None

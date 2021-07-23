@@ -39,7 +39,12 @@ def candidates():
         ),
         CommitWithFeatures(
             commit=Commit(
-                repository="repo5", commit_id="5", message="Insecure deserialization"
+                repository="repo5",
+                commit_id="5",
+                message="Insecure deserialization",
+                changed_files={
+                    "core/src/main/java/org/apache/cxf/workqueue/AutomaticWorkQueueImpl.java"
+                },
             ),
             references_vuln_id=False,
             references_ghissue=False,
@@ -56,6 +61,7 @@ def advisory_record():
         references=[
             "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
         ],
+        code_tokens=["AutomaticWorkQueueImpl"],
         paths=["pom.xml"],
     )
 
@@ -91,3 +97,4 @@ def test_apply_rules(
     assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[3].annotations
 
     assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[4].annotations
+    assert "TOKENS_IN_MODIFIED_PATHS" in annotated_candidates[4].annotations
