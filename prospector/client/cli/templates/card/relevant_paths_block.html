@@ -1,0 +1,10 @@
+{% extends "titled_block.html" %}
+{% set title = "Path relevant for changes" %}
+{% set icon = "fas fa-file-signature" %}
+{% block body %}
+<p>
+    {% for path in commit_with_feature.changes_relevant_path %}
+    <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ path }}</span>
+    {% endfor %}
+</p>
+{% endblock %}

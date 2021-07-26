@@ -1,110 +1,25 @@
 {% extends "base.html" %}
+
 {% block content %}
-
 <div class="container">
+    {% include "report_header.html" %}
+
     <h1>Prospector Report</h1>
-
-    <div class="sticky-top bg-light bg-gradient p-3 mb-3 border border-secondary">
-        <p class="text-center">
-            Displaying all items with at least one <button class="btn btn-primary btn-sm">on annotation filter</button>.
-            You could toggle the filters between <button class="btn btn-primary btn-sm">on</button> and
-            <button class="btn btn-outline-primary btn-sm">off</button> states by left click on them.<br/>
-        {% for annotation in present_annotations | sort %}
-            <button
-                    class="btn btn-primary btn-sm selector"
-                    style="margin: 5pt 5pt 5pt 0;"
-                    data-annotation="{{ annotation }}"
-            >{{ annotation }}</button>
-        {% endfor %}
-        </p>
-        <div class="advisory-record">
-            <h2>Advisory Record</h2>
-            <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b>{{ advisory_record.vulnerability_id }}</b></a><br/>
-            <p>{{ advisory_record.description }}</p>
-            <p style="margin: 10pt 0 0;">
-                {% for code_token in advisory_record.code_tokens | sort %}
-                    <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ code_token }}</span>
-                {% endfor %}
-            </p>
-        </div>
-    </div>
-
     <div id="accordion">
         {% for commit_with_feature in candidates %}
         <div class="card commit d-flex" data-annotations="{{ commit_with_feature.annotations | tojson | forceescape }}">
             <div class="card-header" id="candidateheader{{ loop.index }}">
-                <div class="container">
-                    <div class="row">
-                        <div class="col">
-                            <h5 class="mb-0">
-                                {{ commit_with_feature.commit.message | truncate(150) }}
-                                {% if not commit_with_feature.commit.message %}
-                                <i>(no commit message found)</i>
-                                {% endif %}
-                            </h5>
-                        <p style="margin: 10pt 0 0;">
-                            {% for annotation, comment in commit_with_feature.annotations.items() | sort %}
-                                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ annotation }}</span>
-                            {% endfor %}
-                        </p>
-                        </div>
-                        <div class="col col-auto">
-                            <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false"
-                                aria-controls="collapseExample">
-                                <i class="fas fa-low-vision"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                {% include "card/commit_header.html" %}
             </div>
-
             <div id="candidatebody-{{ loop.index }}" class="collapse show"
                 aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-code-branch"></i> {{ commit_with_feature.commit.commit_id }}
-                    </h5>
-                    <h6 class="card-subtitle mb-2 text-muted"><i class="fab fa-git-alt"></i> {{
-                        commit_with_feature.commit.repository }} <a href="{{ commit_with_feature.commit.repository }}"
-                            target="_blank" class="btn btn-primary btn-sm">Open</a>
-                            <a href="{{ commit_with_feature.commit.repository }}/commit/{{ commit_with_feature.commit.commit_id }}"
-                            target="_blank" class="btn btn-primary btn-sm">Open (on GitHub)</a>
-                        </h6>
-                    <p class="card-text"><i class="fas fa-quote-left"></i> <pre>{{ commit_with_feature.commit.message
-                        }}</pre><i class="fas fa-quote-right"></i></p>
-
-                    <h5 class="card-title"><i class="fas fa-shield-alt"></i> Other CVEs mentioned in message</h5>
-                    <p>{% for cve in commit_with_feature.other_CVE_in_message %}
-                        <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name={{ cve }}" target="_blank"
-                            class="btn btn-outline-primary btn-sm" style="margin: 2pt;">{{
-                            cve }}</a>
-                        {% endfor %}
-                    </p>
-
-                    <h5 class="card-title"><i class="fas fa-file-signature"></i> Path relevant for changes</h5>
-                    <p>{% for path in commit_with_feature.changes_relevant_path %}
-                        <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{
-                            path }}</span>
-                        {% endfor %}
-                    </p>
-
-                    <h5 class="card-title"><i class="fas fa-bullhorn"></i> Annotations </h5>
-                    <p>{% for annotation, comment in commit_with_feature.annotations.items() | sort %}
-                        <button type="button" class="btn btn-primary position-relative m-2" disabled>
-                            {{ comment }}
-                            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-light border border-primary text-primary">
-                                {{ annotation }}
-                            </span>
-                        </button>
-                        {% endfor %}
-                    </p>
-
-                    <h5 class="card-title"><i class="fas fa-link"></i> Referred by pages linked from
-                        advisories</h5>
-                    <p>{% for page in commit_with_feature.referred_to_by_pages_linked_from_advisories %}
-                        <a href="{{ page }}" class="btn btn-outline-primary btn-sm" style="margin: 2pt;">{{
-                            page }}</a> {% endfor %}
-                    </p>
+                    {% include "card/commit_title_block.html" %}
+                    {% include "card/message_block.html" %}
+                    {% include "card/mentioned_cves_block.html" %}
+                    {% include "card/relevant_paths_block.html" %}
+                    {% include "card/annotations_block.html" %}
+                    {% include "card/pages_linked_from_advisories_block.html" %}
                 </div>
             </div>
         </div>
@@ -112,39 +27,5 @@
     </div>
 </div>
 
-<script type="text/javascript">
-buttons = document.getElementsByClassName("selector");
-
-function toggle(selector) {
-    if (selector.classList.contains("btn-primary")) {
-        selector.classList.replace("btn-primary", "btn-outline-primary");
-    } else {
-        selector.classList.replace( "btn-outline-primary", "btn-primary");
-    }
-
-    let commit_cards = document.getElementsByClassName('commit');
-    for (let card of commit_cards) {
-        card.classList.replace("d-flex", "d-none")
-    }
-    let selectors = document.getElementsByClassName("selector");
-    for (const selector of selectors) {
-        if (selector.classList.contains('btn-primary')) {
-            for (let card of commit_cards) {
-                let annotations = JSON.parse(card.dataset.annotations);
-                let relevant = annotations.hasOwnProperty(selector.dataset.annotation);
-                if (relevant) {
-                    card.classList.replace('d-none', 'd-flex')
-                }
-            }
-        }
-    }
-    console.log("toggle: " + selector.dataset.annotation)
-}
-
-for (let i = 0, l = buttons.length; i < l; i++) {
-    let button = buttons[i];
-    button.addEventListener('click', function () {toggle(button);})
-}
-</script>
-
+{% include "filtering_scripts.html" %}
 {% endblock %}

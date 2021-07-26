@@ -1,0 +1,9 @@
+<h5 class="card-title">
+    <i class="fas fa-code-branch"></i> {{ commit_with_feature.commit.commit_id }}
+    <a href="{{ commit_with_feature.commit.repository }}/commit/{{ commit_with_feature.commit.commit_id }}"
+    target="_blank" class="btn btn-primary btn-sm">Open (assume GitHub like interface)</a>
+</h5>
+<h6 class="card-subtitle mb-2 text-muted">
+    <i class="fab fa-git-alt"></i> {{ commit_with_feature.commit.repository }}
+    <a href="{{ commit_with_feature.commit.repository }}" target="_blank" class="btn btn-primary btn-sm">Open</a>
+</h6>
