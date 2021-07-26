@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid h-100">
+<div class="row h-100">
     {% include "report_header.html" %}
 
+<div class="col h-100 overflow-scroll">
+<div class="container">
     <h1>Prospector Report</h1>
-    <div id="accordion">
+    <div id="col accordion">
         {% for commit_with_feature in candidates %}
         <div class="card commit d-flex" data-annotations="{{ commit_with_feature.annotations | tojson | forceescape }}">
             <div class="card-header" id="candidateheader{{ loop.index }}">
@@ -26,6 +29,8 @@
         {% endfor %}
     </div>
 </div>
-
+</div>
+</div>
+</div>
 {% include "filtering_scripts.html" %}
 {% endblock %}
