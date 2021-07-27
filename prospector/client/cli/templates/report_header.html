@@ -4,12 +4,12 @@
         Displaying all items with at least one <button class="btn btn-primary btn-sm">on annotation filter</button>.
         You could toggle the filters between <button class="btn btn-primary btn-sm">on</button> and
         <button class="btn btn-outline-primary btn-sm">off</button> states by left click on them.<br/>
-    {% for annotation in present_annotations | sort %}
+    {% for annotation, count in present_annotations.items() | sort %}
         <button
                 class="btn btn-primary btn-sm selector"
                 style="margin: 5pt 5pt 5pt 0;"
                 data-annotation="{{ annotation }}"
-        >{{ annotation }}</button>
+        >{{ annotation }} <span class="badge bg-secondary">{{ count }}</span></button>
     {% endfor %}
     </p>
     <p>
