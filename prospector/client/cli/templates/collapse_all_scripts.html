@@ -1,0 +1,26 @@
+<script type="application/javascript">
+function toggle_collapse_all(selector) {
+    if (selector.classList.contains("btn-primary")) {
+        selector.classList.replace("btn-primary", "btn-outline-primary");
+        selector.innerHTML = 'Expand all';
+    } else {
+        selector.classList.replace( "btn-outline-primary", "btn-primary");
+        selector.innerHTML = 'Collapse all';
+    }
+
+    let commit_cards = document.getElementsByClassName('commit');
+    for (let card of commit_cards) {
+        let card_body = card.getElementsByClassName('collapse').item(0);
+        if (selector.classList.contains('btn-primary')) {
+            card_body.classList.replace('hide', 'show');
+        } else {
+            card_body.classList.replace('show', 'hide');
+        }
+    }
+    console.log("toggle collapse all")
+}
+
+collapse_all_button = document.getElementById('collapse_all_toggle');
+collapse_all_button.addEventListener('click', function() {toggle_collapse_all(collapse_all_button);})
+
+</script>

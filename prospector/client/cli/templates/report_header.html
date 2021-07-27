@@ -12,6 +12,9 @@
         >{{ annotation }}</button>
     {% endfor %}
     </p>
+    <p>
+        <button class="btn btn-primary" id="collapse_all_toggle">Collapse All</button>
+    </p>
     <div class="advisory-record">
         <h2>Results based on this Advisory Record</h2>
         <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b>{{ advisory_record.vulnerability_id }}</b></a><br/>
