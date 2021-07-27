@@ -15,9 +15,11 @@ def report_as_html(
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.html",
 ):
-    annotations = set()
+    annotations_count = {}
+    commit_with_feature: CommitWithFeatures
     for commit_with_feature in results:
-        annotations = annotations.union(commit_with_feature.annotations.keys())
+        for annotation in commit_with_feature.annotations.keys():
+            annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
 
     _logger.info("Writing results to " + filename)
     environment = jinja2.Environment(
@@ -28,7 +30,7 @@ def report_as_html(
     with open(filename, "w", encoding="utf8") as html_file:
         for content in template.generate(
             candidates=results,
-            present_annotations=annotations,
+            present_annotations=annotations_count,
             advisory_record=advisory_record,
         ):
             html_file.write(content)

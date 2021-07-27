@@ -70,16 +70,29 @@ SUFFIX = [".hu", ".com", ".org", ".ru", ".fr", ".de"]
 
 
 def random_url(max_length: int):
-    return (
-        choice(PROTOCOLS)
-        + "/".join(
-            map(
-                lambda s: s.lower().replace(" ", "-"),
-                random_list_of_strs(min_count=1, max_count=max_length),
+    if random_bool():
+        return (
+            choice(PROTOCOLS)
+            + "/".join(
+                map(
+                    lambda s: s.lower().replace(" ", "-"),
+                    random_list_of_strs(min_count=1, max_count=max_length),
+                )
             )
+            + choice(SUFFIX)
         )
-        + choice(SUFFIX)
-    )
+    else:
+        return (
+            choice(PROTOCOLS)
+            + "github.com/FrontEndART/project-kb"
+            + "/".join(
+                map(
+                    lambda s: s.lower().replace(" ", "-"),
+                    random_list_of_strs(min_count=1, max_count=max_length),
+                )
+            )
+            + choice(SUFFIX)
+        )
 
 
 def random_list_of_url(max_length: int, max_count: int):
@@ -119,6 +132,16 @@ def random_list_of_github_issue_ids(stop: int, max_count: int, start: int = 0):
     return [str(randint(start, stop)) for _ in range(randint(0, max_count))]
 
 
+def random_version(max_length: int, max_size: int, min_size: int = 0):
+    return ".".join([str(randint(min_size, max_size)) for _ in range(max_length)])
+
+
+def random_list_of_version(
+    max_count: int, max_length: int, max_size: int, min_size: int = 0
+):
+    return [random_version(max_length, max_size, min_size) for _ in range(max_count)]
+
+
 def test_report_generation():
     candidates = []
     for _ in range(100):
@@ -147,14 +170,26 @@ def test_report_generation():
         )
         candidates.append(commit_with_feature)
 
+    advisory = AdvisoryRecord(
+        vulnerability_id=random_list_of_cve(max_count=1, min_count=1)[0],
+        repository_url=random_url(4),
+        published_timestamp=randint(0, 100000),
+        last_modified_timestamp=randint(0, 100000),
+        references=random_list_of_strs(42),
+        references_content=random_list_of_strs(42),
+        advisory_references=random_list_of_cve(42),
+        affected_products=random_list_of_strs(42),
+        description=" ".join(random_list_of_strs(42)),
+        preprocessed_vulnerability_description=" ".join(random_list_of_strs(42)),
+        relevant_tags=random_list_of_strs(42),
+        versions=random_list_of_version(42, 4, 42),
+        from_nvd=random_bool(),
+        paths=random_list_of_path(4, 42),
+        code_tokens=random_list_of_strs(42),
+    )
+
     filename = "test_report.html"
     if os.path.isfile(filename):
         os.remove(filename)
-    generated_report = report_as_html(
-        candidates,
-        AdvisoryRecord(
-            vulnerability_id=random_list_of_cve(max_count=1, min_count=1)[0]
-        ),
-        filename,
-    )
+    generated_report = report_as_html(candidates, advisory, filename)
     assert os.path.isfile(generated_report)
