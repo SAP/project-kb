@@ -70,16 +70,29 @@ SUFFIX = [".hu", ".com", ".org", ".ru", ".fr", ".de"]
 
 
 def random_url(max_length: int):
-    return (
-        choice(PROTOCOLS)
-        + "/".join(
-            map(
-                lambda s: s.lower().replace(" ", "-"),
-                random_list_of_strs(min_count=1, max_count=max_length),
+    if random_bool():
+        return (
+            choice(PROTOCOLS)
+            + "/".join(
+                map(
+                    lambda s: s.lower().replace(" ", "-"),
+                    random_list_of_strs(min_count=1, max_count=max_length),
+                )
             )
+            + choice(SUFFIX)
         )
-        + choice(SUFFIX)
-    )
+    else:
+        return (
+            choice(PROTOCOLS)
+            + "github.com/FrontEndART/project-kb"
+            + "/".join(
+                map(
+                    lambda s: s.lower().replace(" ", "-"),
+                    random_list_of_strs(min_count=1, max_count=max_length),
+                )
+            )
+            + choice(SUFFIX)
+        )
 
 
 def random_list_of_url(max_length: int, max_count: int):
