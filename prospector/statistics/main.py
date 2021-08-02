@@ -94,3 +94,14 @@ class StatisticCollection(dict):
                 self[name].add(value)
         else:
             raise KeyError(f"can not collect into {name}, because it is not a set")
+
+    def increment(self, name: Union[str, Tuple[str, ...]], by: Union[int, float] = 1):
+        selected = self[name]
+        if isinstance(selected, list) and (
+            isinstance(selected[-1], int) or isinstance(selected[-1], float)
+        ):
+            selected[-1] += by
+        elif isinstance(selected, int) or isinstance(selected, float):
+            self.record(name, selected + by, overwrite=True)
+        else:
+            ValueError(f"can not increment {name}")
