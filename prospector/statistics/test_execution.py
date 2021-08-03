@@ -1,34 +1,109 @@
 import time
-from statistics.execution import (
-    execution_statistics,
-    execution_timer,
-    measure_execution_time,
-)
+from statistics.execution import Counter, ExecutionTimer, measure_execution_time
+from statistics.main import StatisticCollection
+
+import pytest
 
 
-def test_measure_execution_time():
-    @measure_execution_time()
-    def _dummy(laziness: int) -> int:
-        time.sleep(laziness)
-        return laziness
+class TestMeasureTime:
+    @staticmethod
+    def test_decorator():
+        stats = StatisticCollection()
 
-    _dummy(1)
-    _dummy(2)
+        @measure_execution_time(stats)
+        def _dummy(laziness: int) -> int:
+            time.sleep(laziness)
+            return laziness
 
-    assert len(execution_statistics["statistics"]["test_execution"]["_dummy"]) == 2
-    assert 1 < execution_statistics["statistics"]["test_execution"]["_dummy"][0] < 1.1
-    assert 2 < execution_statistics["statistics"]["test_execution"]["_dummy"][1] < 2.1
+        _dummy(1)
+        _dummy(2)
 
+        assert len(stats["statistics"]["test_execution"]["_dummy"]) == 2
+        assert 1 < stats["statistics"]["test_execution"]["_dummy"][0] < 1.1
+        assert 2 < stats["statistics"]["test_execution"]["_dummy"][1] < 2.1
 
-def test_execution_timer():
-    for i in range(10):
-        with execution_timer("test"):
+    @staticmethod
+    def test_manual():
+        stats = StatisticCollection()
+        timer = ExecutionTimer(stats)
+        for i in range(10):
+            timer.start()
             time.sleep(i / 10)
+            timer.stop()
 
-    assert len(execution_statistics["test"]) == 10
-    for i in range(10):
-        assert i / 10 < execution_statistics["test"][i] < i / 10 + 0.1
+        assert len(stats["execution time"]) == 10
+        for i in range(10):
+            assert i / 10 < stats["execution time"][i] < i / 10 + 0.1
+
+    @staticmethod
+    def test_with():
+        stats = StatisticCollection()
+        for i in range(10):
+            with stats.sub_collection(ExecutionTimer):
+                time.sleep(i / 10)
+
+        assert (
+            len(stats["statistics"]["test_execution"]["test_with"]["execution time"])
+            == 10
+        )
+        for i, measured_time in enumerate(
+            stats["statistics"]["test_execution"]["test_with"]["execution time"]
+        ):
+            assert i / 10 < measured_time < i / 10 + 0.1
 
 
-def test_counter():
-    ...
+class TestCounter:
+    @staticmethod
+    def test_initialize():
+        counter = Counter(StatisticCollection())
+        counter.initialize("kiwi", "grape")
+        counter.initialize("apple", "lemon", value=42)
+
+        assert counter.collection["kiwi"] == 0
+        assert counter.collection["grape"] == 0
+
+        assert counter.collection["apple"] == 42
+        assert counter.collection["lemon"] == 42
+
+    @staticmethod
+    def test_manual():
+        counter = Counter(StatisticCollection())
+        counter.collection.record("apple", 12)
+        counter.collection.record("lemon", [1, 2, 3, 4])
+
+        with pytest.raises(KeyError):
+            counter.increment("apricot")
+
+        counter.increment("apple")
+        assert counter.collection["apple"] == 13
+
+        counter.increment("apple", 3)
+        assert counter.collection["apple"] == 16
+
+        counter.increment("lemon")
+        assert counter.collection["lemon"] == [1, 2, 3, 5]
+
+        counter.increment("lemon", 3)
+        assert counter.collection["lemon"] == [1, 2, 3, 8]
+
+    @staticmethod
+    def test_with():
+        stats = StatisticCollection()
+        with stats.sub_collection(Counter) as counter:
+            counter.collection.record("apple", 12)
+            counter.collection.record("lemon", [1, 2, 3, 4])
+
+            with pytest.raises(KeyError):
+                counter.increment("apricot")
+
+            counter.increment("apple")
+            assert counter.collection["apple"] == 13
+
+            counter.increment("apple", 3)
+            assert counter.collection["apple"] == 16
+
+            counter.increment("lemon")
+            assert counter.collection["lemon"] == [1, 2, 3, 5]
+
+            counter.increment("lemon", 3)
+            assert counter.collection["lemon"] == [1, 2, 3, 8]
