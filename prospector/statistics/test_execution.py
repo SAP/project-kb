@@ -28,3 +28,7 @@ def test_execution_timer():
     assert len(execution_statistics["test"]) == 10
     for i in range(10):
         assert i / 10 < execution_statistics["test"][i] < i / 10 + 0.1
+
+
+def test_counter():
+    ...

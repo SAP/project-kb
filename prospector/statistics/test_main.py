@@ -120,3 +120,10 @@ def test_increment():
 
     stats.increment("lemon", 3)
     assert stats["lemon"] == [1, 2, 3, 8]
+
+
+def test_sub_collection():
+    stats = StatisticCollection()
+
+    with stats.sub_collection():
+        ...
