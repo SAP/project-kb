@@ -1,4 +1,8 @@
-from statistics.main import ForbiddenDuplication, StatisticCollection
+from statistics.main import (
+    ForbiddenDuplication,
+    StatisticCollection,
+    TransparentWrapper,
+)
 
 import pytest
 
@@ -104,26 +108,22 @@ def test_collect():
     assert stats[("lemon", "grape")] == [128, -128]
 
 
-def test_increment():
+def test_transparent_wrapper():
     stats = StatisticCollection()
-    stats.record("apple", 12)
-    stats.record("lemon", [1, 2, 3, 4])
+    wrapper = TransparentWrapper(stats)
 
-    stats.increment("apple")
-    assert stats["apple"] == 13
+    wrapper.record("apple", 12)
+    wrapper.record(("lemon", "apple"), 42)
 
-    stats.increment("apple", 3)
-    assert stats["apple"] == 16
-
-    stats.increment("lemon")
-    assert stats["lemon"] == [1, 2, 3, 5]
-
-    stats.increment("lemon", 3)
-    assert stats["lemon"] == [1, 2, 3, 8]
+    assert wrapper["apple"] == 12
+    assert wrapper[("lemon", "apple")] == 42
 
 
 def test_sub_collection():
     stats = StatisticCollection()
 
-    with stats.sub_collection():
-        ...
+    with stats.sub_collection() as sub_collection:
+        sub_collection.record("apple", 42)
+
+    assert stats["statistics"]["test_main"]["test_sub_collection"]["apple"] == 42
+    assert stats[("statistics", "test_main", "test_sub_collection", "apple")] == 42
