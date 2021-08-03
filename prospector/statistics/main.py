@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Type, Union
 
 from util.inspection import caller_name
 
@@ -10,6 +10,26 @@ class ForbiddenDuplication(ValueError):
 
 
 LEVEL_DELIMITER = "."
+
+
+class SubCollectionWrapper:
+    def __init__(self, collection: StatisticCollection):
+        self.collection = collection
+
+
+class TransparentWrapper(SubCollectionWrapper):
+    def __getattr__(self, item):
+        return self.collection.__getattribute__(item)
+
+    def __getitem__(self, key):
+        return self.collection.__getitem__(key)
+
+    def __enter__(self) -> TransparentWrapper:
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val:
+            raise exc_val
 
 
 class StatisticCollection(dict):
@@ -44,16 +64,16 @@ class StatisticCollection(dict):
 
     def sub_collection(
         self,
-        parent_name: Optional[Union[str, Tuple[str, ...]]] = None,
-        sub_collection: Optional[StatisticCollection] = None,
-    ):
-        if parent_name is None:
-            parent_name = caller_name()
+        sub_collection_type: Type[SubCollectionWrapper] = TransparentWrapper,
+        name: Optional[Union[str, Tuple[str, ...]]] = None,
+    ) -> SubCollectionWrapper:
+        if name is None:
+            name = caller_name()
 
-        if parent_name not in self:
-            if sub_collection is None:
-                sub_collection = StatisticCollection()
-            self.record(parent_name, sub_collection)
+        if name not in self:
+            self.record(name, StatisticCollection())
+
+        return sub_collection_type(self[name])
 
     def __getitem__(self, key: Union[str, Tuple[str, ...]]):
         if isinstance(key, str):
@@ -111,14 +131,3 @@ class StatisticCollection(dict):
                 self[name].add(value)
         else:
             raise KeyError(f"can not collect into {name}, because it is not a set")
-
-    def increment(self, name: Union[str, Tuple[str, ...]], by: Union[int, float] = 1):
-        selected = self[name]
-        if isinstance(selected, list) and (
-            isinstance(selected[-1], int) or isinstance(selected[-1], float)
-        ):
-            selected[-1] += by
-        elif isinstance(selected, int) or isinstance(selected, float):
-            self.record(name, selected + by, overwrite=True)
-        else:
-            ValueError(f"can not increment {name}")
