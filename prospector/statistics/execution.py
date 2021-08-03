@@ -1,3 +1,4 @@
+import inspect
 import time
 from statistics.main import StatisticCollection
 from typing import Optional, Tuple, Union
@@ -56,5 +57,25 @@ class execution_timer:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         execution_statistics.collect(self.name, self.timer.stop())
+        if exc_val:
+            raise exc_val
+
+
+class counter:
+    def __init__(self, parent_name: Optional[Union[str, Tuple[str, ...]]] = None):
+        if parent_name is None:
+            previous_frame = inspect.currentframe().f_back
+            parent_name = "main"
+            if previous_frame:
+                parent_name = inspect.getmodule(previous_frame).__name__
+
+        self.parent_name = parent_name
+        if self.parent_name not in execution_statistics:
+            execution_statistics.record(self.parent_name, StatisticCollection())
+
+    def __enter__(self) -> StatisticCollection:
+        return execution_statistics[self.parent_name]
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val:
             raise exc_val

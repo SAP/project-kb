@@ -1,4 +1,8 @@
-from typing import Tuple, Union
+from __future__ import annotations
+
+from typing import Optional, Tuple, Union
+
+from util.inspection import caller_name
 
 
 class ForbiddenDuplication(ValueError):
@@ -37,6 +41,19 @@ class StatisticCollection(dict):
                     current_collection.record(name[1:], value)
         else:
             raise ValueError("only string or tuple keys are enabled")
+
+    def sub_collection(
+        self,
+        parent_name: Optional[Union[str, Tuple[str, ...]]] = None,
+        sub_collection: Optional[StatisticCollection] = None,
+    ):
+        if parent_name is None:
+            parent_name = caller_name()
+
+        if parent_name not in self:
+            if sub_collection is None:
+                sub_collection = StatisticCollection()
+            self.record(parent_name, sub_collection)
 
     def __getitem__(self, key: Union[str, Tuple[str, ...]]):
         if isinstance(key, str):
