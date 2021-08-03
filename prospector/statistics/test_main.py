@@ -102,3 +102,21 @@ def test_collect():
     assert stats["apple"] == [12, -12]
     assert stats[("lemon", "apple")] == [42, -42]
     assert stats[("lemon", "grape")] == [128, -128]
+
+
+def test_increment():
+    stats = StatisticCollection()
+    stats.record("apple", 12)
+    stats.record("lemon", [1, 2, 3, 4])
+
+    stats.increment("apple")
+    assert stats["apple"] == 13
+
+    stats.increment("apple", 3)
+    assert stats["apple"] == 16
+
+    stats.increment("lemon")
+    assert stats["lemon"] == [1, 2, 3, 5]
+
+    stats.increment("lemon", 3)
+    assert stats["lemon"] == [1, 2, 3, 8]
