@@ -131,3 +131,13 @@ class StatisticCollection(dict):
                 self[name].add(value)
         else:
             raise KeyError(f"can not collect into {name}, because it is not a set")
+
+    def get_descants(self, leaf_only=False, ascents=()):
+        """Return the unsorted collection of all its sub collections and their sub collections and so forth."""
+        for child_key, child in self.items():
+            if isinstance(child, StatisticCollection):
+                if not leaf_only:
+                    yield ascents + (child_key,), child
+                yield from child.get_descants(ascents=ascents + (child_key,))
+            else:
+                yield ascents + (child_key,), child

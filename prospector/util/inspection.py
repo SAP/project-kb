@@ -4,6 +4,7 @@ from typing import Tuple
 
 def caller_name(skip=2) -> Tuple[str, ...]:
     """Get a name of a caller in the format module.class.method
+    Note: It will not work correctly for static methods in classes.
 
     `skip` specifies how many levels of stack to skip while getting caller
     name. skip=1 means "who calls me", skip=2 "who calls my caller" etc.
@@ -15,7 +16,6 @@ def caller_name(skip=2) -> Tuple[str, ...]:
     if len(stack) < start + 1:
         return tuple()
     parent_frame = stack[start][0]
-
     name = []
     module = inspect.getmodule(parent_frame)
     # `modname` can be None when frame is executed directly in console

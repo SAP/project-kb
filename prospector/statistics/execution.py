@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from statistics.main import StatisticCollection, SubCollectionWrapper
+from statistics.collection import StatisticCollection, SubCollectionWrapper
 from typing import Optional, Tuple, Union
 
 execution_statistics = StatisticCollection()
