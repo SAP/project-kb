@@ -1,6 +1,6 @@
 import time
+from statistics.collection import StatisticCollection
 from statistics.execution import Counter, ExecutionTimer, measure_execution_time
-from statistics.main import StatisticCollection
 
 import pytest
 
