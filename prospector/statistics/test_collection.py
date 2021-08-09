@@ -152,3 +152,18 @@ def test_descant():
         ),
         128,
     ) in descants_list
+
+
+def test_console_tree():
+    stats = StatisticCollection()
+    stats.record("apple", 12)
+    stats.record("grape", 84)
+    stats.record(("lemon", "apple"), 42)
+    stats.record(("lemon", "grape"), 128)
+    stats.collect(("lemon", "zest"), 1)
+    stats.collect(("lemon", "zest"), 3)
+    stats.collect(("lemon", "zest"), 12)
+    stats.collect(("lemon", "zest"), 56)
+
+    tree = stats.generate_console_tree()
+    print(tree)
