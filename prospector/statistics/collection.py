@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, Tuple, Type, Union
 
 from util.inspection import caller_name
+from util.type_safety import is_instance_of_either
 
 
 class ForbiddenDuplication(ValueError):
@@ -141,3 +142,21 @@ class StatisticCollection(dict):
                 yield from child.get_descants(ascents=ascents + (child_key,))
             else:
                 yield ascents + (child_key,), child
+
+    def generate_console_tree(self) -> str:
+        descants = sorted(
+            list(self.get_descants()), key=lambda e: LEVEL_DELIMITER.join(e[0])
+        )
+        lines = ["+-- (root)"]
+        for key, descant in descants:
+            indent = "|  " * len(key)
+            if isinstance(descant, StatisticCollection):
+                lines.append(f"{indent}+-- {LEVEL_DELIMITER.join(key)}")
+            else:
+                if isinstance(descant, list) and is_instance_of_either(
+                    descant, int, float
+                ):
+                    lines.append(f"{indent}+-- {key[-1]} = NUM LIST")
+                else:
+                    lines.append(f"{indent}+-- {key[-1]} = {descant}")
+        return "\n".join(lines)
