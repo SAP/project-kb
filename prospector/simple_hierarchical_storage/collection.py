@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from statistics import mean, median, stdev
-from typing import Optional, Tuple, Type, Union
+from typing import Optional, Tuple, Union
 
 from util.inspection import caller_name
 from util.type_safety import is_instance_of_either
@@ -73,16 +73,22 @@ class StatisticCollection(dict):
 
     def sub_collection(
         self,
-        sub_collection_type: Type[SubCollectionWrapper] = TransparentWrapper,
         name: Optional[Union[str, Tuple[str, ...]]] = None,
-    ) -> SubCollectionWrapper:
+    ) -> StatisticCollection:
         if name is None:
             name = caller_name()
 
         if name not in self:
             self.record(name, StatisticCollection())
 
-        return sub_collection_type(self[name])
+        return self[name]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val:
+            raise exc_val
 
     def __getitem__(self, key: Union[str, Tuple[str, ...]]):
         if isinstance(key, str):
@@ -161,8 +167,10 @@ class StatisticCollection(dict):
             if isinstance(descant, StatisticCollection):
                 lines.append(f"{indent}+--+[{LEVEL_DELIMITER.join(key)}]")
             else:
-                if isinstance(descant, list) and is_instance_of_either(
-                    descant, int, float
+                if (
+                    isinstance(descant, list)
+                    and len(descant) > 1
+                    and is_instance_of_either(descant, int, float)
                 ):
                     lines.append(
                         f"{indent}+---[{key[-1]}] is a list of numbers with {_summarize_list(descant)}"

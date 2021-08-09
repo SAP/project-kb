@@ -73,11 +73,8 @@ def prospector(  # noqa: C901
 
     if len(code_tokens) > 0:
         advisory_record.code_tokens += tuple(code_tokens)
-<<<<<<< HEAD
-=======
         # drop duplicates
         advisory_record.code_tokens = list(set(advisory_record.code_tokens))
->>>>>>> e175f62 (prepare for refactoring of feature extr. and rules)
 
     # FIXME this should be handled better (or '' should not end up in the modified_files in
     # the first place)
