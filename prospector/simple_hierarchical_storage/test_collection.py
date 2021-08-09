@@ -1,10 +1,10 @@
-from statistics.collection import (
+import pytest
+
+from simple_hierarchical_storage.collection import (
     ForbiddenDuplication,
     StatisticCollection,
     TransparentWrapper,
 )
-
-import pytest
 
 
 class TestRecord:
@@ -125,9 +125,22 @@ def test_sub_collection():
     with stats.sub_collection() as sub_collection:
         sub_collection.record("apple", 42)
 
-    assert stats["statistics"]["test_collection"]["test_sub_collection"]["apple"] == 42
     assert (
-        stats[("statistics", "test_collection", "test_sub_collection", "apple")] == 42
+        stats["simple_hierarchical_storage"]["test_collection"]["test_sub_collection"][
+            "apple"
+        ]
+        == 42
+    )
+    assert (
+        stats[
+            (
+                "simple_hierarchical_storage",
+                "test_collection",
+                "test_sub_collection",
+                "apple",
+            )
+        ]
+        == 42
     )
 
 
@@ -164,6 +177,26 @@ def test_console_tree():
     stats.collect(("lemon", "zest"), 3)
     stats.collect(("lemon", "zest"), 12)
     stats.collect(("lemon", "zest"), 56)
+    stats.collect(("melon", "marry"), 34)
+    stats.collect(("melon", "marry"), 34.12)
+    stats.collect(("melon", "sweet"), 27)
+    stats.collect(("melon", "sweet"), 27.23)
+    stats.collect(("melon", "sweet"), 0.27)
+    stats.collect(("melon", "sweet"), 2.3)
 
     tree = stats.generate_console_tree()
-    print(tree)
+    assert tree == (
+        "+--+[root]\n"
+        "|  +---[apple] = 12\n"
+        "|  +---[grape] = 84\n"
+        "|  +--+[lemon]\n"
+        "|  |  +---[apple] = 42\n"
+        "|  |  +---[grape] = 128\n"
+        "|  |  +---[zest] is a list of numbers with average = 18, "
+        "deviation = 25.78113005022601, median = 7.5, count = 4\n"
+        "|  +--+[melon]\n"
+        "|  |  +---[marry] is a list of numbers with average = 34.06, "
+        "deviation = 0.08485281374238389, median = 34.06, count = 2\n"
+        "|  |  +---[sweet] is a list of numbers with average = 14.2, "
+        "deviation = 14.936262361559312, median = 14.65, count = 4"
+    )
