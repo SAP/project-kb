@@ -1,8 +1,13 @@
 import time
-from statistics.collection import StatisticCollection
-from statistics.execution import Counter, ExecutionTimer, measure_execution_time
 
 import pytest
+
+from simple_hierarchical_storage.collection import StatisticCollection
+from simple_hierarchical_storage.execution import (
+    Counter,
+    ExecutionTimer,
+    measure_execution_time,
+)
 
 
 class TestMeasureTime:
@@ -18,9 +23,19 @@ class TestMeasureTime:
         _dummy(1)
         _dummy(2)
 
-        assert len(stats["statistics"]["test_execution"]["_dummy"]) == 2
-        assert 1 < stats["statistics"]["test_execution"]["_dummy"][0] < 1.1
-        assert 2 < stats["statistics"]["test_execution"]["_dummy"][1] < 2.1
+        assert (
+            len(stats["simple_hierarchical_storage"]["test_execution"]["_dummy"]) == 2
+        )
+        assert (
+            1
+            < stats["simple_hierarchical_storage"]["test_execution"]["_dummy"][0]
+            < 1.1
+        )
+        assert (
+            2
+            < stats["simple_hierarchical_storage"]["test_execution"]["_dummy"][1]
+            < 2.1
+        )
 
     @staticmethod
     def test_manual():
@@ -43,11 +58,17 @@ class TestMeasureTime:
                 time.sleep(i / 10)
 
         assert (
-            len(stats["statistics"]["test_execution"]["test_with"]["execution time"])
+            len(
+                stats["simple_hierarchical_storage"]["test_execution"]["test_with"][
+                    "execution time"
+                ]
+            )
             == 10
         )
         for i, measured_time in enumerate(
-            stats["statistics"]["test_execution"]["test_with"]["execution time"]
+            stats["simple_hierarchical_storage"]["test_execution"]["test_with"][
+                "execution time"
+            ]
         ):
             assert i / 10 < measured_time < i / 10 + 0.1
 

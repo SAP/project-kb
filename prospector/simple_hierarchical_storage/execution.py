@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import time
-from statistics.collection import StatisticCollection, SubCollectionWrapper
 from typing import Optional, Tuple, Union
+
+from simple_hierarchical_storage.collection import (
+    StatisticCollection,
+    SubCollectionWrapper,
+)
 
 execution_statistics = StatisticCollection()
 
