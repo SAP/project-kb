@@ -16,6 +16,10 @@ import log.util
 
 # from pprint import pprint
 # import pickledb
+from simple_hierarchical_storage.execution import (
+    execution_statistics,
+    measure_execution_time,
+)
 
 _logger = log.util.init_local_logger()
 
@@ -203,6 +207,7 @@ class Git:
             shutil.rmtree(self._path)
             raise ex
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commits(
         self,
         ancestors_of=None,
@@ -249,6 +254,7 @@ class Git:
         out = [l.strip() for l in out]
         return out
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commits_between_two_commit(self, commit_id_from: str, commit_id_to: str):
         """
         Return the commits between the start commit and the end commmit if there are path between them or empty list
@@ -269,6 +275,7 @@ class Git:
             _logger.error("Failed to obtain commits, details below:", exc_info=True)
             return []
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, key, by="id"):
         if by == "id":
             return Commit(self, key)
@@ -318,6 +325,7 @@ class Git:
     # def pretty_print_tag_ref(self, ref):
     #     return ref.split('/')[-1]
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_tags(self):
         try:
             tags = self._exec.run("git tag")
@@ -330,6 +338,7 @@ class Git:
 
         return tags
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit_id_for_tag(self, tag):
         cmd = "git rev-list -n1 " + tag
         cmd = cmd.split()
@@ -344,6 +353,7 @@ class Git:
             return None
         return commit_id.strip()
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_previous_tag(self, tag):
         # https://git-scm.com/docs/git-describe
         commit_for_tag = self.get_commit_id_for_tag(tag)
@@ -376,6 +386,7 @@ class Commit:
             for k in init_data:
                 self._attributes[k] = init_data[k]
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_id(self):
         if "full_id" not in self._attributes:
             try:
@@ -388,6 +399,7 @@ class Commit:
                 )
         return self._attributes["full_id"]
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_parent_id(self):
         """
         Returns the list of parents commits
@@ -408,6 +420,7 @@ class Commit:
     def get_repository(self):
         return self._repository._url
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_msg(self):
         if "msg" not in self._attributes:
             self._attributes["msg"] = ""
@@ -421,6 +434,7 @@ class Commit:
                 )
         return self._attributes["msg"]
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_diff(self, context_size: int = 1, filter_files: str = ""):
         if "diff" not in self._attributes:
             self._attributes["diff"] = ""
@@ -452,6 +466,7 @@ class Commit:
             ).strftime(date_format)
         return self._attributes["timestamp"]
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_changed_files(self):
         if "changed_files" not in self._attributes:
             cmd = ["git", "diff", "--name-only", self._id + "^.." + self._id]
@@ -459,6 +474,7 @@ class Commit:
             self._attributes["changed_files"] = out
         return self._attributes["changed_files"]
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_changed_paths(self, other_commit=None, match=None):
         # TODO refactor, this overlaps with changed_files
 
@@ -493,6 +509,7 @@ class Commit:
 
         return out
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_hunks(self, grouped=False):
         def is_hunk_line(line):
             return line[0] in "-+" and (len(line) < 2 or (line[1] != line[0]))
