@@ -22,6 +22,7 @@ from client.cli.prospector_client import (
     prospector,
 )
 from git.git import GIT_CACHE
+from simple_hierarchical_storage.execution import ExecutionTimer, execution_statistics
 
 _logger = log.util.init_local_logger()
 
@@ -166,104 +167,114 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
 
 
 def main(argv):  # noqa: C901
-    args = parseArguments(argv)
-    configuration = getConfiguration(args.conf)
+    with ExecutionTimer(execution_statistics.sub_collection(name="initialization")):
+        args = parseArguments(argv)
+        configuration = getConfiguration(args.conf)
 
-    if args.log_level:
-        log.config.level = getattr(logging, args.log_level)
+        if args.log_level:
+            log.config.level = getattr(logging, args.log_level)
 
-    _logger.info(f"global log level is set to {logging.getLevelName(log.config.level)}")
+        _logger.info(
+            f"global log level is set to {logging.getLevelName(log.config.level)}"
+        )
 
-    if args.vulnerability_id is None:
-        _logger.error("No vulnerability id was specified. Cannot proceed.")
-        return False
+        if args.vulnerability_id is None:
+            _logger.error("No vulnerability id was specified. Cannot proceed.")
+            return False
 
-    if configuration is None:
-        _logger.error("Invalid configuration, exiting.")
-        return False
+        if configuration is None:
+            _logger.error("Invalid configuration, exiting.")
+            return False
 
-    report = configuration["global"].getboolean("report")
-    if args.report:
-        report = args.report
+        report = configuration["global"].getboolean("report")
+        if args.report:
+            report = args.report
 
-    if configuration["global"].get("nvd_rest_endpoint"):
-        nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
+        if configuration["global"].get("nvd_rest_endpoint"):
+            nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
 
-    backend = configuration["global"].get("backend") or DEFAULT_BACKEND
-    if args.backend:
-        backend = args.backend
+        backend = configuration["global"].get("backend") or DEFAULT_BACKEND
+        if args.backend:
+            backend = args.backend
 
-    if args.ping:
-        return ping_backend(backend, log.config.level < logging.INFO)
+        if args.ping:
+            return ping_backend(backend, log.config.level < logging.INFO)
 
-    vulnerability_id = args.vulnerability_id
-    repository_url = args.repository
+        vulnerability_id = args.vulnerability_id
+        repository_url = args.repository
 
-    vuln_descr = args.descr
-    use_nvd = args.use_nvd
-    tag_interval = args.tag_interval
-    version_interval = args.version_interval
-    time_limit_before = TIME_LIMIT_BEFORE
-    time_limit_after = TIME_LIMIT_AFTER
-    max_candidates = args.max_candidates
-    modified_files = args.modified_files.split(",")
+        vuln_descr = args.descr
+        use_nvd = args.use_nvd
+        tag_interval = args.tag_interval
+        version_interval = args.version_interval
+        time_limit_before = TIME_LIMIT_BEFORE
+        time_limit_after = TIME_LIMIT_AFTER
+        max_candidates = args.max_candidates
+        modified_files = args.modified_files.split(",")
     code_tokens = (
         args.diff_contains.split(",") if args.diff_contains is not None else []
     )
 
     print(code_tokens)
 
-    publication_date = ""
-    if args.pub_date != "":
-        publication_date = args.pub_date + "T00:00Z"
-        # if the date is forced manually, the time interval can
-        # be restricted
-        # time_limit_before = int(time_limit_before / 5)
-        # time_limit_after = int(time_limit_after / 2)
+        publication_date = ""
+        if args.pub_date != "":
+            publication_date = args.pub_date + "T00:00Z"
+            # if the date is forced manually, the time interval can
+            # be restricted
+            # time_limit_before = int(time_limit_before / 5)
+            # time_limit_after = int(time_limit_after / 2)
 
-    git_cache = GIT_CACHE
-    if os.environ["GIT_CACHE"]:
-        git_cache = os.environ["GIT_CACHE"]
-    if configuration["global"].get("git_cache"):
-        git_cache = configuration["global"].get("git_cache")
+        git_cache = GIT_CACHE
+        if os.environ["GIT_CACHE"]:
+            git_cache = os.environ["GIT_CACHE"]
+        if configuration["global"].get("git_cache"):
+            git_cache = configuration["global"].get("git_cache")
 
-    _logger.debug("Using the following configuration:")
-    _logger.pretty_log(
-        {section: dict(configuration[section]) for section in configuration.sections()}
-    )
+        _logger.debug("Using the following configuration:")
+        _logger.pretty_log(
+            {
+                section: dict(configuration[section])
+                for section in configuration.sections()
+            }
+        )
 
-    _logger.debug("Vulnerability ID: " + vulnerability_id)
-    _logger.debug("time-limit before: " + str(time_limit_before))
-    _logger.debug("time-limit after: " + str(time_limit_after))
+        _logger.debug("Vulnerability ID: " + vulnerability_id)
+        _logger.debug("time-limit before: " + str(time_limit_before))
+        _logger.debug("time-limit after: " + str(time_limit_after))
 
-    results, advisory_record = prospector(
-        vulnerability_id=vulnerability_id,
-        repository_url=repository_url,
-        publication_date=publication_date,
-        vuln_descr=vuln_descr,
-        tag_interval=tag_interval,
-        version_interval=version_interval,
-        modified_files=modified_files,
-        code_tokens=code_tokens,
-        time_limit_before=time_limit_before,
-        time_limit_after=time_limit_after,
-        use_nvd=use_nvd,
-        nvd_rest_endpoint=nvd_rest_endpoint,
-        backend_address=backend,
-        git_cache=git_cache,
-        limit_candidates=max_candidates,
-        active_rules=["ALL"],
-    )
+    with ExecutionTimer(execution_statistics.sub_collection(name="core")):
+        results, advisory_record = prospector(
+            vulnerability_id=vulnerability_id,
+            repository_url=repository_url,
+            publication_date=publication_date,
+            vuln_descr=vuln_descr,
+            tag_interval=tag_interval,
+            version_interval=version_interval,
+            modified_files=modified_files,
+            code_tokens=code_tokens,time_limit_before=time_limit_before,
+            time_limit_after=time_limit_after,
+            use_nvd=use_nvd,
+            nvd_rest_endpoint=nvd_rest_endpoint,
+            backend_address=backend,
+            git_cache=git_cache,
+            limit_candidates=max_candidates,
+            active_rules=["ALL"],
+        )
 
-    if report == "console":
-        report_on_console(results, advisory_record, log.config.level < logging.INFO)
-    elif report == "json":
-        report_as_json(results, advisory_record)
-    elif report == "html":
-        report_as_html(results, advisory_record)
-    else:
-        _logger.warning("Invalid report type specified, using 'console'")
-        report_on_console(results, advisory_record, log.config.level < logging.INFO)
+    with ExecutionTimer(execution_statistics.sub_collection(name="reporting")):
+        if report == "console":
+            report_on_console(results, advisory_record, log.config.level < logging.INFO)
+        elif report == "json":
+            report_as_json(results, advisory_record)
+        elif report == "html":
+            report_as_html(results, advisory_record)
+        else:
+            _logger.warning("Invalid report type specified, using 'console'")
+            report_on_console(results, advisory_record, log.config.level < logging.INFO)
+
+    _logger.info("\n" + execution_statistics.generate_console_tree())
+    print(f"WTF = {_logger.level}")
     return True
 
 

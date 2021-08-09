@@ -39,14 +39,13 @@ def measure_execution_time(
     def _measure(function):
         nonlocal name
         if name is None:
-            name = tuple(function.__module__.split(".") + function.__name__.split("."))
+            name = tuple(
+                function.__module__.split(".") + function.__qualname__.split(".")
+            )
 
         def _wrapper(*args, **kwargs):
-            timer = Timer()
-            timer.start()
-            result = function(*args, **kwargs)
-            elapsed = timer.stop()
-            collection.collect(name, elapsed)
+            with ExecutionTimer(collection.sub_collection(name)):
+                result = function(*args, **kwargs)
             return result
 
         return _wrapper
@@ -67,8 +66,9 @@ class ExecutionTimer(SubCollectionWrapper):
     def stop(self):
         self.collection.collect(self.name, self.timer.stop())
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> ExecutionTimer:
         self.start()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
