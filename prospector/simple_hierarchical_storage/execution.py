@@ -39,13 +39,14 @@ def measure_execution_time(
     def _measure(function):
         nonlocal name
         if name is None:
-            name = tuple(
-                function.__module__.split(".") + function.__qualname__.split(".")
-            )
+            name = tuple(function.__module__.split(".") + function.__name__.split("."))
 
         def _wrapper(*args, **kwargs):
-            with ExecutionTimer(collection.sub_collection(name)):
-                result = function(*args, **kwargs)
+            timer = Timer()
+            timer.start()
+            result = function(*args, **kwargs)
+            elapsed = timer.stop()
+            collection.collect(name, elapsed)
             return result
 
         return _wrapper
@@ -64,11 +65,10 @@ class ExecutionTimer(SubCollectionWrapper):
         self.timer.start()
 
     def stop(self):
-        self.collection.collect(self.name, self.timer.stop(), unit="seconds")
+        self.collection.collect(self.name, self.timer.stop())
 
-    def __enter__(self) -> ExecutionTimer:
+    def __enter__(self) -> None:
         self.start()
-        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
@@ -95,8 +95,6 @@ class Counter(SubCollectionWrapper):
         else:
             ValueError(f"can not increment {name}")
 
-    def initialize(
-        self, *keys: Union[str, Tuple[str, ...]], value=0, unit: Optional[str] = None
-    ):
+    def initialize(self, *keys: Union[str, Tuple[str, ...]], value=0):
         for key in keys:
-            self.collection.collect(key, value, unit=unit)
+            self.collection.record(key, value)

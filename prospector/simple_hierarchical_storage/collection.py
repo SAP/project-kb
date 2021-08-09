@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from statistics import mean, median, stdev
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Type, Union
 
 from util.inspection import caller_name
 from util.type_safety import is_instance_of_either
@@ -34,44 +34,15 @@ class TransparentWrapper(SubCollectionWrapper):
             raise exc_val
 
 
-def _summarize_list(collection, unit: Optional[str] = None):
-    if unit is None:
-        return (
-            f"average = {mean(collection)}",
-            f"deviation = {stdev(collection)}",
-            f"median = {median(collection)}",
-            f"count = {len(collection)}",
-            f"sum = {sum(collection)}",
-        )
-    else:
-        return (
-            f"average = {mean(collection)} {unit}",
-            f"deviation = {stdev(collection)} {unit}",
-            f"median = {median(collection)} {unit}",
-            f"count = {len(collection)}",
-            f"sum = {sum(collection)} {unit}",
-        )
+def _summarize_list(collection):
+    return (
+        f"average = {mean(collection)}, deviation = {stdev(collection)}, median = {median(collection)}, "
+        f"count = {len(collection)}"
+    )
 
 
 class StatisticCollection(dict):
-    def __init__(self):
-        super().__init__()
-        self.units = {}
-
-    def drop_all(self):
-        for item in self.values():
-            if isinstance(item, StatisticCollection):
-                item.drop_all()
-        self.clear()
-        self.units.clear()
-
-    def record(
-        self,
-        name: Union[str, Tuple[str, ...]],
-        value,
-        unit: Optional[str] = None,
-        overwrite=False,
-    ):
+    def record(self, name: Union[str, Tuple[str, ...]], value, overwrite=False):
         if isinstance(name, str):
             if not overwrite and name in self:
                 raise ForbiddenDuplication(f"{name} already added")
@@ -83,11 +54,9 @@ class StatisticCollection(dict):
                 )
             else:
                 self[name] = value
-                if unit is not None:
-                    self.units[name] = unit
         elif isinstance(name, tuple):
             if len(name) == 1:
-                self.record(name[0], value, unit=unit)
+                self.record(name[0], value)
             elif len(name) > 1:
                 current_name = name[0]
                 if current_name not in self:
@@ -98,28 +67,22 @@ class StatisticCollection(dict):
                         f"{name} already added as a single value"
                     )
                 else:
-                    current_collection.record(name[1:], value, unit=unit)
+                    current_collection.record(name[1:], value)
         else:
             raise ValueError("only string or tuple keys are enabled")
 
     def sub_collection(
         self,
+        sub_collection_type: Type[SubCollectionWrapper] = TransparentWrapper,
         name: Optional[Union[str, Tuple[str, ...]]] = None,
-    ) -> StatisticCollection:
+    ) -> SubCollectionWrapper:
         if name is None:
             name = caller_name()
 
         if name not in self:
             self.record(name, StatisticCollection())
 
-        return self[name]
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_val:
-            raise exc_val
+        return sub_collection_type(self[name])
 
     def __getitem__(self, key: Union[str, Tuple[str, ...]]):
         if isinstance(key, str):
@@ -157,21 +120,12 @@ class StatisticCollection(dict):
         else:
             raise KeyError("only string ot tuple keys allowed")
 
-    def collect(
-        self, name: Union[str, Tuple[str, ...]], value, unit: Optional[str] = None
-    ):
+    def collect(self, name: Union[str, Tuple[str, ...]], value):
         if name not in self:
-            self.record(name, [], unit=unit)
+            self.record(name, [])
 
         if isinstance(self[name], list):
             self[name].append(value)
-            if unit is not None:
-                if name in self.units and self.units[name] != unit:
-                    raise ValueError(
-                        f"{self.units[name]} is not compatible with {unit}"
-                    )
-                else:
-                    self.units[unit] = unit
         else:
             raise KeyError(f"can not collect into {name}, because it is not a list")
 
@@ -190,71 +144,29 @@ class StatisticCollection(dict):
     def get_descants(self, leaf_only=False, ascents=()):
         """Return the unsorted collection of all its sub collections and their sub collections and so forth."""
         for child_key, child in self.items():
-            unit = self.units.get(child_key, None)
             if isinstance(child, StatisticCollection):
                 if not leaf_only:
-                    yield ascents + (child_key,), child, unit
+                    yield ascents + (child_key,), child
                 yield from child.get_descants(ascents=ascents + (child_key,))
             else:
-                yield ascents + (child_key,), child, unit
+                yield ascents + (child_key,), child
 
     def generate_console_tree(self) -> str:
         descants = sorted(
             list(self.get_descants()), key=lambda e: LEVEL_DELIMITER.join(e[0])
         )
         lines = ["+--+[root]"]
-        for key, descant, unit in descants:
+        for key, descant in descants:
             indent = "|  " * len(key)
             if isinstance(descant, StatisticCollection):
                 lines.append(f"{indent}+--+[{LEVEL_DELIMITER.join(key)}]")
             else:
-                last_key = key[-1]
-                if (
-                    isinstance(descant, list)
-                    and len(descant) > 1
-                    and is_instance_of_either(descant, int, float)
+                if isinstance(descant, list) and is_instance_of_either(
+                    descant, int, float
                 ):
-                    formatted_node = f"+---[{last_key}]"
-                    lines.append(f"{indent}{formatted_node} is a list of numbers with")
-                    summary = _summarize_list(descant, unit=unit)
-                    for property in summary:
-                        lines.append(f"{indent}{' ' * len(formatted_node)} {property}")
-                else:
-                    if unit is not None:
-                        lines.append(f"{indent}+---[{last_key}] = {descant} {unit}")
-                    else:
-                        lines.append(f"{indent}+---[{last_key}] = {descant}")
-
-        return "\n".join(lines)
-
-    def as_html_ul(self) -> str:
-        ul = '<ul class="statistics-list">'
-        for key, child in self.items():
-            unit = self.units.get(key, None)
-            if isinstance(child, StatisticCollection):
-                ul += f'<li><i class="fas fa-sitemap"></i> <strong>{key}</strong> {child.as_html_ul()}</li>'
-            else:
-                if "time" in key:
-                    icon = '<i class="fas fa-hourglass-half"></i>'
-                else:
-                    icon = '<i class="fas fa-info-circle"></i>'
-                if (
-                    isinstance(child, list)
-                    and len(child) > 1
-                    and is_instance_of_either(child, int, float)
-                ):
-                    summary = _summarize_list(child, unit=unit)
-                    ul += (
-                        f"<li>{icon} <strong>{key}</strong>"
-                        f' is a list of numbers<ul class="statistics-list property-list">'
+                    lines.append(
+                        f"{indent}+---[{key[-1]}] is a list of numbers with {_summarize_list(descant)}"
                     )
-                    for property in summary:
-                        ul += f'<li class="property">{property}</li>'
-                    ul += "</ul></li>"
                 else:
-                    if unit is None:
-                        ul += f"<li>{icon} <strong>{key}</strong> = {child}</li>"
-                    else:
-                        ul += f"<li>{icon} <strong>{key}</strong> = {child} {unit}</li>"
-        ul += "</ul>"
-        return ul
+                    lines.append(f"{indent}+---[{key[-1]}] = {descant}")
+        return "\n".join(lines)

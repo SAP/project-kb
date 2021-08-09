@@ -24,49 +24,16 @@ class TestMeasureTime:
         _dummy(2)
 
         assert (
-            len(
-                stats[
-                    (
-                        "simple_hierarchical_storage",
-                        "test_execution",
-                        "TestMeasureTime",
-                        "test_decorator",
-                        "<locals>",
-                        "_dummy",
-                        "execution time",
-                    )
-                ]
-            )
-            == 2
+            len(stats["simple_hierarchical_storage"]["test_execution"]["_dummy"]) == 2
         )
         assert (
             1
-            < stats[
-                (
-                    "simple_hierarchical_storage",
-                    "test_execution",
-                    "TestMeasureTime",
-                    "test_decorator",
-                    "<locals>",
-                    "_dummy",
-                    "execution time",
-                )
-            ][0]
+            < stats["simple_hierarchical_storage"]["test_execution"]["_dummy"][0]
             < 1.1
         )
         assert (
             2
-            < stats[
-                (
-                    "simple_hierarchical_storage",
-                    "test_execution",
-                    "TestMeasureTime",
-                    "test_decorator",
-                    "<locals>",
-                    "_dummy",
-                    "execution time",
-                )
-            ][1]
+            < stats["simple_hierarchical_storage"]["test_execution"]["_dummy"][1]
             < 2.1
         )
 
@@ -87,7 +54,7 @@ class TestMeasureTime:
     def test_with():
         stats = StatisticCollection()
         for i in range(10):
-            with ExecutionTimer(stats.sub_collection()):
+            with stats.sub_collection(ExecutionTimer):
                 time.sleep(i / 10)
 
         assert (
@@ -143,7 +110,7 @@ class TestCounter:
     @staticmethod
     def test_with():
         stats = StatisticCollection()
-        with Counter(stats.sub_collection()) as counter:
+        with stats.sub_collection(Counter) as counter:
             counter.collection.record("apple", 12)
             counter.collection.record("lemon", [1, 2, 3, 4])
 
