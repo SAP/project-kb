@@ -1,4 +1,4 @@
-from statistics.main import (
+from statistics.collection import (
     ForbiddenDuplication,
     StatisticCollection,
     TransparentWrapper,
@@ -125,5 +125,30 @@ def test_sub_collection():
     with stats.sub_collection() as sub_collection:
         sub_collection.record("apple", 42)
 
-    assert stats["statistics"]["test_main"]["test_sub_collection"]["apple"] == 42
-    assert stats[("statistics", "test_main", "test_sub_collection", "apple")] == 42
+    assert stats["statistics"]["test_collection"]["test_sub_collection"]["apple"] == 42
+    assert (
+        stats[("statistics", "test_collection", "test_sub_collection", "apple")] == 42
+    )
+
+
+def test_descant():
+    stats = StatisticCollection()
+    stats.record("apple", 12)
+    stats.record("grape", 84)
+    stats.record(("lemon", "apple"), 42)
+    stats.record(("lemon", "grape"), 128)
+
+    descants = stats.get_descants()
+    descants_list = list(descants)
+
+    assert (("apple",), 12) in descants_list
+    assert (("grape",), 84) in descants_list
+    assert (("lemon",), stats["lemon"]) in descants_list
+    assert (("lemon", "apple"), 42) in descants_list
+    assert (
+        (
+            "lemon",
+            "grape",
+        ),
+        128,
+    ) in descants_list
