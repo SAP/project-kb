@@ -148,22 +148,23 @@ def test_descant():
     stats = StatisticCollection()
     stats.record("apple", 12)
     stats.record("grape", 84)
-    stats.record(("lemon", "apple"), 42)
+    stats.record(("lemon", "apple"), 42, unit="globe")
     stats.record(("lemon", "grape"), 128)
 
     descants = stats.get_descants()
     descants_list = list(descants)
 
-    assert (("apple",), 12) in descants_list
-    assert (("grape",), 84) in descants_list
-    assert (("lemon",), stats["lemon"]) in descants_list
-    assert (("lemon", "apple"), 42) in descants_list
+    assert (("apple",), 12, None) in descants_list
+    assert (("grape",), 84, None) in descants_list
+    assert (("lemon",), stats["lemon"], None) in descants_list
+    assert (("lemon", "apple"), 42, "globe") in descants_list
     assert (
         (
             "lemon",
             "grape",
         ),
         128,
+        None,
     ) in descants_list
 
 
@@ -171,8 +172,8 @@ def test_console_tree():
     stats = StatisticCollection()
     stats.record("apple", 12)
     stats.record("grape", 84)
-    stats.record(("lemon", "apple"), 42)
-    stats.record(("lemon", "grape"), 128)
+    stats.record(("lemon", "apple"), 42, unit="cochren")
+    stats.record(("lemon", "grape"), 128, unit="pezeta")
     stats.collect(("lemon", "zest"), 1)
     stats.collect(("lemon", "zest"), 3)
     stats.collect(("lemon", "zest"), 12)
@@ -190,13 +191,72 @@ def test_console_tree():
         "|  +---[apple] = 12\n"
         "|  +---[grape] = 84\n"
         "|  +--+[lemon]\n"
-        "|  |  +---[apple] = 42\n"
-        "|  |  +---[grape] = 128\n"
-        "|  |  +---[zest] is a list of numbers with average = 18, "
-        "deviation = 25.78113005022601, median = 7.5, count = 4\n"
+        "|  |  +---[apple] = 42 cochren\n"
+        "|  |  +---[grape] = 128 pezeta\n"
+        "|  |  +---[zest] is a list of numbers with\n"
+        "|  |             average = 18\n"
+        "|  |             deviation = 25.78113005022601\n"
+        "|  |             median = 7.5\n"
+        "|  |             count = 4\n"
+        "|  |             sum = 72\n"
         "|  +--+[melon]\n"
-        "|  |  +---[marry] is a list of numbers with average = 34.06, "
-        "deviation = 0.08485281374238389, median = 34.06, count = 2\n"
-        "|  |  +---[sweet] is a list of numbers with average = 14.2, "
-        "deviation = 14.936262361559312, median = 14.65, count = 4"
+        "|  |  +---[marry] is a list of numbers with\n"
+        "|  |              average = 34.06\n"
+        "|  |              deviation = 0.08485281374238389\n"
+        "|  |              median = 34.06\n"
+        "|  |              count = 2\n"
+        "|  |              sum = 68.12\n"
+        "|  |  +---[sweet] is a list of numbers with\n"
+        "|  |              average = 14.2\n"
+        "|  |              deviation = 14.936262361559312\n"
+        "|  |              median = 14.65\n"
+        "|  |              count = 4\n"
+        "|  |              sum = 56.800000000000004"
+    )
+
+
+def test_html_ul():
+    stats = StatisticCollection()
+    stats.record("apple", 12)
+    stats.record("grape", 84)
+    stats.record(("lemon", "apple"), 42, unit="cochren")
+    stats.record(("lemon", "grape"), 128, unit="pezeta")
+    stats.collect(("lemon", "zest"), 1, unit="pinch")
+    stats.collect(("lemon", "zest"), 3)
+    stats.collect(("lemon", "zest"), 12)
+    stats.collect(("lemon", "zest"), 56)
+    stats.collect(("melon", "marry"), 34)
+    stats.collect(("melon", "marry"), 34.12)
+    stats.collect(("melon", "sweet"), 27)
+    stats.collect(("melon", "sweet"), 27.23)
+    stats.collect(("melon", "sweet"), 0.27)
+    stats.collect(("melon", "sweet"), 2.3)
+
+    with open("demo_ul.html", "w", encoding="utf8") as demo_file:
+        ul = stats.as_html_ul()
+        demo_file.write(ul)
+    assert ul == (
+        '<ul class="statistics-list"><li><i class="fas fa-info-circle"></i> '
+        '<strong>apple</strong> = 12</li><li><i class="fas fa-info-circle"></i> '
+        '<strong>grape</strong> = 84</li><li><i class="fas fa-sitemap"></i> '
+        '<strong>lemon</strong> <ul class="statistics-list"><li><i class="fas '
+        'fa-info-circle"></i> <strong>apple</strong> = 42 cochren</li><li><i '
+        'class="fas fa-info-circle"></i> <strong>grape</strong> = 128 '
+        'pezeta</li><li><i class="fas fa-info-circle"></i> <strong>zest</strong> is a '
+        'list of numbers<ul class="statistics-list property-list"><li '
+        'class="property">average = 18 pinch</li><li class="property">deviation = '
+        '25.78113005022601 pinch</li><li class="property">median = 7.5 pinch</li><li '
+        'class="property">count = 4</li><li class="property">sum = 72 '
+        'pinch</li></ul></li></ul></li><li><i class="fas fa-sitemap"></i> '
+        '<strong>melon</strong> <ul class="statistics-list"><li><i class="fas '
+        'fa-info-circle"></i> <strong>marry</strong> is a list of numbers<ul '
+        'class="statistics-list property-list"><li class="property">average = '
+        '34.06</li><li class="property">deviation = 0.08485281374238389</li><li '
+        'class="property">median = 34.06</li><li class="property">count = 2</li><li '
+        'class="property">sum = 68.12</li></ul></li><li><i class="fas '
+        'fa-info-circle"></i> <strong>sweet</strong> is a list of numbers<ul '
+        'class="statistics-list property-list"><li class="property">average = '
+        '14.2</li><li class="property">deviation = 14.936262361559312</li><li '
+        'class="property">median = 14.65</li><li class="property">count = 4</li><li '
+        'class="property">sum = 56.800000000000004</li></ul></li></ul></li></ul>'
     )
