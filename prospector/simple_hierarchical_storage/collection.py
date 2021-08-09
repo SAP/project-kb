@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from statistics import mean, median, stdev
 from typing import Optional, Tuple, Type, Union
 
 from util.inspection import caller_name
@@ -31,6 +32,13 @@ class TransparentWrapper(SubCollectionWrapper):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val:
             raise exc_val
+
+
+def _summarize_list(collection):
+    return (
+        f"average = {mean(collection)}, deviation = {stdev(collection)}, median = {median(collection)}, "
+        f"count = {len(collection)}"
+    )
 
 
 class StatisticCollection(dict):
@@ -147,16 +155,18 @@ class StatisticCollection(dict):
         descants = sorted(
             list(self.get_descants()), key=lambda e: LEVEL_DELIMITER.join(e[0])
         )
-        lines = ["+-- (root)"]
+        lines = ["+--+[root]"]
         for key, descant in descants:
             indent = "|  " * len(key)
             if isinstance(descant, StatisticCollection):
-                lines.append(f"{indent}+-- {LEVEL_DELIMITER.join(key)}")
+                lines.append(f"{indent}+--+[{LEVEL_DELIMITER.join(key)}]")
             else:
                 if isinstance(descant, list) and is_instance_of_either(
                     descant, int, float
                 ):
-                    lines.append(f"{indent}+-- {key[-1]} = NUM LIST")
+                    lines.append(
+                        f"{indent}+---[{key[-1]}] is a list of numbers with {_summarize_list(descant)}"
+                    )
                 else:
-                    lines.append(f"{indent}+-- {key[-1]} = {descant}")
+                    lines.append(f"{indent}+---[{key[-1]}] = {descant}")
         return "\n".join(lines)
