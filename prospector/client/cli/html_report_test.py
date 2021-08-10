@@ -22,6 +22,26 @@ from util.sample_data_generation import (
 )
 
 
+def sample_statistics():
+    stats = StatisticCollection()
+    stats.record("apple time", 12)
+    stats.record("grape", 84)
+    stats.record(("lemon", "space time"), 42, unit="cochren")
+    stats.record(("lemon", "grape"), 128, unit="pezeta")
+    stats.collect(("lemon", "zest"), 1, unit="pinch")
+    stats.collect(("lemon", "zest"), 3)
+    stats.collect(("lemon", "zest"), 12)
+    stats.collect(("lemon", "zest"), 56)
+    stats.collect(("melon", "marry"), 34)
+    stats.collect(("melon", "marry"), 34.12)
+    stats.collect(("melon", "sweet"), 27)
+    stats.collect(("melon", "sweet"), 27.23)
+    stats.collect(("melon", "sweet"), 0.27)
+    stats.collect(("melon", "sweet"), 2.3)
+
+    return stats
+
+
 def test_report_generation():
     candidates = []
     for _ in range(100):
@@ -71,5 +91,7 @@ def test_report_generation():
     filename = "test_report.html"
     if os.path.isfile(filename):
         os.remove(filename)
-    generated_report = report_as_html(candidates, advisory, filename)
+    generated_report = report_as_html(
+        candidates, advisory, filename, statistics=sample_statistics()
+    )
     assert os.path.isfile(generated_report)
