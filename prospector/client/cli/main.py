@@ -274,7 +274,6 @@ def main(argv):  # noqa: C901
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
 
     _logger.info("\n" + execution_statistics.generate_console_tree())
-    print(f"WTF = {_logger.level}")
     return True
 
 
