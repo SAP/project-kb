@@ -16,6 +16,10 @@ import log.util
 
 # from pprint import pprint
 # import pickledb
+from simple_hierarchical_storage.execution import (
+    execution_statistics,
+    measure_execution_time,
+)
 
 _logger = log.util.init_local_logger()
 
@@ -203,6 +207,7 @@ class Git:
             shutil.rmtree(self._path)
             raise ex
 
+    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commits(
         self,
         ancestors_of=None,

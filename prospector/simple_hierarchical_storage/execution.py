@@ -99,4 +99,7 @@ class Counter(SubCollectionWrapper):
         self, *keys: Union[str, Tuple[str, ...]], value=0, unit: Optional[str] = None
     ):
         for key in keys:
-            self.collection.collect(key, value, unit=unit)
+            if key in self.collection:
+                self.collection.collect(key, value, unit=unit)
+            else:
+                self.collection.record(key, value, unit=unit)

@@ -6,6 +6,8 @@ import requests
 from tqdm import tqdm
 
 import log
+from commit_processor.feature_extractor import extract_features
+from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from filter_rank.filter import filter_commits
@@ -23,6 +25,11 @@ from simple_hierarchical_storage.execution import (
 )
 
 # from util.profile import profile
+from simple_hierarchical_storage.execution import (
+    Counter,
+    ExecutionTimer,
+    execution_statistics,
+)
 
 _logger = init_local_logger()
 
@@ -33,6 +40,7 @@ TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 MAX_CANDIDATES = 1000
 
 core_statistics = execution_statistics.sub_collection("core")
+
 
 
 # @profile
