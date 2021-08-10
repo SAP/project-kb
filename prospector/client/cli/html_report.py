@@ -6,6 +6,7 @@ import jinja2
 import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit_features import CommitWithFeatures
+from simple_hierarchical_storage.execution import execution_statistics
 
 _logger = log.util.init_local_logger()
 
@@ -14,6 +15,7 @@ def report_as_html(
     results: List[CommitWithFeatures],
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.html",
+    statistics=None,
 ):
     annotations_count = {}
     commit_with_feature: CommitWithFeatures
@@ -32,6 +34,9 @@ def report_as_html(
             candidates=results,
             present_annotations=annotations_count,
             advisory_record=advisory_record,
+            execution_statistics=(
+                execution_statistics if statistics is None else statistics
+            ).as_html_ul(),
         ):
             html_file.write(content)
     return filename
