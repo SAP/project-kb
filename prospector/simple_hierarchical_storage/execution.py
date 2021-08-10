@@ -64,7 +64,7 @@ class ExecutionTimer(SubCollectionWrapper):
         self.timer.start()
 
     def stop(self):
-        self.collection.collect(self.name, self.timer.stop())
+        self.collection.collect(self.name, self.timer.stop(), unit="seconds")
 
     def __enter__(self) -> ExecutionTimer:
         self.start()

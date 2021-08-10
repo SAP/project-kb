@@ -148,22 +148,23 @@ def test_descant():
     stats = StatisticCollection()
     stats.record("apple", 12)
     stats.record("grape", 84)
-    stats.record(("lemon", "apple"), 42)
+    stats.record(("lemon", "apple"), 42, unit="globe")
     stats.record(("lemon", "grape"), 128)
 
     descants = stats.get_descants()
     descants_list = list(descants)
 
-    assert (("apple",), 12) in descants_list
-    assert (("grape",), 84) in descants_list
-    assert (("lemon",), stats["lemon"]) in descants_list
-    assert (("lemon", "apple"), 42) in descants_list
+    assert (("apple",), 12, None) in descants_list
+    assert (("grape",), 84, None) in descants_list
+    assert (("lemon",), stats["lemon"], None) in descants_list
+    assert (("lemon", "apple"), 42, "globe") in descants_list
     assert (
         (
             "lemon",
             "grape",
         ),
         128,
+        None,
     ) in descants_list
 
 
@@ -171,8 +172,8 @@ def test_console_tree():
     stats = StatisticCollection()
     stats.record("apple", 12)
     stats.record("grape", 84)
-    stats.record(("lemon", "apple"), 42)
-    stats.record(("lemon", "grape"), 128)
+    stats.record(("lemon", "apple"), 42, unit="cochren")
+    stats.record(("lemon", "grape"), 128, unit="pezeta")
     stats.collect(("lemon", "zest"), 1)
     stats.collect(("lemon", "zest"), 3)
     stats.collect(("lemon", "zest"), 12)
@@ -190,13 +191,25 @@ def test_console_tree():
         "|  +---[apple] = 12\n"
         "|  +---[grape] = 84\n"
         "|  +--+[lemon]\n"
-        "|  |  +---[apple] = 42\n"
-        "|  |  +---[grape] = 128\n"
-        "|  |  +---[zest] is a list of numbers with average = 18, "
-        "deviation = 25.78113005022601, median = 7.5, count = 4\n"
+        "|  |  +---[apple] = 42 cochren\n"
+        "|  |  +---[grape] = 128 pezeta\n"
+        "|  |  +---[zest] is a list of numbers with\n"
+        "|  |             average = 18\n"
+        "|  |             deviation = 25.78113005022601\n"
+        "|  |             median = 7.5\n"
+        "|  |             count = 4\n"
+        "|  |             sum = 72\n"
         "|  +--+[melon]\n"
-        "|  |  +---[marry] is a list of numbers with average = 34.06, "
-        "deviation = 0.08485281374238389, median = 34.06, count = 2\n"
-        "|  |  +---[sweet] is a list of numbers with average = 14.2, "
-        "deviation = 14.936262361559312, median = 14.65, count = 4"
+        "|  |  +---[marry] is a list of numbers with\n"
+        "|  |              average = 34.06\n"
+        "|  |              deviation = 0.08485281374238389\n"
+        "|  |              median = 34.06\n"
+        "|  |              count = 2\n"
+        "|  |              sum = 68.12\n"
+        "|  |  +---[sweet] is a list of numbers with\n"
+        "|  |              average = 14.2\n"
+        "|  |              deviation = 14.936262361559312\n"
+        "|  |              median = 14.65\n"
+        "|  |              count = 4\n"
+        "|  |              sum = 56.800000000000004"
     )
