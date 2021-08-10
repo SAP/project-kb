@@ -6,6 +6,7 @@ from client.cli.html_report import report_as_html
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
+from simple_hierarchical_storage.collection import StatisticCollection
 from util.sample_data_generation import (
     random_bool,
     random_commit_hash,
