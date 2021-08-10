@@ -221,26 +221,33 @@ class StatisticCollection(dict):
         return "\n".join(lines)
 
     def as_html_ul(self) -> str:
-        ul = "<ul>"
+        ul = '<ul class="statistics-list">'
         for key, child in self.items():
             unit = self.units.get(key, None)
             if isinstance(child, StatisticCollection):
-                ul += f"<li>{key} {child.as_html_ul()}</li>"
+                ul += f'<li><i class="fas fa-sitemap"></i> <strong>{key}</strong> {child.as_html_ul()}</li>'
             else:
+                if "time" in key:
+                    icon = '<i class="fas fa-hourglass-half"></i>'
+                else:
+                    icon = '<i class="fas fa-info-circle"></i>'
                 if (
                     isinstance(child, list)
                     and len(child) > 1
                     and is_instance_of_either(child, int, float)
                 ):
                     summary = _summarize_list(child, unit=unit)
-                    ul += f"<li>{key} is a list of numbers<ul>"
+                    ul += (
+                        f"<li>{icon} <strong>{key}</strong>"
+                        f' is a list of numbers<ul class="statistics-list property-list">'
+                    )
                     for property in summary:
-                        ul += f"<li>{property}</li>"
+                        ul += f'<li class="property">{property}</li>'
                     ul += "</ul></li>"
                 else:
                     if unit is None:
-                        ul += f"<li>{key} = {child}</li>"
+                        ul += f"<li>{icon} <strong>{key}</strong> = {child}</li>"
                     else:
-                        ul += f"<li>{key} = {child} {unit}</li>"
+                        ul += f"<li>{icon} <strong>{key}</strong> = {child} {unit}</li>"
         ul += "</ul>"
         return ul
