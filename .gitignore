@@ -49,3 +49,4 @@ prospector/requests-cache.sqlite
 prospector/prospector-report.html
 prospector/test_report.html
 prospector/.idea/*
+prospector/demo_ul.html
