@@ -219,3 +219,28 @@ class StatisticCollection(dict):
                         lines.append(f"{indent}+---[{last_key}] = {descant}")
 
         return "\n".join(lines)
+
+    def as_html_ul(self) -> str:
+        ul = "<ul>"
+        for key, child in self.items():
+            unit = self.units.get(key, None)
+            if isinstance(child, StatisticCollection):
+                ul += f"<li>{key} {child.as_html_ul()}</li>"
+            else:
+                if (
+                    isinstance(child, list)
+                    and len(child) > 1
+                    and is_instance_of_either(child, int, float)
+                ):
+                    summary = _summarize_list(child, unit=unit)
+                    ul += f"<li>{key} is a list of numbers<ul>"
+                    for property in summary:
+                        ul += f"<li>{property}</li>"
+                    ul += "</ul></li>"
+                else:
+                    if unit is None:
+                        ul += f"<li>{key} = {child}</li>"
+                    else:
+                        ul += f"<li>{key} = {child} {unit}</li>"
+        ul += "</ul>"
+        return ul

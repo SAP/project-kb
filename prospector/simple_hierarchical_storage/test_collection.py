@@ -213,3 +213,36 @@ def test_console_tree():
         "|  |              count = 4\n"
         "|  |              sum = 56.800000000000004"
     )
+
+
+def test_html_ul():
+    stats = StatisticCollection()
+    stats.record("apple", 12)
+    stats.record("grape", 84)
+    stats.record(("lemon", "apple"), 42, unit="cochren")
+    stats.record(("lemon", "grape"), 128, unit="pezeta")
+    stats.collect(("lemon", "zest"), 1, unit="pinch")
+    stats.collect(("lemon", "zest"), 3)
+    stats.collect(("lemon", "zest"), 12)
+    stats.collect(("lemon", "zest"), 56)
+    stats.collect(("melon", "marry"), 34)
+    stats.collect(("melon", "marry"), 34.12)
+    stats.collect(("melon", "sweet"), 27)
+    stats.collect(("melon", "sweet"), 27.23)
+    stats.collect(("melon", "sweet"), 0.27)
+    stats.collect(("melon", "sweet"), 2.3)
+
+    with open("demo_ul.html", "w", encoding="utf8") as demo_file:
+        ul = stats.as_html_ul()
+        demo_file.write(ul)
+    assert (
+        ul
+        == "<ul><li>apple = 12</li><li>grape = 84</li><li>lemon <ul><li>apple = 42 cochren</li><li>grape = 128 "
+        "pezeta</li><li>zest is a list of numbers<ul><li>average = 18 pinch</li><li>deviation = 25.78113005022601 "
+        "pinch</li><li>median = 7.5 pinch</li><li>count = 4</li><li>sum = 72 "
+        "pinch</li></ul></li></ul></li><li>melon <ul><li>marry is a list of numbers<ul><li>average = "
+        "34.06</li><li>deviation = 0.08485281374238389</li><li>median = 34.06</li><li>count = 2</li><li>sum = "
+        "68.12</li></ul></li><li>sweet is a list of numbers<ul><li>average = 14.2</li><li>deviation = "
+        "14.936262361559312</li><li>median = 14.65</li><li>count = 4</li><li>sum = "
+        "56.800000000000004</li></ul></li></ul></li></ul>"
+    )
