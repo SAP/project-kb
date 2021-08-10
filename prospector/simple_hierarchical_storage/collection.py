@@ -58,6 +58,13 @@ class StatisticCollection(dict):
         super().__init__()
         self.units = {}
 
+    def drop_all(self):
+        for item in self.values():
+            if isinstance(item, StatisticCollection):
+                item.drop_all()
+        self.clear()
+        self.units.clear()
+
     def record(
         self,
         name: Union[str, Tuple[str, ...]],

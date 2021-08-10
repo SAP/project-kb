@@ -2,6 +2,7 @@ import pytest
 
 from api import DB_CONNECT_STRING
 from commitdb.postgres import PostgresCommitDB
+from simple_hierarchical_storage.execution import execution_statistics
 
 from .main import main
 
@@ -35,6 +36,7 @@ def test_main_runonce(setupdb):
         "https://github.com/cloudfoundry/uaa",
         "--tag-interval=v74.0.0:v74.1.0",
     ]
+    execution_statistics.drop_all()
     main(args)
     db.reset()
 
@@ -49,7 +51,9 @@ def test_main_runtwice(setupdb):
         "https://github.com/cloudfoundry/uaa",
         "--tag-interval=v74.0.0:v74.1.0",
     ]
+    execution_statistics.drop_all()
     main(args)
+    execution_statistics.drop_all()
     main(args)
     db.reset()
 

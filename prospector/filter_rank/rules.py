@@ -1,5 +1,6 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit_features import CommitWithFeatures
+from simple_hierarchical_storage.execution import Counter, execution_statistics
 
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
@@ -18,6 +19,8 @@ QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
 IMPORTANT: you are not supposed to change the content of function apply_rules, except
 adding entries to its inner RULES dictionary.
 """
+
+rule_statistics = execution_statistics.sub_collection(("core", "rule"))
 
 
 def apply_rules(
@@ -54,12 +57,15 @@ def apply_rules(
 
     # print("Enabled rules: " + str(rules))
 
-    for candidate in candidates:
-        for rule_id in rules:
-            apply_rule_func = rules[rule_id]
-            rule_explanation = apply_rule_func(candidate, advisory_record)
-            if rule_explanation:
-                candidate.annotations[rule_id] = rule_explanation
+    with Counter(rule_statistics.sub_collection("applying rules")) as counter:
+        for candidate in candidates:
+            counter.collection.collect("fitting rules", 0, unit="rule/candidate")
+            for rule_id in rules:
+                apply_rule_func = rules[rule_id]
+                rule_explanation = apply_rule_func(candidate, advisory_record)
+                if rule_explanation:
+                    candidate.annotations[rule_id] = rule_explanation
+                    counter.increment("fitting rules")
 
     return candidates
 
