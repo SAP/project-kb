@@ -95,6 +95,11 @@ class Counter(SubCollectionWrapper):
         else:
             ValueError(f"can not increment {name}")
 
-    def initialize(self, *keys: Union[str, Tuple[str, ...]], value=0):
+    def initialize(
+        self, *keys: Union[str, Tuple[str, ...]], value=0, unit: Optional[str] = None
+    ):
         for key in keys:
-            self.collection.record(key, value)
+            if key in self.collection:
+                self.collection.collect(key, value, unit=unit)
+            else:
+                self.collection.record(key, value, unit=unit)
