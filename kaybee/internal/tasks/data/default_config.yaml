@@ -260,7 +260,7 @@ export:
         if [ -d $DIR ];
         then
             echo "Folder $DIR exists, skipping git clone"
-            git fetch
+            git fetch --all
         else
             echo "Cloning $1 to folder $DIR"
             git clone $1 $DIR
