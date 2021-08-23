@@ -261,6 +261,7 @@ export:
         then
             echo "Folder $DIR exists, skipping git clone"
             git fetch --all
+            git fetch
         else
             echo "Cloning $1 to folder $DIR"
             git clone $1 $DIR
