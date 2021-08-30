@@ -2,11 +2,7 @@ import pytest
 
 from git.git import Git
 
-from .preprocessor import (
-    extract_cve_references,
-    extract_jira_references,
-    preprocess_commit,
-)
+from .preprocessor import preprocess_commit
 
 
 @pytest.fixture
@@ -45,16 +41,3 @@ def test_proprocess_commit_set(repository):
         preprocessed_commits.append(preprocess_commit(commit))
 
     assert len(preprocessed_commits) == len(commit_set)
-
-
-def test_extract_cve_identifiers():
-    result = extract_cve_references(
-        "bla bla bla CVE-1234-1234567 and CVE-1234-1234, fsafasf"
-    )
-    assert result == ["CVE-1234-1234567", "CVE-1234-1234"]
-
-
-def test_extract_jira_references():
-    commit_msg = "CXF-8535 - Checkstyle fix (cherry picked from commit bbcd8f2eb059848380fbe5af638fe94e3a9a5e1d)"
-
-    assert extract_jira_references(commit_msg) == ["CXF-8535"]
