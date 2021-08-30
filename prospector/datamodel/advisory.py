@@ -10,7 +10,7 @@ import requests
 from pydantic import BaseModel, Field
 
 import log.util
-from commit_processor.constants import RELEVANT_EXTENSIONS
+from processing.constants import RELEVANT_EXTENSIONS
 
 _logger = log.util.init_local_logger()
 
@@ -52,6 +52,7 @@ class AdvisoryRecord(BaseModel):
         self.affected_products = extract_products(self.description)
         self.paths = extract_path_tokens(self.description)
         self.code_tokens = extract_camelcase_tokens(self.description)
+        # self.non_nl_terms =
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """

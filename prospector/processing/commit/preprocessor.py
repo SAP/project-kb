@@ -3,8 +3,6 @@ import re
 from datamodel.commit import Commit as DatamodelCommit
 from git.git import Commit as GitCommit
 
-from .constants import RELEVANT_EXTENSIONS
-
 
 def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     """
@@ -85,75 +83,3 @@ def extract_cve_references(text: str) -> "list[str]":
     Extract CVE identifiers
     """
     return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
-
-
-#
-# NOTE: the following might need to be moved closer to datamodel.advisory
-#
-def is_path(token: str) -> bool:
-    """
-    Checks whether the token is a path
-    """
-    return "/" in token.rstrip(".,;:?!\"'") or (
-        "." in token.rstrip(".,;:?!\"'")
-        and token.rstrip(".,;:?!\"'").split(".")[-1] in RELEVANT_EXTENSIONS
-    )
-
-
-def extract_code_tokens(description: str) -> "list[str]":
-    """
-    Extract code tokens from the description: tokens that are either dot.case,
-    snake_case or CamelCase and no path (paths are used in a different feature)
-    """
-    tokens = [
-        token.rstrip(".,;:?!\"'") for token in description.split(" ")
-    ]  # remove punctuation etc.
-    relevant_tokens = [
-        token
-        for token in tokens
-        if not is_path(token)
-        and (
-            dot_case_split(token) or snake_case_split(token) or camel_case_split(token)
-        )
-    ]
-    return relevant_tokens
-
-
-def camel_case_split(token: str) -> "list[str]":
-    """
-    Splits a CamelCase token into a list of tokens, including the original unsplit.
-
-    example: 'CamelCase' --> ['CamelCase', 'camel', 'case']
-    """
-    matches = re.finditer(
-        ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", token
-    )
-    result = [m.group(0).lower() for m in matches]
-    if len(result) == 1:
-        return []
-    return [token] + result
-
-
-def snake_case_split(token: str) -> "list[str]":
-    """
-    Splits a snake_case token into a list of tokens, including the original unsplit.
-
-    Example: 'snake_case' --> ['snake_case', 'snake', 'case']
-    """
-    result = token.split("_")
-    if len(result) == 1:
-        return []
-    return [token] + result
-
-
-def dot_case_split(token: str) -> "list[str]":
-    """
-    Splits a dot.case token into a list of tokens, including the original unsplit.
-
-    Example: 'dot.case' --> ['dot.case', 'dot', 'case']
-    """
-
-    result = token.split(".")
-    if len(result) == 1:
-        return []
-    return [token] + result
