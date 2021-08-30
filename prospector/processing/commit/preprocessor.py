@@ -1,10 +1,14 @@
-import re
-
 from datamodel.commit import Commit as DatamodelCommit
 from git.git import Commit as GitCommit
+from processing.natural_language_processing import (
+    extract_cve_references,
+    extract_ghissue_references,
+    extract_jira_references,
+)
 
 
 def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
+    # TODO need to recheck these docstring, it may contains some outdated info
     """
     This function is responsible of translating a (git)Commit
     into a preprocessed-Commit, that can be saved to the DB
@@ -57,29 +61,3 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     # result.preprocessed_message = ....
 
     return result
-
-
-# ------------------------------------------------------------------------------
-# helper functions
-# ------------------------------------------------------------------------------
-
-
-def extract_ghissue_references(text: str) -> "list[str]":
-    """
-    Extract identifiers that are (=look like) references to GH issues
-    """
-    return [result.group(0) for result in re.finditer(r"#\d+", text)]
-
-
-def extract_jira_references(text: str) -> "list[str]":
-    """
-    Extract identifiers that point to Jira tickets
-    """
-    return [result.group(0) for result in re.finditer(r"\w+-\d+", text)]
-
-
-def extract_cve_references(text: str) -> "list[str]":
-    """
-    Extract CVE identifiers
-    """
-    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]

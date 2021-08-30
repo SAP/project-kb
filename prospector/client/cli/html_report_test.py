@@ -185,7 +185,7 @@ def test_report_generation():
         versions=random_list_of_version(42, 4, 42),
         from_nvd=random_bool(),
         paths=random_list_of_path(4, 42),
-        code_tokens=random_list_of_strs(42),
+        code_tokens=tuple(random_list_of_strs(42)),
     )
 
     filename = "test_report.html"
