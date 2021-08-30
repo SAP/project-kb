@@ -8,8 +8,7 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
 from git.git import Git
-
-from .requests_filter import ALLOWED_SITES
+from processing.constants import ALLOWED_SITES
 
 _logger = log.util.init_local_logger()
 
