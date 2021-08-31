@@ -1,8 +1,10 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar
 
 from pydantic import BaseModel, Field
 
 from datamodel.commit import Commit
+
+PandasDataFrame = TypeVar("pandas.core.frame.DataFrame")
 
 
 class CommitWithFeatures(BaseModel):
@@ -14,6 +16,7 @@ class CommitWithFeatures(BaseModel):
     referred_to_by_pages_linked_from_advisories: List[str] = ()
     referred_to_by_nvd: List[str] = ()
     annotations: Dict[str, str] = Field(default_factory=dict)
+    similarities_with_changed_files: PandasDataFrame
 
     def __init__(self, **data: Any):
         super().__init__(**data)

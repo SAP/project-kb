@@ -97,7 +97,7 @@ class AdvisoryRecord(BaseModel):
             )
 
 
-# TODO remove is not necessary
+# would be used in the future
 @dataclass
 class Reference:
     """
