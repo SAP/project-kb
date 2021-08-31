@@ -1,14 +1,17 @@
+import pandas
 import pytest
 
 # from datamodel import advisory
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from git.git import Git
+from util.sample_data_generation import random_list_of_cve
 
 from .feature_extractor import (
     extract_changed_relevant_paths,
     extract_features,
     extract_other_CVE_in_message,
+    extract_path_similarities,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
     extract_referred_to_by_pages_linked_from_advisories,
@@ -308,3 +311,41 @@ def test_extract_referred_to_by_pages_linked_from_advisories_wrong_url(repositor
     assert not extract_referred_to_by_pages_linked_from_advisories(
         commit, advisory_record
     )
+
+
+def test_extract_path_similarities():
+    code_tokens = [
+        "TophBeifong_Zuko_IknikBlackstoneVarrick_AsamiSato",
+        "Bolin+Bumi+Ozai+Katara",
+        "Jinora.Appa.Unalaq.Zaheer",
+        'Iroh"Momo"Mako"Kya',
+        "Naga.LinBeifong",
+        "Sokka.Kya",
+        "Bumi=Momo=Naga=Iroh",
+        "Sokka_Unalaq",
+        "Sokka.Iroh.Pabu",
+        "LinBeifong=Zuko",
+        "TenzinBolinSokka",
+        "Korra-AsamiSato-Pabu-Iroh",
+        "Mako.Naga",
+        "Jinora=Bumi",
+        "BolinAppaKuvira",
+        "TophBeifongIroh",
+        "Amon+Zuko+Unalaq",
+    ]
+    paths = [
+        "Unalaq/Aang/Suyin Beifong",
+        "Tenzin/Asami Sato/Suyin Beifong/Tenzin/Bumi/Zaheer",
+        "Asami Sato/Tenzin/Tonraq/Katara/Tarrlok/Naga/Zuko",
+        "Amon/Asami Sato/Bumi/Kuvira/Toph Beifong/Bolin/Bumi",
+        "Momo",
+        "Kuvira/Bolin/Lin Beifong/Sokka/Mako/Korra/Toph Beifong/Unalaq",
+    ]
+    commit = Commit(changed_files=paths)
+    advisory = AdvisoryRecord(
+        vulnerability_id=random_list_of_cve(max_count=1, min_count=1)[0],
+        code_tokens=code_tokens,
+    )
+    similarities: pandas.DataFrame = extract_path_similarities(commit, advisory)
+    similarities.to_csv("similarities.csv")
+    raise NotImplementedError()

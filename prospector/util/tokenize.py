@@ -4,12 +4,16 @@ from typing import Tuple
 
 def split_by_non_word(*texts: str) -> Tuple[str, ...]:
     for text in texts:
-        yield from tuple(re.split(r"\W", text))
+        yield from [part for part in re.split(r"[\W_]", text) if part != ""]
 
 
 def split_by_upper_cases(*texts: str) -> Tuple[str, ...]:
     for text in texts:
-        yield from re.sub(r"([A-Z])", r" \1", text).split(sep=" ")
+        yield from [
+            part
+            for part in re.sub(r"([A-Z])", r" \1", text).split(sep=" ")
+            if part != ""
+        ]
 
 
 def lower_all(*texts: str) -> Tuple[str, ...]:
