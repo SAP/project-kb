@@ -169,7 +169,20 @@ def extract_referred_to_by_pages_linked_from_advisories(
 
 
 def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
-    similarities = pandas.DataFrame()
+    similarities = pandas.DataFrame(
+        columns=[
+            "changed file",
+            "code token",
+            "jaccard",
+            "sorensen-dice",
+            "otsuka-ochiai",
+            "levenshtein",
+            "damerau-levenshtein",
+            "length diff",
+            "inverted normalized levenshtein",
+            "inverted normalized damerau-levenshtein",
+        ]
+    )
     for changed_file_path in commit.changed_files:
         for code_token in advisory_record.code_tokens:
             parts_of_file_path = tokenize_non_nl_term(changed_file_path)
@@ -201,13 +214,11 @@ def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
             )
 
     levenshtein_max = similarities["levenshtein"].max()
-    similarities["normalized levenshtein"] = 1 - (
+    similarities["inverted normalized levenshtein"] = 1 - (
         similarities["levenshtein"] / levenshtein_max
     )
     damerau_levenshtein_max = similarities["damerau-levenshtein"].max()
-    similarities["normalized damerau-levenshtein"] = 1 - (
+    similarities["inverted normalized damerau-levenshtein"] = 1 - (
         similarities["damerau-levenshtein"] / damerau_levenshtein_max
     )
-    ranks = similarities.rank()
-    print(ranks)
     return similarities
