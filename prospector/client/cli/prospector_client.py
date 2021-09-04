@@ -34,6 +34,7 @@ def prospector(  # noqa: C901
     tag_interval: str = "",
     version_interval: str = "",
     modified_files: "list[str]" = [],
+    code_tokens: "list[str]" = [],
     time_limit_before: int = TIME_LIMIT_BEFORE,
     time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = False,
@@ -61,13 +62,21 @@ def prospector(  # noqa: C901
     _logger.pretty_log(advisory_record)
 
     advisory_record.analyze(use_nvd=use_nvd)
-    _logger.info(f"{advisory_record.code_tokens=}")
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
             datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
         )
 
+    if len(code_tokens) > 0:
+        advisory_record.code_tokens += code_tokens
+
+    # FIXME this should be handled better (or '' should not end up in the modified_files in
+    # the first place)
+    if modified_files != [""]:
+        advisory_record.paths += modified_files
+
+    _logger.info(f"{advisory_record.code_tokens=}")
     # print(advisory_record.paths)
 
     # -------------------------------------------------------------------------

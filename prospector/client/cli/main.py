@@ -74,6 +74,13 @@ def parseArguments(args):
         help="Files (partial names are ok, comma separated) that the candidate commits are supposed to touch",
     )
 
+    parser.add_argument(
+        "--diff-contains",
+        default="",
+        type=str,
+        help="Code tokens that the diff of candidate commits is supposed to contain",
+    )
+
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
 
     parser.add_argument(
@@ -83,7 +90,7 @@ def parseArguments(args):
     parser.add_argument(
         "--report",
         default="console",
-        help="how to show the results (options: console, json, html)",
+        help="Format of the report (options: console, json, html)",
     )
 
     parser.add_argument("-c", "--conf", help="specify configuration file")
@@ -200,6 +207,9 @@ def main(argv):  # noqa: C901
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
     modified_files = args.modified_files.split(",")
+    code_tokens = args.diff_contains.split(",")
+
+    print(code_tokens)
 
     publication_date = ""
     if args.pub_date != "":
@@ -232,6 +242,7 @@ def main(argv):  # noqa: C901
         tag_interval=tag_interval,
         version_interval=version_interval,
         modified_files=modified_files,
+        code_tokens=code_tokens,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,

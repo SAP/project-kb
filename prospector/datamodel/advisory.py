@@ -10,7 +10,8 @@ import requests
 from pydantic import BaseModel, Field
 
 import log.util
-from commit_processor.constants import RELEVANT_EXTENSIONS
+
+# from commit_processor.constants import RELEVANT_EXTENSIONS
 
 _logger = log.util.init_local_logger()
 
@@ -137,20 +138,34 @@ def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]
     tokens = [
         token.strip(",.:;-+!?)]}'\"") for token in tokens
     ]  # removing common punctuation marks
+    tokens = [t for t in tokens if t != ""]
     paths = []
     for token in tokens:
-        contains_path_separators = ("\\" in token) or ("/" in token)
+        contains_path_separators = ("\\" in token) or ("/" in token) or ("." in token)
         separated_with_period = "." in token
-        has_relevant_extension = token.split(".")[-1] in RELEVANT_EXTENSIONS
+        # has_relevant_extension = token.split(".")[-1] in RELEVANT_EXTENSIONS
         is_xml_tag = token.startswith("<")
         is_property = token.endswith("=")
+        is_likely_version = token[0].isdigit() and separated_with_period
 
-        is_path = contains_path_separators or (
-            has_relevant_extension if strict_extensions else separated_with_period
-        )
-        probably_not_path = is_xml_tag or is_property
-        if is_path and not probably_not_path:
-            paths.append(token)
+        # is_path = contains_path_separators or (
+        #     has_relevant_extension if strict_extensions else separated_with_period
+        # )
+        # probably_not_path = is_xml_tag or is_property or not has_relevant_extension or not contains_path_separators or is_likely_version
+
+        if (
+            is_property
+            or is_xml_tag
+            or is_likely_version
+            or not contains_path_separators
+        ):
+            continue
+
+        # if strict_extensions and not has_relevant_extension:
+        #     continue
+
+        paths.append(token)
+
     return paths
 
 
