@@ -1,18 +1,23 @@
+import logging
 import sys
 from datetime import datetime
-from pprint import pprint
 
 import requests
 from tqdm import tqdm
 
+import log
 from commit_processor.feature_extractor import extract_features
 from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
+from filter_rank.filter import filter_commits
 from filter_rank.rank import rank
 from filter_rank.rules import apply_rules
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
+from log.util import init_local_logger
+
+_logger = init_local_logger()
 
 SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
@@ -29,21 +34,19 @@ def prospector(  # noqa: C901
     tag_interval: str = "",
     version_interval: str = "",
     modified_files: "list[str]" = [],
+    code_tokens: "list[str]" = [],
     time_limit_before: int = TIME_LIMIT_BEFORE,
     time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = False,
     nvd_rest_endpoint: str = "",
     backend_address: str = "",
     git_cache: str = GIT_CACHE,
-    verbose: bool = False,
-    debug: bool = False,
     limit_candidates: int = MAX_CANDIDATES,
-    rules: "list[str]" = ["ALL"],
+    active_rules: "list[str]" = ["ALL"],
     model_name: str = "",
 ) -> "list[Commit]":
 
-    if debug:
-        verbose = True
+    _logger.info("begin main commit and CVE processing")
 
     # -------------------------------------------------------------------------
     # advisory record extraction
@@ -56,32 +59,37 @@ def prospector(  # noqa: C901
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    if debug:
-        pprint(advisory_record)
+    _logger.pretty_log(advisory_record)
 
     advisory_record.analyze(use_nvd=use_nvd)
-    print(advisory_record.code_tokens)
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
             datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
         )
 
+    if len(code_tokens) > 0:
+        advisory_record.code_tokens += code_tokens
+
+    # FIXME this should be handled better (or '' should not end up in the modified_files in
+    # the first place)
+    if modified_files != [""]:
+        advisory_record.paths += modified_files
+
+    _logger.info(f"{advisory_record.code_tokens=}")
     # print(advisory_record.paths)
 
     # -------------------------------------------------------------------------
     # retrieval of commit candidates
     # -------------------------------------------------------------------------
-    print("Downloading repository {} in {}..".format(repository_url, git_cache))
+    _logger.info("Downloading repository {} in {}..".format(repository_url, git_cache))
     repository = Git(repository_url, git_cache)
     repository.clone()
     tags = repository.get_tags()
 
-    if debug:
-        print("Found tags:")
-        print(tags)
+    _logger.debug(f"Found tags: {tags}")
 
-    print("Done retrieving %s" % repository_url)
+    _logger.info("Done retrieving %s" % repository_url)
 
     prev_tag = None
     following_tag = None
@@ -106,7 +114,7 @@ def prospector(  # noqa: C901
         filter_files="*.java",
     )
 
-    print("found %d candidates" % len(candidates))
+    _logger.info("Found %d candidates" % len(candidates))
     # if some code_tokens were found in the advisory text, require
     # that candidate commits touch some file whose path contains those tokens
     # NOTE: this works quite well for Java, not sure how general this criterion is
@@ -116,25 +124,29 @@ def prospector(  # noqa: C901
     #
     # Here we apply additional criteria to discard commits from the initial
     # set extracted from the repository
-    # -------------------------------------------------------------------------
-    if advisory_record.code_tokens != []:
-        print(
-            "Detected tokens in advisory text, searching for files whose path contains those tokens"
-        )
-        print(advisory_record.code_tokens)
+    # # -------------------------------------------------------------------------
+    # if advisory_record.code_tokens != []:
+    #     _logger.info(
+    #         "Detected tokens in advisory text, searching for files whose path contains those tokens"
+    #     )
+    #     _logger.info(advisory_record.code_tokens)
 
-    if modified_files == [""]:
-        modified_files = advisory_record.code_tokens
-    else:
-        modified_files.extend(advisory_record.code_tokens)
+    # if modified_files == [""]:
+    #     modified_files = advisory_record.code_tokens
+    # else:
+    #     modified_files.extend(advisory_record.code_tokens)
 
-    candidates = filter_by_changed_files(candidates, modified_files, repository)
+    # candidates = filter_by_changed_files(candidates, modified_files, repository)
 
-    if debug:
-        print("Collected %d candidates" % len(candidates))
+    candidates = filter_commits(candidates)
+
+    _logger.debug(f"Collected {len(candidates)} candidates")
 
     if len(candidates) > limit_candidates:
-        print("Number of candidates exceeds %d, aborting." % limit_candidates)
+        _logger.error("Number of candidates exceeds %d, aborting." % limit_candidates)
+        _logger.error(
+            "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
+        )
         sys.exit(-1)
 
     # -------------------------------------------------------------------------
@@ -154,16 +166,18 @@ def prospector(  # noqa: C901
             + "?commit_id="
             + ",".join(candidates)
         )
-        print("The backend returned status '%d'" % r.status_code)
+        _logger.info("The backend returned status '%d'" % r.status_code)
         if r.status_code != 200:
-            print("This is weird...Continuing anyway.")
+            _logger.error("This is weird...Continuing anyway.")
             missing = candidates
         else:
             raw_commit_data = r.json()
-            print("Found {} preprocessed commits".format(len(raw_commit_data)))
+            _logger.info("Found {} preprocessed commits".format(len(raw_commit_data)))
     except requests.exceptions.ConnectionError:
-        print("Could not reach backend, is it running?")
-        print("The result of commit pre-processing will not be saved.")
+        _logger.error(
+            "Could not reach backend, is it running? The result of commit pre-processing will not be saved.",
+            exc_info=log.config.level < logging.WARNING,
+        )
         missing = candidates
 
     preprocessed_commits: "list[Commit]" = []
@@ -175,37 +189,31 @@ def prospector(  # noqa: C901
         else:
             missing.append(candidates[idx])
 
+    _logger.info("Preprocessing commits...")
     first_missing = len(preprocessed_commits)
     pbar = tqdm(missing)
     for commit_id in pbar:
         preprocessed_commits.append(preprocess_commit(repository.get_commit(commit_id)))
 
-    # adv_processor = AdvisoryProcessor()
-    # advisory_record = adv_processor.process(advisory_record)
-
-    # get CommitFeatures
-    # invoke predict
-
-    # TODO here the preprocessed commits should be saved into the database
-
-    if debug:
-        pprint(advisory_record)
-
-    if verbose:
-        print("preprocessed %d commits" % len(preprocessed_commits))
+    _logger.pretty_log(advisory_record)
+    _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
 
     payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
 
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
     # -------------------------------------------------------------------------
+    _logger.info("Sending preprocessing commits to backend...")
     try:
         r = requests.post(backend_address + "/commits/", json=payload)
-        print("Status: %d" % r.status_code)
+        _logger.info("Saving to backend completed (status code: %d)" % r.status_code)
     except requests.exceptions.ConnectionError:
-        print("Could not reach backend, is it running?")
-        print("The result of commit pre-processing will not be saved.")
-        print("Continuing anyway.....")
+        _logger.error(
+            "Could not reach backend, is it running?"
+            "The result of commit pre-processing will not be saved."
+            "Continuing anyway.....",
+            exc_info=log.config.level < logging.WARNING,
+        )
 
     # TODO compute actual rank
     # This can be done by a POST request that creates a "search" job
@@ -217,42 +225,43 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
+    _logger.info("Extracting features from commits...")
     annotated_candidates = []
     for commit in tqdm(preprocessed_commits):
         annotated_candidates.append(extract_features(commit, advisory_record))
 
     annotated_candidates = apply_rules(
-        annotated_candidates, advisory_record, rules=rules
+        annotated_candidates, advisory_record, active_rules=active_rules
     )
     annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
-    return annotated_candidates
+    return annotated_candidates, advisory_record
 
 
-def filter_by_changed_files(
-    candidates: "list[str]", modified_files: "list[str]", git_repository: Git
-) -> list:
-    """
-    Takes a list of commit ids in input and returns in output the list
-    of ids of the commits that modify at least one path that contains one of the strings
-    in "modified_files"
+# def filter_by_changed_files(
+#     candidates: "list[str]", modified_files: "list[str]", git_repository: Git
+# ) -> list:
+#     """
+#     Takes a list of commit ids in input and returns in output the list
+#     of ids of the commits that modify at least one path that contains one of the strings
+#     in "modified_files"
 
-    """
-    modified_files = [f.lower() for f in modified_files if f != ""]
-    if len(modified_files) == 0:
-        return candidates
+#     """
+#     modified_files = [f.lower() for f in modified_files if f != ""]
+#     if len(modified_files) == 0:
+#         return candidates
 
-    filtered_candidates = []
-    if len(modified_files) != 0:
-        for commit_id in candidates:
-            commit_obj = git_repository.get_commit(commit_id)
-            commit_changed_files = commit_obj.get_changed_files()
-            for ccf in commit_changed_files:
-                for f in modified_files:
-                    ccf = ccf.lower()
-                    if f in ccf:
-                        # if f in [e.lower() for e in ccf]:
-                        # print(f, commit_obj.get_id())
-                        filtered_candidates.append(commit_obj.get_id())
+#     filtered_candidates = []
+#     if len(modified_files) != 0:
+#         for commit_id in candidates:
+#             commit_obj = git_repository.get_commit(commit_id)
+#             commit_changed_files = commit_obj.get_changed_files()
+#             for ccf in commit_changed_files:
+#                 for f in modified_files:
+#                     ccf = ccf.lower()
+#                     if f in ccf:
+#                         # if f in [e.lower() for e in ccf]:
+#                         # print(f, commit_obj.get_id())
+#                         filtered_candidates.append(commit_obj.get_id())
 
-    return list(set(filtered_candidates))
+#     return list(set(filtered_candidates))

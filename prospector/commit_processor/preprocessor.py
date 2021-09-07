@@ -47,7 +47,6 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
 
     result.diff = git_commit.get_diff()
     result.hunks = git_commit.get_hunks()
-    result.hunk_count = len(result.hunks)
     result.message = git_commit.get_msg()
     result.timestamp = int(git_commit.get_timestamp())
     result.changed_files = git_commit.get_changed_files()
@@ -71,21 +70,21 @@ def extract_ghissue_references(text: str) -> "list[str]":
     """
     Extract identifiers that are (=look like) references to GH issues
     """
-    return [result.group(0) for result in re.finditer(r"#\d+:?", text)]
+    return [result.group(0) for result in re.finditer(r"#\d+", text)]
 
 
 def extract_jira_references(text: str) -> "list[str]":
     """
     Extract identifiers that point to Jira tickets
     """
-    return [result.group(0) for result in re.finditer(r"\w+-\d+:?", text)]
+    return [result.group(0) for result in re.finditer(r"\w+-\d+", text)]
 
 
 def extract_cve_references(text: str) -> "list[str]":
     """
     Extract CVE identifiers
     """
-    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}:?", text)]
+    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
 
 
 #

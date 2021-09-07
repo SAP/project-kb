@@ -25,6 +25,7 @@ kaybee/kaybeeconf-custom.yaml
 kaybee/kaybee-new-statements
 kaybee/pkged.go
 *.log
+*.log.*
 kaybeeconf.yaml
 prospector/.env
 prospector/workspace.code-workspace
@@ -38,10 +39,13 @@ prospector/nvd.ipynb
 prospector/data/nvd.pkl
 prospector/data/nvd.csv
 .vscode/settings.json
-prospector/data/*
 prospector/cov_html/*
+prospector/client/cli/cov_html/*
 prospector/.coverage
-cov_html/*
+**/cov_html/*
 .coverage
 prospector/prospector.code-workspace
 prospector/requests-cache.sqlite
+prospector/prospector-report.html
+prospector/test_report.html
+prospector/.idea/*

@@ -11,4 +11,5 @@ def filter_commits(
     extensions of the files modified in the commit, and the like)
     """
 
+    print("WARNING: filter_commits() not implemented yet")
     return candidates

@@ -7,22 +7,25 @@ import logging
 import os
 import sys
 from pathlib import Path
-from pprint import pprint
 
 import requests
 
+import log.config
+import log.util
+from client.cli.console_report import report_on_console
+from client.cli.html_report import report_as_html
+from client.cli.json_report import report_as_json
 from client.cli.prospector_client import (
     MAX_CANDIDATES,
     TIME_LIMIT_AFTER,
     TIME_LIMIT_BEFORE,
     prospector,
 )
-from datamodel.commit_features import CommitWithFeatures
 from git.git import GIT_CACHE
 
-DEFAULT_BACKEND = "http://localhost:8000"
+_logger = log.util.init_local_logger()
 
-logger = logging.getLogger("prospector")
+DEFAULT_BACKEND = "http://localhost:8000"
 
 # VERSION = '0.1.0'
 # SCRIPT_PATH=os.path.dirname(os.path.realpath(__file__))
@@ -71,10 +74,23 @@ def parseArguments(args):
         help="Files (partial names are ok, comma separated) that the candidate commits are supposed to touch",
     )
 
+    parser.add_argument(
+        "--diff-contains",
+        default="",
+        type=str,
+        help="Code tokens that the diff of candidate commits is supposed to contain",
+    )
+
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
 
     parser.add_argument(
         "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
+    )
+
+    parser.add_argument(
+        "--report",
+        default="console",
+        help="Format of the report (options: console, json, html)",
     )
 
     parser.add_argument("-c", "--conf", help="specify configuration file")
@@ -84,14 +100,11 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "-v", "--verbose", help="increase output verbosity", action="store_true"
-    )
-
-    parser.add_argument(
-        "-d",
-        "--debug",
-        help="increase output verbosity even more and output stack-traces on exceptions",
-        action="store_true",
+        "-l",
+        "--log-level",
+        dest="log_level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Set the logging level",
     )
 
     return parser.parse_args(args[1:])
@@ -121,7 +134,7 @@ def getConfiguration(customConfigFile=None):
     else:
         return None
 
-    print("Loading configuration from " + configFile)
+    _logger.info("Loading configuration from " + configFile)
     config.read(configFile)
     return config
 
@@ -135,62 +148,43 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
     """
 
     if verbose:
-        print("Contacting server " + server_url)
+        _logger.info("Contacting server " + server_url)
 
     try:
         response = requests.get(server_url)
         if response.status_code != 200:
-            print("Server replied with an unexpected status: " + response.status_code)
+            _logger.error(
+                f"Server replied with an unexpected status: {response.status_code}"
+            )
             return False
         else:
-            print("Server ok!")
+            _logger.info("Server ok!")
             return True
     except Exception:
-        print("Server did not reply")
+        _logger.error("Server did not reply", exc_info=True)
         return False
-
-
-def display_results(results: "list[CommitWithFeatures]", verbose=False):
-    print("-" * 80)
-    print("Rule filtered results")
-    print("-" * 80)
-    count = 0
-    for commit in results:
-        count += 1
-        print(
-            "{}/commit/{}\n-----\n".format(
-                commit.commit.repository,
-                commit.commit.commit_id,
-                # results[commit],
-            )
-        )
-
-    print("-----")
-    print("Found {} candidates".format(count))
 
 
 def main(argv):  # noqa: C901
     args = parseArguments(argv)
     configuration = getConfiguration(args.conf)
 
+    if args.log_level:
+        log.config.level = getattr(logging, args.log_level)
+
+    _logger.info(f"global log level is set to {logging.getLevelName(log.config.level)}")
+
     if args.vulnerability_id is None:
-        print("No vulnerability id was specified. Cannot proceed.")
+        _logger.error("No vulnerability id was specified. Cannot proceed.")
         return False
 
     if configuration is None:
-        print("Invalid configuration, exiting.")
+        _logger.error("Invalid configuration, exiting.")
         return False
 
-    debug = configuration["global"].getboolean("debug")
-    if args.debug:
-        debug = args.debug
-
-    verbose = configuration["global"].getboolean("verbose")
-    if args.verbose:
-        verbose = args.verbose
-
-    if debug:
-        verbose = True
+    report = configuration["global"].getboolean("report")
+    if args.report:
+        report = args.report
 
     if configuration["global"].get("nvd_rest_endpoint"):
         nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
@@ -200,7 +194,7 @@ def main(argv):  # noqa: C901
         backend = args.backend
 
     if args.ping:
-        return ping_backend(backend, verbose)
+        return ping_backend(backend, log.config.level < logging.INFO)
 
     vulnerability_id = args.vulnerability_id
     repository_url = args.repository
@@ -213,6 +207,9 @@ def main(argv):  # noqa: C901
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
     modified_files = args.modified_files.split(",")
+    code_tokens = args.diff_contains.split(",")
+
+    print(code_tokens)
 
     publication_date = ""
     if args.pub_date != "":
@@ -228,21 +225,16 @@ def main(argv):  # noqa: C901
     if configuration["global"].get("git_cache"):
         git_cache = configuration["global"].get("git_cache")
 
-    if verbose:
-        print("Using the following configuration:")
-        pprint(
-            {
-                section: dict(configuration[section])
-                for section in configuration.sections()
-            }
-        )
+    _logger.debug("Using the following configuration:")
+    _logger.pretty_log(
+        {section: dict(configuration[section]) for section in configuration.sections()}
+    )
 
-    if verbose:
-        print("Vulnerability ID: " + vulnerability_id)
-        print("time-limit before: " + str(time_limit_before))
-        print("time-limit after: " + str(time_limit_after))
+    _logger.debug("Vulnerability ID: " + vulnerability_id)
+    _logger.debug("time-limit before: " + str(time_limit_before))
+    _logger.debug("time-limit after: " + str(time_limit_after))
 
-    results = prospector(
+    results, advisory_record = prospector(
         vulnerability_id=vulnerability_id,
         repository_url=repository_url,
         publication_date=publication_date,
@@ -250,20 +242,26 @@ def main(argv):  # noqa: C901
         tag_interval=tag_interval,
         version_interval=version_interval,
         modified_files=modified_files,
+        code_tokens=code_tokens,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
         nvd_rest_endpoint=nvd_rest_endpoint,
         backend_address=backend,
         git_cache=git_cache,
-        verbose=verbose,
-        debug=debug,
         limit_candidates=max_candidates,
+        active_rules=["ALL"],
     )
 
-    display_results(results, verbose=verbose)
-    # print(rule_filtered_results)
-
+    if report == "console":
+        report_on_console(results, advisory_record, log.config.level < logging.INFO)
+    elif report == "json":
+        report_as_json(results, advisory_record)
+    elif report == "html":
+        report_as_html(results, advisory_record)
+    else:
+        _logger.warning("Invalid report type specified, using 'console'")
+        report_on_console(results, advisory_record, log.config.level < logging.INFO)
     return True
 
 

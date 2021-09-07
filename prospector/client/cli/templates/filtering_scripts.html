@@ -1,0 +1,34 @@
+<script type="text/javascript">
+buttons = document.getElementsByClassName("selector");
+
+function toggle(selector) {
+    if (selector.classList.contains("btn-primary")) {
+        selector.classList.replace("btn-primary", "btn-outline-primary");
+    } else {
+        selector.classList.replace( "btn-outline-primary", "btn-primary");
+    }
+
+    let commit_cards = document.getElementsByClassName('commit');
+    for (let card of commit_cards) {
+        card.classList.replace("d-flex", "d-none")
+    }
+    let selectors = document.getElementsByClassName("selector");
+    for (const selector of selectors) {
+        if (selector.classList.contains('btn-primary')) {
+            for (let card of commit_cards) {
+                let annotations = JSON.parse(card.dataset.annotations);
+                let relevant = annotations.hasOwnProperty(selector.dataset.annotation);
+                if (relevant) {
+                    card.classList.replace('d-none', 'd-flex')
+                }
+            }
+        }
+    }
+    console.log("toggle: " + selector.dataset.annotation)
+}
+
+for (let i = 0, l = buttons.length; i < l; i++) {
+    let button = buttons[i];
+    button.addEventListener('click', function () {toggle(button);})
+}
+</script>

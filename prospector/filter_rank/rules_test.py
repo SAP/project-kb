@@ -10,34 +10,44 @@ from filter_rank.rules import apply_rules
 def candidates():
     return [
         CommitWithFeatures(
-            commit=Commit(repository="repo1", commit_id="1", ghissue_refs=["example"]),
+            commit=Commit(
+                repository="repo1",
+                commit_id="1",
+                ghissue_refs=["example"],
+                changed_files={"foo/bar/otherthing.xml", "pom.xml"},
+            ),
             references_vuln_id=True,
-            # references_ghissue=True,
-            changes_relevant_path=True,
         ),
         CommitWithFeatures(
             commit=Commit(repository="repo2", commit_id="2"),
             references_vuln_id=True,
             references_ghissue=False,
-            changes_relevant_path=False,
         ),
         CommitWithFeatures(
             commit=Commit(repository="repo3", commit_id="3", ghissue_refs=["example"]),
             references_vuln_id=False,
-            # references_ghissue=True,
-            changes_relevant_path=False,
         ),
         CommitWithFeatures(
-            commit=Commit(repository="repo4", commit_id="4"),
+            commit=Commit(
+                repository="repo4",
+                commit_id="4",
+                message="Endless loop causes DoS vulnerability",
+                changed_files={"foo/bar/otherthing.xml", "pom.xml"},
+            ),
             references_vuln_id=False,
             references_ghissue=False,
-            changes_relevant_path=True,
         ),
         CommitWithFeatures(
-            commit=Commit(repository="repo5", commit_id="5"),
+            commit=Commit(
+                repository="repo5",
+                commit_id="5",
+                message="Insecure deserialization",
+                changed_files={
+                    "core/src/main/java/org/apache/cxf/workqueue/AutomaticWorkQueueImpl.java"
+                },
+            ),
             references_vuln_id=False,
             references_ghissue=False,
-            changes_relevant_path=False,
         ),
     ]
 
@@ -51,6 +61,7 @@ def advisory_record():
         references=[
             "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
         ],
+        code_tokens=["AutomaticWorkQueueImpl"],
         paths=["pom.xml"],
     )
 
@@ -83,5 +94,7 @@ def test_apply_rules(
     assert "REF_ADV_VULN_ID" not in annotated_candidates[3].annotations
     assert "REF_GH_ISSUE" not in annotated_candidates[3].annotations
     assert "CH_REL_PATH" in annotated_candidates[3].annotations
+    assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[3].annotations
 
-    assert len(annotated_candidates[4].annotations) == 0
+    assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[4].annotations
+    assert "TOKENS_IN_MODIFIED_PATHS" in annotated_candidates[4].annotations

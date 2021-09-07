@@ -1,5 +1,6 @@
 # from typing import Tuple
 # from datamodel import BaseModel
+import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,10 +9,14 @@ from typing import List, Optional
 import requests
 from pydantic import BaseModel, Field
 
-from commit_processor.constants import RELEVANT_EXTENSIONS
+import log.util
+
+# from commit_processor.constants import RELEVANT_EXTENSIONS
+
+_logger = log.util.init_local_logger()
 
 # TODO use prospector own NVD feed endpoint
-NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cve/1.0/"
+NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 
 
 class AdvisoryRecord(BaseModel):
@@ -59,7 +64,8 @@ class AdvisoryRecord(BaseModel):
             response = requests.get(nvd_rest_endpoint + vuln_id)
             if response.status_code != 200:
                 return
-            data = response.json()["result"]["CVE_Items"][0]
+            # data = response.json()["result"]["CVE_Items"][0]
+            data = response.json()
             self.published_timestamp = int(
                 datetime.strptime(
                     data["publishedDate"], r"%Y-%m-%dT%H:%M%z"
@@ -79,7 +85,10 @@ class AdvisoryRecord(BaseModel):
             ]
 
         except Exception:
-            print("Could not retrieve vulnerability data from NVD for " + vuln_id)
+            _logger.error(
+                "Could not retrieve vulnerability data from NVD for " + vuln_id,
+                exc_info=log.config.level < logging.INFO,
+            )
 
 
 def extract_versions(text) -> "list[str]":
@@ -113,25 +122,51 @@ def extract_camelcase_tokens(text) -> "list[str]":
     # return["blaHlafaHlsafs"]
 
 
-def extract_path_tokens(text: str) -> "list[str]":
+def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]:
     """
     Used to look for paths in the text (i.e. vulnerability description)
 
     Input:
         text (str)
+        strict_extensions (bool): this function will always extract tokens with (back) slashes,
+            but it will only match single file names if they have the correct extension, if this argument is True
 
     Returns:
         list: a list of paths that are found
     """
-    return [
-        re.split(r"\.|,|/", token.rstrip(r".,;:?!\"'"))
-        for token in text.split(" ")
-        if ("/" in token.rstrip(r".,;:?!\"'") and not token.startswith("</"))
-        or (
-            "." in token.rstrip(r".,;:?!\"'")
-            and token.rstrip(r".,;:?!\"'").split(".")[-1] in RELEVANT_EXTENSIONS
-        )
-    ]
+    tokens = re.split(r"\s+", text)  # split the text into words
+    tokens = [
+        token.strip(",.:;-+!?)]}'\"") for token in tokens
+    ]  # removing common punctuation marks
+    tokens = [t for t in tokens if t != ""]
+    paths = []
+    for token in tokens:
+        contains_path_separators = ("\\" in token) or ("/" in token) or ("." in token)
+        separated_with_period = "." in token
+        # has_relevant_extension = token.split(".")[-1] in RELEVANT_EXTENSIONS
+        is_xml_tag = token.startswith("<")
+        is_property = token.endswith("=")
+        is_likely_version = token[0].isdigit() and separated_with_period
+
+        # is_path = contains_path_separators or (
+        #     has_relevant_extension if strict_extensions else separated_with_period
+        # )
+        # probably_not_path = is_xml_tag or is_property or not has_relevant_extension or not contains_path_separators or is_likely_version
+
+        if (
+            is_property
+            or is_xml_tag
+            or is_likely_version
+            or not contains_path_separators
+        ):
+            continue
+
+        # if strict_extensions and not has_relevant_extension:
+        #     continue
+
+        paths.append(token)
+
+    return paths
 
 
 @dataclass

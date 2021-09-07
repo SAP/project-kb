@@ -3,7 +3,6 @@
 
 import difflib
 import hashlib
-import logging
 import multiprocessing
 import os
 import random
@@ -13,9 +12,12 @@ import subprocess
 import sys
 from datetime import datetime
 
+import log.util
+
 # from pprint import pprint
 # import pickledb
 
+_logger = log.util.init_local_logger()
 
 GIT_CACHE = ""
 if "GIT_CACHE" in os.environ:
@@ -44,7 +46,7 @@ def clone_repo_multiple(
     """
     This is the parallelized version of clone_repo (works with a list of repositories).
     """
-    print("Using {} parallel workers".format(concurrent))
+    _logger.info(f"Using {concurrent} parallel workers")
     with multiprocessing.Pool(concurrent) as pool:
         args = ((url, output_folder, proxy, shallow, skip_existing) for url in url_list)
         results = pool.starmap(do_clone, args)
@@ -57,11 +59,9 @@ class Git:
         self,
         url,
         cache_path=os.path.abspath("/tmp/git-cache"),
-        verbose=False,
         shallow=False,
     ):
         self.repository_type = "GIT"
-        self._verbose = verbose
         self._url = url
         self._path = os.path.join(cache_path, self._url.rstrip("/").split("/")[-1])
         # self._path = os.path.join(cache_path, self._url.replace("https://","").replace("/", "_"))
@@ -85,14 +85,14 @@ class Git:
         Identifies the default branch of the remote repository for the local git
         repo
         """
-        logging.info("Identifiying remote branch for %s", self._path)
+        _logger.info("Identifiying remote branch for %s", self._path)
 
         try:
             cmd = "git ls-remote -q"
             # self._exec._encoding = 'utf-8'
             l_raw_output = self._exec.run(cmd)
 
-            logging.info(
+            _logger.info(
                 "Identifiying sha1 of default remote ref among %d entries.",
                 len(l_raw_output),
             )
@@ -104,15 +104,15 @@ class Git:
 
                 if ref_name == "HEAD":
                     head_sha1 = sha1
-                    logging.info("Remote head: " + sha1)
+                    _logger.info("Remote head: " + sha1)
                     break
 
         except subprocess.CalledProcessError as ex:
-            logging.error(
+            _logger.error(
                 "Exception happened while obtaining default remote branch for repository in "
                 + self._path
             )
-            logging.error(str(ex))
+            _logger.error(str(ex))
             return None
 
         # ...then search the corresponding treeish among the local references
@@ -121,7 +121,7 @@ class Git:
             # self._exec._encoding = 'utf-8'
             l_raw_output = self._exec.run(cmd)
 
-            logging.info("Processing {} references".format(len(l_raw_output)))
+            _logger.info("Processing {} references".format(len(l_raw_output)))
 
             for raw_line in l_raw_output:
                 (sha1, ref_name) = raw_line.split()
@@ -130,11 +130,11 @@ class Git:
             return None
 
         except Exception as ex:
-            logging.error(
+            _logger.error(
                 "Exception happened while obtaining default remote branch for repository in "
                 + self._path
             )
-            logging.error(str(ex))
+            _logger.error(str(ex))
             return None
 
     def clone(self, shallow=None, skip_existing=False):
@@ -146,42 +146,34 @@ class Git:
             self._shallow_clone = shallow
 
         if not self._url:
-            print("Invalid url specified.")
+            _logger.error("Invalid url specified.")
             sys.exit(-1)
 
         # TODO rearrange order of checks
         if os.path.isdir(os.path.join(self._path, ".git")):
             if skip_existing:
-                if self._verbose:
-                    print("Skipping fetch of {} in {}".format(self._url, self._path))
+                _logger.debug(f"Skipping fetch of {self._url} in {self._path}")
             else:
-                if self._verbose:
-                    print(
-                        "\nFound repo {} in {}.\nFetching....".format(
-                            self._url, self._path
-                        )
-                    )
+                _logger.debug(
+                    f"\nFound repo {self._url} in {self._path}.\nFetching...."
+                )
 
                 self._exec.run(["git", "fetch", "--progress", "--all", "--tags"])
                 # , cwd=self._path, timeout=self._exec_timeout)
             return
 
         if os.path.exists(self._path):
-            if self._verbose:
-                print(
-                    "Folder {} exists but it contains no git repository.".format(
-                        self._path
-                    )
-                )
+            _logger.debug(
+                "Folder {} exists but it contains no git repository.".format(self._path)
+            )
             return
 
         os.makedirs(self._path)
 
-        if self._verbose:
-            print("Cloning %s (shallow=%s)" % (self._url, self._shallow_clone))
+        _logger.debug(f"Cloning {self._url} (shallow={self._shallow_clone})")
 
         if not self._exec.run(["git", "init"], ignore_output=True):
-            print("Failed to initialize repository in %s" % self._path)
+            _logger.error(f"Failed to initialize repository in {self._path}")
 
         try:
             self._exec.run(
@@ -189,7 +181,7 @@ class Git:
             )
             #  , cwd=self._path)
         except Exception as ex:
-            print("Could not update remote in %s (%s)" % (self._path, str(ex)))
+            _logger.error(f"Could not update remote in {self._path}", exc_info=True)
             shutil.rmtree(self._path)
             raise ex
 
@@ -204,9 +196,9 @@ class Git:
                 )  # , cwd=self._path)
                 # self._exec.run_l(['git', 'fetch', '--tags'], cwd=self._path)
         except Exception as ex:
-            print(
-                "Could not fetch %s (shallow=%s) in %s"
-                % (self._url, str(self._shallow_clone), self._path)
+            _logger.error(
+                f"Could not fetch {self._url} (shallow={str(self._shallow_clone)}) in {self._path}",
+                exc_info=True,
             )
             shutil.rmtree(self._path)
             raise ex
@@ -248,10 +240,10 @@ class Git:
             cmd.append('--grep="%s"' % find_in_msg)
 
         try:
-            print(" ".join(cmd))
+            _logger.info(" ".join(cmd))
             out = self._exec.run(cmd)
-        except Exception as ex:
-            sys.stderr.write("Git command failed, cannot get commits \n%s" % str(ex))
+        except Exception:
+            _logger.error("Git command failed, cannot get commits", exc_info=True)
             out = []
 
         out = [l.strip() for l in out]
@@ -269,20 +261,21 @@ class Git:
                 commit_id_from + ".." + commit_id_to,
             ]
             path = self._exec.run(cmd)
-            path.pop(0)
-            path.reverse()
+            if len(path) > 0:
+                path.pop(0)
+                path.reverse()
             return path
         except:
-            print("Failed to obtain commits")
+            _logger.error("Failed to obtain commits, details below:", exc_info=True)
             return []
 
     def get_commit(self, key, by="id"):
         if by == "id":
-            return Commit(self, key, self._verbose)
+            return Commit(self, key)
         if by == "fingerprint":
             # TODO implement computing fingerprints
             c_id = self._fingerprints[key]
-            return Commit(self, c_id, self._verbose)
+            return Commit(self, c_id)
 
         return None
 
@@ -329,7 +322,7 @@ class Git:
         try:
             tags = self._exec.run("git tag")
         except subprocess.CalledProcessError as exc:
-            print("Git command failed." + str(exc.output))
+            _logger.error("Git command failed." + str(exc.output), exc_info=True)
             tags = []
 
         if not tags:
@@ -345,7 +338,7 @@ class Git:
             # @TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
             commit_id = subprocess.check_output(cmd, cwd=self._path).decode()
         except subprocess.CalledProcessError as exc:
-            print("Git command failed." + str(exc.output))
+            _logger.error("Git command failed." + str(exc.output), exc_info=True)
             sys.exit(1)
         if not commit_id:
             return None
@@ -361,7 +354,7 @@ class Git:
             # @TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
             tags = self._exec.run(cmd)
         except subprocess.CalledProcessError as exc:
-            print("Git command failed." + str(exc.output))
+            _logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []
 
         if not tags:
@@ -371,14 +364,12 @@ class Git:
 
 
 class Commit:
-    def __init__(self, repository, commit_id, init_data=None, verbose=False):
+    def __init__(self, repository, commit_id, init_data=None):
         self._attributes = {}
 
         self._repository = repository
         self._id = commit_id
         self._exec = repository._exec
-
-        self._verbose = verbose
 
         # the following attributes will be initialized lazily and memoized, unless init_data is not None
         if init_data:
@@ -390,10 +381,10 @@ class Commit:
             try:
                 cmd = ["git", "log", "--format=%H", "-n1", self._id]
                 self._attributes["full_id"] = self._exec.run(cmd)[0]
-            except:
-                print(
-                    "Failed to obtain full commit id for: %s in dir: %s"
-                    % (self._id, self._exec._workdir)
+            except Exception:
+                _logger.error(
+                    f"Failed to obtain full commit id for: {self._id} in dir: {self._exec._workdir}",
+                    exc_info=True,
                 )
         return self._attributes["full_id"]
 
@@ -408,9 +399,9 @@ class Commit:
                 parents = parent.split(" ")
                 self._attributes["parent_id"] = parents
             except:
-                print(
-                    "Failed to obtain parent id for: %s in dir: %s"
-                    % (self._id, self._exec._workdir)
+                _logger.error(
+                    f"Failed to obtain parent id for: {self._id} in dir: {self._exec._workdir}",
+                    exc_info=True,
                 )
         return self._attributes["parent_id"]
 
@@ -423,10 +414,10 @@ class Commit:
             try:
                 cmd = ["git", "log", "--format=%B", "-n1", self._id]
                 self._attributes["msg"] = " ".join(self._exec.run(cmd))
-            except:
-                print(
-                    "Failed to obtain commit message for commit: %s in dir: %s"
-                    % (self._id, self._exec._workdir)
+            except Exception:
+                _logger.error(
+                    f"Failed to obtain commit message for commit: {self._id} in dir: {self._exec._workdir}",
+                    exc_info=True,
                 )
         return self._attributes["msg"]
 
@@ -443,10 +434,10 @@ class Commit:
                 if filter_files:
                     cmd.append(filter_files)
                 self._attributes["diff"] = self._exec.run(cmd)
-            except:
-                print(
-                    "Failed to obtain patch for commit: %s in dir: %s"
-                    % (self._id, self._exec._workdir)
+            except Exception:
+                _logger.error(
+                    f"Failed to obtain patch for commit: {self._id} in dir: {self._exec._workdir}",
+                    exc_info=True,
                 )
         return self._attributes["diff"]
 
@@ -700,7 +691,9 @@ class CommitSet:
         # passed to the Commit constructor will be used to pass the fields that need to be populated
         commits_count = len(commit_ids)
         if prefetch is True and commits_count > 50:
-            print("WARNING: processing %d commits will take some time!" % commits_count)
+            _logger.warning(
+                f"Processing {commits_count:d} commits will take some time!"
+            )
             for cid in commit_ids:
                 commit_data = {"id": "", "msg": "", "patch": "", "timestamp": ""}
                 current_field = None
@@ -771,7 +764,9 @@ class Exec:
                 stderr=subprocess.DEVNULL,
             )
         except subprocess.TimeoutExpired:  # pragma: no cover
-            print("Timeout exceeded (" + self._timeout + " seconds)")
+            _logger.error(
+                "Timeout exceeded (" + self._timeout + " seconds)", exc_info=True
+            )
             raise Exception("Process did not respond for " + self._timeout + " seconds")
 
     def _execute(self, cmd_l):
@@ -790,8 +785,8 @@ class Exec:
             raw_output_list = out.decode(self._encoding).split("\n")
             return [r for r in raw_output_list if r.strip() != ""]
         except subprocess.TimeoutExpired:  # pragma: no cover
-            print("Timeout exceeded (" + self._timeout + " seconds)")
-            raise Exception("Process did not respond for " + self._timeout + " seconds")
+            _logger.error(f"Timeout exceeded ({self._timeout} seconds)", exc_info=True)
+            raise Exception(f"Process did not respond for {self._timeout} seconds")
             # return None
         # except Exception as ex:                 # pragma: no cover
         #     traceback.print_exc()
