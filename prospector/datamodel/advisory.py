@@ -17,8 +17,6 @@ from processing.natural_language_processing import (
     extract_versions,
 )
 
-from processing.constants import RELEVANT_EXTENSIONS
-
 _logger = log.util.init_local_logger()
 
 # TODO use prospector own NVD feed endpoint
