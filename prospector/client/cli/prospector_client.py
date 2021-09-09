@@ -69,7 +69,7 @@ def prospector(  # noqa: C901
         )
 
     if len(code_tokens) > 0:
-        advisory_record.code_tokens += code_tokens
+        advisory_record.code_tokens += tuple(code_tokens)
 
     # FIXME this should be handled better (or '' should not end up in the modified_files in
     # the first place)
