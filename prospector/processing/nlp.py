@@ -4,7 +4,7 @@ from typing import List, Tuple
 from processing.constants import RELEVANT_EXTENSIONS
 
 
-def extract_non_nl_terms(description: str) -> Tuple[str, ...]:
+def extract_special_terms(description: str) -> Tuple[str, ...]:
     """
     Extract all words (space delimited) which presumably cannot be part of an natural language sentence.
     These are usually code fragments and names of code entities, or paths.

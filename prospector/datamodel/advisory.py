@@ -10,10 +10,10 @@ import requests
 from pydantic import BaseModel, Field
 
 import log.util
-from processing.natural_language_processing import (
-    extract_non_nl_terms,
+from processing.nlp import (
     extract_path_tokens,
     extract_products,
+    extract_special_terms,
     extract_versions,
 )
 
@@ -56,7 +56,7 @@ class AdvisoryRecord(BaseModel):
         )
         self.affected_products = extract_products(self.description)
         self.paths = extract_path_tokens(self.description)
-        self.code_tokens = extract_non_nl_terms(self.description)
+        self.code_tokens = extract_special_terms(self.description)
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """

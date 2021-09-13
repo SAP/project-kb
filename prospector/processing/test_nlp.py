@@ -1,12 +1,12 @@
-from processing.natural_language_processing import (
+from processing.nlp import (
     extract_cve_references,
     extract_jira_references,
-    extract_non_nl_terms,
     extract_path_tokens,
+    extract_special_terms,
 )
 
 
-def test_extract_non_nl_terms():
+def test_extract_special_terms():
     description = (
         "org.apache.http.conn.ssl.AbstractVerifier in Apache HttpComponents HttpClient "
         "before 4.3.5 and HttpAsyncClient before 4.0.2 does not properly verify that the "
@@ -17,7 +17,7 @@ def test_extract_non_nl_terms():
         "the O field."
     )
 
-    terms = extract_non_nl_terms(description)
+    terms = extract_special_terms(description)
 
     assert terms == (
         "org.apache.http.conn.ssl.AbstractVerifier",

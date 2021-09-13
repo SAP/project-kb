@@ -1,6 +1,6 @@
 from datamodel.commit import Commit as DatamodelCommit
 from git.git import Commit as GitCommit
-from processing.natural_language_processing import (
+from processing.nlp import (
     extract_cve_references,
     extract_ghissue_references,
     extract_jira_references,
