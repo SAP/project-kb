@@ -76,7 +76,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--diff-contains",
-        default="",
+        default=None,
         type=str,
         help="Code tokens that the diff of candidate commits is supposed to contain",
     )
@@ -207,7 +207,9 @@ def main(argv):  # noqa: C901
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
     modified_files = args.modified_files.split(",")
-    code_tokens = args.diff_contains.split(",")
+    code_tokens = (
+        args.diff_contains.split(",") if args.diff_contains is not None else []
+    )
 
     print(code_tokens)
 

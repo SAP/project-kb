@@ -6,8 +6,6 @@ import requests
 from tqdm import tqdm
 
 import log
-from commit_processor.feature_extractor import extract_features
-from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from filter_rank.filter import filter_commits
@@ -16,6 +14,8 @@ from filter_rank.rules import apply_rules
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
+from processing.commit.feature_extractor import extract_features
+from processing.commit.preprocessor import preprocess_commit
 
 _logger = init_local_logger()
 
@@ -69,7 +69,7 @@ def prospector(  # noqa: C901
         )
 
     if len(code_tokens) > 0:
-        advisory_record.code_tokens += code_tokens
+        advisory_record.code_tokens += tuple(code_tokens)
 
     # FIXME this should be handled better (or '' should not end up in the modified_files in
     # the first place)

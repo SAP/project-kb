@@ -1,6 +1,7 @@
 from typing import Set
 from urllib.parse import urlparse
 
+import pandas
 import requests_cache
 
 import log.util
@@ -8,8 +9,15 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.commit_features import CommitWithFeatures
 from git.git import Git
-
-from .requests_filter import ALLOWED_SITES
+from processing.constants import ALLOWED_SITES
+from util.similarity import (
+    damerau_levenshtein_edit_distance,
+    jaccard_set_similarity,
+    levenshtein_edit_distance,
+    otsuka_ochiai_set_similarity,
+    sorensen_dice_set_similarity,
+)
+from util.tokenize import tokenize_non_nl_term
 
 _logger = log.util.init_local_logger()
 
@@ -50,6 +58,9 @@ def extract_features(
         referred_to_by_pages_linked_from_advisories=referred_to_by_pages_linked_from_advisories,
         referred_to_by_nvd=referred_to_by_nvd,
         commit_reachable_from_given_tag=commit_reachable_from_given_tag,
+        similarities_with_changed_files=extract_path_similarities(
+            commit, advisory_record
+        ),
     )
     return commit_feature
 
@@ -156,3 +167,59 @@ def extract_referred_to_by_pages_linked_from_advisories(
             return False
 
     return set(filter(is_commit_cited_in, allowed_references))
+
+
+def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
+    similarities = pandas.DataFrame(
+        columns=[
+            "changed file",
+            "code token",
+            "jaccard",
+            "sorensen-dice",
+            "otsuka-ochiai",
+            "levenshtein",
+            "damerau-levenshtein",
+            "length diff",
+            "inverted normalized levenshtein",
+            "inverted normalized damerau-levenshtein",
+        ]
+    )
+    for changed_file_path in commit.changed_files:
+        for code_token in advisory_record.code_tokens:
+            parts_of_file_path = tokenize_non_nl_term(changed_file_path)
+            parts_of_code_token = tokenize_non_nl_term(code_token)
+            similarities = similarities.append(
+                {
+                    "changed file": changed_file_path,
+                    "code token": code_token,
+                    "jaccard": jaccard_set_similarity(
+                        set(parts_of_file_path), set(parts_of_code_token)
+                    ),
+                    "sorensen-dice": sorensen_dice_set_similarity(
+                        set(parts_of_file_path), set(parts_of_code_token)
+                    ),
+                    "otsuka-ochiai": otsuka_ochiai_set_similarity(
+                        set(parts_of_file_path), set(parts_of_code_token)
+                    ),
+                    "levenshtein": levenshtein_edit_distance(
+                        parts_of_file_path, parts_of_code_token
+                    ),
+                    "damerau-levenshtein": damerau_levenshtein_edit_distance(
+                        parts_of_file_path, parts_of_code_token
+                    ),
+                    "length diff": abs(
+                        len(parts_of_file_path) - len(parts_of_code_token)
+                    ),
+                },
+                ignore_index=True,
+            )
+
+    levenshtein_max = similarities["levenshtein"].max()
+    similarities["inverted normalized levenshtein"] = 1 - (
+        similarities["levenshtein"] / levenshtein_max
+    )
+    damerau_levenshtein_max = similarities["damerau-levenshtein"].max()
+    similarities["inverted normalized damerau-levenshtein"] = 1 - (
+        similarities["damerau-levenshtein"] / damerau_levenshtein_max
+    )
+    return similarities
