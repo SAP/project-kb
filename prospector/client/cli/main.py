@@ -207,6 +207,10 @@ def main(argv):  # noqa: C901
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
     modified_files = args.modified_files.split(",")
+<<<<<<< HEAD
+=======
+
+>>>>>>> 30aa6ce (bug: handling of user-supplied special tokens)
     code_tokens = (
         args.diff_contains.split(",") if args.diff_contains is not None else []
     )
