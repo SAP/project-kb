@@ -113,11 +113,11 @@ class TestCounter:
         counter.initialize("kiwi", "grape")
         counter.initialize("apple", "lemon", value=42)
 
-        assert counter.collection["kiwi"] == 0
-        assert counter.collection["grape"] == 0
+        assert counter.collection["kiwi"] == [0]
+        assert counter.collection["grape"] == [0]
 
-        assert counter.collection["apple"] == 42
-        assert counter.collection["lemon"] == 42
+        assert counter.collection["apple"] == [42]
+        assert counter.collection["lemon"] == [42]
 
     @staticmethod
     def test_manual():

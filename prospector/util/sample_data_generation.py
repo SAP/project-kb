@@ -1,6 +1,8 @@
 import os
 from random import choice, choices, getrandbits, randint
 
+from simple_hierarchical_storage.collection import StatisticCollection
+
 
 def random_bool():
     return choice([True, False])
@@ -146,3 +148,23 @@ def random_list_of_version(
     max_count: int, max_length: int, max_size: int, min_size: int = 0
 ):
     return [random_version(max_length, max_size, min_size) for _ in range(max_count)]
+
+
+def sample_statistics():
+    stats = StatisticCollection()
+    stats.record("apple time", 12)
+    stats.record("grape", 84)
+    stats.record(("lemon", "space time"), 42, unit="cochren")
+    stats.record(("lemon", "grape"), 128, unit="pezeta")
+    stats.collect(("lemon", "zest"), 1, unit="pinch")
+    stats.collect(("lemon", "zest"), 3)
+    stats.collect(("lemon", "zest"), 12)
+    stats.collect(("lemon", "zest"), 56)
+    stats.collect(("melon", "marry"), 34)
+    stats.collect(("melon", "marry"), 34.12)
+    stats.collect(("melon", "sweet"), 27)
+    stats.collect(("melon", "sweet"), 27.23)
+    stats.collect(("melon", "sweet"), 0.27)
+    stats.collect(("melon", "sweet"), 2.3)
+
+    return stats

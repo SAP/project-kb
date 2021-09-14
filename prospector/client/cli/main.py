@@ -211,11 +211,9 @@ def main(argv):  # noqa: C901
         time_limit_after = TIME_LIMIT_AFTER
         max_candidates = args.max_candidates
         modified_files = args.modified_files.split(",")
-    code_tokens = (
-        args.diff_contains.split(",") if args.diff_contains is not None else []
-    )
-
-    print(code_tokens)
+        code_tokens = (
+            args.diff_contains.split(",") if args.diff_contains is not None else []
+        )
 
         publication_date = ""
         if args.pub_date != "":
@@ -252,7 +250,8 @@ def main(argv):  # noqa: C901
             tag_interval=tag_interval,
             version_interval=version_interval,
             modified_files=modified_files,
-            code_tokens=code_tokens,time_limit_before=time_limit_before,
+            code_tokens=code_tokens,
+            time_limit_before=time_limit_before,
             time_limit_after=time_limit_after,
             use_nvd=use_nvd,
             nvd_rest_endpoint=nvd_rest_endpoint,
