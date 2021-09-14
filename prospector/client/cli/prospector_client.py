@@ -6,8 +6,6 @@ import requests
 from tqdm import tqdm
 
 import log
-from commit_processor.feature_extractor import extract_features
-from commit_processor.preprocessor import preprocess_commit
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from filter_rank.filter import filter_commits
@@ -18,11 +16,6 @@ from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
 from processing.commit.feature_extractor import extract_features
 from processing.commit.preprocessor import preprocess_commit
-from simple_hierarchical_storage.execution import (
-    Counter,
-    ExecutionTimer,
-    execution_statistics,
-)
 
 # from util.profile import profile
 from simple_hierarchical_storage.execution import (
@@ -40,7 +33,6 @@ TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 MAX_CANDIDATES = 1000
 
 core_statistics = execution_statistics.sub_collection("core")
-
 
 
 # @profile
