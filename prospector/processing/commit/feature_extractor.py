@@ -19,6 +19,9 @@ from util.similarity import (
 )
 from util.tokenize import tokenize_non_nl_term
 
+# from util.profile import profile
+
+
 _logger = log.util.init_local_logger()
 
 DAYS_BEFORE = 180
@@ -26,6 +29,7 @@ DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
 
+# TODO this should be removed (also its invocation from the client)
 def extract_features(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> CommitWithFeatures:
@@ -34,14 +38,14 @@ def extract_features(
         extract_time_between_commit_and_advisory_record(commit, advisory_record)
     )
     commit_reachable_from_given_tag = False
-    repo = Git(advisory_record.repository_url)
-    repo.clone(skip_existing=True)
+    # repo = Git(advisory_record.repository_url)
+    # repo.clone(skip_existing=True)
 
-    for version in advisory_record.versions:
-        version_tag = repo.get_tag_for_version(version)
-        if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag[0]):
-            commit_reachable_from_given_tag = True
-            break
+    # for version in advisory_record.versions:
+    #     version_tag = repo.get_tag_for_version(version)
+    #     if is_commit_reachable_from_given_tag(commit, advisory_record, version_tag[0]):
+    #         commit_reachable_from_given_tag = True
+    #         break
 
     changes_relevant_path = extract_changed_relevant_paths(commit, advisory_record)
     other_CVE_in_message = extract_other_CVE_in_message(commit, advisory_record)
@@ -62,6 +66,17 @@ def extract_features(
             commit, advisory_record
         ),
     )
+
+    # commit_feature = CommitWithFeatures(
+    #     commit=commit,
+    #     # references_vuln_id=references_vuln_id,
+    #     # time_between_commit_and_advisory_record=time_between_commit_and_advisory_record,
+    #     # changes_relevant_path=changes_relevant_path,
+    #     # other_CVE_in_message=other_CVE_in_message,
+    #     # referred_to_by_pages_linked_from_advisories=referred_to_by_pages_linked_from_advisories,
+    #     referred_to_by_nvd=referred_to_by_nvd,
+    #     # commit_reachable_from_given_tag=commit_reachable_from_given_tag,
+    # )
     return commit_feature
 
 
@@ -137,7 +152,7 @@ def is_commit_reachable_from_given_tag(
     Return True if the commit is reachable from the given tag
     """
     repo = Git(advisory_record.repository_url)
-    repo.clone()
+    # repo.clone()
 
     commit_id = commit.commit_id
     tag_id = repo.get_commit_id_for_tag(version_tag)

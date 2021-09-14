@@ -17,6 +17,8 @@ from log.util import init_local_logger
 from processing.commit.feature_extractor import extract_features
 from processing.commit.preprocessor import preprocess_commit
 
+# from util.profile import profile
+
 _logger = init_local_logger()
 
 SECS_PER_DAY = 86400
@@ -26,6 +28,7 @@ TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 MAX_CANDIDATES = 1000
 
 
+# @profile
 def prospector(  # noqa: C901
     vulnerability_id: str,
     repository_url: str,
@@ -70,6 +73,11 @@ def prospector(  # noqa: C901
 
     if len(code_tokens) > 0:
         advisory_record.code_tokens += tuple(code_tokens)
+<<<<<<< HEAD
+=======
+        # drop duplicates
+        advisory_record.code_tokens = list(set(advisory_record.code_tokens))
+>>>>>>> e175f62 (prepare for refactoring of feature extr. and rules)
 
     # FIXME this should be handled better (or '' should not end up in the modified_files in
     # the first place)
@@ -225,6 +233,8 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
+
+    # TODO remove "proactive" invocation of feature extraction
     _logger.info("Extracting features from commits...")
     annotated_candidates = []
     for commit in tqdm(preprocessed_commits):

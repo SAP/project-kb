@@ -64,6 +64,8 @@ def apply_rules(
     return candidates
 
 
+# TODO change signature to accept "Commit", not "CommitWithFeatures"
+# in all apply_rule_* funcs
 def apply_rule_references_vuln_id(
     candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
 ) -> str:
