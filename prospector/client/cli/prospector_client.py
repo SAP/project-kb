@@ -1,6 +1,7 @@
 import logging
 import sys
 from datetime import datetime
+from typing import List, Tuple
 
 import requests
 from tqdm import tqdm
@@ -8,6 +9,7 @@ from tqdm import tqdm
 import log
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
+from datamodel.commit_features import CommitWithFeatures
 from filter_rank.filter import filter_commits
 from filter_rank.rank import rank
 from filter_rank.rules import apply_rules
@@ -19,9 +21,9 @@ from processing.commit.preprocessor import preprocess_commit
 
 # from util.profile import profile
 from simple_hierarchical_storage.execution import (
-    Counter,
     ExecutionTimer,
     execution_statistics,
+    measure_execution_time,
 )
 
 _logger = init_local_logger()
@@ -36,6 +38,7 @@ core_statistics = execution_statistics.sub_collection("core")
 
 
 # @profile
+@measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
     vulnerability_id: str,
     repository_url: str,
@@ -54,7 +57,7 @@ def prospector(  # noqa: C901
     limit_candidates: int = MAX_CANDIDATES,
     active_rules: "list[str]" = ["ALL"],
     model_name: str = "",
-) -> "list[Commit]":
+) -> Tuple[List[CommitWithFeatures], AdvisoryRecord]:
 
     _logger.info("begin main commit and CVE processing")
 
@@ -132,6 +135,7 @@ def prospector(  # noqa: C901
             filter_files="*.java",
         )
 
+        core_statistics.record("candidates", len(candidates), unit="commits")
         _logger.info("Found %d candidates" % len(candidates))
     # if some code_tokens were found in the advisory text, require
     # that candidate commits touch some file whose path contains those tokens
@@ -174,9 +178,7 @@ def prospector(  # noqa: C901
     # commit preprocessing
     # -------------------------------------------------------------------------
 
-    with ExecutionTimer(
-        core_statistics.sub_collection(name="commit preprocessing")
-    ) as timer:
+    with ExecutionTimer(core_statistics.sub_collection(name="commit preprocessing")):
         raw_commit_data = dict()
         missing = []
         try:
@@ -218,15 +220,10 @@ def prospector(  # noqa: C901
         _logger.info("Preprocessing commits...")
         first_missing = len(preprocessed_commits)
         pbar = tqdm(missing)
-        with Counter(
-            timer.collection.sub_collection(name="commit preprocessing")
-        ) as counter:
-            counter.initialize("preprocessed commits", unit="commit")
-            for commit_id in pbar:
-                counter.increment("preprocessed commits")
-                preprocessed_commits.append(
-                    preprocess_commit(repository.get_commit(commit_id))
-                )
+        for commit_id in pbar:
+            preprocessed_commits.append(
+                preprocess_commit(repository.get_commit(commit_id))
+            )
 
         _logger.pretty_log(advisory_record)
         _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
@@ -263,17 +260,12 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
-    with ExecutionTimer(
-        core_statistics.sub_collection(name="analyze candidates")
-    ) as timer:
+    with ExecutionTimer(core_statistics.sub_collection(name="analyze candidates")):
         _logger.info("Extracting features from commits...")
         annotated_candidates = []
-        with Counter(timer.collection.sub_collection("commit analysing")) as counter:
-            counter.initialize("analyzed commits", unit="commit")
-            # TODO remove "proactive" invocation of feature extraction
-            for commit in tqdm(preprocessed_commits):
-                counter.increment("analyzed commits")
-                annotated_candidates.append(extract_features(commit, advisory_record))
+        # TODO remove "proactive" invocation of feature extraction
+        for commit in tqdm(preprocessed_commits):
+            annotated_candidates.append(extract_features(commit, advisory_record))
 
         annotated_candidates = apply_rules(
             annotated_candidates, advisory_record, active_rules=active_rules
