@@ -2,7 +2,7 @@ import pytest
 
 from api import DB_CONNECT_STRING
 from commitdb.postgres import PostgresCommitDB
-from simple_hierarchical_storage.execution import execution_statistics
+from stats.execution import execution_statistics
 
 from .main import main
 

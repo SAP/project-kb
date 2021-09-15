@@ -5,7 +5,7 @@ import pandas as pd
 
 import log.util
 from datamodel.commit import Commit
-from filter_rank import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
+from ranking import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
 
 from .utils.model_loader import save_model
 

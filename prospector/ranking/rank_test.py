@@ -6,8 +6,8 @@ import pytest
 from datamodel.commit import Commit
 
 # from datamodel.commit_features import CommitWithFeatures
-from filter_rank.filter import filter_commits
-from filter_rank.rank import make_dataframe, predict, rank, train
+from filtering.filter import filter_commits
+from ranking.rank import make_dataframe, predict, rank, train
 
 
 @pytest.fixture

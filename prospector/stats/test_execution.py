@@ -2,12 +2,8 @@ import time
 
 import pytest
 
-from simple_hierarchical_storage.collection import StatisticCollection
-from simple_hierarchical_storage.execution import (
-    Counter,
-    ExecutionTimer,
-    measure_execution_time,
-)
+from stats.collection import StatisticCollection
+from stats.execution import Counter, ExecutionTimer, measure_execution_time
 
 
 class TestMeasureTime:
@@ -27,7 +23,7 @@ class TestMeasureTime:
             len(
                 stats[
                     (
-                        "simple_hierarchical_storage",
+                        "stats",
                         "test_execution",
                         "TestMeasureTime",
                         "test_decorator",
@@ -43,7 +39,7 @@ class TestMeasureTime:
             1
             < stats[
                 (
-                    "simple_hierarchical_storage",
+                    "stats",
                     "test_execution",
                     "TestMeasureTime",
                     "test_decorator",
@@ -58,7 +54,7 @@ class TestMeasureTime:
             2
             < stats[
                 (
-                    "simple_hierarchical_storage",
+                    "stats",
                     "test_execution",
                     "TestMeasureTime",
                     "test_decorator",
@@ -91,17 +87,10 @@ class TestMeasureTime:
                 time.sleep(i / 10)
 
         assert (
-            len(
-                stats["simple_hierarchical_storage"]["test_execution"]["test_with"][
-                    "execution time"
-                ]
-            )
-            == 10
+            len(stats["stats"]["test_execution"]["test_with"]["execution time"]) == 10
         )
         for i, measured_time in enumerate(
-            stats["simple_hierarchical_storage"]["test_execution"]["test_with"][
-                "execution time"
-            ]
+            stats["stats"]["test_execution"]["test_with"]["execution time"]
         ):
             assert i / 10 < measured_time < i / 10 + 0.1
 

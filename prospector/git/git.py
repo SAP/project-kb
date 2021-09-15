@@ -16,10 +16,7 @@ import log.util
 
 # from pprint import pprint
 # import pickledb
-from simple_hierarchical_storage.execution import (
-    execution_statistics,
-    measure_execution_time,
-)
+from stats.execution import execution_statistics, measure_execution_time
 
 _logger = log.util.init_local_logger()
 

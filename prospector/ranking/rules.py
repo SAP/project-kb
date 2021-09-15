@@ -1,7 +1,7 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from processing.commit.feature_extractor import extract_references_vuln_id
-from simple_hierarchical_storage.execution import Counter, execution_statistics
+from stats.execution import Counter, execution_statistics
 
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
