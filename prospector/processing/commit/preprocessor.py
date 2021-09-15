@@ -37,7 +37,7 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     commit_id = git_commit.get_id()
     repository_url = git_commit._repository._url
 
-    result = DatamodelCommit(commit_id=commit_id, repository=repository_url)
+    commit = DatamodelCommit(commit_id=commit_id, repository=repository_url)
 
     # This is where all the attributes of the preprocessed commit
     # are computed and assigned.
@@ -47,17 +47,15 @@ def preprocess_commit(git_commit: GitCommit) -> DatamodelCommit:
     # should be computed here so that they can be stored in the db.
     # Space-efficiency is important.
 
-    result.diff = git_commit.get_diff()
-    result.hunks = git_commit.get_hunks()
-    result.message = git_commit.get_msg()
-    result.timestamp = int(git_commit.get_timestamp())
-    result.changed_files = git_commit.get_changed_files()
-    result.tags = git_commit.get_tags()
-    # TODO extract commit tags
+    commit.diff = git_commit.get_diff()
+    commit.hunks = git_commit.get_hunks()
+    commit.message = git_commit.get_msg()
+    commit.timestamp = int(git_commit.get_timestamp())
+    commit.changed_files = git_commit.get_changed_files()
+    commit.tags = git_commit.get_tags()
 
-    result.jira_refs = list(set(extract_jira_references(result.message)))
-    result.ghissue_refs = extract_ghissue_references(result.message)
-    result.cve_refs = extract_cve_references(result.message)
-    # result.preprocessed_message = ....
+    commit.jira_refs = list(set(extract_jira_references(commit.message)))
+    commit.ghissue_refs = extract_ghissue_references(commit.message)
+    commit.cve_refs = extract_cve_references(commit.message)
 
-    return result
+    return commit

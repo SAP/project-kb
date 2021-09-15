@@ -8,22 +8,18 @@ from tqdm import tqdm
 import log
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from filter_rank.filter import filter_commits
-from filter_rank.rank import rank
-from filter_rank.rules import apply_rules
+from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
 
 # from processing.commit.feature_extractor import extract_features
 from processing.commit.preprocessor import preprocess_commit
+from ranking.rank import rank
+from ranking.rules import apply_rules
 
 # from util.profile import profile
-from simple_hierarchical_storage.execution import (
-    Counter,
-    ExecutionTimer,
-    execution_statistics,
-)
+from stats.execution import Counter, ExecutionTimer, execution_statistics
 
 _logger = init_local_logger()
 

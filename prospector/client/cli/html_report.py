@@ -6,7 +6,7 @@ import jinja2
 import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from simple_hierarchical_storage.execution import execution_statistics
+from stats.execution import execution_statistics
 
 _logger = log.util.init_local_logger()
 

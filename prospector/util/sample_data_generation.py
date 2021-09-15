@@ -1,7 +1,7 @@
 import os
 from random import choice, choices, getrandbits, randint
 
-from simple_hierarchical_storage.collection import StatisticCollection
+from stats.collection import StatisticCollection
 
 
 def random_bool():

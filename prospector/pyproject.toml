@@ -8,7 +8,10 @@ testpaths = [
     "processing",
     "git",
     "api",
-    "filter_rank"
+    "ranking",
+    "filtering",
+    "stats",
+    "util"
 ]
 
 [tool.isort]

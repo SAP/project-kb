@@ -4,7 +4,7 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
 # from datamodel.commit_features import CommitWithFeatures
-from filter_rank.rules import apply_rules
+from ranking.rules import apply_rules
 
 
 @pytest.fixture

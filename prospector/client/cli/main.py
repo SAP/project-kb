@@ -22,7 +22,7 @@ from client.cli.prospector_client import (
     prospector,
 )
 from git.git import GIT_CACHE
-from simple_hierarchical_storage.execution import ExecutionTimer, execution_statistics
+from stats.execution import ExecutionTimer, execution_statistics
 
 _logger = log.util.init_local_logger()
 

@@ -1,6 +1,6 @@
 import pytest
 
-from simple_hierarchical_storage.collection import (
+from stats.collection import (
     ForbiddenDuplication,
     StatisticCollection,
     TransparentWrapper,
@@ -125,16 +125,11 @@ def test_sub_collection():
     with stats.sub_collection() as sub_collection:
         sub_collection.record("apple", 42)
 
-    assert (
-        stats["simple_hierarchical_storage"]["test_collection"]["test_sub_collection"][
-            "apple"
-        ]
-        == 42
-    )
+    assert stats["stats"]["test_collection"]["test_sub_collection"]["apple"] == 42
     assert (
         stats[
             (
-                "simple_hierarchical_storage",
+                "stats",
                 "test_collection",
                 "test_sub_collection",
                 "apple",
