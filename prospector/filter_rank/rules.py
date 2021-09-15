@@ -1,5 +1,7 @@
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit_features import CommitWithFeatures
+from datamodel.commit import Commit
+from processing.commit.feature_extractor import extract_references_vuln_id
+from simple_hierarchical_storage.execution import Counter, execution_statistics
 
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
@@ -8,7 +10,7 @@ QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
    Pick a clear rule id (all capitals, underscore separated) and a rule function
    (start with apply_rule_....)
 
-2. Implement the rule function, which MUST take as input a CommitWithFeatures
+2. Implement the rule function, which MUST take as input a datamodel.commit.Commit
    and an AdvisoryRecord and must return either None, if the rule did not match,
    or a string explaining the match that was found.
 
@@ -19,12 +21,14 @@ IMPORTANT: you are not supposed to change the content of function apply_rules, e
 adding entries to its inner RULES dictionary.
 """
 
+rule_statistics = execution_statistics.sub_collection(("core", "rule"))
+
 
 def apply_rules(
-    candidates: "list[CommitWithFeatures]",
+    candidates: "list[Commit]",
     advisory_record: AdvisoryRecord,
     active_rules=["ALL"],
-) -> "list[CommitWithFeatures]":
+) -> "list[Commit]":
     """
     This applies a set of hand-crafted rules and returns a dict in the following form:
 
@@ -54,12 +58,15 @@ def apply_rules(
 
     # print("Enabled rules: " + str(rules))
 
-    for candidate in candidates:
-        for rule_id in rules:
-            apply_rule_func = rules[rule_id]
-            rule_explanation = apply_rule_func(candidate, advisory_record)
-            if rule_explanation:
-                candidate.annotations[rule_id] = rule_explanation
+    with Counter(rule_statistics.sub_collection("applying rules")) as counter:
+        for candidate in candidates:
+            counter.collection.collect("fitting rules", 0, unit="rule/candidate")
+            for rule_id in rules:
+                apply_rule_func = rules[rule_id]
+                rule_explanation = apply_rule_func(candidate, advisory_record)
+                if rule_explanation:
+                    candidate.annotations[rule_id] = rule_explanation
+                    counter.increment("fitting rules")
 
     return candidates
 
@@ -67,44 +74,45 @@ def apply_rules(
 # TODO change signature to accept "Commit", not "CommitWithFeatures"
 # in all apply_rule_* funcs
 def apply_rule_references_vuln_id(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
 
     explanation_template = (
         "The commit message mentions the vulnerability identifier '{}'"
     )
 
-    if candidate.references_vuln_id:
+    references_vuln_id = extract_references_vuln_id(candidate, advisory_record)
+    if references_vuln_id:
         return explanation_template.format(advisory_record.vulnerability_id)
     return None
 
 
 def apply_rule_references_ghissue(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
 
     explanation_template = (
         "The commit message refers to the following GitHub issues: '{}'"
     )
 
-    if len(candidate.commit.ghissue_refs) > 0:
-        return explanation_template.format(str(candidate.commit.ghissue_refs))
+    if len(candidate.ghissue_refs) > 0:
+        return explanation_template.format(str(candidate.ghissue_refs))
     return None
 
 
 def apply_rule_references_jira_issue(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
 
     explanation_template = "The commit message refers to the following Jira issues: {}"
 
-    if len(candidate.commit.jira_refs) > 0:
-        return explanation_template.format(", ".join(candidate.commit.jira_refs))
+    if len(candidate.jira_refs) > 0:
+        return explanation_template.format(", ".join(candidate.jira_refs))
     return None
 
 
 def apply_rule_changes_relevant_path(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
     This rule matches commits that touch some file that is mentioned
@@ -118,7 +126,7 @@ def apply_rule_changes_relevant_path(
     relevant_paths = set(
         [
             path
-            for path in candidate.commit.changed_files
+            for path in candidate.changed_files
             for adv_path in advisory_record.paths
             if adv_path in path
         ]
@@ -132,7 +140,7 @@ def apply_rule_changes_relevant_path(
 
 
 def apply_rule_code_tokens_in_msg(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
     This rule matches commits whose commit message contain some of the special "code tokens"
@@ -142,7 +150,7 @@ def apply_rule_code_tokens_in_msg(
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
-        [kw for kw in advisory_record.code_tokens if kw in candidate.commit.message]
+        [kw for kw in advisory_record.code_tokens if kw in candidate.message]
     )
 
     if len(matching_keywords) > 0:
@@ -152,7 +160,7 @@ def apply_rule_code_tokens_in_msg(
 
 
 def apply_rule_code_tokens_in_diff(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
     This rule matches commits whose diff contain some of the special "code tokens"
@@ -165,7 +173,7 @@ def apply_rule_code_tokens_in_diff(
         [
             kw
             for kw in advisory_record.code_tokens
-            for diff_line in candidate.commit.diff
+            for diff_line in candidate.diff
             if kw in diff_line
         ]
     )
@@ -177,7 +185,7 @@ def apply_rule_code_tokens_in_diff(
 
 
 def apply_rule_security_keyword_in_msg(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
     This rule matches commits whose message contains one or more "security-related" keywords
@@ -196,7 +204,7 @@ def apply_rule_security_keyword_in_msg(
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
-        [kw for kw in SEC_KEYWORDS if kw in candidate.commit.message.lower()]
+        [kw for kw in SEC_KEYWORDS if kw in candidate.message.lower()]
     )
 
     if len(matching_keywords) > 0:
@@ -206,7 +214,7 @@ def apply_rule_security_keyword_in_msg(
 
 
 def apply_rule_code_token_in_paths(
-    candidate: CommitWithFeatures, advisory_record: AdvisoryRecord
+    candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
     This rule matches commits that modify paths that correspond to a code token extracted
@@ -218,7 +226,7 @@ def apply_rule_code_token_in_paths(
     matches = set(
         [
             (p, token)
-            for p in candidate.commit.changed_files
+            for p in candidate.changed_files
             for token in advisory_record.code_tokens
             if token in p
         ]

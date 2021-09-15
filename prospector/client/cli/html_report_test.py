@@ -5,8 +5,7 @@ from random import randint
 from client.cli.html_report import report_as_html
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from datamodel.commit_features import CommitWithFeatures
-from util.sample_data_generation import (
+from util.sample_data_generation import (  # random_list_of_url,
     random_bool,
     random_commit_hash,
     random_dict_of_strs,
@@ -16,39 +15,32 @@ from util.sample_data_generation import (
     random_list_of_jira_refs,
     random_list_of_path,
     random_list_of_strs,
-    random_list_of_url,
     random_list_of_version,
     random_url,
+    sample_statistics,
 )
 
 
 def test_report_generation():
     candidates = []
     for _ in range(100):
-        commit_with_feature = CommitWithFeatures(
-            commit=Commit(
-                commit_id=random_commit_hash(),
-                repository=random_url(4),
-                message=" ".join(random_list_of_strs(100)),
-                timestamp=randint(0, 100000),
-                hunks=random_list_of_hunks(1000, 42),
-                diff=random_list_of_strs(200),
-                changed_files=random_list_of_path(4, 42),
-                message_reference_content=random_list_of_strs(42),
-                jira_refs=random_list_of_jira_refs(42),
-                ghissue_refs=random_list_of_github_issue_ids(100000, 42),
-                cve_refs=random_list_of_cve(42),
-                tags=random_list_of_strs(42),
-            ),
-            references_vuln_id=random_bool(),
-            time_between_commit_and_advisory_record=randint(0, 42),
-            changes_relevant_path=set(random_list_of_path(4, 42)),
-            other_CVE_in_message=set(random_list_of_cve(42)),
-            referred_to_by_pages_linked_from_advisories=set(random_list_of_url(4, 42)),
-            referred_to_by_nvd=set(random_list_of_url(4, 42)),
+        annotated_candidates = Commit(
+            commit_id=random_commit_hash(),
+            repository=random_url(4),
+            message=" ".join(random_list_of_strs(100)),
+            timestamp=randint(0, 100000),
+            hunks=random_list_of_hunks(1000, 42),
+            diff=random_list_of_strs(200),
+            changed_files=random_list_of_path(4, 42),
+            message_reference_content=random_list_of_strs(42),
+            jira_refs=random_list_of_jira_refs(42),
+            ghissue_refs=random_list_of_github_issue_ids(100000, 42),
+            cve_refs=random_list_of_cve(42),
+            tags=random_list_of_strs(42),
             annotations=random_dict_of_strs(16, 10),
         )
-        candidates.append(commit_with_feature)
+
+        candidates.append(annotated_candidates)
 
     advisory = AdvisoryRecord(
         vulnerability_id=random_list_of_cve(max_count=1, min_count=1)[0],
@@ -71,5 +63,7 @@ def test_report_generation():
     filename = "test_report.html"
     if os.path.isfile(filename):
         os.remove(filename)
-    generated_report = report_as_html(candidates, advisory, filename)
+    generated_report = report_as_html(
+        candidates, advisory, filename, statistics=sample_statistics()
+    )
     assert os.path.isfile(generated_report)

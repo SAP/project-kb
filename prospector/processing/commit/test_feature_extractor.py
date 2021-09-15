@@ -7,9 +7,8 @@ from datamodel.commit import Commit
 from git.git import Git
 from util.sample_data_generation import random_list_of_cve
 
-from .feature_extractor import (
+from .feature_extractor import (  # extract_features,
     extract_changed_relevant_paths,
-    extract_features,
     extract_other_CVE_in_message,
     extract_path_similarities,
     extract_references_vuln_id,
@@ -29,46 +28,46 @@ def repository():
     return repo
 
 
-def test_extract_features(repository, requests_mock):
-    requests_mock.get(
-        "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
-    )
-    requests_mock.get(
-        "https://for.testing.purposes/containing_commit_id_in_text",
-        text="some text 7532d2fb0d6081a12c2a48ec854a81a8b718be62 blah",
-    )
+# def test_extract_features(repository, requests_mock):
+#     requests_mock.get(
+#         "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
+#     )
+#     requests_mock.get(
+#         "https://for.testing.purposes/containing_commit_id_in_text",
+#         text="some text 7532d2fb0d6081a12c2a48ec854a81a8b718be62 blah",
+#     )
 
-    repo = repository
-    commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
-    processed_commit = preprocess_commit(commit)
+#     repo = repository
+#     commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
+#     processed_commit = preprocess_commit(commit)
 
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="CVE-2020-26258",
-        repository_url="https://github.com/apache/struts",
-        published_timestamp=1607532756,
-        references=[
-            "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
-            "https://for.testing.purposes/containing_commit_id_in_text",
-        ],
-        paths=["pom.xml"],
-    )
+#     advisory_record = AdvisoryRecord(
+#         vulnerability_id="CVE-2020-26258",
+#         repository_url="https://github.com/apache/struts",
+#         published_timestamp=1607532756,
+#         references=[
+#             "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
+#             "https://for.testing.purposes/containing_commit_id_in_text",
+#         ],
+#         paths=["pom.xml"],
+#     )
 
-    extracted_features = extract_features(processed_commit, advisory_record)
+#     extracted_features = extract_features(processed_commit, advisory_record)
 
-    assert extracted_features.references_vuln_id is True
-    assert extracted_features.time_between_commit_and_advisory_record == 1000000
-    assert extracted_features.changes_relevant_path == [
-        "pom.xml",
-    ]
-    assert extracted_features.other_CVE_in_message == [
-        "CVE-2020-26259",
-    ]
-    assert extracted_features.referred_to_by_pages_linked_from_advisories == [
-        "https://for.testing.purposes/containing_commit_id_in_text",
-    ]
-    assert extracted_features.referred_to_by_nvd == [
-        "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
-    ]
+#     assert extracted_features.references_vuln_id is True
+#     assert extracted_features.time_between_commit_and_advisory_record == 1000000
+#     assert extracted_features.changes_relevant_path == [
+#         "pom.xml",
+#     ]
+#     assert extracted_features.other_CVE_in_message == [
+#         "CVE-2020-26259",
+#     ]
+#     assert extracted_features.referred_to_by_pages_linked_from_advisories == [
+#         "https://for.testing.purposes/containing_commit_id_in_text",
+#     ]
+#     assert extracted_features.referred_to_by_nvd == [
+#         "https://for.testing.purposes/reference/to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62",
+#     ]
 
 
 def test_extract_references_vuln_id():

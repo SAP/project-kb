@@ -3,7 +3,7 @@
 {% set icon = "fas fa-shield-alt" %}
 {% block body %}
 <p>
-    {% for cve in commit_with_feature.other_CVE_in_message %}
+    {% for cve in annotated_commit.other_CVE_in_message %}
     <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name={{ cve }}" target="_blank"
         class="btn btn-outline-primary btn-sm" style="margin: 2pt;">{{
         cve }}</a>
