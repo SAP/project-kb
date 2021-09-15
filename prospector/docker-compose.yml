@@ -1,0 +1,56 @@
+version: "3.1"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    ports:
+      - "8000:80"
+    depends_on:
+      - redis
+      - db
+    environment:
+      GIT_CACHE: /tmp
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DBNAME: postgres
+      PRE_START_PATH: /app/update-feeds.sh
+    volumes:
+      - ${CVE_DATA_PATH:-./cve_data}:/cve_data
+
+  worker:
+    build:
+      context: docker/worker
+      dockerfile: Dockerfile
+    volumes:
+      - .:/pythonimports
+    depends_on:
+      - redis
+    environment:
+      LOG_LEVEL: debug
+      PIP_REQUIREMENTS: requirements.txt
+      GIT_CACHE: /tmp
+
+  db:
+    image: postgres
+    container_name: db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080

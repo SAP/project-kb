@@ -1,0 +1,10 @@
+{% extends "titled_block.html" %}
+{% set title = "Referred by pages linked from advisories" %}
+{% set icon = "fas fa-link" %}
+{% block body %}
+<p>
+    {% for page in annotated_commit.referred_to_by_pages_linked_from_advisories %}
+    <a href="{{ page }}" class="btn btn-outline-primary btn-sm" style="margin: 2pt;">{{ page }}</a>
+    {% endfor %}
+</p>
+{% endblock %}

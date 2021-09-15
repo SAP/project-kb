@@ -7,6 +7,7 @@
 [![Join the chat at https://gitter.im/project-kb/general](https://badges.gitter.im/project-kb/general.svg)](https://gitter.im/project-kb/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![GitHub All Releases](https://img.shields.io/github/downloads/SAP/PROJECT-KB/total)
 [![REUSE status](https://api.reuse.software/badge/github.com/sap/project-kb)](https://api.reuse.software/info/github.com/sap/project-kb)
+[![Pytest](https://github.com/SAP/project-kb/actions/workflows/python.yml/badge.svg)](https://github.com/SAP/project-kb/actions/workflows/python.yml)
 
 
 `Project KB` supports the creation, management and aggregation of a
@@ -65,12 +66,9 @@ The **toolkit** comprises:
     - fetch vulnerability statements from one or more remote sources (git repositories)
     - merge the content of multiple sources of statements, based on a conflict resolution policy
     - export the result of the merge operation to a variety of different formats
-  * `prospector`, a research prototype to help map vulnerability advisories onto
-    the commits that contain fixes for those vulnerabilities (more info
-    [here]](https://arxiv.org/abs/2103.13375)).
+  * `prospector`, a research prototype to help map vulnerability advisories onto the commits that contain fixes for those vulnerabilities.
 
-The **knowledge base**, offers a set of vulnerability statements that can be
-consumed using the `kaybee` tool.
+The **knowledge base**, offers a set of vulnerability statements that can be consumed using the `kaybee` tool.
 
 ## Getting started
 

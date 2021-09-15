@@ -1,0 +1,32 @@
+<div class="col-3 h-100 overflow-scroll bg-light bg-gradient border border-secondary">
+    <h2>Filters</h2>
+    <p class="text-center">
+        Displaying all items with at least one <button class="btn btn-primary btn-sm">on annotation filter</button>.
+        You could toggle the filters between <button class="btn btn-primary btn-sm">on</button> and
+        <button class="btn btn-outline-primary btn-sm">off</button> states by left click on them.<br/>
+    {% for annotation, count in present_annotations.items() | sort %}
+        <button
+                class="btn btn-primary btn-sm selector"
+                style="margin: 5pt 5pt 5pt 0;"
+                data-annotation="{{ annotation }}"
+        >{{ annotation }} <span class="badge bg-secondary">{{ count }}</span></button>
+    {% endfor %}
+    </p>
+    <p>
+        <button class="btn btn-primary" id="collapse_all_toggle">Collapse All</button>
+    </p>
+    <div class="advisory-record">
+        <h2>Results based on this Advisory Record</h2>
+        <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b>{{ advisory_record.vulnerability_id }}</b></a><br/>
+        <p>{{ advisory_record.description }}</p>
+        <p style="margin: 10pt 0 0;">
+            {% for code_token in advisory_record.code_tokens | sort %}
+                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ code_token }}</span>
+            {% endfor %}
+        </p>
+    </div>
+    <div class="statistics" style="margin-top: 3ex">
+        <h2>Execution statistics</h2>
+        {{ execution_statistics | safe }}
+    </div>
+</div>

@@ -1,0 +1,25 @@
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h5 class="mb-0">
+                {{ annotated_commit.message | truncate(150) }}
+                {% if not annotated_commit.message %}
+                <i>(no commit message found)</i>
+                {% endif %}
+            </h5>
+        <p style="margin: 10pt 0 0;">
+            <i class="fas fa-bullhorn"></i>
+            {% for annotation, comment in annotated_commit.annotations.items() | sort %}
+                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ annotation }}</span>
+            {% endfor %}
+        </p>
+        </div>
+        <div class="col col-auto">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+                data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false"
+                aria-controls="collapseExample">
+                <i class="fas fa-low-vision"></i>
+            </button>
+        </div>
+    </div>
+</div>

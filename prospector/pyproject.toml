@@ -1,0 +1,19 @@
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov-config=.coveragerc --cov-report html:cov_html --cov=."
+testpaths = [
+    "commitdb",
+    "datamodel",
+    "client",
+    "processing",
+    "git",
+    "api",
+    "ranking",
+    "filtering",
+    "stats",
+    "util"
+]
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3

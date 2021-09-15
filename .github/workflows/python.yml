@@ -1,0 +1,72 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python
+
+on:
+  push:
+    branches: [prospector-assuremoss]
+  pull_request:
+    branches: [prospector-assuremoss]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis:alpine
+        ports:
+          - 6379:6379
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Setup pipenv environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+      - name: Activate pipenv
+        run: |
+          cd prospector
+          pipenv --python 3.8
+          pipenv install --dev
+      - name: Flake8
+        uses: TrueBrain/actions-flake8@master
+        with:
+          path: prospector
+          max_line_length: 100
+          ignore: E203,E501,W503
+      - name: Test with pytest
+        env:
+          GIT_CACHE: "/tmp/git-cache"
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "postgres"
+          POSTGRES_HOST: "localhost"
+          POSTGRES_PORT: "5432"
+          POSTGRES_DBNAME: "postgres"
+          REDIS_URL: ""
+        run: |
+          cd prospector
+          [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
+          pipenv run pytest

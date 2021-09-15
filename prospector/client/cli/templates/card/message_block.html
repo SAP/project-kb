@@ -1,0 +1,6 @@
+{% extends "titled_block.html" %}
+{% set title = "Commit message" %}
+{% set icon = "fas fa-quote-left" %}
+{% block body %}
+<pre class="card-text" style="white-space: pre-wrap;">{{ annotated_commit.message }}</pre>
+{% endblock %}
