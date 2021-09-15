@@ -1,10 +1,9 @@
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
 
 class Commit(BaseModel):
-    # class Commit:
     commit_id: str = ""
     repository: str = ""
     timestamp: Optional[int] = 0
@@ -17,6 +16,7 @@ class Commit(BaseModel):
     ghissue_refs: List[str] = Field(default_factory=list)
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
+    annotations: Dict[str, str] = Field(default_factory=dict)
 
     @property
     def hunk_count(self):

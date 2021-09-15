@@ -1,17 +1,17 @@
 <h5 class="card-title">
-    <i class="fas fa-code-branch"></i> {{ commit_with_feature.commit.commit_id }}
+    <i class="fas fa-code-branch"></i> {{ annotated_commit.commit_id }}
 </h5>
 <h6 class="card-subtitle mb-2 text-muted">
-    <i class="fab fa-git-alt"></i> {{ commit_with_feature.commit.repository }}
-    {% if 'github' in commit_with_feature.commit.repository %}
+    <i class="fab fa-git-alt"></i> {{ annotated_commit.repository }}
+    {% if 'github' in annotated_commit.repository %}
     <a
-        href="{{ commit_with_feature.commit.repository }}/commit/{{ commit_with_feature.commit.commit_id }}"
+        href="{{ annotated_commit.repository }}/commit/{{ annotated_commit.commit_id }}"
         target="_blank"
         class="btn btn-primary btn-sm"
     >Open Commit (assume GitHub-like API)</a>
     {% else %}
     <a
-        href="{{ commit_with_feature.commit.repository }}"
+        href="{{ annotated_commit.repository }}"
         target="_blank"
         class="btn btn-primary btn-sm"
     >Open Repository (unknown API)</a>

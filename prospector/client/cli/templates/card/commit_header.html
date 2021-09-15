@@ -2,14 +2,14 @@
     <div class="row">
         <div class="col">
             <h5 class="mb-0">
-                {{ commit_with_feature.commit.message | truncate(150) }}
-                {% if not commit_with_feature.commit.message %}
+                {{ annotated_commit.message | truncate(150) }}
+                {% if not annotated_commit.message %}
                 <i>(no commit message found)</i>
                 {% endif %}
             </h5>
         <p style="margin: 10pt 0 0;">
             <i class="fas fa-bullhorn"></i>
-            {% for annotation, comment in commit_with_feature.annotations.items() | sort %}
+            {% for annotation, comment in annotated_commit.annotations.items() | sort %}
                 <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ annotation }}</span>
             {% endfor %}
         </p>
