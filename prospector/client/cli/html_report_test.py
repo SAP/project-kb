@@ -49,7 +49,6 @@ def test_report_generation():
         last_modified_timestamp=randint(0, 100000),
         references=random_list_of_strs(42),
         references_content=random_list_of_strs(42),
-        advisory_references=random_list_of_cve(42),
         affected_products=random_list_of_strs(42),
         description=" ".join(random_list_of_strs(42)),
         preprocessed_vulnerability_description=" ".join(random_list_of_strs(42)),

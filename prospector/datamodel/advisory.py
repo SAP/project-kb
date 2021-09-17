@@ -34,7 +34,6 @@ class AdvisoryRecord(BaseModel):
     last_modified_timestamp: int = 0
     references: List[str] = Field(default_factory=list)
     references_content: List[str] = Field(default_factory=list)
-    advisory_references: List[str] = Field(default_factory=list)
     affected_products: List[str] = Field(default_factory=list)
     description: Optional[str] = ""
     preprocessed_vulnerability_description: str = ""

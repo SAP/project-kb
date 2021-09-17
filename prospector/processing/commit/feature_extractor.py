@@ -142,7 +142,8 @@ def extract_referred_to_by_nvd(
 ) -> Set[str]:
     return set(
         filter(
-            lambda reference: commit.commit_id in reference, advisory_record.references
+            lambda reference: commit.commit_id[:8] in reference,
+            advisory_record.references,
         )
     )
 
