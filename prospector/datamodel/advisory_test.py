@@ -6,10 +6,22 @@ from datamodel.advisory import AdvisoryRecord
 
 def test_advisory_basic():
     adv_rec = AdvisoryRecord(
-        vulnerability_id="CVE-2015-5612", repository_url="https://github.com/abc/xyz"
+        vulnerability_id="CVE-2015-5612",
+        repository_url="https://github.com/abc/xyz",
+        references=[
+            "https://github.com/abc/def/commit/af542817cb325173410876aa3",
+            "https://github.com/abc/def/issues/54",
+        ],
     )
 
     assert adv_rec.repository_url == "https://github.com/abc/xyz"
+
+    mentions_commit = False
+    for r in adv_rec.references:
+        if "af542817c" in r:
+            mentions_commit = True
+
+    assert mentions_commit
     # assert ar.vulnerability_id == "CVE-2015-5612"
     # assert ar.published_timestamp == "2015-09-04T15:59Z"
 

@@ -1,6 +1,9 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from processing.commit.feature_extractor import extract_references_vuln_id
+from processing.commit.feature_extractor import (
+    extract_references_vuln_id,
+    extract_referred_to_by_nvd,
+)
 from stats.execution import Counter, execution_statistics
 
 """
@@ -46,6 +49,7 @@ def apply_rules(
         "REF_GH_ISSUE": apply_rule_references_ghissue,
         "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
         "CH_REL_PATH": apply_rule_changes_relevant_path,
+        "COMMIT_REFERENCED_BY_ADV": apply_rule_commit_referenced_by_adv,
     }
 
     if "ALL" in active_rules:
@@ -239,5 +243,20 @@ def apply_rule_code_token_in_paths(
             explained_matches.append("{} ({})".format(m[0], m[1]))
 
         return explanation_template.format(", ".join(explained_matches))
+
+    return None
+
+
+def apply_rule_commit_referenced_by_adv(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    explanation_template = (
+        "One or more links to this commit appear in the advisory page: ({})"
+    )
+
+    commit_references = extract_referred_to_by_nvd(candidate, advisory_record)
+
+    if len(commit_references) > 0:
+        return explanation_template.format(", ".join(commit_references))
 
     return None

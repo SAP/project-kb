@@ -33,7 +33,7 @@ def candidates():
         ),
         Commit(
             repository="repo5",
-            commit_id="5",
+            commit_id="7532d2fb0d6081a12c2a48ec854a81a8b718be62",
             message="Insecure deserialization",
             changed_files={
                 "core/src/main/java/org/apache/cxf/workqueue/AutomaticWorkQueueImpl.java"
@@ -48,9 +48,7 @@ def advisory_record():
         vulnerability_id="CVE-2020-26258",
         repository_url="https://github.com/apache/struts",
         published_timestamp=1607532756,
-        references=[
-            "https://reference.to/some/commit/7532d2fb0d6081a12c2a48ec854a81a8b718be62"
-        ],
+        references=["https://reference.to/some/commit/7532d2fb0d60"],
         code_tokens=["AutomaticWorkQueueImpl"],
         paths=["pom.xml"],
     )
@@ -86,3 +84,4 @@ def test_apply_rules(candidates: "list[Commit]", advisory_record: AdvisoryRecord
 
     assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[4].annotations
     assert "TOKENS_IN_MODIFIED_PATHS" in annotated_candidates[4].annotations
+    assert "COMMIT_REFERENCED_BY_ADV" in annotated_candidates[4].annotations
