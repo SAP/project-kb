@@ -1,10 +1,8 @@
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from processing.commit.feature_extractor import (
-    extract_references_vuln_id,
-    extract_referred_to_by_nvd,
-)
 from stats.execution import Counter, execution_statistics
+
+from .rule_helpers import extract_references_vuln_id, extract_referred_to_by_nvd
 
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE

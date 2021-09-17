@@ -10,7 +10,8 @@ import requests
 from pydantic import BaseModel, Field
 
 import log.util
-from processing.nlp import (
+
+from .nlp import (
     extract_path_tokens,
     extract_products,
     extract_special_terms,

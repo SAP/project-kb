@@ -1,7 +1,7 @@
 import re
 from typing import List, Tuple
 
-from processing.constants import RELEVANT_EXTENSIONS
+from datamodel.constants import RELEVANT_EXTENSIONS
 
 
 def extract_special_terms(description: str) -> Tuple[str, ...]:

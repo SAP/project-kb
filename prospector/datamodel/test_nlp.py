@@ -1,4 +1,4 @@
-from processing.nlp import (
+from .nlp import (
     extract_cve_references,
     extract_jira_references,
     extract_path_tokens,

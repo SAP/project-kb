@@ -238,6 +238,7 @@ class StatisticCollection(dict):
                     icon = '<i class="fas fa-hourglass-half"></i>'
                 else:
                     icon = '<i class="fas fa-info-circle"></i>'
+
                 if (
                     isinstance(child, list)
                     and len(child) > 1
@@ -252,9 +253,15 @@ class StatisticCollection(dict):
                         ul += f'<li class="property">{property}</li>'
                     ul += "</ul></li>"
                 else:
-                    if unit is None:
-                        ul += f"<li>{icon} <strong>{key}</strong> = {child}</li>"
+                    ul += f"<li>{icon} <strong>{key}</strong> = "
+                    if isinstance(child, list) and len(child) == 1:
+                        child = child[0]
+                    if isinstance(child, float):
+                        ul += f"{child:.4}"
                     else:
-                        ul += f"<li>{icon} <strong>{key}</strong> = {child} {unit}</li>"
+                        ul += str(child)
+                    if unit is not None:
+                        ul += f" {unit}"
+                    ul += "</li>"
         ul += "</ul>"
         return ul
