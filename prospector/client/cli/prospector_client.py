@@ -8,12 +8,13 @@ from tqdm import tqdm
 
 import log
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit
+from datamodel.commit import Commit, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
-from processing.commit.preprocessor import preprocess_commit
+
+# from processing.commit.preprocessor import preprocess_commit
 from ranking.rank import rank
 from ranking.rules import apply_rules
 
@@ -228,7 +229,7 @@ def prospector(  # noqa: C901
             for commit_id in pbar:
                 counter.increment("preprocessed commits")
                 preprocessed_commits.append(
-                    preprocess_commit(repository.get_commit(commit_id))
+                    make_from_raw_commit(repository.get_commit(commit_id))
                 )
 
         _logger.pretty_log(advisory_record)

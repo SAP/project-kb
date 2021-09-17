@@ -10,7 +10,6 @@ from datamodel.commit import Commit
 
 # from datamodel.commit_features import CommitWithFeatures
 from git.git import Git
-from processing.constants import ALLOWED_SITES
 from util.similarity import (
     damerau_levenshtein_edit_distance,
     jaccard_set_similarity,
@@ -23,6 +22,15 @@ from util.tokenize import tokenize_non_nl_term
 # from util.profile import profile
 
 # TODO move this file to the rules package and rename it to helpers.py
+
+ALLOWED_SITES = [
+    "for.testing.purposes",
+    "lists.apache.org",
+    "just.an.example.site",
+    "one.more.example.site",
+    "non-existing-url.com",  # for testing.
+    "jvndb.jvn.jp",  # for trying out: usually does not aviable, but not always, anyway it is a good example
+]
 
 _logger = log.util.init_local_logger()
 

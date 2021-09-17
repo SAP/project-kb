@@ -3,11 +3,11 @@ import pytest
 
 # from datamodel import advisory
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit
+from datamodel.commit import Commit, make_from_raw_commit
 from git.git import Git
 from util.sample_data_generation import random_list_of_cve
 
-from .feature_extractor import (  # extract_features,
+from .rule_helpers import (  # extract_features,
     extract_changed_relevant_paths,
     extract_other_CVE_in_message,
     extract_path_similarities,
@@ -18,7 +18,6 @@ from .feature_extractor import (  # extract_features,
     is_commit_in_given_interval,
     is_commit_reachable_from_given_tag,
 )
-from .preprocessor import preprocess_commit
 
 
 @pytest.fixture
@@ -39,7 +38,7 @@ def repository():
 
 #     repo = repository
 #     commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
-#     processed_commit = preprocess_commit(commit)
+#     processed_commit = make_from_raw_commit(commit)
 
 #     advisory_record = AdvisoryRecord(
 #         vulnerability_id="CVE-2020-26258",
@@ -244,8 +243,8 @@ def test_extract_referred_to_by_nvd(repository):
 def test_is_commit_reachable_from_given_tag(repository):
 
     repo = repository
-    commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
-    test_commit = preprocess_commit(commit)
+    raw_commit = repo.get_commit("7532d2fb0d6081a12c2a48ec854a81a8b718be62")
+    commit = make_from_raw_commit(raw_commit)
 
     advisory_record = AdvisoryRecord(
         vulnerability_id="CVE-2020-26258",
@@ -256,11 +255,13 @@ def test_is_commit_reachable_from_given_tag(repository):
     )
 
     assert not is_commit_reachable_from_given_tag(
-        test_commit, advisory_record, advisory_record.versions[0]
+        commit, advisory_record, advisory_record.versions[0]
     )
 
     assert is_commit_reachable_from_given_tag(
-        preprocess_commit(repo.get_commit("2e19fc6670a70c13c08a3ed0927abc7366308bb1")),
+        make_from_raw_commit(
+            repo.get_commit("2e19fc6670a70c13c08a3ed0927abc7366308bb1")
+        ),
         advisory_record,
         advisory_record.versions[1],
     )
