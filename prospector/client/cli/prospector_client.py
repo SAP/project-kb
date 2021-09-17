@@ -1,6 +1,7 @@
 import logging
 import sys
 from datetime import datetime
+from typing import List, Tuple
 
 import requests
 from tqdm import tqdm
@@ -12,14 +13,17 @@ from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
-
-# from processing.commit.feature_extractor import extract_features
 from processing.commit.preprocessor import preprocess_commit
 from ranking.rank import rank
 from ranking.rules import apply_rules
 
 # from util.profile import profile
-from stats.execution import Counter, ExecutionTimer, execution_statistics
+from stats.execution import (
+    Counter,
+    ExecutionTimer,
+    execution_statistics,
+    measure_execution_time,
+)
 
 _logger = init_local_logger()
 
@@ -33,6 +37,7 @@ core_statistics = execution_statistics.sub_collection("core")
 
 
 # @profile
+@measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
     vulnerability_id: str,
     repository_url: str,
@@ -51,7 +56,7 @@ def prospector(  # noqa: C901
     limit_candidates: int = MAX_CANDIDATES,
     active_rules: "list[str]" = ["ALL"],
     model_name: str = "",
-) -> "list[Commit]":
+) -> Tuple[List[Commit], AdvisoryRecord]:
 
     _logger.info("begin main commit and CVE processing")
 
@@ -129,6 +134,7 @@ def prospector(  # noqa: C901
             filter_files="*.java",
         )
 
+        core_statistics.record("candidates", len(candidates), unit="commits")
         _logger.info("Found %d candidates" % len(candidates))
     # if some code_tokens were found in the advisory text, require
     # that candidate commits touch some file whose path contains those tokens
@@ -264,7 +270,7 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection(name="analyze candidates")
     ) as timer:
-        _logger.info("Extracting features from commits...")
+        # _logger.info("Extracting features from commits...")
         # annotated_candidates = []
         # with Counter(timer.collection.sub_collection("commit analysing")) as counter:
         #     counter.initialize("analyzed commits", unit="commit")
