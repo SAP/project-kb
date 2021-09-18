@@ -47,7 +47,7 @@ def prospector(  # noqa: C901
     tag_interval: str = "",
     version_interval: str = "",
     modified_files: "list[str]" = [],
-    code_tokens: "list[str]" = [],
+    advisory_keywords: "list[str]" = [],
     time_limit_before: int = TIME_LIMIT_BEFORE,
     time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = False,
@@ -75,24 +75,24 @@ def prospector(  # noqa: C901
     _logger.pretty_log(advisory_record)
 
     advisory_record.analyze(use_nvd=use_nvd)
-    _logger.info(f"{advisory_record.code_tokens=}")
+    _logger.info(f"{advisory_record.keywords=}")
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
             datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
         )
 
-    if len(code_tokens) > 0:
-        advisory_record.code_tokens += tuple(code_tokens)
+    if len(advisory_keywords) > 0:
+        advisory_record.keywords += tuple(advisory_keywords)
         # drop duplicates
-        advisory_record.code_tokens = list(set(advisory_record.code_tokens))
+        advisory_record.keywords = list(set(advisory_record.keywords))
 
     # FIXME this should be handled better (or '' should not end up in the modified_files in
     # the first place)
     if modified_files != [""]:
         advisory_record.paths += modified_files
 
-    _logger.info(f"{advisory_record.code_tokens=}")
+    _logger.info(f"{advisory_record.keywords=}")
     # print(advisory_record.paths)
 
     # -------------------------------------------------------------------------
@@ -137,7 +137,7 @@ def prospector(  # noqa: C901
 
         core_statistics.record("candidates", len(candidates), unit="commits")
         _logger.info("Found %d candidates" % len(candidates))
-    # if some code_tokens were found in the advisory text, require
+    # if some advisory_keywords were found in the advisory text, require
     # that candidate commits touch some file whose path contains those tokens
     # NOTE: this works quite well for Java, not sure how general this criterion is
 
@@ -147,16 +147,16 @@ def prospector(  # noqa: C901
     # Here we apply additional criteria to discard commits from the initial
     # set extracted from the repository
     # # -------------------------------------------------------------------------
-    # if advisory_record.code_tokens != []:
+    # if advisory_record.advisory_keywords != []:
     #     _logger.info(
     #         "Detected tokens in advisory text, searching for files whose path contains those tokens"
     #     )
-    #     _logger.info(advisory_record.code_tokens)
+    #     _logger.info(advisory_record.advisory_keywords)
 
     # if modified_files == [""]:
-    #     modified_files = advisory_record.code_tokens
+    #     modified_files = advisory_record.advisory_keywords
     # else:
-    #     modified_files.extend(advisory_record.code_tokens)
+    #     modified_files.extend(advisory_record.advisory_keywords)
 
     # candidates = filter_by_changed_files(candidates, modified_files, repository)
 

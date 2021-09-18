@@ -43,7 +43,7 @@ class AdvisoryRecord(BaseModel):
     from_nvd: bool = False
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
     paths: List[str] = Field(default_factory=list)
-    code_tokens: Tuple[str, ...] = Field(default_factory=tuple)
+    keywords: Tuple[str, ...] = Field(default_factory=tuple)
 
     def analyze(self, use_nvd: bool = False):
         self.from_nvd = use_nvd
@@ -56,7 +56,7 @@ class AdvisoryRecord(BaseModel):
         )
         self.affected_products = extract_products(self.description)
         self.paths = extract_path_tokens(self.description)
-        self.code_tokens = extract_special_terms(self.description)
+        self.keywords = extract_special_terms(self.description)
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """

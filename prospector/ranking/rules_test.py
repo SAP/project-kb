@@ -49,7 +49,7 @@ def advisory_record():
         repository_url="https://github.com/apache/struts",
         published_timestamp=1607532756,
         references=["https://reference.to/some/commit/7532d2fb0d60"],
-        code_tokens=["AutomaticWorkQueueImpl"],
+        keywords=["AutomaticWorkQueueImpl"],
         paths=["pom.xml"],
     )
 

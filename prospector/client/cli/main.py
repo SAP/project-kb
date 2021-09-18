@@ -76,13 +76,15 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "--diff-contains",
+        "--advisory-keywords",
         default=None,
         type=str,
-        help="Code tokens that the diff of candidate commits is supposed to contain",
+        help="Add the specified keywords to the advisory record",
     )
 
-    parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
+    parser.add_argument(
+        "--use-nvd", default=False, action="store_true", help="Get data from NVD"
+    )
 
     parser.add_argument(
         "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
@@ -201,15 +203,19 @@ def main(argv):  # noqa: C901
     repository_url = args.repository
 
     vuln_descr = args.descr
-    use_nvd = args.use_nvd
+    if args.vulnerability_id.lower().startswith("cve-"):
+        use_nvd = True
+    if args.use_nvd is not None:
+        use_nvd = args.use_nvd
+
     tag_interval = args.tag_interval
     version_interval = args.version_interval
     time_limit_before = TIME_LIMIT_BEFORE
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
     modified_files = args.modified_files.split(",")
-    code_tokens = (
-        args.diff_contains.split(",") if args.diff_contains is not None else []
+    advisory_keywords = (
+        args.advisory_keywords.split(",") if args.advisory_keywords is not None else []
     )
 
     publication_date = ""
@@ -243,7 +249,7 @@ def main(argv):  # noqa: C901
         tag_interval=tag_interval,
         version_interval=version_interval,
         modified_files=modified_files,
-        code_tokens=code_tokens,
+        advisory_keywords=advisory_keywords,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
