@@ -69,13 +69,13 @@ def test_adv_record_products():
     assert "Chrysler" in record.affected_products
 
 
-def test_adv_record_code_tokens():
+def test_adv_record_keywords():
     record = AdvisoryRecord(
         vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
     )
     record.analyze()
 
-    assert record.code_tokens == (
+    assert record.keywords == (
         "IO",
         "2.7,",
         "FileNameUtils.normalize",

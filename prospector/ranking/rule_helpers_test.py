@@ -314,7 +314,7 @@ def test_extract_referred_to_by_pages_linked_from_advisories_wrong_url(repositor
 
 
 def test_extract_path_similarities():
-    code_tokens = [
+    keywords = [
         "TophBeifong_Zuko_IknikBlackstoneVarrick_AsamiSato",
         "Bolin+Bumi+Ozai+Katara",
         "Jinora.Appa.Unalaq.Zaheer",
@@ -343,7 +343,7 @@ def test_extract_path_similarities():
     commit = Commit(changed_files=paths)
     advisory = AdvisoryRecord(
         vulnerability_id=random_list_of_cve(max_count=1, min_count=1)[0],
-        code_tokens=code_tokens,
+        keywords=keywords,
     )
     similarities: pandas.DataFrame = extract_path_similarities(commit, advisory)
     expected = (

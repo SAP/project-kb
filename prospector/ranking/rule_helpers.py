@@ -154,7 +154,7 @@ def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
         ]
     )
     for changed_file_path in commit.changed_files:
-        for code_token in advisory_record.code_tokens:
+        for code_token in advisory_record.keywords:
             parts_of_file_path = tokenize_non_nl_term(changed_file_path)
             parts_of_code_token = tokenize_non_nl_term(code_token)
             similarities = similarities.append(

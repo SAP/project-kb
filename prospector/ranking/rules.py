@@ -40,9 +40,9 @@ def apply_rules(
 
     RULES = {
         "REF_ADV_VULN_ID": apply_rule_references_vuln_id,
-        "TOKENS_IN_DIFF": apply_rule_code_tokens_in_diff,
-        "TOKENS_IN_COMMIT_MSG": apply_rule_code_tokens_in_msg,
-        "TOKENS_IN_MODIFIED_PATHS": apply_rule_code_token_in_paths,
+        "TOKENS_IN_DIFF": apply_rule_adv_keywords_in_diff,
+        "TOKENS_IN_COMMIT_MSG": apply_rule_adv_keywords_in_msg,
+        "TOKENS_IN_MODIFIED_PATHS": apply_rule_adv_keywords_in_paths,
         "SEC_KEYWORD_IN_COMMIT_MSG": apply_rule_security_keyword_in_msg,
         "REF_GH_ISSUE": apply_rule_references_ghissue,
         "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
@@ -142,7 +142,7 @@ def apply_rule_changes_relevant_path(
     return None
 
 
-def apply_rule_code_tokens_in_msg(
+def apply_rule_adv_keywords_in_msg(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
@@ -153,7 +153,7 @@ def apply_rule_code_tokens_in_msg(
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
-        [kw for kw in advisory_record.code_tokens if kw in candidate.message]
+        [kw for kw in advisory_record.keywords if kw in candidate.message]
     )
 
     if len(matching_keywords) > 0:
@@ -162,7 +162,7 @@ def apply_rule_code_tokens_in_msg(
     return None
 
 
-def apply_rule_code_tokens_in_diff(
+def apply_rule_adv_keywords_in_diff(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
@@ -175,7 +175,7 @@ def apply_rule_code_tokens_in_diff(
     matching_keywords = set(
         [
             kw
-            for kw in advisory_record.code_tokens
+            for kw in advisory_record.keywords
             for diff_line in candidate.diff
             if kw in diff_line
         ]
@@ -216,7 +216,7 @@ def apply_rule_security_keyword_in_msg(
     return None
 
 
-def apply_rule_code_token_in_paths(
+def apply_rule_adv_keywords_in_paths(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
@@ -230,7 +230,7 @@ def apply_rule_code_token_in_paths(
         [
             (p, token)
             for p in candidate.changed_files
-            for token in advisory_record.code_tokens
+            for token in advisory_record.keywords
             if token in p
         ]
     )

@@ -76,10 +76,10 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "--diff-contains",
+        "--advisory-keywords",
         default=None,
         type=str,
-        help="Code tokens that the diff of candidate commits is supposed to contain",
+        help="Add the specified keywords to the advisory record",
     )
 
     parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
@@ -208,8 +208,8 @@ def main(argv):  # noqa: C901
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
     modified_files = args.modified_files.split(",")
-    code_tokens = (
-        args.diff_contains.split(",") if args.diff_contains is not None else []
+    advisory_keywords = (
+        args.advisory_keywords.split(",") if args.advisory_keywords is not None else []
     )
 
     publication_date = ""
@@ -243,7 +243,7 @@ def main(argv):  # noqa: C901
         tag_interval=tag_interval,
         version_interval=version_interval,
         modified_files=modified_files,
-        code_tokens=code_tokens,
+        advisory_keywords=advisory_keywords,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
