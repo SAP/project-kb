@@ -82,7 +82,9 @@ def parseArguments(args):
         help="Add the specified keywords to the advisory record",
     )
 
-    parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
+    parser.add_argument(
+        "--use-nvd", default=False, action="store_true", help="Get data from NVD"
+    )
 
     parser.add_argument(
         "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
@@ -201,7 +203,11 @@ def main(argv):  # noqa: C901
     repository_url = args.repository
 
     vuln_descr = args.descr
-    use_nvd = args.use_nvd
+    if args.vulnerability_id.lower().startswith("cve-"):
+        use_nvd = True
+    if args.use_nvd is not None:
+        use_nvd = args.use_nvd
+
     tag_interval = args.tag_interval
     version_interval = args.version_interval
     time_limit_before = TIME_LIMIT_BEFORE
