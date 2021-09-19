@@ -16,7 +16,7 @@ from log.util import init_local_logger
 from ranking.rank import rank
 from ranking.rules import apply_rules
 
-# from util.profile impot profile
+# from util.profile import profile
 from stats.execution import (
     Counter,
     ExecutionTimer,
