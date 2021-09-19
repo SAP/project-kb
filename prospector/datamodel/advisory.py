@@ -64,23 +64,34 @@ class AdvisoryRecord(BaseModel):
         self.versions.extend(
             [v for v in extract_versions(self.description) if v not in self.versions]
         )
+
         self.affected_products = extract_products(self.description)
         self.paths = extract_path_tokens(self.description)
         self.keywords = extract_special_terms(self.description)
 
+        _logger.debug("References: " + str(self.references))
         self.references = [
             r for r in self.references if urlparse(r).hostname in ALLOWED_SITES
         ]
+        _logger.debug("Relevant references: " + str(self.references))
 
         for r in self.references:
-            self.references_content.append(fetch_reference_content(r))
+            ref_content = fetch_reference_content(r)
+            if ref_content:
+                _logger.debug("Fetched content of reference " + r)
+                self.references_content.append(ref_content)
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
         populate object field using NVD data
-        returns: description, published_timestamp, last_modified timestamp, list of links
+        returns: description, published_timestamp, last_modified timestamp, list of references
         """
 
+        # TODO check behavior when some of the data attributes of the AdvisoryRecord
+        # class contain data (e.g. passed explicitly as input by the useer);
+        # In that case, shall the data from NVD be appended to the exiting data,
+        # replace it, be ignored?
+        # (note: right now, it just replaces it)
         try:
             response = requests.get(nvd_rest_endpoint + vuln_id)
             if response.status_code != 200:
@@ -134,6 +145,9 @@ class Reference:
     url: str
     repo_url: str
 
+    # TODO we do not need a class for this, this is a collection of
+    # functions, with not state at all, they can become part of some
+    # other general string analysis module
     def __post_init__(self):
         # TODO this is not general (the .git suffix can be stripped only for github)
         self.repo_url = re.sub(r"\.git$|/$", "", self.repo_url)

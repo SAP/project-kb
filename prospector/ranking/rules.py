@@ -200,7 +200,7 @@ def apply_rule_security_keyword_in_msg(
     """
 
     SEC_KEYWORDS = [
-        "vuln",
+        "vulner",
         "exploit",
         "attack",
         "secur",
@@ -208,6 +208,9 @@ def apply_rule_security_keyword_in_msg(
         "dos",
         "insecur",
         "inject",
+        "unsafe",
+        "remote execution",
+        "malicious",
     ]
     explanation_template = "The commit message includes the following keywords: {}"
 
