@@ -9,11 +9,11 @@ from util.sample_data_generation import random_list_of_cve
 
 from .rule_helpers import (  # extract_features,
     extract_changed_relevant_paths,
+    extract_commit_mentioned_in_linked_pages,
     extract_other_CVE_in_message,
     extract_path_similarities,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
-    extract_referred_to_by_pages_linked_from_advisories,
     extract_time_between_commit_and_advisory_record,
     is_commit_in_given_interval,
     is_commit_reachable_from_given_tag,
@@ -267,7 +267,7 @@ def test_is_commit_reachable_from_given_tag(repository):
     )
 
 
-def test_extract_referred_to_by_pages_linked_from_advisories(repository, requests_mock):
+def test_extract_extract_commit_mentioned_in_linked_pages(repository, requests_mock):
     requests_mock.get(
         "https://for.testing.purposes/containing_commit_id_in_text_2",
         text="some text r97993e3d78e1f5389b7b172ba9f308440830ce5 blah",
@@ -278,39 +278,34 @@ def test_extract_referred_to_by_pages_linked_from_advisories(repository, request
         references=["https://for.testing.purposes/containing_commit_id_in_text_2"],
     )
 
+    advisory_record.analyze()
+
     commit = Commit(
         commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
         repository="test_repository",
     )
-    assert extract_referred_to_by_pages_linked_from_advisories(
-        commit, advisory_record
-    ) == {
-        "https://for.testing.purposes/containing_commit_id_in_text_2",
-    }
+    assert extract_commit_mentioned_in_linked_pages(commit, advisory_record) == 1
 
     commit = Commit(
         commit_id="f4d2eabd921cbd8808b9d923ee63d44538b4154f",
         repository="test_repository",
     )
-    assert (
-        extract_referred_to_by_pages_linked_from_advisories(commit, advisory_record)
-        == set()
-    )
+    assert extract_commit_mentioned_in_linked_pages(commit, advisory_record) == 0
 
 
-def test_extract_referred_to_by_pages_linked_from_advisories_wrong_url(repository):
-    advisory_record = AdvisoryRecord(
-        vulnerability_id="CVE-2020-26258",
-        references=["https://non-existing-url.com"],
-    )
+# def test_extract_referred_to_by_pages_linked_from_advisories_wrong_url(repository):
+#     advisory_record = AdvisoryRecord(
+#         vulnerability_id="CVE-2020-26258",
+#         references=["https://non-existing-url.com"],
+#     )
 
-    commit = Commit(
-        commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
-        repository="test_repository",
-    )
-    assert not extract_referred_to_by_pages_linked_from_advisories(
-        commit, advisory_record
-    )
+#     commit = Commit(
+#         commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",
+#         repository="test_repository",
+#     )
+#     assert not extract_commit_mentioned_in_linked_pages(
+#         commit, advisory_record
+#     )
 
 
 def test_extract_path_similarities():

@@ -13,8 +13,6 @@ from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
-
-# from processing.commit.preprocessor import preprocess_commit
 from ranking.rank import rank
 from ranking.rules import apply_rules
 
@@ -93,7 +91,6 @@ def prospector(  # noqa: C901
         advisory_record.paths += modified_files
 
     _logger.info(f"{advisory_record.keywords=}")
-    # print(advisory_record.paths)
 
     # -------------------------------------------------------------------------
     # retrieval of commit candidates
@@ -137,29 +134,13 @@ def prospector(  # noqa: C901
 
         core_statistics.record("candidates", len(candidates), unit="commits")
         _logger.info("Found %d candidates" % len(candidates))
-    # if some advisory_keywords were found in the advisory text, require
-    # that candidate commits touch some file whose path contains those tokens
-    # NOTE: this works quite well for Java, not sure how general this criterion is
 
     # -------------------------------------------------------------------------
     # commit filtering
     #
     # Here we apply additional criteria to discard commits from the initial
     # set extracted from the repository
-    # # -------------------------------------------------------------------------
-    # if advisory_record.advisory_keywords != []:
-    #     _logger.info(
-    #         "Detected tokens in advisory text, searching for files whose path contains those tokens"
-    #     )
-    #     _logger.info(advisory_record.advisory_keywords)
-
-    # if modified_files == [""]:
-    #     modified_files = advisory_record.advisory_keywords
-    # else:
-    #     modified_files.extend(advisory_record.advisory_keywords)
-
-    # candidates = filter_by_changed_files(candidates, modified_files, repository)
-
+    # -------------------------------------------------------------------------
     with ExecutionTimer(core_statistics.sub_collection(name="commit filtering")):
         candidates = filter_commits(candidates)
 
@@ -184,9 +165,8 @@ def prospector(  # noqa: C901
         raw_commit_data = dict()
         missing = []
         try:
-            # Exploit the preprocessed commits already stored in the backend
-            #      and only process those that are missing. Note: the endpoint
-            #      does not exist (yet)
+            # Use the preprocessed commits already stored in the backend
+            # and only process those that are missing.
             r = requests.get(
                 backend_address
                 + "/commits/"
@@ -271,14 +251,6 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection(name="analyze candidates")
     ) as timer:
-        # _logger.info("Extracting features from commits...")
-        # annotated_candidates = []
-        # with Counter(timer.collection.sub_collection("commit analysing")) as counter:
-        #     counter.initialize("analyzed commits", unit="commit")
-        #     # TODO remove "proactive" invocation of feature extraction
-        #     for commit in tqdm(preprocessed_commits):
-        #         counter.increment("analyzed commits")
-        #         annotated_candidates.append(extract_features(commit, advisory_record))
 
         annotated_candidates = apply_rules(
             preprocessed_commits, advisory_record, active_rules=active_rules
@@ -286,32 +258,3 @@ def prospector(  # noqa: C901
         annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
     return annotated_candidates, advisory_record
-
-
-# def filter_by_changed_files(
-#     candidates: "list[str]", modified_files: "list[str]", git_repository: Git
-# ) -> list:
-#     """
-#     Takes a list of commit ids in input and returns in output the list
-#     of ids of the commits that modify at least one path that contains one of the strings
-#     in "modified_files"
-
-#     """
-#     modified_files = [f.lower() for f in modified_files if f != ""]
-#     if len(modified_files) == 0:
-#         return candidates
-
-#     filtered_candidates = []
-#     if len(modified_files) != 0:
-#         for commit_id in candidates:
-#             commit_obj = git_repository.get_commit(commit_id)
-#             commit_changed_files = commit_obj.get_changed_files()
-#             for ccf in commit_changed_files:
-#                 for f in modified_files:
-#                     ccf = ccf.lower()
-#                     if f in ccf:
-#                         # if f in [e.lower() for e in ccf]:
-#                         # print(f, commit_obj.get_id())
-#                         filtered_candidates.append(commit_obj.get_id())
-
-#     return list(set(filtered_candidates))

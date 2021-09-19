@@ -2,7 +2,11 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from stats.execution import Counter, execution_statistics
 
-from .rule_helpers import extract_references_vuln_id, extract_referred_to_by_nvd
+from .rule_helpers import (
+    extract_commit_mentioned_in_linked_pages,
+    extract_references_vuln_id,
+    extract_referred_to_by_nvd,
+)
 
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
@@ -47,7 +51,8 @@ def apply_rules(
         "REF_GH_ISSUE": apply_rule_references_ghissue,
         "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
         "CH_REL_PATH": apply_rule_changes_relevant_path,
-        "COMMIT_REFERENCED_BY_ADV": apply_rule_commit_referenced_by_adv,
+        "COMMIT_MENTIONED_IN_ADV": apply_rule_commit_mentioned_in_adv,
+        "COMMIT_MENTIONED_IN_REFERENCE": apply_rule_commit_mentioned_in_reference,
     }
 
     if "ALL" in active_rules:
@@ -195,7 +200,7 @@ def apply_rule_security_keyword_in_msg(
     """
 
     SEC_KEYWORDS = [
-        "vuln",
+        "vulner",
         "exploit",
         "attack",
         "secur",
@@ -203,6 +208,9 @@ def apply_rule_security_keyword_in_msg(
         "dos",
         "insecur",
         "inject",
+        "unsafe",
+        "remote execution",
+        "malicious",
     ]
     explanation_template = "The commit message includes the following keywords: {}"
 
@@ -246,7 +254,7 @@ def apply_rule_adv_keywords_in_paths(
     return None
 
 
-def apply_rule_commit_referenced_by_adv(
+def apply_rule_commit_mentioned_in_adv(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     explanation_template = (
@@ -257,5 +265,18 @@ def apply_rule_commit_referenced_by_adv(
 
     if len(commit_references) > 0:
         return explanation_template.format(", ".join(commit_references))
+
+    return None
+
+
+def apply_rule_commit_mentioned_in_reference(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    explanation_template = "This commit is mentioned in one or more referenced pages"
+
+    count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
+
+    if count > 0:
+        return explanation_template
 
     return None

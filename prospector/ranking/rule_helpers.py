@@ -1,8 +1,6 @@
 from typing import Set
-from urllib.parse import urlparse
 
 import pandas
-import requests_cache
 
 import log.util
 from datamodel.advisory import AdvisoryRecord
@@ -16,15 +14,6 @@ from util.similarity import (
     sorensen_dice_set_similarity,
 )
 from util.tokenize import tokenize_non_nl_term
-
-ALLOWED_SITES = [
-    "for.testing.purposes",
-    "lists.apache.org",
-    "just.an.example.site",
-    "one.more.example.site",
-    "non-existing-url.com",  # for testing.
-    "jvndb.jvn.jp",  # for trying out: usually does not aviable, but not always, anyway it is a good example
-]
 
 _logger = log.util.init_local_logger()
 
@@ -119,23 +108,38 @@ def is_commit_reachable_from_given_tag(
     return True
 
 
-def extract_referred_to_by_pages_linked_from_advisories(
+# def extract_referred_to_by_pages_linked_from_advisories(
+#     commit: Commit, advisory_record: AdvisoryRecord
+# ) -> Set[str]:
+#     allowed_references = filter(
+#         lambda reference: urlparse(reference).hostname in ALLOWED_SITES,
+#         advisory_record.references,
+#     )
+#     session = requests_cache.CachedSession("requests-cache")
+
+#     def is_commit_cited_in(reference: str):
+#         try:
+#             return commit.commit_id[:8] in session.get(reference).text
+#         except Exception:
+#             _logger.debug(f"can not retrieve site: {reference}", exc_info=True)
+#             return False
+#     return set(filter(is_commit_cited_in, allowed_references))
+
+
+def extract_commit_mentioned_in_linked_pages(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> Set[str]:
-    allowed_references = filter(
-        lambda reference: urlparse(reference).hostname in ALLOWED_SITES,
-        advisory_record.references,
-    )
-    session = requests_cache.CachedSession("requests-cache")
+) -> int:
 
-    def is_commit_cited_in(reference: str):
-        try:
-            return commit.commit_id[:8] in session.get(reference).text
-        except Exception:
-            _logger.debug(f"can not retrieve site: {reference}", exc_info=True)
-            return False
+    # TODO: convert advisory.references to a dictionary (the key must be the url,
+    # else we cannot say in which side we found a reference to the commit at hand,
+    # when we find one);
+    # for now, we can only return an integer from this function, but not ideal
+    matching_references_count = 0
+    for content_of_reference in advisory_record.references_content:
+        if commit.commit_id[:8] in content_of_reference:
+            matching_references_count += 1
 
-    return set(filter(is_commit_cited_in, allowed_references))
+    return matching_references_count
 
 
 def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):

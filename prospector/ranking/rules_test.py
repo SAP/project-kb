@@ -84,4 +84,4 @@ def test_apply_rules(candidates: "list[Commit]", advisory_record: AdvisoryRecord
 
     assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[4].annotations
     assert "TOKENS_IN_MODIFIED_PATHS" in annotated_candidates[4].annotations
-    assert "COMMIT_REFERENCED_BY_ADV" in annotated_candidates[4].annotations
+    assert "COMMIT_MENTIONED_IN_ADV" in annotated_candidates[4].annotations
