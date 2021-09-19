@@ -15,21 +15,6 @@ from util.similarity import (
 )
 from util.tokenize import tokenize_non_nl_term
 
-# from urllib.parse import urlparse
-
-
-# import requests_cache
-
-
-ALLOWED_SITES = [
-    "for.testing.purposes",
-    "lists.apache.org",
-    "just.an.example.site",
-    "one.more.example.site",
-    "non-existing-url.com",  # for testing.
-    "jvndb.jvn.jp",  # for trying out: usually does not aviable, but not always, anyway it is a good example
-]
-
 _logger = log.util.init_local_logger()
 
 DAYS_BEFORE = 180
@@ -141,7 +126,7 @@ def is_commit_reachable_from_given_tag(
 #     return set(filter(is_commit_cited_in, allowed_references))
 
 
-def extract_referred_to_by_pages_linked_from_advisories(
+def extract_commit_mentioned_in_linked_pages(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> int:
 

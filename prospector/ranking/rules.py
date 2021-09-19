@@ -3,9 +3,9 @@ from datamodel.commit import Commit
 from stats.execution import Counter, execution_statistics
 
 from .rule_helpers import (
+    extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
-    extract_referred_to_by_pages_linked_from_advisories,
 )
 
 """
@@ -271,9 +271,7 @@ def apply_rule_commit_mentioned_in_reference(
 ) -> str:
     explanation_template = "This commit is mentioned in one or more referenced pages"
 
-    count = extract_referred_to_by_pages_linked_from_advisories(
-        candidate, advisory_record
-    )
+    count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
 
     if count > 0:
         return explanation_template

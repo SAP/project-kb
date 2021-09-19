@@ -5,8 +5,10 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Tuple
+from urllib.parse import urlparse
 
 import requests
+import requests_cache
 from pydantic import BaseModel, Field
 
 import log.util
@@ -18,9 +20,17 @@ from .nlp import (
     extract_versions,
 )
 
+ALLOWED_SITES = [
+    "for.testing.purposes",
+    "lists.apache.org",
+    "just.an.example.site",
+    "one.more.example.site",
+    "non-existing-url.com",  # for testing.
+    "jvndb.jvn.jp",  # for trying out: usually does not aviable, but not always, anyway it is a good example
+]
+
 _logger = log.util.init_local_logger()
 
-# TODO use prospector own NVD feed endpoint
 NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 
 
@@ -58,6 +68,13 @@ class AdvisoryRecord(BaseModel):
         self.paths = extract_path_tokens(self.description)
         self.keywords = extract_special_terms(self.description)
 
+        self.references = [
+            r for r in self.references if urlparse(r).hostname in ALLOWED_SITES
+        ]
+
+        for r in self.references:
+            self.references_content.append(fetch_reference_content(r))
+
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
         populate object field using NVD data
@@ -93,6 +110,18 @@ class AdvisoryRecord(BaseModel):
                 "Could not retrieve vulnerability data from NVD for " + vuln_id,
                 exc_info=log.config.level < logging.INFO,
             )
+
+
+def fetch_reference_content(reference: str) -> str:
+
+    try:
+        session = requests_cache.CachedSession("requests-cache")
+        content = session.get(reference).text
+    except Exception:
+        _logger.debug(f"can not retrieve reference content: {reference}", exc_info=True)
+        return False
+
+    return content
 
 
 # would be used in the future
