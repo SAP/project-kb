@@ -175,6 +175,9 @@ def apply_rule_adv_keywords_in_diff(
     extracted from the advisory.
     """
 
+    # FIXME: this is hardcoded, read it from an "config" object passed to the rule function
+    skip_tokens = ["IO"]
+
     explanation_template = "The commit diff includes the following keywords: {}"
 
     matching_keywords = set(
@@ -182,7 +185,7 @@ def apply_rule_adv_keywords_in_diff(
             kw
             for kw in advisory_record.keywords
             for diff_line in candidate.diff
-            if kw in diff_line
+            if kw in diff_line and kw not in skip_tokens
         ]
     )
 
