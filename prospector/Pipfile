@@ -45,7 +45,6 @@ pytest = "*"
 python-levenshtein = "*"
 typing-extensions = "*"
 requests-cache = "*"
-pydantic = "*"
 
 [requires]
 python_version = "3.8"
