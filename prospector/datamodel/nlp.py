@@ -1,6 +1,8 @@
 import re
 from typing import List, Tuple
 
+from spacy.lang.en import English
+
 from datamodel.constants import RELEVANT_EXTENSIONS
 
 
@@ -31,7 +33,19 @@ def extract_products(text: str) -> List[str]:
     """
     Extract product names from advisory text
     """
-    # TODO implement this properly
+    nlp = English()
+    nlp.add_pipe("entity_ruler").from_disk("./datamodel/gazetteers/products.jsonl")
+
+    product_names = []
+    doc = nlp(text)
+
+    for entity in doc.ents:
+        if entity.label_ == "PROD":
+            product_names.append(entity.ent_id_)
+
+    if len(product_names) > 0:
+        return product_names
+
     regex = r"([A-Z]+[a-z\b]+)"
     result = list(set(re.findall(regex, text)))
     return [p for p in result if len(p) > 2]

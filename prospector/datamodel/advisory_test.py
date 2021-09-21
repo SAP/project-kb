@@ -1,6 +1,7 @@
 # from dataclasses import asdict
 # import pytest
 # import spacy
+# import requests
 from spacy.lang.en import English
 
 from datamodel.advisory import AdvisoryRecord
@@ -121,3 +122,24 @@ def test_process_description_spacy():
         print(product_names)
 
     return product_names
+
+
+def test_guess_license():
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
+    )
+    record.analyze()
+    assert record.license == "OSS"
+
+    # record.description = "Microsof Windows"
+    # record.analyze()
+    # assert record._guess_license() == 'PROPRIETARY'
+
+
+def test_guess_repository():
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
+    )
+    record.analyze()
+
+    assert record.repository_url == "https://github.com/apache/commons-io"

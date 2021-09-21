@@ -1,5 +1,6 @@
 # from typing import Tuple
 # from datamodel import BaseModel
+import csv
 import logging
 import re
 from dataclasses import dataclass
@@ -101,6 +102,8 @@ class AdvisoryRecord(BaseModel):
                     self.references_content.append(ref_content)
 
         self.license = self._guess_license()
+        if self.repository_url == "":
+            self.repository_url = self._guess_repository()
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
@@ -159,10 +162,14 @@ class AdvisoryRecord(BaseModel):
             "dom4j",
             "jackson-data",
             "jackson-databind",
+            "jetty",
             "openvpn",
             "openssl",
             "debian",
             "ubuntu",
+            "netty",
+            "spring framework",
+            "spring security",
         ]
 
         proprietary_keywords = [
@@ -181,18 +188,32 @@ class AdvisoryRecord(BaseModel):
             "symantec",
         ]
 
-        is_oss = len([m for m in oss_keywords if (m in lowercase_descr)]) > 0
-        is_proprietary = (
-            len([m for m in proprietary_keywords if (m in lowercase_descr)]) > 0
-        )
+        matching_oss = [m for m in oss_keywords if (m in lowercase_descr)]
+        matching_proprietary = [
+            m for m in proprietary_keywords if (m in lowercase_descr)
+        ]
 
-        if is_proprietary:
-            return "PROPRIETARY"
-
-        if is_oss:
+        if matching_oss is not []:
             return "OSS"
 
+        if matching_proprietary is not []:
+            return "PROPRIETARY"
+
         return "UNKNOWN"
+
+    def _guess_repository(self) -> str:
+
+        product_repository_map = {}
+
+        with open("./datamodel/gazetteers/product_repositories.csv", mode="r") as f:
+            reader = csv.reader(f)
+            product_repository_map = {rows[0]: rows[1] for rows in reader}
+
+        for p in self.affected_products:
+            if p in product_repository_map:
+                return product_repository_map[p]
+
+        return ""
 
 
 def fetch_reference_content(reference: str) -> str:
