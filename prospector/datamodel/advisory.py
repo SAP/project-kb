@@ -71,6 +71,7 @@ class AdvisoryRecord(BaseModel):
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
     paths: List[str] = Field(default_factory=list)
     keywords: Tuple[str, ...] = Field(default_factory=tuple)
+    license: str = "UNKNOWN"
 
     def analyze(self, use_nvd: bool = False, fetch_references=False):
         self.from_nvd = use_nvd
@@ -98,6 +99,8 @@ class AdvisoryRecord(BaseModel):
                 if ref_content:
                     _logger.debug("Fetched content of reference " + r)
                     self.references_content.append(ref_content)
+
+        self.license = self._guess_license()
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
@@ -139,6 +142,57 @@ class AdvisoryRecord(BaseModel):
                 "Could not retrieve vulnerability data from NVD for " + vuln_id,
                 exc_info=log.config.level < logging.INFO,
             )
+
+    def _guess_license(self) -> str:
+        lowercase_descr = self.description.lower()
+
+        oss_keywords = [
+            "apache",
+            "eclipse",
+            "linux",
+            "android",
+            "jenkins",
+            "php",
+            "python",
+            "wireshark",
+            "wordpress",
+            "dom4j",
+            "jackson-data",
+            "jackson-databind",
+            "openvpn",
+            "openssl",
+            "debian",
+            "ubuntu",
+        ]
+
+        proprietary_keywords = [
+            "microsoft",
+            "windows",
+            "oracle",
+            "ibm",
+            "sap",
+            "salesforce",
+            "cisco",
+            "adobe",
+            "dell",
+            "netgear",
+            "dahua",
+            "intel",
+            "symantec",
+        ]
+
+        is_oss = len([m for m in oss_keywords if (m in lowercase_descr)]) > 0
+        is_proprietary = (
+            len([m for m in proprietary_keywords if (m in lowercase_descr)]) > 0
+        )
+
+        if is_proprietary:
+            return "PROPRIETARY"
+
+        if is_oss:
+            return "OSS"
+
+        return "UNKNOWN"
 
 
 def fetch_reference_content(reference: str) -> str:
