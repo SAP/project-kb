@@ -1,7 +1,9 @@
 # from dataclasses import asdict
-from datamodel.advisory import AdvisoryRecord
-
 # import pytest
+# import spacy
+from spacy.lang.en import English
+
+from datamodel.advisory import AdvisoryRecord
 
 
 def test_advisory_basic():
@@ -83,3 +85,26 @@ def test_adv_record_keywords():
         '"\\..\\foo",',
         '"limited"',
     )
+
+
+def test_process_description_spacy():
+    # see https://spacy.io/usage/rule-based-matching#entityruler
+
+    product_names = []
+
+    nlp = English()
+    nlp.add_pipe("entity_ruler").from_disk("./datamodel/gazetteers/products.jsonl")
+
+    doc = nlp(ADVISORY_TEXT_2)
+    # for token in doc:
+    #     print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,  token.shape_, token.is_alpha, token.is_stop)
+
+    for entity in doc.ents:
+        if entity.label_ == "PROD":
+            product_names.append(entity.text)
+
+    print(product_names)
+
+    assert product_names == ["Apache Commons IO"]
+
+    return product_names

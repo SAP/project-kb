@@ -64,7 +64,7 @@ class AdvisoryRecord(BaseModel):
     references_content: List[str] = Field(default_factory=list)
     affected_products: List[str] = Field(default_factory=list)
     description: Optional[str] = ""
-    preprocessed_vulnerability_description: str = ""
+    preprocessed_description: str = ""
     relevant_tags: List[str] = None
     versions: List[str] = Field(default_factory=list)
     from_nvd: bool = False
