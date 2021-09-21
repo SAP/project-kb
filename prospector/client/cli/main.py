@@ -87,6 +87,13 @@ def parseArguments(args):
     )
 
     parser.add_argument(
+        "--fetch-references",
+        default=False,
+        action="store_true",
+        help="Fetch content of references linked from the advisory",
+    )
+
+    parser.add_argument(
         "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
     )
 
@@ -208,6 +215,10 @@ def main(argv):  # noqa: C901
     if args.use_nvd is not None:
         use_nvd = args.use_nvd
 
+    fetch_references = configuration["global"].get("fetch_references") or False
+    if args.fetch_references:
+        fetch_references = args.fetch_references
+
     tag_interval = args.tag_interval
     version_interval = args.version_interval
     time_limit_before = TIME_LIMIT_BEFORE
@@ -254,6 +265,7 @@ def main(argv):  # noqa: C901
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
         nvd_rest_endpoint=nvd_rest_endpoint,
+        fetch_references=fetch_references,
         backend_address=backend,
         git_cache=git_cache,
         limit_candidates=max_candidates,

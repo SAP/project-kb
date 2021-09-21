@@ -278,7 +278,7 @@ def test_extract_extract_commit_mentioned_in_linked_pages(repository, requests_m
         references=["https://for.testing.purposes/containing_commit_id_in_text_2"],
     )
 
-    advisory_record.analyze()
+    advisory_record.analyze(fetch_references=True)
 
     commit = Commit(
         commit_id="r97993e3d78e1f5389b7b172ba9f308440830ce5",

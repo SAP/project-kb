@@ -50,6 +50,7 @@ def prospector(  # noqa: C901
     time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = False,
     nvd_rest_endpoint: str = "",
+    fetch_references: bool = False,
     backend_address: str = "",
     git_cache: str = GIT_CACHE,
     limit_candidates: int = MAX_CANDIDATES,
@@ -72,7 +73,7 @@ def prospector(  # noqa: C901
 
     _logger.pretty_log(advisory_record)
 
-    advisory_record.analyze(use_nvd=use_nvd)
+    advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
     _logger.info(f"{advisory_record.keywords=}")
 
     if publication_date != "":

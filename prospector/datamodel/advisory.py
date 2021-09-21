@@ -21,12 +21,29 @@ from .nlp import (
 )
 
 ALLOWED_SITES = [
-    "for.testing.purposes",
-    "lists.apache.org",
-    "just.an.example.site",
-    "one.more.example.site",
-    "non-existing-url.com",  # for testing.
-    "jvndb.jvn.jp",  # for trying out: usually does not aviable, but not always, anyway it is a good example
+    "github.com",
+    "github.io",
+    "apache.org",
+    "gitlab.org",
+    "cpan.org",
+    "gnome.org",
+    "gnu.org",
+    "nongnu.org",
+    "kernel.org",
+    "rclone.org",
+    "openssl.org",
+    "squid-cache.org",
+    "ossec.net",
+    "readthedocs.io",
+    "atlassian.net",
+    "jira.atlassian.com",
+    "lists.debian.org",
+    "access.redhat.com",
+    "openstack.org",
+    "python.org",
+    "pypi.org",
+    "for.testing.purposes",  # do not remove this, used in mocks for testing purposes
+    "jvndb.jvn.jp",  # for testing: sometimes unreachable
 ]
 
 _logger = log.util.init_local_logger()
@@ -55,7 +72,7 @@ class AdvisoryRecord(BaseModel):
     paths: List[str] = Field(default_factory=list)
     keywords: Tuple[str, ...] = Field(default_factory=tuple)
 
-    def analyze(self, use_nvd: bool = False):
+    def analyze(self, use_nvd: bool = False, fetch_references=False):
         self.from_nvd = use_nvd
 
         if self.from_nvd:
@@ -75,11 +92,12 @@ class AdvisoryRecord(BaseModel):
         ]
         _logger.debug("Relevant references: " + str(self.references))
 
-        for r in self.references:
-            ref_content = fetch_reference_content(r)
-            if ref_content:
-                _logger.debug("Fetched content of reference " + r)
-                self.references_content.append(ref_content)
+        if fetch_references:
+            for r in self.references:
+                ref_content = fetch_reference_content(r)
+                if ref_content:
+                    _logger.debug("Fetched content of reference " + r)
+                    self.references_content.append(ref_content)
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
