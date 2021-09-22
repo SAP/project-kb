@@ -147,7 +147,7 @@ class Git:
             self._shallow_clone = shallow
 
         if not self._url:
-            _logger.error("Invalid url specified.")
+            _logger.error("Invalid url.")
             sys.exit(-1)
 
         # TODO rearrange order of checks

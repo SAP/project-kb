@@ -105,6 +105,9 @@ class AdvisoryRecord(BaseModel):
         if self.repository_url == "":
             self.repository_url = self._guess_repository()
 
+        if self.repository_url == "":
+            raise (Exception("No repository specified (and I could not guess it"))
+
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
         populate object field using NVD data
