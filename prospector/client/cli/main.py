@@ -106,10 +106,6 @@ def parseArguments(args):
     parser.add_argument("-c", "--conf", help="specify configuration file")
 
     parser.add_argument(
-        "-p", "--ping", help="Contact server to check it's alive", action="store_true"
-    )
-
-    parser.add_argument(
         "-l",
         "--log-level",
         dest="log_level",
@@ -192,7 +188,7 @@ def main(argv):  # noqa: C901
         _logger.error("Invalid configuration, exiting.")
         return False
 
-    report = configuration["global"].getboolean("report")
+    report = configuration["global"].getboolean("report") or "html"
     if args.report:
         report = args.report
 
@@ -203,8 +199,9 @@ def main(argv):  # noqa: C901
     if args.backend:
         backend = args.backend
 
-    if args.ping:
-        return ping_backend(backend, log.config.level < logging.INFO)
+    if not ping_backend(backend, log.config.level < logging.INFO):
+        _logger.error("Backend unreachable, aborting.")
+        return False
 
     vulnerability_id = args.vulnerability_id
     repository_url = args.repository
