@@ -102,11 +102,13 @@ class AdvisoryRecord(BaseModel):
                     self.references_content.append(ref_content)
 
         self.license = self._guess_license()
+
         if self.repository_url == "":
             self.repository_url = self._guess_repository()
 
         if self.repository_url == "":
-            raise (Exception("No repository specified (and I could not guess it"))
+            print(self.description)
+            raise (Exception("No repository specified (and I could not guess it)"))
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
@@ -214,7 +216,9 @@ class AdvisoryRecord(BaseModel):
 
         for p in self.affected_products:
             if p in product_repository_map:
-                return product_repository_map[p]
+                r = product_repository_map[p]
+                _logger.info("Guessed repository {} for project {}".format(r, p))
+                return r
 
         return ""
 
