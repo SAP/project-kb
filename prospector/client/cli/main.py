@@ -83,7 +83,7 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "--use-nvd", default=False, action="store_true", help="Get data from NVD"
+        "--use-nvd", default=None, action="store_true", help="Get data from NVD"
     )
 
     parser.add_argument(
