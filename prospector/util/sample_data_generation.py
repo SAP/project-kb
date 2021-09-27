@@ -107,11 +107,14 @@ def random_list_of_url(max_length: int, max_count: int):
     return [random_url(max_length) for _ in range(randint(0, max_count))]
 
 
-def random_list_of_cve(max_count: int, min_count: int = 0):
-    return [
-        f"CVE-{randint(1987, 2021)}-{str(randint(10, 99)).rjust(4, '0')}"
-        for _ in range(randint(min_count, max_count))
-    ]
+def random_dict_of_cve(max_count: int, min_count: int = 0):
+    return dict.fromkeys(
+        [
+            f"CVE-{randint(1987, 2021)}-{str(randint(10, 99)).rjust(4, '0')}"
+            for _ in range(randint(min_count, max_count))
+        ],
+        "",
+    )
 
 
 def random_commit_hash():
@@ -129,15 +132,20 @@ def random_list_of_hunks(stop: int, max_count: int, start: int = 0):
     return [random_hunk(start=start, stop=stop) for _ in range(randint(0, max_count))]
 
 
-def random_list_of_jira_refs(max_count: int):
-    return [
-        f"{choice(SAMPLES)}-{str(randint(0, 1000))}"
-        for _ in range(randint(0, max_count))
-    ]
+def random_dict_of_jira_refs(max_count: int):
+    return dict.fromkeys(
+        [
+            f"{choice(SAMPLES)}-{str(randint(0, 1000))}"
+            for _ in range(randint(0, max_count))
+        ],
+        "",
+    )
 
 
-def random_list_of_github_issue_ids(stop: int, max_count: int, start: int = 0):
-    return [str(randint(start, stop)) for _ in range(randint(0, max_count))]
+def random_dict_of_github_issue_ids(stop: int, max_count: int, start: int = 0):
+    return dict.fromkeys(
+        [str(randint(start, stop)) for _ in range(randint(0, max_count))], ""
+    )
 
 
 def random_version(max_length: int, max_size: int, min_size: int = 0):
