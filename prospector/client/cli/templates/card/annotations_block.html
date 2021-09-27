@@ -3,7 +3,7 @@
 {% set icon = "fas fa-bullhorn" %}
 {% block body %}
 <p>
-    {% for annotation, comment in commit_with_feature.annotations.items() | sort %}
+    {% for annotation, comment in annotated_commit.annotations.items() | sort %}
     <button type="button" class="btn btn-primary position-relative m-2" disabled>
         {{ comment }}
         <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-light border border-primary text-primary">

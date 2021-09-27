@@ -20,9 +20,13 @@
         <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b>{{ advisory_record.vulnerability_id }}</b></a><br/>
         <p>{{ advisory_record.description }}</p>
         <p style="margin: 10pt 0 0;">
-            {% for code_token in advisory_record.code_tokens | sort %}
-                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ code_token }}</span>
+            {% for token in advisory_record.keywords | sort %}
+                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ token }}</span>
             {% endfor %}
         </p>
+    </div>
+    <div class="statistics" style="margin-top: 3ex">
+        <h2>Execution statistics</h2>
+        {{ execution_statistics | safe }}
     </div>
 </div>
