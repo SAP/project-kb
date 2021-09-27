@@ -2,14 +2,12 @@ import json
 
 import log.util
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit_features import CommitWithFeatures
+from datamodel.commit import Commit
 
 _logger = log.util.init_local_logger()
 
 
-def report_as_json(
-    results: "list[CommitWithFeatures]", advisory_record: AdvisoryRecord
-):
+def report_as_json(results: "list[Commit]", advisory_record: AdvisoryRecord):
 
     data = {
         "advisory_record": advisory_record.dict(),

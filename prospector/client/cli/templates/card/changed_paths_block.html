@@ -3,7 +3,7 @@
 {% set icon = "fas fa-file-signature" %}
 {% block body %}
 <p>
-    {% for path in commit_with_feature.commit.changed_files %}
+    {% for path in annotated_commit.changed_files %}
     <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ path }}</span>
     {% endfor %}
 </p>

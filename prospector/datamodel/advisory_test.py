@@ -1,15 +1,27 @@
 # from dataclasses import asdict
-from datamodel.advisory import AdvisoryRecord, extract_path_tokens
+from datamodel.advisory import AdvisoryRecord
 
 # import pytest
 
 
 def test_advisory_basic():
     adv_rec = AdvisoryRecord(
-        vulnerability_id="CVE-2015-5612", repository_url="https://github.com/abc/xyz"
+        vulnerability_id="CVE-2015-5612",
+        repository_url="https://github.com/abc/xyz",
+        references=[
+            "https://github.com/abc/def/commit/af542817cb325173410876aa3",
+            "https://github.com/abc/def/issues/54",
+        ],
     )
 
     assert adv_rec.repository_url == "https://github.com/abc/xyz"
+
+    mentions_commit = False
+    for r in adv_rec.references:
+        if "af542817c" in r:
+            mentions_commit = True
+
+    assert mentions_commit
     # assert ar.vulnerability_id == "CVE-2015-5612"
     # assert ar.published_timestamp == "2015-09-04T15:59Z"
 
@@ -57,37 +69,17 @@ def test_adv_record_products():
     assert "Chrysler" in record.affected_products
 
 
-def test_adv_record_code_tokens():
+def test_adv_record_keywords():
     record = AdvisoryRecord(
         vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
     )
     record.analyze()
 
-    assert "FileNameUtils" in record.code_tokens
-
-
-def test_adv_record_path_extraction_no_real_paths():
-    result = extract_path_tokens(ADVISORY_TEXT)
-
-    assert result == ['\\"Radio', "protection,\\"]
-
-
-def test_adv_record_path_extraction_has_real_paths():
-    result = extract_path_tokens(ADVISORY_TEXT_2)
-
-    assert result == ["FileNameUtils.normalize", "//../foo", "\\..\\foo"]
-
-
-# TODO: the strict_extensions thing is broken, to be reworked
-# def test_adv_record_path_extraction_strict_extensions():
-#     """
-#     If strict_extensions is True, it will always extract tokens with (back) slashes,
-#     but it will only collect single file names if they have the correct extension.
-#     """
-#     result = extract_path_tokens(
-#         ADVISORY_TEXT_2
-#         + " Developer.gery put something here to check if foo.java and bar.cpp will be found.",
-#         strict_extensions=True,
-#     )
-
-#     assert result == ["FileNameUtils.normalize","//../foo", "\\..\\foo", "foo.java", "bar.cpp"]
+    assert record.keywords == (
+        "IO",
+        "2.7,",
+        "FileNameUtils.normalize",
+        '"//../foo",',
+        '"\\..\\foo",',
+        '"limited"',
+    )
