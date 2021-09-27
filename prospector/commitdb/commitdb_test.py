@@ -30,9 +30,9 @@ def test_simple_write(setupdb):
         diff=["fasdfasfa", "asf90hfasdfads", "fasd0fasdfas"],
         changed_files=["fadsfasd/fsdafasd/fdsafafdsa.ifd"],
         message_reference_content=[],
-        jira_refs=[],
-        ghissue_refs=[],
-        cve_refs=["fasdfads", "fsfasf"],
+        jira_refs={},
+        ghissue_refs={},
+        cve_refs={"fasdfads": "", "fsfasf": ""},
         tags=["tag1"],
     )
     db.save(commit_obj)
@@ -46,9 +46,9 @@ def test_simple_write(setupdb):
         diff=["fasdfasfa", "asf90hfasdfads", "fasd0fasdfas"],
         changed_files=["fadsfasd/fsdafasd/fdsafafdsa.ifd"],
         message_reference_content=[],
-        jira_refs=[],
-        ghissue_refs=["hggdhd"],
-        cve_refs=["fasdfads", "fsfasf"],
+        jira_refs={},
+        ghissue_refs={"hggdhd": ""},
+        cve_refs={"fasdfads": "", "fsfasf": ""},
         tags=["tag1"],
     )
     db.save(commit_obj)
@@ -74,9 +74,9 @@ def test_upsert(setupdb):
         diff=["fasdfasfa", "asf90hfasdfads", "fasd0fasdfas"],
         changed_files=["fadsfasd/fsdafasd/fdsafafdsa.ifd"],
         message_reference_content=[],
-        jira_refs=[],
-        ghissue_refs=["hggdhd"],
-        cve_refs=["fasdfads", "fsfasf"],
+        jira_refs={},
+        ghissue_refs={"hggdhd": ""},
+        cve_refs={"fasdfads": "", "314202": ""},
         tags=["tag1"],
     )
     db.save(commit_obj)

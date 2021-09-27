@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from datamodel.constants import RELEVANT_EXTENSIONS
 
@@ -70,22 +70,26 @@ def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]
     return paths
 
 
-def extract_ghissue_references(text: str) -> List[str]:
+def extract_ghissue_references(text: str) -> Dict[str, str]:
     """
     Extract identifiers that are (=look like) references to GH issues
     """
-    return [result.group(0) for result in re.finditer(r"#\d+", text)]
+    return dict.fromkeys([result.group(0) for result in re.finditer(r"#\d+", text)], "")
 
 
-def extract_jira_references(text: str) -> List[str]:
+def extract_jira_references(text: str) -> Dict[str, str]:
     """
     Extract identifiers that point to Jira tickets
     """
-    return [result.group(0) for result in re.finditer(r"\w+-\d+", text)]
+    return dict.fromkeys(
+        [result.group(0) for result in re.finditer(r"\w+-\d+", text)], ""
+    )
 
 
-def extract_cve_references(text: str) -> List[str]:
+def extract_cve_references(text: str) -> Dict[str, str]:
     """
     Extract CVE identifiers
     """
-    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
+    return dict.fromkeys(
+        [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)], ""
+    )

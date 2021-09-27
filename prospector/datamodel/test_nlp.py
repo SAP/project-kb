@@ -83,10 +83,10 @@ def test_extract_cve_identifiers():
     result = extract_cve_references(
         "bla bla bla CVE-1234-1234567 and CVE-1234-1234, fsafasf"
     )
-    assert result == ["CVE-1234-1234567", "CVE-1234-1234"]
+    assert result == {"CVE-1234-1234": "", "CVE-1234-1234567": ""}
 
 
 def test_extract_jira_references():
     commit_msg = "CXF-8535 - Checkstyle fix (cherry picked from commit bbcd8f2eb059848380fbe5af638fe94e3a9a5e1d)"
 
-    assert extract_jira_references(commit_msg) == ["CXF-8535"]
+    assert extract_jira_references(commit_msg) == {"CXF-8535": ""}

@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Dict, Set
 
 import pandas
 
@@ -50,8 +50,8 @@ def extract_changed_relevant_paths(
 
 def extract_other_CVE_in_message(
     commit: Commit, advisory_record: AdvisoryRecord
-) -> Set[str]:
-    return set(commit.cve_refs) - {advisory_record.vulnerability_id}
+) -> Dict[str, str]:
+    return dict.fromkeys(set(commit.cve_refs) - {advisory_record.vulnerability_id}, "")
 
 
 def is_commit_in_given_interval(
