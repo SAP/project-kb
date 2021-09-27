@@ -22,7 +22,6 @@ from client.cli.prospector_client import (
     prospector,
 )
 from git.git import GIT_CACHE
-from stats.execution import execution_statistics
 
 _logger = log.util.init_local_logger()
 
@@ -76,22 +75,13 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "--advisory-keywords",
-        default=None,
+        "--diff-contains",
+        default="",
         type=str,
-        help="Add the specified keywords to the advisory record",
+        help="Code tokens that the diff of candidate commits is supposed to contain",
     )
 
-    parser.add_argument(
-        "--use-nvd", default=False, action="store_true", help="Get data from NVD"
-    )
-
-    parser.add_argument(
-        "--fetch-references",
-        default=False,
-        action="store_true",
-        help="Fetch content of references linked from the advisory",
-    )
+    parser.add_argument("--use-nvd", action="store_true", help="Get data from NVD")
 
     parser.add_argument(
         "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
@@ -210,24 +200,16 @@ def main(argv):  # noqa: C901
     repository_url = args.repository
 
     vuln_descr = args.descr
-    if args.vulnerability_id.lower().startswith("cve-"):
-        use_nvd = True
-    if args.use_nvd is not None:
-        use_nvd = args.use_nvd
-
-    fetch_references = configuration["global"].get("fetch_references") or False
-    if args.fetch_references:
-        fetch_references = args.fetch_references
-
+    use_nvd = args.use_nvd
     tag_interval = args.tag_interval
     version_interval = args.version_interval
     time_limit_before = TIME_LIMIT_BEFORE
     time_limit_after = TIME_LIMIT_AFTER
     max_candidates = args.max_candidates
     modified_files = args.modified_files.split(",")
-    advisory_keywords = (
-        args.advisory_keywords.split(",") if args.advisory_keywords is not None else []
-    )
+    code_tokens = args.diff_contains.split(",")
+
+    print(code_tokens)
 
     publication_date = ""
     if args.pub_date != "":
@@ -260,12 +242,11 @@ def main(argv):  # noqa: C901
         tag_interval=tag_interval,
         version_interval=version_interval,
         modified_files=modified_files,
-        advisory_keywords=advisory_keywords,
+        code_tokens=code_tokens,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
         nvd_rest_endpoint=nvd_rest_endpoint,
-        fetch_references=fetch_references,
         backend_address=backend,
         git_cache=git_cache,
         limit_candidates=max_candidates,
@@ -281,8 +262,6 @@ def main(argv):  # noqa: C901
     else:
         _logger.warning("Invalid report type specified, using 'console'")
         report_on_console(results, advisory_record, log.config.level < logging.INFO)
-
-    _logger.info("\n" + execution_statistics.generate_console_tree())
     return True
 
 

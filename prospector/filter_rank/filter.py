@@ -1,9 +1,9 @@
-from datamodel.commit import Commit
+from datamodel.commit_features import CommitWithFeatures
 
 
 def filter_commits(
-    candidates: "list[Commit]",
-) -> "list[Commit]":
+    candidates: "list[CommitWithFeatures]",
+) -> "list[CommitWithFeatures]":
     """
     Takes in input a set of candidate (datamodel) commits (coming from the commitdb)
     and returns in output a filtered list obtained by discarding the irrelevant

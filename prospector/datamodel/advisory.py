@@ -1,54 +1,21 @@
 # from typing import Tuple
 # from datamodel import BaseModel
-import csv
 import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Tuple
-from urllib.parse import urlparse
+from typing import List, Optional
 
 import requests
-import requests_cache
 from pydantic import BaseModel, Field
 
 import log.util
 
-from .nlp import (
-    extract_path_tokens,
-    extract_products,
-    extract_special_terms,
-    extract_versions,
-)
-
-ALLOWED_SITES = [
-    "github.com",
-    "github.io",
-    "apache.org",
-    "gitlab.org",
-    "cpan.org",
-    "gnome.org",
-    "gnu.org",
-    "nongnu.org",
-    "kernel.org",
-    "rclone.org",
-    "openssl.org",
-    "squid-cache.org",
-    "ossec.net",
-    "readthedocs.io",
-    "atlassian.net",
-    "jira.atlassian.com",
-    "lists.debian.org",
-    "access.redhat.com",
-    "openstack.org",
-    "python.org",
-    "pypi.org",
-    "for.testing.purposes",  # do not remove this, used in mocks for testing purposes
-    "jvndb.jvn.jp",  # for testing: sometimes unreachable
-]
+# from commit_processor.constants import RELEVANT_EXTENSIONS
 
 _logger = log.util.init_local_logger()
 
+# TODO use prospector own NVD feed endpoint
 NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 
 
@@ -63,18 +30,18 @@ class AdvisoryRecord(BaseModel):
     last_modified_timestamp: int = 0
     references: List[str] = Field(default_factory=list)
     references_content: List[str] = Field(default_factory=list)
+    advisory_references: List[str] = Field(default_factory=list)
     affected_products: List[str] = Field(default_factory=list)
     description: Optional[str] = ""
-    preprocessed_description: str = ""
+    preprocessed_vulnerability_description: str = ""
     relevant_tags: List[str] = None
     versions: List[str] = Field(default_factory=list)
     from_nvd: bool = False
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
     paths: List[str] = Field(default_factory=list)
-    keywords: Tuple[str, ...] = Field(default_factory=tuple)
-    license: str = "UNKNOWN"
+    code_tokens: List[str] = Field(default_factory=list)
 
-    def analyze(self, use_nvd: bool = False, fetch_references=False):
+    def analyze(self, use_nvd: bool = False):
         self.from_nvd = use_nvd
 
         if self.from_nvd:
@@ -83,39 +50,16 @@ class AdvisoryRecord(BaseModel):
         self.versions.extend(
             [v for v in extract_versions(self.description) if v not in self.versions]
         )
-
         self.affected_products = extract_products(self.description)
         self.paths = extract_path_tokens(self.description)
-        self.keywords = extract_special_terms(self.description)
-
-        _logger.debug("References: " + str(self.references))
-        self.references = [
-            r for r in self.references if urlparse(r).hostname in ALLOWED_SITES
-        ]
-        _logger.debug("Relevant references: " + str(self.references))
-
-        if fetch_references:
-            for r in self.references:
-                ref_content = fetch_reference_content(r)
-                if ref_content:
-                    _logger.debug("Fetched content of reference " + r)
-                    self.references_content.append(ref_content)
-
-        self.license = self._guess_license()
-        if self.repository_url == "":
-            self.repository_url = self._guess_repository()
+        self.code_tokens = extract_camelcase_tokens(self.description)
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
         populate object field using NVD data
-        returns: description, published_timestamp, last_modified timestamp, list of references
+        returns: description, published_timestamp, last_modified timestamp, list of links
         """
 
-        # TODO check behavior when some of the data attributes of the AdvisoryRecord
-        # class contain data (e.g. passed explicitly as input by the useer);
-        # In that case, shall the data from NVD be appended to the exiting data,
-        # replace it, be ignored?
-        # (note: right now, it just replaces it)
         try:
             response = requests.get(nvd_rest_endpoint + vuln_id)
             if response.status_code != 200:
@@ -146,89 +90,85 @@ class AdvisoryRecord(BaseModel):
                 exc_info=log.config.level < logging.INFO,
             )
 
-    def _guess_license(self) -> str:
-        lowercase_descr = self.description.lower()
 
-        oss_keywords = [
-            "apache",
-            "eclipse",
-            "linux",
-            "android",
-            "jenkins",
-            "php",
-            "python",
-            "wireshark",
-            "wordpress",
-            "dom4j",
-            "jackson-data",
-            "jackson-databind",
-            "jetty",
-            "openvpn",
-            "openssl",
-            "debian",
-            "ubuntu",
-            "netty",
-            "spring framework",
-            "spring security",
-        ]
+def extract_versions(text) -> "list[str]":
+    """
+    Extract all versions mentioned in the advisory text
+    """
+    regex = r"[0-9]{1,}\.[0-9]{1,}[0-9a-z.]*"
+    result = re.findall(regex, text)
 
-        proprietary_keywords = [
-            "microsoft",
-            "windows",
-            "oracle",
-            "ibm",
-            "sap",
-            "salesforce",
-            "cisco",
-            "adobe",
-            "dell",
-            "netgear",
-            "dahua",
-            "intel",
-            "symantec",
-        ]
-
-        matching_oss = [m for m in oss_keywords if (m in lowercase_descr)]
-        matching_proprietary = [
-            m for m in proprietary_keywords if (m in lowercase_descr)
-        ]
-
-        if matching_oss is not []:
-            return "OSS"
-
-        if matching_proprietary is not []:
-            return "PROPRIETARY"
-
-        return "UNKNOWN"
-
-    def _guess_repository(self) -> str:
-
-        product_repository_map = {}
-
-        with open("./datamodel/gazetteers/product_repositories.csv", mode="r") as f:
-            reader = csv.reader(f)
-            product_repository_map = {rows[0]: rows[1] for rows in reader}
-
-        for p in self.affected_products:
-            if p in product_repository_map:
-                return product_repository_map[p]
-
-        return ""
+    return result
 
 
-def fetch_reference_content(reference: str) -> str:
-
-    try:
-        session = requests_cache.CachedSession("requests-cache")
-        content = session.get(reference).text
-    except Exception:
-        _logger.debug(f"can not retrieve reference content: {reference}", exc_info=True)
-        return False
-
-    return content
+def extract_products(text) -> "list[str]":
+    """
+    Extract product names from advisory text
+    """
+    # TODO implement this properly
+    regex = r"([A-Z]+[a-z\b]+)"
+    result = list(set(re.findall(regex, text)))
+    return [p for p in result if len(p) > 2]
 
 
-# would be used in the future
+def extract_camelcase_tokens(text) -> "list[str]":
+    """
+    Extract camelcase or snake_case elements from advisory text
+    """
+    regex = r"([A-Za-z]+[a-z\b]+[A-Z]+[a-z\b]+)"
+    result = list(set(re.findall(regex, text)))
+    # return list(result)
+    return [p for p in result if len(p) > 2]
+    # return["blaHlafaHlsafs"]
+
+
+def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]:
+    """
+    Used to look for paths in the text (i.e. vulnerability description)
+
+    Input:
+        text (str)
+        strict_extensions (bool): this function will always extract tokens with (back) slashes,
+            but it will only match single file names if they have the correct extension, if this argument is True
+
+    Returns:
+        list: a list of paths that are found
+    """
+    tokens = re.split(r"\s+", text)  # split the text into words
+    tokens = [
+        token.strip(",.:;-+!?)]}'\"") for token in tokens
+    ]  # removing common punctuation marks
+    tokens = [t for t in tokens if t != ""]
+    paths = []
+    for token in tokens:
+        contains_path_separators = ("\\" in token) or ("/" in token) or ("." in token)
+        separated_with_period = "." in token
+        # has_relevant_extension = token.split(".")[-1] in RELEVANT_EXTENSIONS
+        is_xml_tag = token.startswith("<")
+        is_property = token.endswith("=")
+        is_likely_version = token[0].isdigit() and separated_with_period
+
+        # is_path = contains_path_separators or (
+        #     has_relevant_extension if strict_extensions else separated_with_period
+        # )
+        # probably_not_path = is_xml_tag or is_property or not has_relevant_extension or not contains_path_separators or is_likely_version
+
+        if (
+            is_property
+            or is_xml_tag
+            or is_likely_version
+            or not contains_path_separators
+        ):
+            continue
+
+        # if strict_extensions and not has_relevant_extension:
+        #     continue
+
+        paths.append(token)
+
+    return paths
+
+
 @dataclass
 class Reference:
     """
@@ -238,9 +178,6 @@ class Reference:
     url: str
     repo_url: str
 
-    # TODO we do not need a class for this, this is a collection of
-    # functions, with not state at all, they can become part of some
-    # other general string analysis module
     def __post_init__(self):
         # TODO this is not general (the .git suffix can be stripped only for github)
         self.repo_url = re.sub(r"\.git$|/$", "", self.repo_url)

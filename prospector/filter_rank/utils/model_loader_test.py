@@ -1,9 +1,8 @@
 import os
-
 import pytest
 
-from ranking import MODELS_FOLDER
-from ranking.utils.model_loader import get_model_path, load_model, save_model
+from filter_rank import MODELS_FOLDER
+from filter_rank.utils.model_loader import load_model, get_model_path, save_model
 
 
 @pytest.fixture
@@ -17,12 +16,8 @@ def model_name_joblib():
 
 
 def test_get_model_path(model_name, model_name_joblib):
-    assert get_model_path(model_name_joblib) == os.path.join(
-        MODELS_FOLDER, model_name_joblib
-    )
-    assert get_model_path(model_name) == os.path.join(
-        MODELS_FOLDER, "{}.joblib".format(model_name)
-    )
+    assert get_model_path(model_name_joblib) == os.path.join(MODELS_FOLDER, model_name_joblib)
+    assert get_model_path(model_name) == os.path.join(MODELS_FOLDER, '{}.joblib'.format(model_name))
 
 
 def test_load_model(model_name, model_name_joblib):

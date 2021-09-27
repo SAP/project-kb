@@ -16,7 +16,6 @@ import log.util
 
 # from pprint import pprint
 # import pickledb
-from stats.execution import execution_statistics, measure_execution_time
 
 _logger = log.util.init_local_logger()
 
@@ -204,7 +203,6 @@ class Git:
             shutil.rmtree(self._path)
             raise ex
 
-    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commits(
         self,
         ancestors_of=None,
@@ -271,7 +269,6 @@ class Git:
             _logger.error("Failed to obtain commits, details below:", exc_info=True)
             return []
 
-    @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, key, by="id"):
         if by == "id":
             return Commit(self, key)
@@ -455,10 +452,6 @@ class Commit:
             ).strftime(date_format)
         return self._attributes["timestamp"]
 
-    @measure_execution_time(
-        execution_statistics.sub_collection("core"),
-        name="retrieve changed file from git",
-    )
     def get_changed_files(self):
         if "changed_files" not in self._attributes:
             cmd = ["git", "diff", "--name-only", self._id + "^.." + self._id]

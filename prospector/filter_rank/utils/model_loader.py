@@ -1,18 +1,17 @@
+from filter_rank import MODELS_FOLDER
+
+from joblib import load, dump
 import os
-
-from joblib import dump, load
-
-from ranking import MODELS_FOLDER
 
 
 def get_model_path(model_name: str) -> str:
     """
     A helper function to retrieve the model path
     """
-    if model_name.endswith(".joblib"):
+    if model_name.endswith('.joblib'):
         return os.path.join(MODELS_FOLDER, model_name)
     else:
-        return os.path.join(MODELS_FOLDER, "{}.joblib".format(model_name))
+        return os.path.join(MODELS_FOLDER, '{}.joblib'.format(model_name))
 
 
 def load_model(model_name: str):
@@ -24,7 +23,7 @@ def load_model(model_name: str):
     model_path = get_model_path(model_name)
 
     if not os.path.exists(model_path):
-        raise Exception("Model {} not found".format(model_name))
+        raise Exception('Model {} not found'.format(model_name))
 
     return load(model_path)
 

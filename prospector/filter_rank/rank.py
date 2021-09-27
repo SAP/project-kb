@@ -4,24 +4,26 @@ import re
 import pandas as pd
 
 import log.util
-from datamodel.commit import Commit
-from ranking import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
+from datamodel.commit_features import CommitWithFeatures
+from filter_rank import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
 
 from .utils.model_loader import save_model
 
 _logger = log.util.init_local_logger()
 
 
-def rank(candidates: "list[Commit]", model_name: str) -> "list[Commit]":
+def rank(
+    candidates: "list[CommitWithFeatures]", model_name: str
+) -> "list[CommitWithFeatures]":
     """
-    Takes in input a list of Commit and augments them with ML generated annotations.
-    Returns the initial list of Commit augmented with annotations.
+    Takes in input a list of CommitWithFeatures and augments them with ML generated annotations.
+    Returns the initial list of CommitWithFeatures augmented with annotations.
     """
 
     return candidates
 
 
-def predict(model_name: str, candidate: Commit) -> float:
+def predict(model_name: str, commit_features: CommitWithFeatures) -> float:
     """
     The function computes the similarity score for the given commit
     """

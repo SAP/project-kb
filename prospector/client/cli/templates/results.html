@@ -9,8 +9,8 @@
 <div class="container">
     <h1>Prospector Report</h1>
     <div id="col accordion">
-        {% for annotated_commit in candidates %}
-        <div class="card commit d-flex" data-annotations="{{ annotated_commit.annotations | tojson | forceescape }}">
+        {% for commit_with_feature in candidates %}
+        <div class="card commit d-flex" data-annotations="{{ commit_with_feature.annotations | tojson | forceescape }}">
             <div class="card-header" id="candidateheader{{ loop.index }}">
                 {% include "card/commit_header.html" %}
             </div>

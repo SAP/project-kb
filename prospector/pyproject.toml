@@ -5,12 +5,10 @@ testpaths = [
     "commitdb",
     "datamodel",
     "client",
+    "commit_processor",
     "git",
     "api",
-    "ranking",
-    "filtering",
-    "stats",
-    "util"
+    "filter_rank"
 ]
 
 [tool.isort]

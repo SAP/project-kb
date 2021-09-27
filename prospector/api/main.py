@@ -46,6 +46,43 @@ app.include_router(nvd.router)
 app.include_router(preprocessed.router)
 
 
+# # -----------------------------------------------------------------------------
+# # Data here refers to training data, used to train ML models
+# # TODO find a less generic term
+# @app.get("/data", tags=["data"])
+# async def get_data():
+#     return [
+#         {
+#             "repository_url": "https://github.com/apache/struts",
+#             "commit_id": "a4612fe8232678cab3297",
+#             "label": 1,
+#             "vulnerability_id": "CVE-XXXX-YYYY",
+#         },
+#         {
+#             "repository_url": "https://github.com/apache/struts",
+#             "commit_id": "a4612fe8232678cab3297",
+#             "label": 1,
+#             "vulnerability_id": "CVE-XXXX-YYYY",
+#         },
+#         {
+#             "repository_url": "https://github.com/apache/struts",
+#             "commit_id": "a4612fe8232678cab3297",
+#             "label": 1,
+#             "vulnerability_id": "CVE-XXXX-YYYY",
+#         },
+#     ]
+
+
+# @app.post("/data", tags=["data"])
+# async def create_data(repository_url, commit_id, label, vulnerability_id):
+#     return {
+#         "repository_url": repository_url,
+#         "commit_id": commit_id,
+#         "label": label,
+#         "vulnerability_id": vulnerability_id,
+#     }
+
+
 # -----------------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def read_items():

@@ -5,22 +5,20 @@ import jinja2
 
 import log.util
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit
-from stats.execution import execution_statistics
+from datamodel.commit_features import CommitWithFeatures
 
 _logger = log.util.init_local_logger()
 
 
 def report_as_html(
-    results: List[Commit],
+    results: List[CommitWithFeatures],
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.html",
-    statistics=None,
 ):
     annotations_count = {}
-    annotated_commit: Commit
-    for annotated_commit in results:
-        for annotation in annotated_commit.annotations.keys():
+    commit_with_feature: CommitWithFeatures
+    for commit_with_feature in results:
+        for annotation in commit_with_feature.annotations.keys():
             annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
 
     _logger.info("Writing results to " + filename)
@@ -34,9 +32,6 @@ def report_as_html(
             candidates=results,
             present_annotations=annotations_count,
             advisory_record=advisory_record,
-            execution_statistics=(
-                execution_statistics if statistics is None else statistics
-            ).as_html_ul(),
         ):
             html_file.write(content)
     return filename

@@ -1,21 +1,10 @@
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
-from datamodel.nlp import (
-    extract_cve_references,
-    extract_ghissue_references,
-    extract_jira_references,
-)
-from git.git import Commit as RawCommit
-
 
 class Commit(BaseModel):
-    """
-    Remember to propagate any changes you make here to the DB schema and
-    to the save() and lookup() functions of the database module.
-    """
-
+    # class Commit:
     commit_id: str = ""
     repository: str = ""
     timestamp: Optional[int] = 0
@@ -28,7 +17,6 @@ class Commit(BaseModel):
     ghissue_refs: List[str] = Field(default_factory=list)
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
-    annotations: Dict[str, str] = Field(default_factory=dict)
 
     @property
     def hunk_count(self):
@@ -38,46 +26,3 @@ class Commit(BaseModel):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
     #     out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
     #     return out
-
-
-def make_from_raw_commit(git_commit: RawCommit) -> Commit:
-    """
-    This function is responsible of translating a raw (git)Commit
-    into a preprocessed-Commit, that can be saved to the DB
-    and later used by the ranking/ML module.
-
-
-    NOTE: don't be confused by the fact that we have two classes
-    both named Commit: the one from the git module represents
-    a commit as extracted directly from Git, with only minimal post-processing.
-    The datamodel.Commit class instead maps one-to-one onto the
-    rows of the backend database, and its instances are the input
-    to the ranking module (together with an Advisory Record with
-    which they must be matched)
-    """
-
-    commit_id = git_commit.get_id()
-    repository_url = git_commit._repository._url
-
-    commit = Commit(commit_id=commit_id, repository=repository_url)
-
-    # This is where all the attributes of the preprocessed commit
-    # are computed and assigned.
-    #
-    # Note: all attributes that do not depend on a particular query
-    # (that is, that do not depend on a particular Advisory Record)
-    # should be computed here so that they can be stored in the db.
-    # Space-efficiency is important.
-
-    commit.diff = git_commit.get_diff()
-    commit.hunks = git_commit.get_hunks()
-    commit.message = git_commit.get_msg()
-    commit.timestamp = int(git_commit.get_timestamp())
-    commit.changed_files = git_commit.get_changed_files()
-    commit.tags = git_commit.get_tags()
-
-    commit.jira_refs = list(set(extract_jira_references(commit.message)))
-    commit.ghissue_refs = extract_ghissue_references(commit.message)
-    commit.cve_refs = extract_cve_references(commit.message)
-
-    return commit

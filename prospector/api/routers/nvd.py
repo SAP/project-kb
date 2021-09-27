@@ -23,26 +23,6 @@ DATA_PATH = os.environ.get("CVE_DATA_PATH") or os.path.join(
 )
 
 
-@router.get("/vulnerabilities/by-year/{year}")
-async def get_vuln_list_by_year(year: str):
-    _logger.debug("Requested list of vulnerabilities for " + year)
-
-    if len(year) != 4 or not year.isdigit():
-        return JSONResponse([])
-
-    data_dir = os.path.join(DATA_PATH, year)
-    if not os.path.isdir(data_dir):
-        _logger.info("No data found for year " + year)
-        raise HTTPException(
-            status_code=404, detail="No vulnerabilities found for " + year
-        )
-
-    _logger.debug("Serving data for year " + year)
-    vuln_ids = [vid.rstrip(".json") for vid in os.listdir(data_dir)]
-    results = {"count": len(vuln_ids), "data": vuln_ids}
-    return JSONResponse(results)
-
-
 @router.get("/vulnerabilities/{vuln_id}")
 async def get_vuln_data(vuln_id):
     _logger.debug("Requested data for vulnerability " + vuln_id)
