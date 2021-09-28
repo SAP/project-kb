@@ -12,6 +12,7 @@ import requests_cache
 from pydantic import BaseModel, Field
 
 import log.util
+from util.collection import union_of
 
 from .nlp import (
     extract_path_tokens,
@@ -78,13 +79,13 @@ class AdvisoryRecord(BaseModel):
         if self.from_nvd:
             self._get_from_nvd(self.vulnerability_id, self.nvd_rest_endpoint)
 
-        self.versions.extend(
-            [v for v in extract_versions(self.description) if v not in self.versions]
-        )
+        self.versions = union_of(self.versions, extract_versions(self.description))
 
-        self.affected_products = extract_products(self.description)
-        self.paths = extract_path_tokens(self.description)
-        self.keywords = extract_special_terms(self.description)
+        self.affected_products = union_of(
+            self.affected_products, extract_products(self.description)
+        )
+        self.paths = union_of(self.paths, extract_path_tokens(self.description))
+        self.keywords = union_of(self.keywords, extract_special_terms(self.description))
 
         _logger.debug("References: " + str(self.references))
         self.references = [
