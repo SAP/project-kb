@@ -24,9 +24,9 @@ class Commit(BaseModel):
     diff: List[str] = Field(default_factory=list)
     changed_files: List[str] = Field(default_factory=list)
     message_reference_content: List[str] = Field(default_factory=list)
-    jira_refs: List[str] = Field(default_factory=list)
-    ghissue_refs: List[str] = Field(default_factory=list)
-    cve_refs: List[str] = Field(default_factory=list)
+    jira_refs: Dict[str, str] = Field(default_factory=dict)
+    ghissue_refs: Dict[str, str] = Field(default_factory=dict)
+    cve_refs: Dict[str, str] = Field(default_factory=dict)
     tags: List[str] = Field(default_factory=list)
     annotations: Dict[str, str] = Field(default_factory=dict)
 
@@ -75,8 +75,7 @@ def make_from_raw_commit(git_commit: RawCommit) -> Commit:
     commit.timestamp = int(git_commit.get_timestamp())
     commit.changed_files = git_commit.get_changed_files()
     commit.tags = git_commit.get_tags()
-
-    commit.jira_refs = list(set(extract_jira_references(commit.message)))
+    commit.jira_refs = extract_jira_references(commit.message)
     commit.ghissue_refs = extract_ghissue_references(commit.message)
     commit.cve_refs = extract_cve_references(commit.message)
 

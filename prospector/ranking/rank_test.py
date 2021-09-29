@@ -13,9 +13,9 @@ from ranking.rank import make_dataframe, predict, rank, train
 @pytest.fixture
 def candidates():
     return [
-        Commit(repository="repo1", commit_id="1", ghissue_refs=["example"]),
+        Commit(repository="repo1", commit_id="1", ghissue_refs={"example": ""}),
         Commit(repository="repo2", commit_id="2"),
-        Commit(repository="repo3", commit_id="3", ghissue_refs=["example"]),
+        Commit(repository="repo3", commit_id="3", ghissue_refs={"example": ""}),
         Commit(repository="repo4", commit_id="4"),
         Commit(repository="repo5", commit_id="5"),
     ]

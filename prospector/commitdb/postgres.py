@@ -50,12 +50,19 @@ class PostgresCommitDB(CommitDB):
 
                     result = cur.fetchall()
                     if len(result):
-                        # Workaround for unmarshaling hunks
+                        # Workaround for unmarshaling hunks, dict type refs
                         lis = []
                         for r in result[0]["hunks"]:
                             a, b = r.strip("()").split(",")
                             lis.append((int(a), int(b)))
                         result[0]["hunks"] = lis
+                        result[0]["jira_refs"] = dict.fromkeys(
+                            result[0]["jira_refs"], ""
+                        )
+                        result[0]["ghissue_refs"] = dict.fromkeys(
+                            result[0]["ghissue_refs"], ""
+                        )
+                        result[0]["cve_refs"] = dict.fromkeys(result[0]["cve_refs"], "")
                         parsed_commit = Commit.parse_obj(result[0])
                         data.append(parsed_commit)
                     else:
@@ -68,12 +75,15 @@ class PostgresCommitDB(CommitDB):
                 result = cur.fetchall()
                 if len(result):
                     for res in result:
-                        # Workaround for unmarshaling hunks
+                        # Workaround for unmarshaling hunks, dict type refs
                         lis = []
                         for r in res[3]:
                             a, b = r.strip("()").split(",")
                             lis.append((int(a), int(b)))
                         res[3] = lis
+                        res[9] = dict.fromkeys(res[8], "")
+                        res[10] = dict.fromkeys(res[9], "")
+                        res[11] = dict.fromkeys(res[10], "")
                         parsed_commit = Commit.parse_obj(res)
                         data.append(parsed_commit)
             cur.close()
@@ -138,9 +148,9 @@ class PostgresCommitDB(CommitDB):
                     commit_obj.diff,
                     commit_obj.changed_files,
                     commit_obj.message_reference_content,
-                    commit_obj.jira_refs,
-                    commit_obj.ghissue_refs,
-                    commit_obj.cve_refs,
+                    list(commit_obj.jira_refs.keys()),
+                    list(commit_obj.ghissue_refs.keys()),
+                    list(commit_obj.cve_refs.keys()),
                     commit_obj.tags,
                 ),
             )
