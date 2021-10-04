@@ -10,6 +10,10 @@ def extract_special_terms(description: str) -> Tuple[str, ...]:
     These are usually code fragments and names of code entities, or paths.
     """
 
+    return ()
+    # TODO replace this with NLP implementation
+    # see, https://github.com/SAP/project-kb/issues/256#issuecomment-927639866
+    # noinspection PyUnreachableCode
     result = []
     for word in description.split():
         no_punctation_word = word.rstrip(").,;:?!\"'").lstrip("(")
