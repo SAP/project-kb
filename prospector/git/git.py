@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
+from urllib.parse import urlparse
 
 import log.util
 
@@ -55,6 +56,14 @@ def clone_repo_multiple(
     return results
 
 
+def path_from_url(url, base_path):
+    url = url.rstrip("/")
+    parsed_url = urlparse(url)
+    return os.path.join(
+        base_path, parsed_url.netloc + parsed_url.path.replace("/", "_")
+    )
+
+
 class Git:
     def __init__(
         self,
@@ -64,8 +73,7 @@ class Git:
     ):
         self.repository_type = "GIT"
         self._url = url
-        self._path = os.path.join(cache_path, self._url.rstrip("/").split("/")[-1])
-        # self._path = os.path.join(cache_path, self._url.replace("https://","").replace("/", "_"))
+        self._path = path_from_url(url, cache_path)
         self._fingerprints = dict()
         self._exec_timeout = None
         self._shallow_clone = shallow
