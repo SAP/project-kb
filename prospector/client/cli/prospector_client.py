@@ -102,13 +102,13 @@ def prospector(  # noqa: C901
         _logger.info(
             "Downloading repository {} in {}..".format(repository_url, git_cache)
         )
-        repository = Git(repository_url, git_cache)
+        repository = Git(advisory_record.repository_url, git_cache)
         repository.clone()
         tags = repository.get_tags()
 
         _logger.debug(f"Found tags: {tags}")
 
-        _logger.info("Done retrieving %s" % repository_url)
+        _logger.info("Done retrieving %s" % advisory_record.repository_url)
 
         prev_tag = None
         following_tag = None

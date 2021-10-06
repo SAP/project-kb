@@ -1,0 +1,16 @@
+{"label": "PROD", "pattern": [{"LOWER": "apache"}, {"LOWER": "commons"},  {"LOWER": "io"}], "id":"apache-commons-io"}
+{"label": "PROD", "pattern": [{"LOWER": "apache"}, {"LOWER": "commons"},  {"LOWER": "beanutils"}], "id":"apache-commons-beanutils"}
+{"label": "PROD", "pattern": [{"LOWER": "apache"}, {"LOWER": "activemq"}], "id": "apache-activemq"}
+{"label": "PROD", "pattern": [{"LOWER": "apache"}, {"LOWER": "poi"}], "id": "apache-poi"}
+{"label": "PROD", "pattern": [{"LOWER": "apache"}, {"LOWER": "struts"}, {"LOWER":"1"}], "id": "apache-struts-1"}
+{"label": "PROD", "pattern": [{"LOWER": "apache"}, {"LOWER": "struts"}, {"LOWER":"1.x"}], "id": "apache-struts-1"}
+{"label": "PROD", "pattern": [{"LOWER": "struts 1.x"}], "id": "apache-struts-1"}
+{"label": "PROD", "pattern": [{"LOWER": "struts 1"}], "id": "apache-struts-1"}
+{"label": "PROD", "pattern": [{"LOWER": "apache"}, {"LOWER": "struts"}], "id": "apache-struts"}
+{"label": "PROD", "pattern": [{"LOWER": "poi"}], "id": "apache-poi"}
+{"label": "PROD", "pattern": [{"LOWER": "eclipse"}, {"LOWER": "steady"}], "id": "eclipse-steady"}
+{"label": "PROD", "pattern": [{"LOWER": "eclipse"}, {"LOWER": "jetty"}], "id": "eclipse-jetty"}
+{"label": "PROD", "pattern": [{"LOWER": "jetty"}], "id": "eclipse-jetty"}
+{"label": "PROD", "pattern": [{"LOWER": "spring"}, {"LOWER": "framework"}], "id": "spring-framework"}
+{"label": "PROD", "pattern": [{"LOWER": "spring"}, {"LOWER": "security"}], "id": "spring-security"}
+{"label": "PROD", "pattern": [{"LOWER": "spring"}, {"LOWER": "data"}, {"LOWER": "commons"}], "id": "spring-data-commons"}

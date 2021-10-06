@@ -1,5 +1,6 @@
 # from typing import Tuple
 # from datamodel import BaseModel
+import csv
 import logging
 import re
 from dataclasses import dataclass
@@ -65,13 +66,14 @@ class AdvisoryRecord(BaseModel):
     references_content: List[str] = Field(default_factory=list)
     affected_products: List[str] = Field(default_factory=list)
     description: Optional[str] = ""
-    preprocessed_vulnerability_description: str = ""
+    preprocessed_description: str = ""
     relevant_tags: List[str] = None
     versions: List[str] = Field(default_factory=list)
     from_nvd: bool = False
     nvd_rest_endpoint: str = NVD_REST_ENDPOINT
     paths: List[str] = Field(default_factory=list)
     keywords: Tuple[str, ...] = Field(default_factory=tuple)
+    license: str = "UNKNOWN"
 
     def analyze(self, use_nvd: bool = False, fetch_references=False):
         self.from_nvd = use_nvd
@@ -99,6 +101,15 @@ class AdvisoryRecord(BaseModel):
                 if ref_content:
                     _logger.debug("Fetched content of reference " + r)
                     self.references_content.append(ref_content)
+
+        self.license = self._guess_license()
+
+        if self.repository_url == "":
+            self.repository_url = self._guess_repository()
+
+        if self.repository_url == "":
+            print(self.description)
+            raise (Exception("No repository specified (and I could not guess it)"))
 
     def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
         """
@@ -140,6 +151,77 @@ class AdvisoryRecord(BaseModel):
                 "Could not retrieve vulnerability data from NVD for " + vuln_id,
                 exc_info=log.config.level < logging.INFO,
             )
+
+    def _guess_license(self) -> str:
+        lowercase_descr = self.description.lower()
+
+        oss_keywords = [
+            "apache",
+            "eclipse",
+            "linux",
+            "android",
+            "jenkins",
+            "php",
+            "python",
+            "wireshark",
+            "wordpress",
+            "dom4j",
+            "jackson-data",
+            "jackson-databind",
+            "jetty",
+            "openvpn",
+            "openssl",
+            "debian",
+            "ubuntu",
+            "netty",
+            "spring framework",
+            "spring security",
+        ]
+
+        proprietary_keywords = [
+            "microsoft",
+            "windows",
+            "oracle",
+            "ibm",
+            "sap",
+            "salesforce",
+            "cisco",
+            "adobe",
+            "dell",
+            "netgear",
+            "dahua",
+            "intel",
+            "symantec",
+        ]
+
+        matching_oss = [m for m in oss_keywords if (m in lowercase_descr)]
+        matching_proprietary = [
+            m for m in proprietary_keywords if (m in lowercase_descr)
+        ]
+
+        if matching_oss is not []:
+            return "OSS"
+
+        if matching_proprietary is not []:
+            return "PROPRIETARY"
+
+        return "UNKNOWN"
+
+    def _guess_repository(self) -> str:
+
+        product_repository_map = {}
+
+        with open("./datamodel/gazetteers/product_repositories.csv", mode="r") as f:
+            reader = csv.reader(f)
+            product_repository_map = {rows[0]: rows[1] for rows in reader}
+
+        for p in self.affected_products:
+            if p in product_repository_map:
+                r = product_repository_map[p]
+                _logger.info("Guessed repository {} for project {}".format(r, p))
+                return r
+
+        return ""
 
 
 def fetch_reference_content(reference: str) -> str:

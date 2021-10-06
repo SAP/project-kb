@@ -1,7 +1,37 @@
 # from dataclasses import asdict
+# import pytest
+# import spacy
+# import requests
+from spacy.lang.en import English
+
 from datamodel.advisory import AdvisoryRecord
 
-# import pytest
+ADVISORY_TEXT_1 = """Unspecified vulnerability in Uconnect before 15.26.1, as used
+    in certain Fiat Chrysler Automobiles (FCA) from 2013 to 2015 models, allows
+    remote attackers in the same cellular network to control vehicle movement,
+    cause human harm or physical damage, or modify dashboard settings via
+    vectors related to modification of entertainment-system firmware and access
+    of the CAN bus due to insufficient \\"Radio security protection,\\" as
+    demonstrated on a 2014 Jeep Cherokee Limited FWD."""
+
+ADVISORY_TEXT_2 = """
+In Apache Commons IO before 2.7, When invoking the method FileNameUtils.normalize
+with an improper input string, like "//../foo", or "\\..\\foo", the result would be
+the same value, thus possibly providing access to files in the parent directory,
+but not further above (thus "limited" path traversal), if the calling code would
+use the result to construct a path value."""
+
+ADVISORY_TEXT_3 = """
+Apache Commons BeanUtils, as distributed in lib/commons-beanutils-1.8.0.jar in
+Apache Struts 1.x through 1.3.10 and in other products requiring
+commons-beanutils through 1.9.2, does not suppress the class property, which
+allows remote attackers to "manipulate" the ClassLoader and execute arbitrary
+code via the class parameter, as demonstrated by the passing of this parameter
+to the getClass method of the ActionForm object in Struts 1.
+"""
+
+
+ADVISORIES = [ADVISORY_TEXT_1, ADVISORY_TEXT_2, ADVISORY_TEXT_3]
 
 
 def test_advisory_basic():
@@ -26,25 +56,11 @@ def test_advisory_basic():
     # assert ar.published_timestamp == "2015-09-04T15:59Z"
 
 
-ADVISORY_TEXT = """Unspecified vulnerability in Uconnect before 15.26.1, as used
-    in certain Fiat Chrysler Automobiles (FCA) from 2013 to 2015 models, allows
-    remote attackers in the same cellular network to control vehicle movement,
-    cause human harm or physical damage, or modify dashboard settings via
-    vectors related to modification of entertainment-system firmware and access
-    of the CAN bus due to insufficient \\"Radio security protection,\\" as
-    demonstrated on a 2014 Jeep Cherokee Limited FWD."""
-
-ADVISORY_TEXT_2 = """
-In Apache Commons IO before 2.7, When invoking the method FileNameUtils.normalize
-with an improper input string, like "//../foo", or "\\..\\foo", the result would be
-the same value, thus possibly providing access to files in the parent directory,
-but not further above (thus "limited" path traversal), if the calling code would
-use the result to construct a path value."""
-
-
 def test_adv_record_versions():
 
-    record = AdvisoryRecord(vulnerability_id="CVE-2014-0050", description=ADVISORY_TEXT)
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-2014-0050", description=ADVISORY_TEXT_1
+    )
     record.analyze()
 
     assert "15.26.1" in record.versions
@@ -62,7 +78,9 @@ def test_adv_record_versions():
 
 
 def test_adv_record_products():
-    record = AdvisoryRecord(vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT)
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_1
+    )
     record.analyze()
 
     # print(record)
@@ -87,3 +105,45 @@ def test_adv_record_keywords():
             '"limited"',
         )
     )
+
+
+def test_process_description_spacy():
+    # see https://spacy.io/usage/rule-based-matching#entityruler
+
+    nlp = English()
+    nlp.add_pipe("entity_ruler").from_disk("./datamodel/gazetteers/products.jsonl")
+
+    for adv in ADVISORIES:
+        product_names = []
+        doc = nlp(adv)
+        # for token in doc:
+        #     print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,  token.shape_, token.is_alpha, token.is_stop)
+
+        for entity in doc.ents:
+            if entity.label_ == "PROD":
+                product_names.append(entity.text)
+
+        print(product_names)
+
+    return product_names
+
+
+def test_guess_license():
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
+    )
+    record.analyze()
+    assert record.license == "OSS"
+
+    # record.description = "Microsof Windows"
+    # record.analyze()
+    # assert record._guess_license() == 'PROPRIETARY'
+
+
+def test_guess_repository():
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
+    )
+    record.analyze()
+
+    assert record.repository_url == "https://github.com/apache/commons-io"
