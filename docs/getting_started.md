@@ -48,7 +48,7 @@ as in this example:
 
     sources:
     - repo: https://github.com/sap/project-kb
-      branch: master
+      branch: vulnerability-data
       rank: 10
 
 
