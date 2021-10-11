@@ -8,11 +8,11 @@ from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
-import requests_cache
 from pydantic import BaseModel, Field
 
 import log.util
 from util.collection import union_of
+from util.http import fetch_url
 
 from .nlp import (
     extract_path_tokens,
@@ -95,8 +95,8 @@ class AdvisoryRecord(BaseModel):
 
         if fetch_references:
             for r in self.references:
-                ref_content = fetch_reference_content(r)
-                if ref_content:
+                ref_content = fetch_url(r)
+                if len(ref_content) > 0:
                     _logger.debug("Fetched content of reference " + r)
                     self.references_content.append(ref_content)
 
@@ -140,18 +140,6 @@ class AdvisoryRecord(BaseModel):
                 "Could not retrieve vulnerability data from NVD for " + vuln_id,
                 exc_info=log.config.level < logging.INFO,
             )
-
-
-def fetch_reference_content(reference: str) -> str:
-
-    try:
-        session = requests_cache.CachedSession("requests-cache")
-        content = session.get(reference).text
-    except Exception:
-        _logger.debug(f"can not retrieve reference content: {reference}", exc_info=True)
-        return False
-
-    return content
 
 
 # would be used in the future
