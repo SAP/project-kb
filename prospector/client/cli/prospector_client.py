@@ -48,7 +48,7 @@ def prospector(  # noqa: C901
     advisory_keywords: "list[str]" = [],
     time_limit_before: int = TIME_LIMIT_BEFORE,
     time_limit_after: int = TIME_LIMIT_AFTER,
-    use_nvd: bool = False,
+    use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
     fetch_references: bool = False,
     backend_address: str = "",
@@ -92,6 +92,7 @@ def prospector(  # noqa: C901
         advisory_record.paths += modified_files
 
     _logger.info(f"{advisory_record.keywords=}")
+    _logger.info(f"{advisory_record.paths=}")
 
     # -------------------------------------------------------------------------
     # retrieval of commit candidates
