@@ -77,7 +77,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--filter-extensions",
-        default="*.java",
+        default="java",
         type=str,
         help="Filter out commits that do not modify at least one file with this extension",
     )
