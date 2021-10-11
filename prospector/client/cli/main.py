@@ -76,6 +76,13 @@ def parseArguments(args):
     )
 
     parser.add_argument(
+        "--filter-extensions",
+        default="*.java",
+        type=str,
+        help="Filter out commits that do not modify at least one file with this extension",
+    )
+
+    parser.add_argument(
         "--advisory-keywords",
         default=None,
         type=str,
@@ -86,6 +93,7 @@ def parseArguments(args):
         "--use-nvd", default=None, action="store_true", help="Get data from NVD"
     )
 
+    # FIXME: with python 3.9 we can use the new built-in capabilities of argparse to get rid of this
     parser.add_argument(
         "--no-use-nvd", default=None, action="store_true", help="Get data from NVD"
     )
@@ -215,7 +223,7 @@ def main(argv):  # noqa: C901
 
     vuln_descr = args.descr
 
-    filter_extensions = "*.py"
+    filter_extensions = "*." + args.filter_extensions
 
     use_nvd = False
     if args.vulnerability_id.lower().startswith("cve-"):
