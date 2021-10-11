@@ -83,7 +83,11 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "--use-nvd", default=False, action="store_true", help="Get data from NVD"
+        "--use-nvd", default=None, action="store_true", help="Get data from NVD"
+    )
+
+    parser.add_argument(
+        "--no-use-nvd", default=None, action="store_true", help="Get data from NVD"
     )
 
     parser.add_argument(
@@ -210,10 +214,14 @@ def main(argv):  # noqa: C901
     repository_url = args.repository
 
     vuln_descr = args.descr
+
+    use_nvd = False
     if args.vulnerability_id.lower().startswith("cve-"):
         use_nvd = True
-    if args.use_nvd is not None:
-        use_nvd = args.use_nvd
+    if args.use_nvd is True:
+        use_nvd = True
+    elif args.no_use_nvd is True:
+        use_nvd = False
 
     fetch_references = configuration["global"].get("fetch_references") or False
     if args.fetch_references:
