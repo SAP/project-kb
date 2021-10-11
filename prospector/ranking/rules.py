@@ -1,3 +1,5 @@
+from typing import List
+
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from stats.execution import Counter, execution_statistics
@@ -6,7 +8,22 @@ from .rule_helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
+    fetch_candidate_references,
 )
+
+SEC_KEYWORDS = [
+    "vulner",
+    "exploit",
+    "attack",
+    "secur",
+    "xxe",
+    "dos",
+    "insecur",
+    "inject",
+    "unsafe",
+    "remote execution",
+    "malicious",
+]
 
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
@@ -30,10 +47,10 @@ rule_statistics = execution_statistics.sub_collection("rules")
 
 
 def apply_rules(
-    candidates: "list[Commit]",
+    candidates: List[Commit],
     advisory_record: AdvisoryRecord,
     active_rules=["ALL"],
-) -> "list[Commit]":
+) -> List[Commit]:
     """
     This applies a set of hand-crafted rules and returns a dict in the following form:
 
@@ -53,6 +70,8 @@ def apply_rules(
         "CH_REL_PATH": apply_rule_changes_relevant_path,
         "COMMIT_MENTIONED_IN_ADV": apply_rule_commit_mentioned_in_adv,
         "COMMIT_MENTIONED_IN_REFERENCE": apply_rule_commit_mentioned_in_reference,
+        "VULN_MENTIONED_IN_LINKED_ISSUE": apply_rule_vuln_mentioned_in_linked_issue,
+        "SEC_KEYWORD_MENTIONED_IN_LINKED_ISSUE": apply_rule_security_keyword_in_linked_issue,
     }
 
     if "ALL" in active_rules:
@@ -202,19 +221,6 @@ def apply_rule_security_keyword_in_msg(
     This rule matches commits whose message contains one or more "security-related" keywords
     """
 
-    SEC_KEYWORDS = [
-        "vulner",
-        "exploit",
-        "attack",
-        "secur",
-        "xxe",
-        "dos",
-        "insecur",
-        "inject",
-        "unsafe",
-        "remote execution",
-        "malicious",
-    ]
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
@@ -281,5 +287,46 @@ def apply_rule_commit_mentioned_in_reference(
 
     if count > 0:
         return explanation_template
+
+    return None
+
+
+def apply_rule_vuln_mentioned_in_linked_issue(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    explanation_template = (
+        "The issue (or pull request) {} mentions the vulnerability id {}"
+    )
+
+    candidate = fetch_candidate_references(candidate)
+
+    for ref, page_content in candidate.ghissue_refs.items():
+        if page_content is None:
+            continue
+
+        if advisory_record.vulnerability_id in page_content:
+            return explanation_template.format(ref, advisory_record.vulnerability_id)
+
+    return None
+
+
+def apply_rule_security_keyword_in_linked_issue(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    explanation_template = (
+        "The issue (or pull request) {} contains security-related terms: {}"
+    )
+
+    candidate = fetch_candidate_references(candidate)
+
+    for ref, page_content in candidate.ghissue_refs.items():
+        if page_content is None:
+            continue
+
+        matching_keywords = set(
+            [kw for kw in SEC_KEYWORDS if kw in page_content.lower()]
+        )
+        if len(matching_keywords) > 0:
+            return explanation_template.format(ref, ", ".join(matching_keywords))
 
     return None

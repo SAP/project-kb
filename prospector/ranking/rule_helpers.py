@@ -1,11 +1,13 @@
 from typing import Dict, Set
 
 import pandas
+from bs4 import BeautifulSoup
 
 import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from git.git import Git
+from util.http import fetch_url
 from util.similarity import (
     damerau_levenshtein_edit_distance,
     jaccard_set_similarity,
@@ -196,3 +198,27 @@ def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
         similarities["damerau-levenshtein"] / damerau_levenshtein_max
     )
     return similarities
+
+
+def fetch_candidate_references(commit: Commit) -> Commit:
+    # FIXME: this is very ad-hoc for GH issue/PR pages
+
+    for ref, page_content in commit.ghissue_refs.items():
+        if page_content is None:
+            url = commit.repository + "/issues/" + ref.lstrip("#")
+            raw_page_content = fetch_url(url)
+
+            soup = BeautifulSoup(raw_page_content, "html.parser")
+            content = ""
+            for comment_block in soup.find_all(
+                True, class_=["markdown-body", "markdown-title"]
+            ):
+                content += comment_block.text
+
+            if len(content) > 0:
+                commit.ghissue_refs[ref] = content
+
+    # TODO: also treat JIRA pages
+    # TODO: cache BS extracted text (it takes some time...)
+
+    return commit
