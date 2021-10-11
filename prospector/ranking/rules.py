@@ -72,6 +72,7 @@ def apply_rules(
         "COMMIT_MENTIONED_IN_REFERENCE": apply_rule_commit_mentioned_in_reference,
         "VULN_MENTIONED_IN_LINKED_ISSUE": apply_rule_vuln_mentioned_in_linked_issue,
         "SEC_KEYWORD_MENTIONED_IN_LINKED_ISSUE": apply_rule_security_keyword_in_linked_issue,
+        "JIRA_ISSUE_REF_IN_COMMIT_MSG_AND_ADVISORY": apply_rule_jira_issue_in_commit_msg_and_advisory,
     }
 
     if "ALL" in active_rules:
@@ -328,5 +329,22 @@ def apply_rule_security_keyword_in_linked_issue(
         )
         if len(matching_keywords) > 0:
             return explanation_template.format(ref, ", ".join(matching_keywords))
+
+    return None
+
+
+def apply_rule_jira_issue_in_commit_msg_and_advisory(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    explanation_template = "The issue(s) {} (mentioned in the commit message) is referenced by the advisory"
+
+    matches = [
+        (i, j)
+        for i in candidate.jira_refs
+        for j in advisory_record.references
+        if i in j
+    ]
+    if len(matches) > 0:
+        return explanation_template.format(", ".join(matches))
 
     return None
