@@ -215,6 +215,8 @@ def main(argv):  # noqa: C901
 
     vuln_descr = args.descr
 
+    filter_extensions = "*.py"
+
     use_nvd = False
     if args.vulnerability_id.lower().startswith("cve-"):
         use_nvd = True
@@ -266,6 +268,7 @@ def main(argv):  # noqa: C901
         publication_date=publication_date,
         vuln_descr=vuln_descr,
         tag_interval=tag_interval,
+        filter_extensions=filter_extensions,
         version_interval=version_interval,
         modified_files=modified_files,
         advisory_keywords=advisory_keywords,
