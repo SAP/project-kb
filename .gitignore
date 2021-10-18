@@ -53,3 +53,5 @@ similarities.csv
 prospector/demo_ul.html
 prospector/prospector-report.json
 requests-cache.sqlite
+prospector/output.png
+prospector/output.pstats

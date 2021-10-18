@@ -14,8 +14,11 @@ def pretty_log(self: logging.Logger, obj, level: int = logging.DEBUG):
 def init_local_logger():
     previous_frame = inspect.currentframe().f_back
     logger_name = "main"
-    if previous_frame:
-        logger_name = inspect.getmodule(previous_frame).__name__
+    try:
+        if previous_frame:
+            logger_name = inspect.getmodule(previous_frame).__name__
+    except Exception:
+        print(f"error during logger name determination, using '{logger_name}'")
     logger = logging.getLogger(logger_name)
     logger.setLevel(log.config.level)
     formatter = logging.Formatter(
