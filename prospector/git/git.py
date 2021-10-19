@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
+from functools import lru_cache
 from urllib.parse import urlparse
 
 import log.util
@@ -270,7 +271,7 @@ class Git:
                 "--ancestry-path",
                 commit_id_from + ".." + commit_id_to,
             ]
-            path = self._exec.run(cmd)
+            path = list(list(self._exec.run(cmd)))
             if len(path) > 0:
                 path.pop(0)
                 path.reverse()
@@ -756,19 +757,34 @@ class Exec:
         else:
             raise ValueError("Path must be absolute for Exec to work: " + path)
 
-    def run(self, cmd, ignore_output=False):
+    def run(self, cmd, ignore_output=False, cache: bool = False):
+        if cache:
+            result = self._run_cached(
+                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
+            )
+        else:
+            result = self._run_uncached(
+                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
+            )
+        return result
+
+    @lru_cache(maxsize=10000)
+    def _run_cached(self, cmd, ignore_output=False):
+        return self._run_uncached(cmd, ignore_output=ignore_output)
+
+    def _run_uncached(self, cmd, ignore_output=False):
         if isinstance(cmd, str):
             cmd = cmd.split()
 
         if ignore_output:
             self._execute_no_output(cmd)
-            return []
+            return ()
 
         result = self._execute(cmd)
         if result is None:
-            return []
+            return ()
 
-        return result
+        return tuple(result)
 
     def _execute_no_output(self, cmd_l):
         try:
