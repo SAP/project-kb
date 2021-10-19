@@ -100,7 +100,7 @@ class Git:
         try:
             cmd = "git ls-remote -q"
             # self._exec._encoding = 'utf-8'
-            l_raw_output = self._exec.run(cmd)
+            l_raw_output = self._exec.run(cmd, cache=True)
 
             _logger.info(
                 "Identifiying sha1 of default remote ref among %d entries.",
@@ -129,7 +129,7 @@ class Git:
         try:
             cmd = "git show-ref"
             # self._exec._encoding = 'utf-8'
-            l_raw_output = self._exec.run(cmd)
+            l_raw_output = self._exec.run(cmd, cache=True)
 
             _logger.info("Processing {} references".format(len(l_raw_output)))
 
@@ -168,7 +168,9 @@ class Git:
                     f"\nFound repo {self._url} in {self._path}.\nFetching...."
                 )
 
-                self._exec.run(["git", "fetch", "--progress", "--all", "--tags"])
+                self._exec.run(
+                    ["git", "fetch", "--progress", "--all", "--tags"], cache=True
+                )
                 # , cwd=self._path, timeout=self._exec_timeout)
             return
 
@@ -182,12 +184,14 @@ class Git:
 
         _logger.debug(f"Cloning {self._url} (shallow={self._shallow_clone})")
 
-        if not self._exec.run(["git", "init"], ignore_output=True):
+        if not self._exec.run(["git", "init"], ignore_output=True, cache=True):
             _logger.error(f"Failed to initialize repository in {self._path}")
 
         try:
             self._exec.run(
-                ["git", "remote", "add", "origin", self._url], ignore_output=True
+                ["git", "remote", "add", "origin", self._url],
+                ignore_output=True,
+                cache=True,
             )
             #  , cwd=self._path)
         except Exception as ex:
@@ -197,12 +201,14 @@ class Git:
 
         try:
             if self._shallow_clone:
-                self._exec.run(["git", "fetch", "--depth", "1"])  # , cwd=self._path)
+                self._exec.run(
+                    ["git", "fetch", "--depth", "1"], cache=True
+                )  # , cwd=self._path)
                 # sh.git.fetch('--depth', '1', 'origin', _cwd=self._path)
             else:
                 # sh.git.fetch('--all', '--tags', _cwd=self._path)
                 self._exec.run(
-                    ["git", "fetch", "--progress", "--all", "--tags"]
+                    ["git", "fetch", "--progress", "--all", "--tags"], cache=True
                 )  # , cwd=self._path)
                 # self._exec.run_l(['git', 'fetch', '--tags'], cwd=self._path)
         except Exception as ex:
@@ -252,7 +258,7 @@ class Git:
 
         try:
             _logger.info(" ".join(cmd))
-            out = self._exec.run(cmd)
+            out = self._exec.run(cmd, cache=True)
         except Exception:
             _logger.error("Git command failed, cannot get commits", exc_info=True)
             out = []
@@ -271,7 +277,7 @@ class Git:
                 "--ancestry-path",
                 commit_id_from + ".." + commit_id_to,
             ]
-            path = list(list(self._exec.run(cmd)))
+            path = list(list(self._exec.run(cmd, cache=True)))
             if len(path) > 0:
                 path.pop(0)
                 path.reverse()
@@ -332,7 +338,7 @@ class Git:
 
     def get_tags(self):
         try:
-            tags = self._exec.run("git tag")
+            tags = self._exec.run("git tag", cache=True)
         except subprocess.CalledProcessError as exc:
             _logger.error("Git command failed." + str(exc.output), exc_info=True)
             tags = []
@@ -364,7 +370,7 @@ class Git:
 
         try:
             # @TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
-            tags = self._exec.run(cmd)
+            tags = self._exec.run(cmd, cache=True)
         except subprocess.CalledProcessError as exc:
             _logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []
@@ -392,7 +398,7 @@ class Commit:
         if "full_id" not in self._attributes:
             try:
                 cmd = ["git", "log", "--format=%H", "-n1", self._id]
-                self._attributes["full_id"] = self._exec.run(cmd)[0]
+                self._attributes["full_id"] = self._exec.run(cmd, cache=True)[0]
             except Exception:
                 _logger.error(
                     f"Failed to obtain full commit id for: {self._id} in dir: {self._exec._workdir}",
@@ -407,7 +413,7 @@ class Commit:
         if "parent_id" not in self._attributes:
             try:
                 cmd = ["git", "log", "--format=%P", "-n1", self._id]
-                parent = self._exec.run(cmd)[0]
+                parent = self._exec.run(cmd, cache=True)[0]
                 parents = parent.split(" ")
                 self._attributes["parent_id"] = parents
             except:
@@ -425,7 +431,7 @@ class Commit:
             self._attributes["msg"] = ""
             try:
                 cmd = ["git", "log", "--format=%B", "-n1", self._id]
-                self._attributes["msg"] = " ".join(self._exec.run(cmd))
+                self._attributes["msg"] = " ".join(self._exec.run(cmd, cache=True))
             except Exception:
                 _logger.error(
                     f"Failed to obtain commit message for commit: {self._id} in dir: {self._exec._workdir}",
@@ -445,7 +451,7 @@ class Commit:
                 ]
                 if filter_files:
                     cmd.append(filter_files)
-                self._attributes["diff"] = self._exec.run(cmd)
+                self._attributes["diff"] = self._exec.run(cmd, cache=True)
             except Exception:
                 _logger.error(
                     f"Failed to obtain patch for commit: {self._id} in dir: {self._exec._workdir}",
@@ -471,7 +477,7 @@ class Commit:
     def get_changed_files(self):
         if "changed_files" not in self._attributes:
             cmd = ["git", "diff", "--name-only", self._id + "^.." + self._id]
-            out = self._exec.run(cmd)
+            out = self._exec.run(cmd, cache=True)
             self._attributes["changed_files"] = out
         return self._attributes["changed_files"]
 
@@ -492,7 +498,7 @@ class Commit:
             other_commit_id + ".." + self._id,
         ]
         try:
-            out = self._exec.run(cmd)
+            out = self._exec.run(cmd, cache=True)
         except Exception as e:
             out = str()
             sys.stderr.write(str(e))
@@ -571,7 +577,7 @@ class Commit:
         if "fingerprint" not in self._attributes:
             # try:
             cmd = ["git", "show", '--format="%t"', "--numstat", self._id]
-            out = self._exec.run(cmd)
+            out = self._exec.run(cmd, cache=True)
             self._attributes["fingerprint"] = hashlib.md5(
                 "\n".join(out).encode()
             ).hexdigest()
@@ -603,21 +609,21 @@ class Commit:
 
         # get tag info
         raw_out = self._exec.run(
-            "git tag --sort=taggerdate --contains " + self._id
+            "git tag --sort=taggerdate --contains " + self._id, cache=True
         )  # ,  cwd=self._path)
         if raw_out:
             tag = raw_out[0]
             tag_timestamp = self._exec.run(
-                'git show -s --format="%at" ' + tag + "^{commit}"
+                'git show -s --format="%at" ' + tag + "^{commit}", cache=True
             )[0][1:-1]
         else:
             tag = ""
             tag_timestamp = "0"
 
         try:
-            commit_timestamp = self._exec.run('git show -s --format="%at" ' + self._id)[
-                0
-            ][1:-1]
+            commit_timestamp = self._exec.run(
+                'git show -s --format="%at" ' + self._id, cache=True
+            )[0][1:-1]
             time_delta = int(tag_timestamp) - int(commit_timestamp)
             if time_delta < 0:
                 time_delta = -1
@@ -652,7 +658,7 @@ class Commit:
     def get_tags(self):
         if "tags" not in self._attributes:
             cmd = "git tag --contains " + self._id
-            tags = self._exec.run(cmd)
+            tags = self._exec.run(cmd, cache=True)
             if not tags:
                 self._attributes["tags"] = []
             else:
@@ -715,7 +721,8 @@ class CommitSet:
                 current_field = None
                 commit_raw_data = self._repository._exec.run(
                     "git show --format=@@@@@SHA1@@@@@%n%H%n@@@@@LOGMSG@@@@@%n%s%n%b%n@@@@@TIMESTAMP@@@@@@%n%at%n@@@@@PATCH@@@@@ "
-                    + cid
+                    + cid,
+                    cache=True,
                 )
 
                 for line in commit_raw_data:
