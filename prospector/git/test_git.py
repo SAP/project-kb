@@ -1,6 +1,8 @@
 # from pprint import pprint
+import os.path
+import time
 
-from .git import Git
+from .git import Exec, Git
 
 # from .version_to_tag import version_to_wide_interval_tags
 from .version_to_tag import get_tag_for_version
@@ -62,10 +64,10 @@ def test_get_tag_for_version():
 
 #     result = version_to_wide_interval_tags("2.3.3", repo)
 
-    # assert result == [
-    #     ("STRUTS_2_3_2", "STRUTS_2_3_3"),
-    #     ("STRUTS_2_3_3", "STRUTS_2_3_4"),
-    # ]
+# assert result == [
+#     ("STRUTS_2_3_2", "STRUTS_2_3_3"),
+#     ("STRUTS_2_3_3", "STRUTS_2_3_4"),
+# ]
 
 
 def test_get_commit_parent():
@@ -96,3 +98,21 @@ def test_get_commit_parent():
     assert parent_id[0] == "05528157f0725707a512aa4dc2b9054fb4a4467c"
     assert parent_id[1] == "fe656eae21a7a287b2143fad638234314f858178"
     # print(parent_id)
+
+
+def test_run_cache():
+    _exec = Exec(workdir=os.path.abspath("."))
+    start = time.time_ns()
+    for _ in range(1000):
+        result = _exec.run("echo 42", cache=False)
+        assert result == ("42",)
+    no_cache_time = time.time_ns() - start
+
+    _exec = Exec(workdir=os.path.abspath("."))
+    start = time.time_ns()
+    for _ in range(1000):
+        result = _exec.run("echo 42", cache=True)
+        assert result == ("42",)
+    cache_time = time.time_ns() - start
+
+    assert cache_time < no_cache_time
