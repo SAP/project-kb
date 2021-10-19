@@ -614,7 +614,7 @@ class Commit:
             tag_timestamp = "0"
 
         try:
-            commit_timestamp = self._exec.run('git show -s --format="%ct" ' + self._id)[
+            commit_timestamp = self._exec.run('git show -s --format="%at" ' + self._id)[
                 0
             ][1:-1]
             time_delta = int(tag_timestamp) - int(commit_timestamp)
