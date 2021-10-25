@@ -61,6 +61,8 @@ def get_tag_for_version(tags, version):
         list: list with tags that could be the version
         @TODO: only return the most relevant tag i.e. for key 8 version 4.1 returns ['version-3.4.1', 'version-4.1', 'version-4.4.1']
     """
+    if isinstance(tags, tuple):
+        tags = list(tags)
     if type(tags) != list or len(tags) == 0:
         raise ValueError(
             "tags should be a list of tags to map the version onto, is a {} of length {}".format(

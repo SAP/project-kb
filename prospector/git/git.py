@@ -11,6 +11,8 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
+from functools import lru_cache
+from urllib.parse import urlparse
 
 import log.util
 
@@ -55,6 +57,14 @@ def clone_repo_multiple(
     return results
 
 
+def path_from_url(url, base_path):
+    url = url.rstrip("/")
+    parsed_url = urlparse(url)
+    return os.path.join(
+        base_path, parsed_url.netloc + parsed_url.path.replace("/", "_")
+    )
+
+
 class Git:
     def __init__(
         self,
@@ -64,8 +74,7 @@ class Git:
     ):
         self.repository_type = "GIT"
         self._url = url
-        self._path = os.path.join(cache_path, self._url.rstrip("/").split("/")[-1])
-        # self._path = os.path.join(cache_path, self._url.replace("https://","").replace("/", "_"))
+        self._path = path_from_url(url, cache_path)
         self._fingerprints = dict()
         self._exec_timeout = None
         self._shallow_clone = shallow
@@ -262,7 +271,7 @@ class Git:
                 "--ancestry-path",
                 commit_id_from + ".." + commit_id_to,
             ]
-            path = self._exec.run(cmd)
+            path = list(list(self._exec.run(cmd)))
             if len(path) > 0:
                 path.pop(0)
                 path.reverse()
@@ -606,7 +615,7 @@ class Commit:
             tag_timestamp = "0"
 
         try:
-            commit_timestamp = self._exec.run('git show -s --format="%ct" ' + self._id)[
+            commit_timestamp = self._exec.run('git show -s --format="%at" ' + self._id)[
                 0
             ][1:-1]
             time_delta = int(tag_timestamp) - int(commit_timestamp)
@@ -748,19 +757,34 @@ class Exec:
         else:
             raise ValueError("Path must be absolute for Exec to work: " + path)
 
-    def run(self, cmd, ignore_output=False):
+    def run(self, cmd, ignore_output=False, cache: bool = False):
+        if cache:
+            result = self._run_cached(
+                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
+            )
+        else:
+            result = self._run_uncached(
+                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
+            )
+        return result
+
+    @lru_cache(maxsize=10000)
+    def _run_cached(self, cmd, ignore_output=False):
+        return self._run_uncached(cmd, ignore_output=ignore_output)
+
+    def _run_uncached(self, cmd, ignore_output=False):
         if isinstance(cmd, str):
             cmd = cmd.split()
 
         if ignore_output:
             self._execute_no_output(cmd)
-            return []
+            return ()
 
         result = self._execute(cmd)
         if result is None:
-            return []
+            return ()
 
-        return result
+        return tuple(result)
 
     def _execute_no_output(self, cmd_l):
         try:

@@ -43,12 +43,13 @@ def prospector(  # noqa: C901
     publication_date: str = "",
     vuln_descr: str = "",
     tag_interval: str = "",
+    filter_extensions: str = "",
     version_interval: str = "",
     modified_files: "list[str]" = [],
     advisory_keywords: "list[str]" = [],
     time_limit_before: int = TIME_LIMIT_BEFORE,
     time_limit_after: int = TIME_LIMIT_AFTER,
-    use_nvd: bool = False,
+    use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
     fetch_references: bool = False,
     backend_address: str = "",
@@ -92,6 +93,7 @@ def prospector(  # noqa: C901
         advisory_record.paths += modified_files
 
     _logger.info(f"{advisory_record.keywords=}")
+    _logger.info(f"{advisory_record.paths=}")
 
     # -------------------------------------------------------------------------
     # retrieval of commit candidates
@@ -130,7 +132,7 @@ def prospector(  # noqa: C901
             until=until,
             ancestors_of=following_tag,
             exclude_ancestors_of=prev_tag,
-            filter_files="*.java",
+            filter_files=filter_extensions,
         )
 
         core_statistics.record("candidates", len(candidates), unit="commits")
@@ -221,29 +223,25 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
     # -------------------------------------------------------------------------
-    with ExecutionTimer(
-        core_statistics.sub_collection(name="save preprocessed commits to backend")
-    ):
-        _logger.info("Sending preprocessing commits to backend...")
-        try:
-            r = requests.post(backend_address + "/commits/", json=payload)
-            _logger.info(
-                "Saving to backend completed (status code: %d)" % r.status_code
-            )
-        except requests.exceptions.ConnectionError:
-            _logger.error(
-                "Could not reach backend, is it running?"
-                "The result of commit pre-processing will not be saved."
-                "Continuing anyway.....",
-                exc_info=log.config.level < logging.WARNING,
-            )
-
-    # TODO compute actual rank
-    # This can be done by a POST request that creates a "search" job
-    # whose inputs are the AdvisoryRecord, and the repository URL
-    # The API returns immediately indicating a job id. From this
-    # id, a URL can be constructed to poll the results asynchronously.
-    # ranked_results = [repository.get_commit(c) for c in preprocessed_commits]
+    if len(payload) > 0:
+        with ExecutionTimer(
+            core_statistics.sub_collection(name="save preprocessed commits to backend")
+        ):
+            _logger.info("Sending preprocessing commits to backend...")
+            try:
+                r = requests.post(backend_address + "/commits/", json=payload)
+                _logger.info(
+                    "Saving to backend completed (status code: %d)" % r.status_code
+                )
+            except requests.exceptions.ConnectionError:
+                _logger.error(
+                    "Could not reach backend, is it running?"
+                    "The result of commit pre-processing will not be saved."
+                    "Continuing anyway.....",
+                    exc_info=log.config.level < logging.WARNING,
+                )
+    else:
+        _logger.warning("No preprocessed commits to send to backend.")
 
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor

@@ -76,6 +76,13 @@ def parseArguments(args):
     )
 
     parser.add_argument(
+        "--filter-extensions",
+        default="java",
+        type=str,
+        help="Filter out commits that do not modify at least one file with this extension",
+    )
+
+    parser.add_argument(
         "--advisory-keywords",
         default=None,
         type=str,
@@ -83,7 +90,12 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "--use-nvd", default=False, action="store_true", help="Get data from NVD"
+        "--use-nvd", default=None, action="store_true", help="Get data from NVD"
+    )
+
+    # FIXME: with python 3.9 we can use the new built-in capabilities of argparse to get rid of this
+    parser.add_argument(
+        "--no-use-nvd", default=None, action="store_true", help="Get data from NVD"
     )
 
     parser.add_argument(
@@ -210,10 +222,16 @@ def main(argv):  # noqa: C901
     repository_url = args.repository
 
     vuln_descr = args.descr
+
+    filter_extensions = "*." + args.filter_extensions
+
+    use_nvd = False
     if args.vulnerability_id.lower().startswith("cve-"):
         use_nvd = True
-    if args.use_nvd is not None:
-        use_nvd = args.use_nvd
+    if args.use_nvd is True:
+        use_nvd = True
+    elif args.no_use_nvd is True:
+        use_nvd = False
 
     fetch_references = configuration["global"].get("fetch_references") or False
     if args.fetch_references:
@@ -258,6 +276,7 @@ def main(argv):  # noqa: C901
         publication_date=publication_date,
         vuln_descr=vuln_descr,
         tag_interval=tag_interval,
+        filter_extensions=filter_extensions,
         version_interval=version_interval,
         modified_files=modified_files,
         advisory_keywords=advisory_keywords,
