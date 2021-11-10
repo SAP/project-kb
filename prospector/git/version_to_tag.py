@@ -6,11 +6,16 @@
 # flake8: noqa
 
 import difflib
+import logging
+import log.util
+
 
 # pylint: disable=singleton-comparison,unidiomatic-typecheck, dangerous-default-value
 import re
 
 from .git import Commit, Git
+
+_logger = log.util.init_local_logger()
 
 
 def recursively_split_version_string(input_version: str, output_version: list = []):
@@ -121,14 +126,10 @@ def get_tag_for_version(tags, version):
         ]
 
     else:
-        version = re.sub("[^0-9]", "", version)
-        best_match = ("", 0.0)
-        for tag in tags:
-            t_strip = re.sub("[^0-9]", "", tag)
-            match_score = difflib.SequenceMatcher(None, t_strip, version).ratio()
-            if match_score > best_match[1]:
-                best_match = (tag, match_score)
-        tag = best_match[0]
+        _logger.warning(
+            "WARNING: Could not map supplied version(s) to tag(s), please provide mapping by using the '--tag-interval' flag"
+        )
+        tag = version
     return [tag]
 
 
