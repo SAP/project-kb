@@ -126,10 +126,10 @@ def get_tag_for_version(tags, version):
         ]
 
     else:
-        _logger.warning(
-            "WARNING: Could not map supplied version(s) to tag(s), please provide mapping by using the '--tag-interval' flag"
+        _logger.error(
+            "Could not map supplied version to tag. Please provide mapping by using the '--tag-interval' flag or type it here:"
         )
-        tag = version
+        tag = str(input())
     return [tag]
 
 

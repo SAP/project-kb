@@ -118,7 +118,9 @@ def prospector(  # noqa: C901
             prev_tag, following_tag = tag_interval.split(":")
         elif version_interval != "":
             vuln_version, fixed_version = version_interval.split(":")
+            _logger.info("Determining vulnerable version")
             prev_tag = get_tag_for_version(tags, vuln_version)[0]
+            _logger.info("Determining fixed version")
             following_tag = get_tag_for_version(tags, fixed_version)[0]
 
         since = None
