@@ -55,7 +55,7 @@ def prospector(  # noqa: C901
     backend_address: str = "",
     git_cache: str = GIT_CACHE,
     limit_candidates: int = MAX_CANDIDATES,
-    active_rules: "list[str]" = ["ALL"],
+    rules: "list[str]" = ["ALL"],
     model_name: str = "",
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
@@ -252,7 +252,7 @@ def prospector(  # noqa: C901
     ) as timer:
 
         annotated_candidates = apply_rules(
-            preprocessed_commits, advisory_record, active_rules=active_rules
+            preprocessed_commits, advisory_record, rules=rules
         )
         annotated_candidates = rank(annotated_candidates, model_name=model_name)
 

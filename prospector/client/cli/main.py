@@ -270,6 +270,8 @@ def main(argv):  # noqa: C901
     _logger.debug("time-limit before: " + str(time_limit_before))
     _logger.debug("time-limit after: " + str(time_limit_after))
 
+    active_rules = ["ALL", "-REF_JIRA_ISSUE"]
+
     results, advisory_record = prospector(
         vulnerability_id=vulnerability_id,
         repository_url=repository_url,
@@ -288,7 +290,7 @@ def main(argv):  # noqa: C901
         backend_address=backend,
         git_cache=git_cache,
         limit_candidates=max_candidates,
-        active_rules=["ALL"],
+        rules=active_rules,
     )
 
     if report == "console":
