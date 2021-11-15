@@ -54,9 +54,9 @@ def advisory_record():
     )
 
 
-def test_apply_rules(candidates: "list[Commit]", advisory_record: AdvisoryRecord):
+def test_apply_rules_all(candidates: "list[Commit]", advisory_record: AdvisoryRecord):
     annotated_candidates = apply_rules(
-        candidates=candidates, advisory_record=advisory_record
+        candidates=candidates, advisory_record=advisory_record, rules=["ALL"]
     )
 
     print(annotated_candidates[0].annotations)
@@ -85,3 +85,64 @@ def test_apply_rules(candidates: "list[Commit]", advisory_record: AdvisoryRecord
     assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[4].annotations
     assert "TOKENS_IN_MODIFIED_PATHS" in annotated_candidates[4].annotations
     assert "COMMIT_MENTIONED_IN_ADV" in annotated_candidates[4].annotations
+
+
+def test_apply_rules_selected(
+    candidates: "list[Commit]", advisory_record: AdvisoryRecord
+):
+    annotated_candidates = apply_rules(
+        candidates=candidates,
+        advisory_record=advisory_record,
+        rules=[
+            "REF_ADV_VULN_ID",
+            "REF_GH_ISSUE",
+            "CH_REL_PATH",
+            "SEC_KEYWORD_IN_COMMIT_MSG",
+            "TOKENS_IN_MODIFIED_PATHS",
+            "COMMIT_MENTIONED_IN_ADV",
+        ],
+    )
+
+    print(annotated_candidates[0].annotations)
+
+    assert len(annotated_candidates[0].annotations) > 0
+    assert "REF_ADV_VULN_ID" in annotated_candidates[0].annotations
+    assert "REF_GH_ISSUE" in annotated_candidates[0].annotations
+    assert "CH_REL_PATH" in annotated_candidates[0].annotations
+
+    assert len(annotated_candidates[1].annotations) > 0
+    assert "REF_ADV_VULN_ID" in annotated_candidates[1].annotations
+    assert "REF_GH_ISSUE" not in annotated_candidates[1].annotations
+    assert "CH_REL_PATH" not in annotated_candidates[1].annotations
+
+    assert len(annotated_candidates[2].annotations) > 0
+    assert "REF_ADV_VULN_ID" not in annotated_candidates[2].annotations
+    assert "REF_GH_ISSUE" in annotated_candidates[2].annotations
+    assert "CH_REL_PATH" not in annotated_candidates[2].annotations
+
+    assert len(annotated_candidates[3].annotations) > 0
+    assert "REF_ADV_VULN_ID" not in annotated_candidates[3].annotations
+    assert "REF_GH_ISSUE" not in annotated_candidates[3].annotations
+    assert "CH_REL_PATH" in annotated_candidates[3].annotations
+    assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[3].annotations
+
+    assert "SEC_KEYWORD_IN_COMMIT_MSG" in annotated_candidates[4].annotations
+    assert "TOKENS_IN_MODIFIED_PATHS" in annotated_candidates[4].annotations
+    assert "COMMIT_MENTIONED_IN_ADV" in annotated_candidates[4].annotations
+
+
+def test_apply_rules_selected_rules(
+    candidates: "list[Commit]", advisory_record: AdvisoryRecord
+):
+    annotated_candidates = apply_rules(
+        candidates=candidates,
+        advisory_record=advisory_record,
+        rules=["ALL", "-REF_ADV_VULN_ID"],
+    )
+
+    print(annotated_candidates[0].annotations)
+
+    assert len(annotated_candidates[0].annotations) > 0
+    assert "REF_ADV_VULN_ID" not in annotated_candidates[0].annotations
+    assert "REF_GH_ISSUE" in annotated_candidates[0].annotations
+    assert "CH_REL_PATH" in annotated_candidates[0].annotations

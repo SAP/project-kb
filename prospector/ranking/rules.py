@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -28,19 +28,18 @@ SEC_KEYWORDS = [
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
 
-1. Start by adding an entry to the RULES dictionary in the apply_rule function.
+1. Start by adding an entry to the RULES dictionary (bottom of this file).
    Pick a clear rule id (all capitals, underscore separated) and a rule function
-   (start with apply_rule_....)
+   (naming convention: "apply_rule_....")
 
-2. Implement the rule function, which MUST take as input a datamodel.commit.Commit
+2. Implement the rule function, which MUST take as input a Commit
    and an AdvisoryRecord and must return either None, if the rule did not match,
    or a string explaining the match that was found.
 
 3. Do not forget to write a short comment at the beginning of the function explaining
    what the rule is about.
 
-IMPORTANT: you are not supposed to change the content of function apply_rules, except
-adding entries to its inner RULES dictionary.
+IMPORTANT: you are not supposed to change the content of function apply_rules.
 """
 
 rule_statistics = execution_statistics.sub_collection("rules")
@@ -49,7 +48,7 @@ rule_statistics = execution_statistics.sub_collection("rules")
 def apply_rules(
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
-    active_rules=["ALL"],
+    rules=["ALL"],
 ) -> List[Commit]:
     """
     This applies a set of hand-crafted rules and returns a dict in the following form:
@@ -59,44 +58,44 @@ def apply_rules(
     where 'explanation' describes the rule that matched for that candidate
     """
 
-    RULES = {
-        "REF_ADV_VULN_ID": apply_rule_references_vuln_id,
-        "TOKENS_IN_DIFF": apply_rule_adv_keywords_in_diff,
-        "TOKENS_IN_COMMIT_MSG": apply_rule_adv_keywords_in_msg,
-        "TOKENS_IN_MODIFIED_PATHS": apply_rule_adv_keywords_in_paths,
-        "SEC_KEYWORD_IN_COMMIT_MSG": apply_rule_security_keyword_in_msg,
-        "REF_GH_ISSUE": apply_rule_references_ghissue,
-        "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
-        "CH_REL_PATH": apply_rule_changes_relevant_path,
-        "COMMIT_MENTIONED_IN_ADV": apply_rule_commit_mentioned_in_adv,
-        "COMMIT_MENTIONED_IN_REFERENCE": apply_rule_commit_mentioned_in_reference,
-        "VULN_MENTIONED_IN_LINKED_ISSUE": apply_rule_vuln_mentioned_in_linked_issue,
-        "SEC_KEYWORD_MENTIONED_IN_LINKED_ISSUE": apply_rule_security_keyword_in_linked_issue,
-        "JIRA_ISSUE_REF_IN_COMMIT_MSG_AND_ADVISORY": apply_rule_jira_issue_in_commit_msg_and_advisory,
-    }
+    enabled_rules = get_enabled_rules(rules)
 
-    if "ALL" in active_rules:
-        rules = RULES
-    else:
-        rules = dict()
-        for i in RULES:
-            if i in active_rules:
-                rules[i] = RULES[i]
-    rule_statistics.collect("active", len(rules), unit="rules")
+    rule_statistics.collect("active", len(enabled_rules), unit="rules")
 
-    # print("Enabled rules: " + str(rules))
+    print("Enabled rules: " + str(enabled_rules))
 
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")
         for candidate in candidates:
-            for rule_id in rules:
-                apply_rule_func = rules[rule_id]
+            for rule_id in enabled_rules:
+                apply_rule_func = enabled_rules[rule_id]
                 rule_explanation = apply_rule_func(candidate, advisory_record)
                 if rule_explanation:
                     counter.increment("matches")
                     candidate.annotations[rule_id] = rule_explanation
 
     return candidates
+
+
+def get_enabled_rules(rules: List) -> Dict:
+    enabled_rules = dict()
+
+    if "ALL" in rules:
+        enabled_rules = RULES_REGISTRY
+
+    for r in rules:
+        print(r)
+        print(r[:1])
+        if r == "ALL":
+            continue
+        if r[0] != "-":
+            enabled_rules[r] = RULES_REGISTRY[r]
+        elif r[0] == "-":
+            rule_to_exclude = r[1:]
+            if rule_to_exclude in enabled_rules:
+                del enabled_rules[rule_to_exclude]
+
+    return enabled_rules
 
 
 # TODO change signature to accept "Commit", not "CommitWithFeatures"
@@ -348,3 +347,20 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
         return explanation_template.format(", ".join(matches))
 
     return None
+
+
+RULES_REGISTRY = {
+    "REF_ADV_VULN_ID": apply_rule_references_vuln_id,
+    "TOKENS_IN_DIFF": apply_rule_adv_keywords_in_diff,
+    "TOKENS_IN_COMMIT_MSG": apply_rule_adv_keywords_in_msg,
+    "TOKENS_IN_MODIFIED_PATHS": apply_rule_adv_keywords_in_paths,
+    "SEC_KEYWORD_IN_COMMIT_MSG": apply_rule_security_keyword_in_msg,
+    "REF_GH_ISSUE": apply_rule_references_ghissue,
+    "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
+    "CH_REL_PATH": apply_rule_changes_relevant_path,
+    "COMMIT_MENTIONED_IN_ADV": apply_rule_commit_mentioned_in_adv,
+    "COMMIT_MENTIONED_IN_REFERENCE": apply_rule_commit_mentioned_in_reference,
+    "VULN_MENTIONED_IN_LINKED_ISSUE": apply_rule_vuln_mentioned_in_linked_issue,
+    "SEC_KEYWORD_MENTIONED_IN_LINKED_ISSUE": apply_rule_security_keyword_in_linked_issue,
+    "JIRA_ISSUE_REF_IN_COMMIT_MSG_AND_ADVISORY": apply_rule_jira_issue_in_commit_msg_and_advisory,
+}
