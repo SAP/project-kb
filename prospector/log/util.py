@@ -21,30 +21,33 @@ def init_local_logger():
         print(f"error during logger name determination, using '{logger_name}'")
     logger = logging.getLogger(logger_name)
     logger.setLevel(log.config.level)
-    formatter = logging.Formatter(
+    detailed_formatter = logging.Formatter(
         "%(message)s"
         "\n\tOF %(levelname)s FROM %(name)s"
         "\n\tIN %(funcName)s (%(filename)s:%(lineno)d)"
         "\n\tAT %(asctime)s",
         "%Y-%m-%d %H:%M:%S",
     )
+    condensed_formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s]: %(message)s", "%Y-%m-%d %H:%M:%S"
+    )
 
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
+    console_handler.setFormatter(condensed_formatter)
     logger.addHandler(console_handler)
 
     error_file = logging.handlers.TimedRotatingFileHandler(
         "error.log", when="h", backupCount=5
     )
     error_file.setLevel(logging.ERROR)
-    error_file.setFormatter(formatter)
+    error_file.setFormatter(detailed_formatter)
     logger.addHandler(error_file)
 
     all_file = logging.handlers.TimedRotatingFileHandler(
         "all.log", when="h", backupCount=5
     )
     all_file.setLevel(logging.DEBUG)
-    all_file.setFormatter(formatter)
+    all_file.setFormatter(detailed_formatter)
     logger.addHandler(all_file)
 
     setattr(logging.Logger, pretty_log.__name__, pretty_log)
