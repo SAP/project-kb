@@ -49,7 +49,7 @@ def clone_repo_multiple(
     """
     This is the parallelized version of clone_repo (works with a list of repositories).
     """
-    _logger.info(f"Using {concurrent} parallel workers")
+    _logger.debug(f"Using {concurrent} parallel workers")
     with multiprocessing.Pool(concurrent) as pool:
         args = ((url, output_folder, proxy, shallow, skip_existing) for url in url_list)
         results = pool.starmap(do_clone, args)
@@ -95,14 +95,14 @@ class Git:
         Identifies the default branch of the remote repository for the local git
         repo
         """
-        _logger.info("Identifiying remote branch for %s", self._path)
+        _logger.debug("Identifiying remote branch for %s", self._path)
 
         try:
             cmd = "git ls-remote -q"
             # self._exec._encoding = 'utf-8'
             l_raw_output = self._exec.run(cmd)
 
-            _logger.info(
+            _logger.debug(
                 "Identifiying sha1 of default remote ref among %d entries.",
                 len(l_raw_output),
             )
@@ -114,7 +114,7 @@ class Git:
 
                 if ref_name == "HEAD":
                     head_sha1 = sha1
-                    _logger.info("Remote head: " + sha1)
+                    _logger.debug("Remote head: " + sha1)
                     break
 
         except subprocess.CalledProcessError as ex:
@@ -131,7 +131,7 @@ class Git:
             # self._exec._encoding = 'utf-8'
             l_raw_output = self._exec.run(cmd)
 
-            _logger.info("Processing {} references".format(len(l_raw_output)))
+            _logger.debug("Processing {} references".format(len(l_raw_output)))
 
             for raw_line in l_raw_output:
                 (sha1, ref_name) = raw_line.split()
@@ -251,7 +251,7 @@ class Git:
             cmd.append('--grep="%s"' % find_in_msg)
 
         try:
-            _logger.info(" ".join(cmd))
+            _logger.debug(" ".join(cmd))
             out = self._exec.run(cmd)
         except Exception:
             _logger.error("Git command failed, cannot get commits", exc_info=True)

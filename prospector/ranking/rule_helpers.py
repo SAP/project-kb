@@ -3,7 +3,6 @@ from typing import Dict, Set
 import pandas
 from bs4 import BeautifulSoup
 
-import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from git.git import Git
@@ -16,8 +15,6 @@ from util.similarity import (
     sorensen_dice_set_similarity,
 )
 from util.tokenize import tokenize_non_nl_term
-
-_logger = log.util.init_local_logger()
 
 DAYS_BEFORE = 180
 DAYS_AFTER = 365
