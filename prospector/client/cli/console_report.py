@@ -1,8 +1,5 @@
-import log.util
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-
-_logger = log.util.init_local_logger()
 
 
 def report_on_console(
