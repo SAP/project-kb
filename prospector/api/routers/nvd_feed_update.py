@@ -113,7 +113,7 @@ def do_fetch(what, quiet=False):
             data = json.loads(archive.read(f).decode())
 
     if not quiet:
-        pbar = tqdm(data["CVE_Items"])
+        pbar = tqdm(data["CVE_Items"], desc="fetching CVE entries", unit="CVE entry")
     else:
         pbar = data["CVE_Items"]
     for v in pbar:

@@ -200,9 +200,8 @@ def prospector(  # noqa: C901
             else:
                 missing.append(candidates[idx])
 
-        _logger.info("Preprocessing commits...")
         first_missing = len(preprocessed_commits)
-        pbar = tqdm(missing)
+        pbar = tqdm(missing, desc="preprocessing uncached commits", unit="commit")
         with Counter(
             timer.collection.sub_collection(name="commit preprocessing")
         ) as counter:
