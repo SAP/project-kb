@@ -62,8 +62,6 @@ def apply_rules(
 
     rule_statistics.collect("active", len(enabled_rules), unit="rules")
 
-    print("Enabled rules: " + str(enabled_rules))
-
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")
         for candidate in candidates:
@@ -84,8 +82,6 @@ def get_enabled_rules(rules: List) -> Dict:
         enabled_rules = RULES_REGISTRY
 
     for r in rules:
-        print(r)
-        print(r[:1])
         if r == "ALL":
             continue
         if r[0] != "-":
