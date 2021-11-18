@@ -59,7 +59,7 @@ def prospector(  # noqa: C901
     model_name: str = "",
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
-    _logger.info("begin main commit and CVE processing")
+    _logger.debug("begin main commit and CVE processing")
 
     # -------------------------------------------------------------------------
     # advisory record extraction
@@ -75,7 +75,7 @@ def prospector(  # noqa: C901
     _logger.pretty_log(advisory_record)
 
     advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
-    _logger.info(f"{advisory_record.keywords=}")
+    _logger.debug(f"{advisory_record.keywords=}")
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
@@ -92,8 +92,8 @@ def prospector(  # noqa: C901
     if modified_files != [""]:
         advisory_record.paths += modified_files
 
-    _logger.info(f"{advisory_record.keywords=}")
-    _logger.info(f"{advisory_record.paths=}")
+    _logger.debug(f"{advisory_record.keywords=}")
+    _logger.debug(f"{advisory_record.paths=}")
 
     # -------------------------------------------------------------------------
     # retrieval of commit candidates
@@ -101,16 +101,14 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
-        _logger.info(
-            "Downloading repository {} in {}..".format(repository_url, git_cache)
-        )
+        _logger.info(f"Downloading repository {repository_url} in {git_cache}...")
         repository = Git(repository_url, git_cache)
         repository.clone()
         tags = repository.get_tags()
 
         _logger.debug(f"Found tags: {tags}")
 
-        _logger.info("Done retrieving %s" % repository_url)
+        _logger.info(f"Done retrieving {repository_url}")
 
         prev_tag = None
         following_tag = None
@@ -177,7 +175,7 @@ def prospector(  # noqa: C901
                 + "?commit_id="
                 + ",".join(candidates)
             )
-            _logger.info("The backend returned status '%d'" % r.status_code)
+            _logger.debug("The backend returned status '%d'" % r.status_code)
             if r.status_code != 200:
                 _logger.error("This is weird...Continuing anyway.")
                 missing = candidates
@@ -202,9 +200,8 @@ def prospector(  # noqa: C901
             else:
                 missing.append(candidates[idx])
 
-        _logger.info("Preprocessing commits...")
         first_missing = len(preprocessed_commits)
-        pbar = tqdm(missing)
+        pbar = tqdm(missing, desc="preprocessing uncached commits", unit="commit")
         with Counter(
             timer.collection.sub_collection(name="commit preprocessing")
         ) as counter:
@@ -227,10 +224,10 @@ def prospector(  # noqa: C901
         with ExecutionTimer(
             core_statistics.sub_collection(name="save preprocessed commits to backend")
         ):
-            _logger.info("Sending preprocessing commits to backend...")
+            _logger.debug("Sending preprocessing commits to backend...")
             try:
                 r = requests.post(backend_address + "/commits/", json=payload)
-                _logger.info(
+                _logger.debug(
                     "Saving to backend completed (status code: %d)" % r.status_code
                 )
             except requests.exceptions.ConnectionError:
