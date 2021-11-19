@@ -18,6 +18,21 @@ from .git import Commit, Git
 _logger = log.util.init_local_logger()
 
 
+class ResultsWithSuggestions:
+    def __init__(self, matches: list = [], suggestions: list = []):
+        self.matches = matches  # exact or high-confidence results
+        self.suggestions = suggestions  # potantially good suggestions
+
+    def has_matches(self) -> bool:
+        return len(self.matches) != 0
+
+    def get_matches(self) -> list:
+        return self.matches
+
+    def get_suggestions(self) -> list:
+        return self.suggestions
+
+
 def recursively_split_version_string(input_version: str, output_version: list = []):
     """
     Splits a version/tag string into a list with integers and strings
@@ -56,14 +71,14 @@ def recursively_split_version_string(input_version: str, output_version: list = 
     )
 
 
-def get_tag_for_version(tags, version):
+def get_tag_for_version(tags, version) -> ResultsWithSuggestions:
     """
     Map a version onto an existing tag
     Input:
         tags (list): a list of tags to map version onto
         version (str): the version
     Returns:
-        list: list with tags that could be the version
+        ResultsWithSuggestions: class with tags that could be the version (both exact matches and suggestions)
         @TODO: only return the most relevant tag i.e. for key 8 version 4.1 returns ['version-3.4.1', 'version-4.1', 'version-4.4.1']
     """
     if isinstance(tags, tuple):
@@ -109,9 +124,9 @@ def get_tag_for_version(tags, version):
     elif version in stripped_tags and stripped_tags.count(version) == 1:
         tag = tags[stripped_tags.index(version)]
     elif version in stripped_tags and stripped_tags.count(version) > 1:
-        return [
-            tags[index] for index, tag in enumerate(stripped_tags) if tag == version
-        ]
+        return ResultsWithSuggestions(
+            [tags[index] for index, tag in enumerate(stripped_tags) if tag == version]
+        )
     elif (
         stripped_version in stripped_tags and stripped_tags.count(stripped_version) == 1
     ):
@@ -119,18 +134,24 @@ def get_tag_for_version(tags, version):
     elif (
         stripped_version in stripped_tags and stripped_tags.count(stripped_version) > 1
     ):
-        return [
-            tags[index]
-            for index, tag in enumerate(stripped_tags)
-            if tag == stripped_version
-        ]
-
-    else:
-        _logger.error(
-            "Could not map supplied version to tag. Please provide mapping by using the '--tag-interval' flag or type it here:"
+        return ResultsWithSuggestions(
+            [
+                tags[index]
+                for index, tag in enumerate(stripped_tags)
+                if tag == stripped_version
+            ]
         )
-        tag = str(input())
-    return [tag]
+    else:
+        version = re.sub("[^0-9]", "", version)
+        best_match = ("", 0.0)
+        for tag in tags:
+            t_strip = re.sub("[^0-9]", "", tag)
+            match_score = difflib.SequenceMatcher(None, t_strip, version).ratio()
+            if match_score > best_match[1]:
+                best_match = (tag, match_score)
+        tag = [best_match[0]]
+        return ResultsWithSuggestions(suggestions=tag)
+    return ResultsWithSuggestions(matches=[tag])
 
 
 # def get_timestamp_for_tag(tag, git_repo):

@@ -1,7 +1,10 @@
 import pytest
 
 from .test_fixtures import tags
-from .version_to_tag import get_tag_for_version, recursively_split_version_string
+from .version_to_tag import (
+    recursively_split_version_string,
+    get_tag_for_version,
+)
 
 # flake8: noqa
 
@@ -35,4 +38,6 @@ def test_recursively_split_version_string_errors(input_version, error):
 )
 def test_get_tag_for_version(version, tag, tags):
     # returns a list of tags that could be corresponding to the version
-    assert tag in get_tag_for_version(tags, version)
+    res = get_tag_for_version(tags, version)
+    print(res)
+    assert tag in res.get_matches()

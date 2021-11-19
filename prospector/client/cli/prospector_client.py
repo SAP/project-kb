@@ -35,6 +35,23 @@ MAX_CANDIDATES = 1000
 core_statistics = execution_statistics.sub_collection("core")
 
 
+def compute_tag_for_version(tag, version):
+    results = get_tag_for_version(tag, version)
+    if results.has_matches():
+        return results.get_matches()
+    else:
+        suggestions = results.get_suggestions()
+        return interactively_ask_user(
+            "Could not map supplied version to tag. Please provide mapping by using the '--tag-interval' flag or type it here. Suggestions:"
+            + str(suggestions)
+        )
+
+
+def interactively_ask_user(message):
+    _logger.warning(message)
+    return [str(input())]
+
+
 # @profile
 @measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
@@ -119,9 +136,9 @@ def prospector(  # noqa: C901
         elif version_interval != "":
             vuln_version, fixed_version = version_interval.split(":")
             _logger.info("Determining vulnerable version")
-            prev_tag = get_tag_for_version(tags, vuln_version)[0]
+            prev_tag = compute_tag_for_version(tags, vuln_version)[0]
             _logger.info("Determining fixed version")
-            following_tag = get_tag_for_version(tags, fixed_version)[0]
+            following_tag = compute_tag_for_version(tags, fixed_version)[0]
 
         since = None
         until = None

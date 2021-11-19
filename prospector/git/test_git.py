@@ -43,7 +43,7 @@ def test_get_tag_for_version():
     repo = Git("https://github.com/apache/struts")
     repo.clone()
     tags = repo.get_tags()
-    assert get_tag_for_version(tags, "2.3.9") == ["STRUTS_2_3_9"]
+    assert get_tag_for_version(tags, "2.3.9").get_suggestions() == ["STRUTS_2_3_9"]
 
 
 # def test_legacy_mapping_version_to_tag_1():
