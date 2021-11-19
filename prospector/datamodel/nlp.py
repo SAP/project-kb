@@ -78,9 +78,7 @@ def extract_ghissue_references(text: str) -> Dict[str, str]:
     """
     Extract identifiers that are (=look like) references to GH issues
     """
-    return dict.fromkeys(
-        [result.group(0) for result in re.finditer(r"#\d+", text)], None
-    )
+    return dict.fromkeys([result.group(0) for result in re.finditer(r"#\d+", text)], "")
 
 
 def extract_jira_references(text: str) -> Dict[str, str]:
@@ -88,7 +86,7 @@ def extract_jira_references(text: str) -> Dict[str, str]:
     Extract identifiers that point to Jira tickets
     """
     return dict.fromkeys(
-        [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", text)], None
+        [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", text)], ""
     )
 
 

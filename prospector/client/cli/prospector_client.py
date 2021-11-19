@@ -52,7 +52,7 @@ def prospector(  # noqa: C901
     use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
     fetch_references: bool = False,
-    backend_address: str = "",
+    backend_address: str = "http://localhost:8000",
     git_cache: str = GIT_CACHE,
     limit_candidates: int = MAX_CANDIDATES,
     rules: "list[str]" = ["ALL"],
