@@ -90,11 +90,9 @@ def test_extract_cve_identifiers():
 
 def test_extract_jira_references():
     commit_msg = "CXF-8535 - Checkstyle fix (cherry picked from commit bbcd8f2eb059848380fbe5af638fe94e3a9a5e1d)"
-
-    assert extract_jira_references(commit_msg) == {"CXF-8535": None}
+    assert extract_jira_references(commit_msg) == {"CXF-8535": ""}
 
 
 def test_extract_jira_references_lowercase():
     commit_msg = "cxf-8535 - Checkstyle fix (cherry picked from commit bbcd8f2eb059848380fbe5af638fe94e3a9a5e1d)"
-
     assert extract_jira_references(commit_msg) == {}
