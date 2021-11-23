@@ -28,13 +28,13 @@ def init_local_logger():
         "\n\tAT %(asctime)s",
         "%Y-%m-%d %H:%M:%S",
     )
-    condensed_formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s]: %(message)s", "%Y-%m-%d %H:%M:%S"
-    )
+    # condensed_formatter = logging.Formatter(
+    #     "%(asctime)s [%(levelname)s]: %(message)s", "%Y-%m-%d %H:%M:%S"
+    # )
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(condensed_formatter)
-    logger.addHandler(console_handler)
+    # console_handler = logging.StreamHandler()
+    # console_handler.setFormatter(condensed_formatter)
+    # logger.addHandler(console_handler)
 
     error_file = logging.handlers.TimedRotatingFileHandler(
         "error.log", when="h", backupCount=5

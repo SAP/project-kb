@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import requests
+from console import msg
 
 import log.config
 import log.util
@@ -198,6 +199,7 @@ def main(argv):  # noqa: C901
 
     if args.vulnerability_id is None:
         _logger.error("No vulnerability id was specified. Cannot proceed.")
+        msg("No vulnerability id was specified. Cannot proceed.", "error")
         return False
 
     if configuration is None:
@@ -291,19 +293,30 @@ def main(argv):  # noqa: C901
         git_cache=git_cache,
         limit_candidates=max_candidates,
         rules=active_rules,
+        console_msg_func=msg,
     )
 
+    report_file = None
     if report == "console":
         report_on_console(results, advisory_record, log.config.level < logging.INFO)
     elif report == "json":
-        report_as_json(results, advisory_record)
+        report_file = report_as_json(results, advisory_record)
     elif report == "html":
-        report_as_html(results, advisory_record)
+        report_file = report_as_html(results, advisory_record)
     else:
         _logger.warning("Invalid report type specified, using 'console'")
+        msg(
+            f"{report} is not a valid report type, 'console' will be used instead",
+            "warn",
+        )
         report_on_console(results, advisory_record, log.config.level < logging.INFO)
 
     _logger.info("\n" + execution_statistics.generate_console_tree())
+    execution_time = "xxx"
+    msg("Report generation", "ok")
+    msg(f"Execution time: {execution_time}", "note")
+    if report_file:
+        msg(f"Report saved in {report_file}", "note")
     return True
 
 

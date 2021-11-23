@@ -1,9 +1,10 @@
 import logging
 import sys
 from datetime import datetime
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 import requests
+from console import msg
 from tqdm import tqdm
 
 import log
@@ -57,6 +58,7 @@ def prospector(  # noqa: C901
     limit_candidates: int = MAX_CANDIDATES,
     rules: "list[str]" = ["ALL"],
     model_name: str = "",
+    console_msg_func: Callable = msg,
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
     _logger.debug("begin main commit and CVE processing")
@@ -94,6 +96,7 @@ def prospector(  # noqa: C901
 
     _logger.debug(f"{advisory_record.keywords=}")
     _logger.debug(f"{advisory_record.paths=}")
+    console_msg_func("Processing advisory", "ok")
 
     # -------------------------------------------------------------------------
     # retrieval of commit candidates
@@ -104,11 +107,12 @@ def prospector(  # noqa: C901
         _logger.info(f"Downloading repository {repository_url} in {git_cache}...")
         repository = Git(repository_url, git_cache)
         repository.clone()
+
         tags = repository.get_tags()
 
         _logger.debug(f"Found tags: {tags}")
-
         _logger.info(f"Done retrieving {repository_url}")
+        console_msg_func("Git repository cloning", "ok")
 
         prev_tag = None
         following_tag = None
@@ -135,6 +139,7 @@ def prospector(  # noqa: C901
 
         core_statistics.record("candidates", len(candidates), unit="commits")
         _logger.info("Found %d candidates" % len(candidates))
+        console_msg_func("Candidate commit retrieval", "ok")
 
     # -------------------------------------------------------------------------
     # commit filtering
@@ -154,8 +159,13 @@ def prospector(  # noqa: C901
             _logger.error(
                 "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
             )
+            console_msg_func(
+                f"Found {len(candidates)} candidates, too many to proceed.", "error"
+            )
+            console_msg_func("Please try running the tool again.", "note")
             sys.exit(-1)
 
+    console_msg_func(f"Found {len(candidates)} candidates", "note")
     # -------------------------------------------------------------------------
     # commit preprocessing
     # -------------------------------------------------------------------------
@@ -185,6 +195,9 @@ def prospector(  # noqa: C901
                     "Found {} preprocessed commits".format(len(raw_commit_data))
                 )
         except requests.exceptions.ConnectionError:
+            print(
+                "Could not reach backend, is it running? The result of commit pre-processing will not be saved. (Check the logs for details)"
+            )
             _logger.error(
                 "Could not reach backend, is it running? The result of commit pre-processing will not be saved.",
                 exc_info=log.config.level < logging.WARNING,
@@ -201,7 +214,7 @@ def prospector(  # noqa: C901
                 missing.append(candidates[idx])
 
         first_missing = len(preprocessed_commits)
-        pbar = tqdm(missing, desc="preprocessing uncached commits", unit="commit")
+        pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
         with Counter(
             timer.collection.sub_collection(name="commit preprocessing")
         ) as counter:
@@ -214,6 +227,8 @@ def prospector(  # noqa: C901
 
         _logger.pretty_log(advisory_record)
         _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
+
+        console_msg_func("Preprocessing commits", "ok")
 
         payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
 
@@ -230,6 +245,7 @@ def prospector(  # noqa: C901
                 _logger.debug(
                     "Saving to backend completed (status code: %d)" % r.status_code
                 )
+                msg("Saving preprocessed commits to backend", "ok")
             except requests.exceptions.ConnectionError:
                 _logger.error(
                     "Could not reach backend, is it running?"
@@ -237,6 +253,7 @@ def prospector(  # noqa: C901
                     "Continuing anyway.....",
                     exc_info=log.config.level < logging.WARNING,
                 )
+                msg("Could not save preprocessed commits to backend", "warn")
     else:
         _logger.warning("No preprocessed commits to send to backend.")
 
@@ -251,6 +268,8 @@ def prospector(  # noqa: C901
         annotated_candidates = apply_rules(
             preprocessed_commits, advisory_record, rules=rules
         )
+        msg("Applying rules", "ok")
+
         annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
     return annotated_candidates, advisory_record
