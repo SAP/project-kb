@@ -9,10 +9,10 @@ import sys
 from pathlib import Path
 
 import requests
-from console import msg
 
 import log.config
 import log.util
+from client.cli.console import msg
 from client.cli.console_report import report_on_console
 from client.cli.html_report import report_as_html
 from client.cli.json_report import report_as_json

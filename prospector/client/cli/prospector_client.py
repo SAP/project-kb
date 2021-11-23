@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Callable, List, Tuple
 
 import requests
-from console import msg
 from tqdm import tqdm
 
 import log
@@ -24,6 +23,8 @@ from stats.execution import (
     execution_statistics,
     measure_execution_time,
 )
+
+from .console import msg
 
 _logger = init_local_logger()
 
