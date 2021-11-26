@@ -1,12 +1,13 @@
 import logging
 import sys
 from datetime import datetime
-from typing import Callable, List, Tuple
+from typing import List, Tuple
 
 import requests
 from tqdm import tqdm
 
 import log
+from client.cli.console import MessageStatus, MessageWriter
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit, make_from_raw_commit
 from filtering.filter import filter_commits
@@ -23,8 +24,6 @@ from stats.execution import (
     execution_statistics,
     measure_execution_time,
 )
-
-from .console import msg
 
 _logger = init_local_logger()
 
@@ -59,7 +58,6 @@ def prospector(  # noqa: C901
     limit_candidates: int = MAX_CANDIDATES,
     rules: "list[str]" = ["ALL"],
     model_name: str = "",
-    console_msg_func: Callable = msg,
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
     _logger.debug("begin main commit and CVE processing")
@@ -67,37 +65,37 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # advisory record extraction
     # -------------------------------------------------------------------------
-    advisory_record = AdvisoryRecord(
-        vulnerability_id=vulnerability_id,
-        repository_url=repository_url,
-        description=vuln_descr,
-        from_nvd=use_nvd,
-        nvd_rest_endpoint=nvd_rest_endpoint,
-    )
-
-    _logger.pretty_log(advisory_record)
-
-    advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
-    _logger.debug(f"{advisory_record.keywords=}")
-
-    if publication_date != "":
-        advisory_record.published_timestamp = int(
-            datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
+    with MessageWriter("Processing advisory") as writer:
+        advisory_record = AdvisoryRecord(
+            vulnerability_id=vulnerability_id,
+            repository_url=repository_url,
+            description=vuln_descr,
+            from_nvd=use_nvd,
+            nvd_rest_endpoint=nvd_rest_endpoint,
         )
 
-    if len(advisory_keywords) > 0:
-        advisory_record.keywords += tuple(advisory_keywords)
-        # drop duplicates
-        advisory_record.keywords = list(set(advisory_record.keywords))
+        _logger.pretty_log(advisory_record)
 
-    # FIXME this should be handled better (or '' should not end up in the modified_files in
-    # the first place)
-    if modified_files != [""]:
-        advisory_record.paths += modified_files
+        advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
+        _logger.debug(f"{advisory_record.keywords=}")
 
-    _logger.debug(f"{advisory_record.keywords=}")
-    _logger.debug(f"{advisory_record.paths=}")
-    console_msg_func("Processing advisory", "ok")
+        if publication_date != "":
+            advisory_record.published_timestamp = int(
+                datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
+            )
+
+        if len(advisory_keywords) > 0:
+            advisory_record.keywords += tuple(advisory_keywords)
+            # drop duplicates
+            advisory_record.keywords = list(set(advisory_record.keywords))
+
+        # FIXME this should be handled better (or '' should not end up in the modified_files in
+        # the first place)
+        if modified_files != [""]:
+            advisory_record.paths += modified_files
+
+        _logger.debug(f"{advisory_record.keywords=}")
+        _logger.debug(f"{advisory_record.paths=}")
 
     # -------------------------------------------------------------------------
     # retrieval of commit candidates
@@ -105,42 +103,42 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
-        _logger.info(f"Downloading repository {repository_url} in {git_cache}...")
-        repository = Git(repository_url, git_cache)
-        repository.clone()
+        with MessageWriter("Git repository cloning"):
+            _logger.info(f"Downloading repository {repository_url} in {git_cache}...")
+            repository = Git(repository_url, git_cache)
+            repository.clone()
 
-        tags = repository.get_tags()
+            tags = repository.get_tags()
 
-        _logger.debug(f"Found tags: {tags}")
-        _logger.info(f"Done retrieving {repository_url}")
-        console_msg_func("Git repository cloning", "ok")
+            _logger.debug(f"Found tags: {tags}")
+            _logger.info(f"Done retrieving {repository_url}")
 
-        prev_tag = None
-        following_tag = None
-        if tag_interval != "":
-            prev_tag, following_tag = tag_interval.split(":")
-        elif version_interval != "":
-            vuln_version, fixed_version = version_interval.split(":")
-            prev_tag = get_tag_for_version(tags, vuln_version)[0]
-            following_tag = get_tag_for_version(tags, fixed_version)[0]
+        with MessageWriter("Candidate commit retrieval"):
+            prev_tag = None
+            following_tag = None
+            if tag_interval != "":
+                prev_tag, following_tag = tag_interval.split(":")
+            elif version_interval != "":
+                vuln_version, fixed_version = version_interval.split(":")
+                prev_tag = get_tag_for_version(tags, vuln_version)[0]
+                following_tag = get_tag_for_version(tags, fixed_version)[0]
 
-        since = None
-        until = None
-        if advisory_record.published_timestamp:
-            since = advisory_record.published_timestamp - time_limit_before
-            until = advisory_record.published_timestamp + time_limit_after
+            since = None
+            until = None
+            if advisory_record.published_timestamp:
+                since = advisory_record.published_timestamp - time_limit_before
+                until = advisory_record.published_timestamp + time_limit_after
 
-        candidates = repository.get_commits(
-            since=since,
-            until=until,
-            ancestors_of=following_tag,
-            exclude_ancestors_of=prev_tag,
-            filter_files=filter_extensions,
-        )
+            candidates = repository.get_commits(
+                since=since,
+                until=until,
+                ancestors_of=following_tag,
+                exclude_ancestors_of=prev_tag,
+                filter_files=filter_extensions,
+            )
 
-        core_statistics.record("candidates", len(candidates), unit="commits")
-        _logger.info("Found %d candidates" % len(candidates))
-        console_msg_func("Candidate commit retrieval", "ok")
+            core_statistics.record("candidates", len(candidates), unit="commits")
+            _logger.info("Found %d candidates" % len(candidates))
 
     # -------------------------------------------------------------------------
     # commit filtering
@@ -151,22 +149,24 @@ def prospector(  # noqa: C901
     with ExecutionTimer(core_statistics.sub_collection(name="commit filtering")):
         candidates = filter_commits(candidates)
 
-        _logger.debug(f"Collected {len(candidates)} candidates")
+        with MessageWriter("Filtering commits") as writer:
+            _logger.debug(f"Collected {len(candidates)} candidates")
 
-        if len(candidates) > limit_candidates:
-            _logger.error(
-                "Number of candidates exceeds %d, aborting." % limit_candidates
-            )
-            _logger.error(
-                "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
-            )
-            console_msg_func(
-                f"Found {len(candidates)} candidates, too many to proceed.", "error"
-            )
-            console_msg_func("Please try running the tool again.", "note")
-            sys.exit(-1)
+            if len(candidates) > limit_candidates:
+                _logger.error(
+                    "Number of candidates exceeds %d, aborting." % limit_candidates
+                )
+                _logger.error(
+                    "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
+                )
+                writer.print_note(
+                    f"Found {len(candidates)} candidates, too many to proceed.",
+                    new_status=MessageStatus.ERROR,
+                )
+                writer.print_note("Please try running the tool again.")
+                sys.exit(-1)
 
-    console_msg_func(f"Found {len(candidates)} candidates", "note")
+            writer.print_note(f"Found {len(candidates)} candidates")
     # -------------------------------------------------------------------------
     # commit preprocessing
     # -------------------------------------------------------------------------
@@ -174,64 +174,63 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection(name="commit preprocessing")
     ) as timer:
-        raw_commit_data = dict()
-        missing = []
-        try:
-            # Use the preprocessed commits already stored in the backend
-            # and only process those that are missing.
-            r = requests.get(
-                backend_address
-                + "/commits/"
-                + repository_url
-                + "?commit_id="
-                + ",".join(candidates)
-            )
-            _logger.debug("The backend returned status '%d'" % r.status_code)
-            if r.status_code != 200:
-                _logger.error("This is weird...Continuing anyway.")
+        with MessageWriter("Preprocessing commits") as writer:
+            raw_commit_data = dict()
+            missing = []
+            try:
+                # Use the preprocessed commits already stored in the backend
+                # and only process those that are missing.
+                r = requests.get(
+                    backend_address
+                    + "/commits/"
+                    + repository_url
+                    + "?commit_id="
+                    + ",".join(candidates)
+                )
+                _logger.debug("The backend returned status '%d'" % r.status_code)
+                if r.status_code != 200:
+                    _logger.error("This is weird...Continuing anyway.")
+                    missing = candidates
+                else:
+                    raw_commit_data = r.json()
+                    _logger.info(
+                        "Found {} preprocessed commits".format(len(raw_commit_data))
+                    )
+            except requests.exceptions.ConnectionError:
+                print(
+                    "Could not reach backend, is it running? The result of commit pre-processing will not be saved. (Check the logs for details)"
+                )
+                _logger.error(
+                    "Could not reach backend, is it running? The result of commit pre-processing will not be saved.",
+                    exc_info=log.config.level < logging.WARNING,
+                )
                 missing = candidates
-            else:
-                raw_commit_data = r.json()
-                _logger.info(
-                    "Found {} preprocessed commits".format(len(raw_commit_data))
-                )
-        except requests.exceptions.ConnectionError:
-            print(
-                "Could not reach backend, is it running? The result of commit pre-processing will not be saved. (Check the logs for details)"
-            )
-            _logger.error(
-                "Could not reach backend, is it running? The result of commit pre-processing will not be saved.",
-                exc_info=log.config.level < logging.WARNING,
-            )
-            missing = candidates
 
-        preprocessed_commits: "list[Commit]" = []
-        for idx, commit in enumerate(raw_commit_data):
-            if (
-                commit
-            ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
-                preprocessed_commits.append(Commit.parse_obj(commit))
-            else:
-                missing.append(candidates[idx])
+            preprocessed_commits: "list[Commit]" = []
+            for idx, commit in enumerate(raw_commit_data):
+                if (
+                    commit
+                ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
+                    preprocessed_commits.append(Commit.parse_obj(commit))
+                else:
+                    missing.append(candidates[idx])
 
-        first_missing = len(preprocessed_commits)
-        pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
-        with Counter(
-            timer.collection.sub_collection(name="commit preprocessing")
-        ) as counter:
-            counter.initialize("preprocessed commits", unit="commit")
-            for commit_id in pbar:
-                counter.increment("preprocessed commits")
-                preprocessed_commits.append(
-                    make_from_raw_commit(repository.get_commit(commit_id))
-                )
+            first_missing = len(preprocessed_commits)
+            pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
+            with Counter(
+                timer.collection.sub_collection(name="commit preprocessing")
+            ) as counter:
+                counter.initialize("preprocessed commits", unit="commit")
+                for commit_id in pbar:
+                    counter.increment("preprocessed commits")
+                    preprocessed_commits.append(
+                        make_from_raw_commit(repository.get_commit(commit_id))
+                    )
 
-        _logger.pretty_log(advisory_record)
-        _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
+            _logger.pretty_log(advisory_record)
+            _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
 
-        console_msg_func("Preprocessing commits", "ok")
-
-        payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
+            payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
 
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
@@ -240,21 +239,24 @@ def prospector(  # noqa: C901
         with ExecutionTimer(
             core_statistics.sub_collection(name="save preprocessed commits to backend")
         ):
-            _logger.debug("Sending preprocessing commits to backend...")
-            try:
-                r = requests.post(backend_address + "/commits/", json=payload)
-                _logger.debug(
-                    "Saving to backend completed (status code: %d)" % r.status_code
-                )
-                msg("Saving preprocessed commits to backend", "ok")
-            except requests.exceptions.ConnectionError:
-                _logger.error(
-                    "Could not reach backend, is it running?"
-                    "The result of commit pre-processing will not be saved."
-                    "Continuing anyway.....",
-                    exc_info=log.config.level < logging.WARNING,
-                )
-                msg("Could not save preprocessed commits to backend", "warn")
+            with MessageWriter("Saving preprocessed commits to backend") as writer:
+                _logger.debug("Sending preprocessing commits to backend...")
+                try:
+                    r = requests.post(backend_address + "/commits/", json=payload)
+                    _logger.debug(
+                        "Saving to backend completed (status code: %d)" % r.status_code
+                    )
+                except requests.exceptions.ConnectionError:
+                    _logger.error(
+                        "Could not reach backend, is it running?"
+                        "The result of commit pre-processing will not be saved."
+                        "Continuing anyway.....",
+                        exc_info=log.config.level < logging.WARNING,
+                    )
+                    writer.print_note(
+                        "Could not save preprocessed commits to backend",
+                        new_status=MessageStatus.WARNING,
+                    )
     else:
         _logger.warning("No preprocessed commits to send to backend.")
 
@@ -266,11 +268,11 @@ def prospector(  # noqa: C901
         core_statistics.sub_collection(name="analyze candidates")
     ) as timer:
 
-        annotated_candidates = apply_rules(
-            preprocessed_commits, advisory_record, rules=rules
-        )
-        msg("Applying rules", "ok")
+        with MessageWriter("Applying rules"):
+            annotated_candidates = apply_rules(
+                preprocessed_commits, advisory_record, rules=rules
+            )
 
-        annotated_candidates = rank(annotated_candidates, model_name=model_name)
+            annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
     return annotated_candidates, advisory_record
