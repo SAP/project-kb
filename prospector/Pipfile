@@ -46,6 +46,7 @@ python-levenshtein = "*"
 typing-extensions = "*"
 requests-cache = "*"
 beautifulsoup4 = "*"
+colorama = "==0.4.4"
 
 [requires]
 python_version = "3.8"

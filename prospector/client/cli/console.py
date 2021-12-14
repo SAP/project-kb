@@ -1,31 +1,36 @@
-HEADER = "\033[95m"
-OKBLUE = "\033[94m"
-OKCYAN = "\033[96m"
-OKGREEN = "\033[92m"
-WARNING = "\033[93m"
-FAIL = "\033[91m"
-ENDC = "\033[0m"
-BOLD = "\033[1m"
-LIGHT = "\033[97m"
-UNDERLINE = "\033[4m"
+from enum import Enum
+from typing import Optional
+
+from colorama import Fore, Style
 
 
-def msg(text: str, code: str):
-    indent = False
-    right = ""
-    if code == "ok":
-        color = OKGREEN
-        right = f"[{color}OK{ENDC}]"
-    elif code == "warn" or code == "warning":
-        color = WARNING
-        right = f"[{color}??{ENDC}]"
-    elif code == "err" or code == "error":
-        color = FAIL
-        right = f"[{color}!!{ENDC}]"
-    elif code == "note":
-        indent = True
-        text = f"{ENDC}{text}{ENDC}"
+class MessageStatus(Enum):
+    OK = Fore.GREEN
+    WARNING = Fore.YELLOW
+    ERROR = Fore.RED
 
-    if indent:
-        print("  ", end="")
-    print(f"{text:<70}{right}", end=None)
+
+class MessageWriter(object):
+    indent: str = "  "
+
+    def __init__(self, message: str):
+        self._message = message
+        self.status: MessageStatus = MessageStatus.OK
+
+    def __enter__(self):
+        print(f"{Fore.LIGHTWHITE_EX}{self._message}{Style.RESET_ALL} ...")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val is not None:
+            self.status = MessageStatus.ERROR
+        print(
+            f"{MessageWriter.indent}[{self.status.value}{self.status.name}{Style.RESET_ALL}]"
+        )
+        if exc_val is not None:
+            raise exc_val
+
+    def print_note(self, note: str, new_status: Optional[MessageStatus] = None):
+        print(f"{MessageWriter.indent}{Fore.WHITE}{note}")
+        if isinstance(new_status, MessageStatus):
+            self.status = new_status
