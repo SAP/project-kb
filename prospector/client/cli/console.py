@@ -30,7 +30,7 @@ class ConsoleWriter(object):
         if exc_val is not None:
             raise exc_val
 
-    def print(self, note: str, new_status: Optional[MessageStatus] = None):
+    def print(self, note: str, status: Optional[MessageStatus] = None):
         print(f"{ConsoleWriter.indent}{Fore.WHITE}{note}")
-        if isinstance(new_status, MessageStatus):
-            self.status = new_status
+        if isinstance(status, MessageStatus):
+            self.status = status
