@@ -10,7 +10,7 @@ class MessageStatus(Enum):
     ERROR = Fore.RED
 
 
-class MessageWriter(object):
+class ConsoleWriter(object):
     indent: str = "  "
 
     def __init__(self, message: str):
@@ -25,12 +25,12 @@ class MessageWriter(object):
         if exc_val is not None:
             self.status = MessageStatus.ERROR
         print(
-            f"{MessageWriter.indent}[{self.status.value}{self.status.name}{Style.RESET_ALL}]"
+            f"{ConsoleWriter.indent}[{self.status.value}{self.status.name}{Style.RESET_ALL}]"
         )
         if exc_val is not None:
             raise exc_val
 
-    def print_note(self, note: str, new_status: Optional[MessageStatus] = None):
-        print(f"{MessageWriter.indent}{Fore.WHITE}{note}")
+    def print(self, note: str, new_status: Optional[MessageStatus] = None):
+        print(f"{ConsoleWriter.indent}{Fore.WHITE}{note}")
         if isinstance(new_status, MessageStatus):
             self.status = new_status

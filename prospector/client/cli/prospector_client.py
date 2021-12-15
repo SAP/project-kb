@@ -7,7 +7,7 @@ import requests
 from tqdm import tqdm
 
 import log
-from client.cli.console import MessageStatus, MessageWriter
+from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit, make_from_raw_commit
 from filtering.filter import filter_commits
@@ -62,95 +62,44 @@ def prospector(  # noqa: C901
 
     _logger.debug("begin main commit and CVE processing")
 
-    # -------------------------------------------------------------------------
-    # advisory record extraction
-    # -------------------------------------------------------------------------
-    with MessageWriter("Processing advisory") as writer:
-        advisory_record = AdvisoryRecord(
-            vulnerability_id=vulnerability_id,
-            repository_url=repository_url,
-            description=vuln_descr,
-            from_nvd=use_nvd,
-            nvd_rest_endpoint=nvd_rest_endpoint,
+    # construct an advisory record
+    with ConsoleWriter("Processing advisory"):
+        advisory_record = build_advisory_record(
+            vulnerability_id,
+            repository_url,
+            vuln_descr,
+            nvd_rest_endpoint,
+            fetch_references,
+            use_nvd,
+            publication_date,
+            advisory_keywords,
+            modified_files,
         )
 
-        _logger.pretty_log(advisory_record)
+    # obtain a repository object
+    repository = Git(repository_url, git_cache)
 
-        advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
-        _logger.debug(f"{advisory_record.keywords=}")
-
-        if publication_date != "":
-            advisory_record.published_timestamp = int(
-                datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
-            )
-
-        if len(advisory_keywords) > 0:
-            advisory_record.keywords += tuple(advisory_keywords)
-            # drop duplicates
-            advisory_record.keywords = list(set(advisory_record.keywords))
-
-        # FIXME this should be handled better (or '' should not end up in the modified_files in
-        # the first place)
-        if modified_files != [""]:
-            advisory_record.paths += modified_files
-
-        _logger.debug(f"{advisory_record.keywords=}")
-        _logger.debug(f"{advisory_record.paths=}")
+    # retrieve of commit candidates
+    candidates = get_candidates(
+        advisory_record,
+        repository,
+        tag_interval,
+        version_interval,
+        time_limit_before,
+        time_limit_after,
+        filter_extensions,
+    )
 
     # -------------------------------------------------------------------------
-    # retrieval of commit candidates
-    # -------------------------------------------------------------------------
-    with ExecutionTimer(
-        core_statistics.sub_collection(name="retrieval of commit candidates")
-    ):
-        with MessageWriter("Git repository cloning"):
-            _logger.info(f"Downloading repository {repository_url} in {git_cache}...")
-            repository = Git(repository_url, git_cache)
-            repository.clone()
-
-            tags = repository.get_tags()
-
-            _logger.debug(f"Found tags: {tags}")
-            _logger.info(f"Done retrieving {repository_url}")
-
-        with MessageWriter("Candidate commit retrieval"):
-            prev_tag = None
-            following_tag = None
-            if tag_interval != "":
-                prev_tag, following_tag = tag_interval.split(":")
-            elif version_interval != "":
-                vuln_version, fixed_version = version_interval.split(":")
-                prev_tag = get_tag_for_version(tags, vuln_version)[0]
-                following_tag = get_tag_for_version(tags, fixed_version)[0]
-
-            since = None
-            until = None
-            if advisory_record.published_timestamp:
-                since = advisory_record.published_timestamp - time_limit_before
-                until = advisory_record.published_timestamp + time_limit_after
-
-            candidates = repository.get_commits(
-                since=since,
-                until=until,
-                ancestors_of=following_tag,
-                exclude_ancestors_of=prev_tag,
-                filter_files=filter_extensions,
-            )
-
-            core_statistics.record("candidates", len(candidates), unit="commits")
-            _logger.info("Found %d candidates" % len(candidates))
-
-    # -------------------------------------------------------------------------
-    # commit filtering
+    # filter commits
     #
     # Here we apply additional criteria to discard commits from the initial
     # set extracted from the repository
     # -------------------------------------------------------------------------
     with ExecutionTimer(core_statistics.sub_collection(name="commit filtering")):
-        candidates = filter_commits(candidates)
-
-        with MessageWriter("Filtering commits") as writer:
+        with ConsoleWriter("Filtering commits") as writer:
             _logger.debug(f"Collected {len(candidates)} candidates")
+            candidates = filter_commits(candidates)
 
             if len(candidates) > limit_candidates:
                 _logger.error(
@@ -159,14 +108,15 @@ def prospector(  # noqa: C901
                 _logger.error(
                     "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
                 )
-                writer.print_note(
+                writer.print(
                     f"Found {len(candidates)} candidates, too many to proceed.",
-                    new_status=MessageStatus.ERROR,
+                    status=MessageStatus.ERROR,
                 )
-                writer.print_note("Please try running the tool again.")
+                writer.print("Please try running the tool again.")
                 sys.exit(-1)
 
-            writer.print_note(f"Found {len(candidates)} candidates")
+            writer.print(f"Found {len(candidates)} candidates")
+
     # -------------------------------------------------------------------------
     # commit preprocessing
     # -------------------------------------------------------------------------
@@ -174,7 +124,7 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection(name="commit preprocessing")
     ) as timer:
-        with MessageWriter("Preprocessing commits") as writer:
+        with ConsoleWriter("Preprocessing commits") as writer:
             raw_commit_data = dict()
             missing = []
             try:
@@ -239,7 +189,7 @@ def prospector(  # noqa: C901
         with ExecutionTimer(
             core_statistics.sub_collection(name="save preprocessed commits to backend")
         ):
-            with MessageWriter("Saving preprocessed commits to backend") as writer:
+            with ConsoleWriter("Saving preprocessed commits to backend") as writer:
                 _logger.debug("Sending preprocessing commits to backend...")
                 try:
                     r = requests.post(backend_address + "/commits/", json=payload)
@@ -253,9 +203,9 @@ def prospector(  # noqa: C901
                         "Continuing anyway.....",
                         exc_info=log.config.level < logging.WARNING,
                     )
-                    writer.print_note(
+                    writer.print(
                         "Could not save preprocessed commits to backend",
-                        new_status=MessageStatus.WARNING,
+                        status=MessageStatus.WARNING,
                     )
     else:
         _logger.warning("No preprocessed commits to send to backend.")
@@ -268,7 +218,7 @@ def prospector(  # noqa: C901
         core_statistics.sub_collection(name="analyze candidates")
     ) as timer:
 
-        with MessageWriter("Applying rules"):
+        with ConsoleWriter("Applying rules"):
             annotated_candidates = apply_rules(
                 preprocessed_commits, advisory_record, rules=rules
             )
@@ -276,3 +226,102 @@ def prospector(  # noqa: C901
             annotated_candidates = rank(annotated_candidates, model_name=model_name)
 
     return annotated_candidates, advisory_record
+
+
+def build_advisory_record(
+    vulnerability_id,
+    repository_url,
+    vuln_descr,
+    nvd_rest_endpoint,
+    fetch_references,
+    use_nvd,
+    publication_date,
+    advisory_keywords,
+    modified_files,
+) -> AdvisoryRecord:
+
+    advisory_record = AdvisoryRecord(
+        vulnerability_id=vulnerability_id,
+        repository_url=repository_url,
+        description=vuln_descr,
+        from_nvd=use_nvd,
+        nvd_rest_endpoint=nvd_rest_endpoint,
+    )
+
+    _logger.pretty_log(advisory_record)
+
+    advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
+    _logger.debug(f"{advisory_record.keywords=}")
+
+    if publication_date != "":
+        advisory_record.published_timestamp = int(
+            datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
+        )
+
+    if len(advisory_keywords) > 0:
+        advisory_record.keywords += tuple(advisory_keywords)
+        # drop duplicates
+        advisory_record.keywords = list(set(advisory_record.keywords))
+
+    # FIXME this should be handled better (or '' should not end up in the modified_files in
+    # the first place)
+    if modified_files != [""]:
+        advisory_record.paths += modified_files
+
+    _logger.debug(f"{advisory_record.keywords=}")
+    _logger.debug(f"{advisory_record.paths=}")
+
+    return advisory_record
+
+
+def get_candidates(
+    advisory_record,
+    repository,
+    tag_interval,
+    version_interval,
+    time_limit_before,
+    time_limit_after,
+    filter_extensions,
+) -> List:
+    with ExecutionTimer(
+        core_statistics.sub_collection(name="retrieval of commit candidates")
+    ):
+        with ConsoleWriter("Git repository cloning"):
+            _logger.info(
+                f"Downloading repository {repository._url} in {repository._path}"
+            )
+            repository.clone()
+
+            tags = repository.get_tags()
+
+            _logger.debug(f"Found tags: {tags}")
+            _logger.info(f"Done retrieving {repository._url}")
+
+        with ConsoleWriter("Candidate commit retrieval"):
+            prev_tag = None
+            following_tag = None
+            if tag_interval != "":
+                prev_tag, following_tag = tag_interval.split(":")
+            elif version_interval != "":
+                vuln_version, fixed_version = version_interval.split(":")
+                prev_tag = get_tag_for_version(tags, vuln_version)[0]
+                following_tag = get_tag_for_version(tags, fixed_version)[0]
+
+            since = None
+            until = None
+            if advisory_record.published_timestamp:
+                since = advisory_record.published_timestamp - time_limit_before
+                until = advisory_record.published_timestamp + time_limit_after
+
+            candidates = repository.get_commits(
+                since=since,
+                until=until,
+                ancestors_of=following_tag,
+                exclude_ancestors_of=prev_tag,
+                filter_files=filter_extensions,
+            )
+
+            core_statistics.record("candidates", len(candidates), unit="commits")
+            _logger.info("Found %d candidates" % len(candidates))
+
+    return candidates
