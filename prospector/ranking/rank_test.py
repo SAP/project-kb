@@ -23,7 +23,7 @@ def candidates():
 
 def test_filter(candidates):
     result = filter_commits(candidates)
-    assert isinstance(result, list)
+    assert isinstance(result, tuple)
 
 
 def test_rank(candidates):

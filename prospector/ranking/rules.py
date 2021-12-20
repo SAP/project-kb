@@ -12,11 +12,12 @@ from .rule_helpers import (
 )
 
 SEC_KEYWORDS = [
-    "vulner",
+    "vuln",
     "exploit",
     "attack",
     "secur",
     "xxe",
+    "xss",
     "dos",
     "insecur",
     "inject",
