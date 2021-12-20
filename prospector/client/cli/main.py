@@ -112,7 +112,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--report",
-        default="console",
+        default="html",
         help="Format of the report (options: console, json, html)",
     )
 
@@ -306,7 +306,7 @@ def main(argv):  # noqa: C901
         rules=active_rules,
     )
 
-    with ConsoleWriter("Saving results") as console:
+    with ConsoleWriter("Generating report") as console:
         report_file = None
         if report == "console":
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
@@ -316,9 +316,9 @@ def main(argv):  # noqa: C901
             report_file = report_as_html(results, advisory_record)
         else:
             _logger.warning("Invalid report type specified, using 'console'")
+            console.set_status(MessageStatus.WARNING)
             console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
-                status=MessageStatus.WARNING,
             )
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
 
