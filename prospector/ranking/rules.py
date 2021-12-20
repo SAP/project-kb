@@ -340,7 +340,8 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
         if i in j
     ]
     if len(matches) > 0:
-        return explanation_template.format(", ".join(matches))
+        ticket_ids = [id for (id, _) in matches]
+        return explanation_template.format(", ".join(ticket_ids))
 
     return None
 

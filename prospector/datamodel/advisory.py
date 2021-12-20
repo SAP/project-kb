@@ -25,6 +25,7 @@ ALLOWED_SITES = [
     "github.com",
     "github.io",
     "apache.org",
+    "issues.apache.org",
     "gitlab.org",
     "cpan.org",
     "gnome.org",
