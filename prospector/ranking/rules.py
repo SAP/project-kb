@@ -346,6 +346,19 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
     return None
 
 
+def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) -> str:
+
+    MAX_HUNKS = 10
+    explanation_template = (
+        "This commit modifies only {} hunks (groups of contiguous lines of code)"
+    )
+
+    if candidate.hunk_count <= MAX_HUNKS:
+        return explanation_template.format(candidate.hunk_count)
+
+    return None
+
+
 RULES_REGISTRY = {
     "REF_ADV_VULN_ID": apply_rule_references_vuln_id,
     "TOKENS_IN_DIFF": apply_rule_adv_keywords_in_diff,
@@ -360,4 +373,5 @@ RULES_REGISTRY = {
     "VULN_MENTIONED_IN_LINKED_ISSUE": apply_rule_vuln_mentioned_in_linked_issue,
     "SEC_KEYWORD_MENTIONED_IN_LINKED_ISSUE": apply_rule_security_keyword_in_linked_issue,
     "JIRA_ISSUE_REF_IN_COMMIT_MSG_AND_ADVISORY": apply_rule_jira_issue_in_commit_msg_and_advisory,
+    "SMALL_COMMIT": apply_rule_small_commit,
 }
