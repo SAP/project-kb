@@ -76,51 +76,42 @@ def prospector(  # noqa: C901
             modified_files,
         )
 
-    # obtain a repository object
-    repository = Git(repository_url, git_cache)
+    with ConsoleWriter("Obtaining initial set of candidates") as writer:
 
-    # retrieve of commit candidates
-    candidates = get_candidates(
-        advisory_record,
-        repository,
-        tag_interval,
-        version_interval,
-        time_limit_before,
-        time_limit_after,
-        filter_extensions,
-    )
+        # obtain a repository object
+        repository = Git(repository_url, git_cache)
 
-    # -------------------------------------------------------------------------
-    # filter commits
-    #
-    # Here we apply additional criteria to discard commits from the initial
-    # set extracted from the repository
-    # -------------------------------------------------------------------------
-    with ExecutionTimer(core_statistics.sub_collection(name="commit filtering")):
-        with ConsoleWriter("Filtering commits") as writer:
-            _logger.debug(f"Collected {len(candidates)} candidates")
-            candidates = filter_commits(candidates)
+        # retrieve of commit candidates
+        candidates = get_candidates(
+            advisory_record,
+            repository,
+            tag_interval,
+            version_interval,
+            time_limit_before,
+            time_limit_after,
+            filter_extensions,
+        )
+        _logger.debug(f"Collected {len(candidates)} candidates")
 
-            if len(candidates) > limit_candidates:
-                _logger.error(
-                    "Number of candidates exceeds %d, aborting." % limit_candidates
-                )
-                _logger.error(
-                    "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
-                )
-                writer.print(
-                    f"Found {len(candidates)} candidates, too many to proceed.",
-                    status=MessageStatus.ERROR,
-                )
-                writer.print("Please try running the tool again.")
-                sys.exit(-1)
+        if len(candidates) > limit_candidates:
+            _logger.error(
+                "Number of candidates exceeds %d, aborting." % limit_candidates
+            )
+            _logger.error(
+                "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
+            )
+            writer.print(
+                f"Found {len(candidates)} candidates, too many to proceed.",
+                status=MessageStatus.ERROR,
+            )
+            writer.print("Please try running the tool again.")
+            sys.exit(-1)
 
-            writer.print(f"Found {len(candidates)} candidates")
+        writer.print(f"Found {len(candidates)} candidates")
 
     # -------------------------------------------------------------------------
     # commit preprocessing
     # -------------------------------------------------------------------------
-
     with ExecutionTimer(
         core_statistics.sub_collection(name="commit preprocessing")
     ) as timer:
@@ -213,6 +204,22 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # analyze candidates by applying rules and ML predictor
     # -------------------------------------------------------------------------
+
+    # -------------------------------------------------------------------------
+    # filter commits
+    #
+    # Here we apply additional criteria to discard commits from the initial
+    # set extracted from the repository
+    # -------------------------------------------------------------------------
+    with ConsoleWriter("Candidate filtering") as console:
+        candidate_count = len(preprocessed_commits)
+        console.print(f"Filtering {candidate_count} candidates")
+
+        preprocessed_commits, rejected = filter_commits(preprocessed_commits)
+
+        if len(rejected) > 0:
+            console.print(f"Dropped {len(rejected)} candidates")
+            console.print(f"{rejected}")
 
     with ExecutionTimer(
         core_statistics.sub_collection(name="analyze candidates")
