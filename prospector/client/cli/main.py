@@ -12,7 +12,7 @@ import requests
 
 import log.config
 import log.util
-from client.cli.console import MessageStatus, MessageWriter
+from client.cli.console import ConsoleWriter, MessageStatus
 from client.cli.console_report import report_on_console
 from client.cli.html_report import report_as_html
 from client.cli.json_report import report_as_json
@@ -189,7 +189,7 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
 
 
 def main(argv):  # noqa: C901
-    with MessageWriter("Initialization") as writer:
+    with ConsoleWriter("Initialization") as console:
         args = parseArguments(argv)
         configuration = getConfiguration(args.conf)
 
@@ -202,9 +202,9 @@ def main(argv):  # noqa: C901
 
         if args.vulnerability_id is None:
             _logger.error("No vulnerability id was specified. Cannot proceed.")
-            writer.print_note(
+            console.print(
                 "No vulnerability id was specified. Cannot proceed.",
-                new_status=MessageStatus.ERROR,
+                status=MessageStatus.ERROR,
             )
             return False
 
@@ -306,7 +306,7 @@ def main(argv):  # noqa: C901
         rules=active_rules,
     )
 
-    with MessageWriter("Saving results") as writer:
+    with ConsoleWriter("Saving results") as console:
         report_file = None
         if report == "console":
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
@@ -316,17 +316,17 @@ def main(argv):  # noqa: C901
             report_file = report_as_html(results, advisory_record)
         else:
             _logger.warning("Invalid report type specified, using 'console'")
-            writer.print_note(
+            console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
-                new_status=MessageStatus.WARNING,
+                status=MessageStatus.WARNING,
             )
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
 
         _logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
-        writer.print_note(f"Execution time: {execution_time:.4f} sec")
+        console.print(f"Execution time: {execution_time:.4f} sec")
         if report_file:
-            writer.print_note(f"Report saved in {report_file}")
+            console.print(f"Report saved in {report_file}")
         return True
 
 
