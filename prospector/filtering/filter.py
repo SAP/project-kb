@@ -14,8 +14,8 @@ def filter_commits(
 
     The first return value is the filtered list, the second is the list of rejected commits.
     """
-    MAX_HUNKS = 100
-    MAX_FILES = 50
+    MAX_HUNKS = 200
+    MAX_FILES = 100
 
     # TODO: maybe this could become a dictionary, with keys indicating "reasons" for rejection
     # which would enable a more useful output
