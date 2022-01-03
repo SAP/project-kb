@@ -57,7 +57,7 @@ jobs:
           path: prospector
           max_line_length: 100
           ignore: E203,E501,W503
-          args: "--exclude=__init__.py"
+          args: '--per-file-ignore="__init__.py:F401,__init__.py:F403"'
       - name: Test with pytest
         env:
           GIT_CACHE: "/tmp/git-cache"
