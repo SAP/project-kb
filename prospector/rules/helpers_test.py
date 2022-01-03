@@ -7,7 +7,7 @@ from datamodel.commit import Commit, make_from_raw_commit
 from git.git import Git
 from util.sample_data_generation import random_dict_of_cve
 
-from .rule_helpers import (  # extract_features,
+from .helpers import (  # extract_features,
     extract_changed_relevant_paths,
     extract_commit_mentioned_in_linked_pages,
     extract_other_CVE_in_message,

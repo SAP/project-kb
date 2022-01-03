@@ -4,7 +4,7 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from stats.execution import Counter, execution_statistics
 
-from .rule_helpers import (
+from .helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,

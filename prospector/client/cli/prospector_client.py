@@ -14,8 +14,8 @@ from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
-from ranking.rank import rank
-from ranking.rules import apply_rules
+from ranking import rank
+from rules import apply_rules
 
 # from util.profile import profile
 from stats.execution import (

@@ -2,8 +2,11 @@ import os
 
 import pytest
 
-from ranking import MODELS_FOLDER
 from ranking.utils.model_loader import get_model_path, load_model, save_model
+
+from ..config import MODELS_FOLDER
+
+# from ..ranking import *
 
 
 @pytest.fixture

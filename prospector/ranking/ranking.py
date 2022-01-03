@@ -5,8 +5,8 @@ import pandas as pd
 
 import log.util
 from datamodel.commit import Commit
-from ranking import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
 
+from .config import NUM_ELEMENTS_TRAINING_DATA, TRAINING_DATA
 from .utils.model_loader import save_model
 
 _logger = log.util.init_local_logger()

@@ -7,7 +7,9 @@ from datamodel.commit import Commit
 
 # from datamodel.commit_features import CommitWithFeatures
 from filtering.filter import filter_commits
-from ranking.rank import make_dataframe, predict, rank, train
+
+# from .config import *
+from ranking import make_dataframe, predict, rank, train
 
 
 @pytest.fixture

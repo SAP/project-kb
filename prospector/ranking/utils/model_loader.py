@@ -2,7 +2,7 @@ import os
 
 from joblib import dump, load
 
-from ranking import MODELS_FOLDER
+from ..config import MODELS_FOLDER
 
 
 def get_model_path(model_name: str) -> str:

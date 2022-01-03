@@ -87,3 +87,11 @@ def test_adv_record_keywords():
             '"limited"',
         )
     )
+
+
+# def test_adv_record_project_data():
+#     record = AdvisoryRecord(vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2)
+#     record.analyze()
+
+#     # print(record)
+#     assert "Chrysler" in record.affected_products

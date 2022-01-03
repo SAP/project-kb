@@ -1,5 +1,5 @@
 [flake8]
-ignore = E203, E501, W503
+ignore = E203, E501, W503,F401,F403
 exclude =
     # No need to traverse our git directory
     .git,
@@ -13,5 +13,8 @@ exclude =
     build,
     # This contains builds of flake8 that we don't want to check
     dist
+; per-file-ignores =
+;     __init__.py:F403,
+;     __init__.py:F401
 max-complexity = 12
 max-line-length = 100

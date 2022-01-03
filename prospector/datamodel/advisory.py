@@ -1,8 +1,6 @@
 # from typing import Tuple
 # from datamodel import BaseModel
 import logging
-import re
-from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
@@ -143,31 +141,31 @@ class AdvisoryRecord(BaseModel):
             )
 
 
-# would be used in the future
-@dataclass
-class Reference:
-    """
-    Used for analyzing the references
-    """
+# might be used in the future
+# @dataclass
+# class Reference:
+#     """
+#     Used for analyzing the references
+#     """
 
-    url: str
-    repo_url: str
+#     url: str
+#     repo_url: str
 
-    # TODO we do not need a class for this, this is a collection of
-    # functions, with not state at all, they can become part of some
-    # other general string analysis module
-    def __post_init__(self):
-        # TODO this is not general (the .git suffix can be stripped only for github)
-        self.repo_url = re.sub(r"\.git$|/$", "", self.repo_url)
+#     # TODO we do not need a class for this, this is a collection of
+#     # functions, with not state at all, they can become part of some
+#     # other general string analysis module
+#     def __post_init__(self):
+#         # TODO this is not general (the .git suffix can be stripped only for github)
+#         self.repo_url = re.sub(r"\.git$|/$", "", self.repo_url)
 
-    def is_pull_page(self):
-        return self.repo_url + "/pull/" in self.url
+#     def is_pull_page(self):
+#         return self.repo_url + "/pull/" in self.url
 
-    def is_issue_page(self):
-        return self.repo_url + "/issues/" in self.url
+#     def is_issue_page(self):
+#         return self.repo_url + "/issues/" in self.url
 
-    def is_tag_page(self):
-        return self.repo_url + "/releases/tag/" in self.url
+#     def is_tag_page(self):
+#         return self.repo_url + "/releases/tag/" in self.url
 
-    def is_commit_page(self):
-        return self.repo_url + "/commit/" in self.url
+#     def is_commit_page(self):
+#         return self.repo_url + "/commit/" in self.url
