@@ -24,7 +24,7 @@ repos:
           - --max-line-length=100
           - --ignore=E203,E501,W503
           - --max-complexity=12
-          - --exclude=__init__.py
+          - --per-file-exclude="__init__.py:F401 __init__.py:F403"
           # - "--select=B,C,E,F,W,T4,B9"
           # these are errors that will be ignored by flake8
           # check out their meaning here
