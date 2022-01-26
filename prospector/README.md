@@ -91,6 +91,8 @@ This also starts a convenient DB administration tool at http://localhost:8080
 
 `uvicorn api.main:app --reload`
 
+Note, that it requires `POSTGRES_USER`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DBNAME` to be set in the .env file. 
+
 You can then point your browser to `http://127.0.0.1:8000` to access the API.
 You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
@@ -99,6 +101,7 @@ You might also want to take a look at `http://127.0.0.1:8000/docs`.
 `python api/main.py`
 
 which is equivalent but more convenient for debugging.
+
 
 ## Using the CLI
 
@@ -119,6 +122,8 @@ In the example above, the tag interval has been chosen by considering the text o
 To run the tests, run:
 
 `pytest`
+
+Note, that `pytest` requires running instances of the backend and database either in containers or by previous commands.
 
 ## Credits
 
