@@ -17,7 +17,7 @@ but fails without it)
 
 ## Setup (for development and demonstration purposes only!)
 
-<u>Prerequisites:</u>
+Prerequisites:
 
 * Python 3.8
 * pipenv
