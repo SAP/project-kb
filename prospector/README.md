@@ -11,7 +11,7 @@ produces in output a ranked list of commits, in decreasing order of relevance.
 **WARNING** Please keep in mind that Prospector is a research prototype, currently
 under development: feel free to try it out, but do expect some rough edges.
 
-If you find a bug, please open an issue. I you can also fix the bug, please
+If you find a bug, please open an issue. If you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
 but fails without it)
 
