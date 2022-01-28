@@ -6,35 +6,38 @@ Prospector is a tool to reduce the effort needed to find security fixes for
 It takes a vulnerability description (in natural language) in input and
 produces in output a ranked list of commits, in decreasing order of relevance.
 
-
-![](docs/img/prospector-reimplementation.png)
-
+<img src="docs/img/prospector-assuremoss-arch.png"/>
 
 **WARNING** Please keep in mind that Prospector is a research prototype, currently
 under development: feel free to try it out, but do expect some rough edges.
 
-If you find an bug, please open an issue. I you can also fix the bug, please
+If you find a bug, please open an issue. If you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
 but fails without it)
 
 ## Setup (for development and demonstration purposes only!)
 
+Prerequisites:
+
+* Python 3.8
+* pipenv
+
 The easiest way to set up Prospector is to clone this repository and then run the following commands:
 
 ```
-git clone https://github.com/sap/project-kb
-git checkout prospector-assuremoss
+git clone -b prospector-assuremoss https://github.com/sap/project-kb
 cd project-kb/prospector
 cp .env-sample .env
 ```
 
-Modify the `.env` file as you see fit, then continue with:
+Modify the `.env` file as you see fit (to run the client only the `GIT_CACHE` variable must be set, the rest is for setting up the backend), then continue with:
 
 ```
 source .env
 mkdir -p $GIT_CACHE
 pipenv --python 3.8
 pipenv install --dev
+pipenv shell
 pre-commit install
 python -m spacy download en_core_web_sm
 ```
@@ -51,15 +54,14 @@ If you have issues with these steps, please open a Github issue and
 explain in detail what you did and what unexpected behaviour you observed
 (also indicate your operating system and Python version).
 
-*Please note that Windows is not supported*, WSL should be fine though.
-
+*Please note that Windows is not supported*, WSL and WSL2 is fine though.
 
 **IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
 your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
 black is run prior to committing anyway, but the auto-formatting might save you some time
 and avoid frustration.
 
-If you use VScode, this can be achieved by pasting these lines in your configuration file:
+If you use VSCode, this can be achieved by pasting these lines in your configuration file:
 
 ```
     "python.formatting.provider": "black",
@@ -89,6 +91,8 @@ This also starts a convenient DB administration tool at http://localhost:8080
 
 `uvicorn api.main:app --reload`
 
+Note, that it requires `POSTGRES_USER`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DBNAME` to be set in the .env file. 
+
 You can then point your browser to `http://127.0.0.1:8000` to access the API.
 You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
@@ -97,6 +101,7 @@ You might also want to take a look at `http://127.0.0.1:8000/docs`.
 `python api/main.py`
 
 which is equivalent but more convenient for debugging.
+
 
 ## Using the CLI
 
@@ -117,6 +122,8 @@ In the example above, the tag interval has been chosen by considering the text o
 To run the tests, run:
 
 `pytest`
+
+Note, that `pytest` requires running instances of the backend and database either in containers or by previous commands.
 
 ## Credits
 
