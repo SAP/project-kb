@@ -2,8 +2,10 @@
 
 ## What is it
 Prospector is a tool to reduce the effort needed to find security fixes for
-*known* vulnerabilities in open source software. Its approach is described in
-more detail in this document: https://arxiv.org/pdf/2103.13375.pdf
+*known* vulnerabilities in open source software. In its first version, the
+approach of Prospector relied on a machine learning model, trained on
+the data of project KB (and some more instances available at SAP Security Research).
+This approach is described in more detail in this document: https://arxiv.org/pdf/2103.13375.pdf
 
 The document can be cited as follows:
 ```
@@ -27,8 +29,9 @@ The original code developed by Daan Hommersom [can be retrieved
 here](https://github.com/SAP/project-kb/tree/d93b1c3ab47cb4d7ad7537c11a468580dabaf77d/prospector)
 or through the tag `DAAN_HOMMERSOM_THESIS`.
 
-This folder is kept as a placeholder, while a reimplementation of the tool
-is progressing (see below).
+A new implementation of Prospector is in progress at this time (see below), based
+on a different method (hand-crafted rule that are used to annotate commits so that
+the user can decide which candidate commit is the fix they are looking for).
 
 **WARNING**
 *Please understand that this implementation is a proof-of-concept
