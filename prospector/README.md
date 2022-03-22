@@ -10,9 +10,14 @@ commits that match certain criteria. These criteria are implemented as rules
 that inspect the attributes of the advisory object and those of the candidate
 commits.
 
-This is a re-implementation of a previous prototype (see *prospector-alpha*
-below); the development of this new version is funded by EU grant number 952647
+The development of this new version is funded by EU grant number 952647
 ([AssureMOSS](https://assuremoss.eu/en/)).
+
+<p align="center">
+    <a href="https://assuremoss.eu">
+        <img height="120" src="docs/img/assuremoss_logo.png">
+    </a>
+</p>
 
 
 **WARNING** Please keep in mind that Prospector is a research prototype,
@@ -22,6 +27,9 @@ edges.
 If you find an bug, please open an issue. I you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your
 correction but fails without it)
+
+Prospector is a complete re-implementation of a previous prototype (see *prospector-alpha* below) developed by SAP Security Research intern Daan Hommersom.
+
 
 ## Setup (for development, testing, and demonstration purposes only!)
 
