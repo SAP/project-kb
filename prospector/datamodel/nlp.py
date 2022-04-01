@@ -78,7 +78,14 @@ def extract_ghissue_references(text: str) -> Dict[str, str]:
     """
     Extract identifiers that are (=look like) references to GH issues
     """
-    return dict.fromkeys([result.group(0) for result in re.finditer(r"#\d+", text)], "")
+    issue_references = dict()
+    issue_references.update(
+        dict.fromkeys([result.group(0) for result in re.finditer(r"#\d+", text)], "")
+    )
+    issue_references.update(
+        dict.fromkeys([result.group(0) for result in re.finditer(r"gh-\d+", text)], "")
+    )
+    return issue_references
 
 
 def extract_jira_references(text: str) -> Dict[str, str]:
