@@ -127,7 +127,7 @@ Note, that `pytest` requires running instances of the backend and database eithe
 
 ## Credits
 
-This project was initially developed by Daan Hommersom as part of his thesis
+This project is inspired by the prototype developed by Daan Hommersom as part of his thesis
 done in partial fulfillment of the requirements for the degree of Master of
 Science in Data Science & Entrepreneurship at the Jheronimus Academy of Data
 Science during a graduation internship at SAP.
