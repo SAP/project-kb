@@ -28,7 +28,7 @@ If you find an bug, please open an issue. I you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your
 correction but fails without it)
 
-Prospector is a complete re-implementation of a previous prototype (see *prospector-alpha* below) developed by SAP Security Research intern Daan Hommersom.
+Prospector is a complete re-implementation of a previous prototype (see *patch-finder* below) developed by SAP Security Research intern Daan Hommersom.
 
 
 ## Setup (for development, testing, and demonstration purposes only!)
@@ -144,15 +144,15 @@ of the advisory ("MultipartStream.java in Apache Commons FileUpload before 1.3.1
 
 
 
-## Prior versions of this tool (Prospector-alpha)
+## Prior versions of this tool (patch-finder)
 
 This is a complete *reimplementation* of an earlier research prototype that we
-now refer to as `prospector-alpha`. The goals of prospector-alpha were similar,
+now refer to as `patch-finder`. The goals of patch-finder were similar,
 but the emphasis was more on building a completely automated (non-interactive)
 tool, whereas the new implementation aims at supporting the user by automating
 parts of the mining process (the more repetitive, time-consuming, error-prone)
 but leaving to them the ultimate selection of fix-commits. The techniques used
-in the two implementations are radically different. Prospector-alpha strongly
+in the two implementations are radically different. Patch-finder strongly
 relies on ML learning to rank candidate commits and its models were trained on
 the project KB data, whereas the new implementation is focussing on implementing
 a set of rules that mimick the mining methods that a human expert would use. The
@@ -161,7 +161,7 @@ results, and effectiveness. Furthermore, we plan to introduce ML in the new
 implementation as well to complement the rule-based processing and to prioritise
 candidates.
 
-Prospector-alpha was implemented by Daan Hommersom during his internship at SAP
+Patch-finder was implemented by Daan Hommersom during his internship at SAP
 Security Research for his Master thesis in Data Science & Entrepreneurship at
 the Jheronimus Academy of Data Science (JADS).
 
@@ -169,7 +169,7 @@ The original code developed by Daan Hommersom can be retrieved
 [here](https://github.com/SAP/project-kb/tree/DAAN_HOMMERSOM_THESIS/prospector).
 
 
-The approach implemented in Prospector-alpha is described in detail in this
+The approach implemented in patch-finder is described in detail in this
 document: https://arxiv.org/pdf/2103.13375.pdf
 
 The document can be cited as follows:
