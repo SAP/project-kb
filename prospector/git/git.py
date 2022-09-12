@@ -23,6 +23,7 @@ from stats.execution import execution_statistics, measure_execution_time
 
 _logger = log.util.init_local_logger()
 
+# If we don't parse .env file, we can't use the environment variables
 load_dotenv()
 
 GIT_CACHE = os.getenv("GIT_CACHE")
