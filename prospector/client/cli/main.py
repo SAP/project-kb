@@ -16,7 +16,9 @@ path_root = os.getcwd()
 if path_root not in sys.path:
     sys.path.append(path_root)
 
-from log import config, util
+import log
+
+# from log import config, util
 from client.cli.console import ConsoleWriter, MessageStatus
 from client.cli.console_report import report_on_console
 from client.cli.html_report import report_as_html
@@ -30,7 +32,7 @@ from client.cli.prospector_client import (
 from git.git import GIT_CACHE
 from stats.execution import execution_statistics
 
-_logger = util.init_local_logger()
+_logger = log.util.init_local_logger()
 
 DEFAULT_BACKEND = "http://localhost:8000"
 
@@ -199,9 +201,11 @@ def main(argv):  # noqa: C901
         configuration = getConfiguration(args.conf)
 
         if args.log_level:
-            config.level = getattr(logging, args.log_level)
+            log.config.level = getattr(logging, args.log_level)
 
-        _logger.info(f"global log level is set to {logging.getLevelName(config.level)}")
+        _logger.info(
+            f"global log level is set to {logging.getLevelName(log.config.level)}"
+        )
 
         if args.vulnerability_id is None:
             _logger.error("No vulnerability id was specified. Cannot proceed.")
@@ -227,7 +231,7 @@ def main(argv):  # noqa: C901
             backend = args.backend
 
         if args.ping:
-            return ping_backend(backend, config.level < logging.INFO)
+            return ping_backend(backend, log.config.level < logging.INFO)
 
         vulnerability_id = args.vulnerability_id
         repository_url = args.repository
@@ -312,7 +316,7 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Generating report") as console:
         report_file = None
         if report == "console":
-            report_on_console(results, advisory_record, config.level < logging.INFO)
+            report_on_console(results, advisory_record, log.config.level < logging.INFO)
         elif report == "json":
             report_file = report_as_json(results, advisory_record)
         elif report == "html":
@@ -323,7 +327,7 @@ def main(argv):  # noqa: C901
             console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
             )
-            report_on_console(results, advisory_record, config.level < logging.INFO)
+            report_on_console(results, advisory_record, log.config.level < logging.INFO)
 
         _logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
