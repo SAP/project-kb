@@ -10,10 +10,10 @@ from pathlib import Path
 
 import requests
 
-# Runtime cannot find local module
-path_root = os.getcwd()
-if path_root not in sys.path:
-    sys.path.append(path_root)
+# Runtime cannot find local module mac OS
+#path_root = os.getcwd()
+#if path_root not in sys.path:
+    #sys.path.append(path_root)
 
 import log.config
 import log.util
