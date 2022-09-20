@@ -7,13 +7,25 @@
 
 <div class="col h-100 overflow-scroll">
 <div class="container">
-    <h1>Prospector Report</h1>
+    <div class="row">
+        <div class="col">
+            <h1>Prospector Report</h1> 
+        </div>
+        <div class="col col-auto align-self-end mb-2">
+            <a target="_blank" class="btn btn-primary btn-sm" onclick="exportSelected()">Export selected</a> 
+        </div>
+        
+    </div>
     <div id="col accordion">
         {% for annotated_commit in candidates %}
         <div class="card commit d-flex" data-annotations="{{ annotated_commit.annotations | tojson | forceescape }}">
+            
             <div class="card-header" id="candidateheader{{ loop.index }}">
                 {% include "card/commit_header.html" %}
             </div>
+            
+            
+
             <div id="candidatebody-{{ loop.index }}" class="collapse show"
                 aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
                 <div class="card-body">
