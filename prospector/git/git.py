@@ -13,6 +13,7 @@ import sys
 from datetime import datetime
 from functools import lru_cache
 from urllib.parse import urlparse
+from dotenv import load_dotenv
 
 import log.util
 
@@ -22,13 +23,14 @@ from stats.execution import execution_statistics, measure_execution_time
 
 _logger = log.util.init_local_logger()
 
-GIT_CACHE = ""
-if "GIT_CACHE" in os.environ:
-    GIT_CACHE = os.environ["GIT_CACHE"]
+# If we don't parse .env file, we can't use the environment variables
+load_dotenv()
+
+GIT_CACHE = os.getenv("GIT_CACHE")
 
 if not os.path.isdir(GIT_CACHE):
     raise ValueError(
-        "Environment variable GIT_CACHE is not set or it points to a directory that does not exist"
+        f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
     )
 
 

@@ -10,6 +10,11 @@ from pathlib import Path
 
 import requests
 
+# Runtime cannot find local module
+path_root = os.getcwd()
+if path_root not in sys.path:
+    sys.path.append(path_root)
+
 import log.config
 import log.util
 from client.cli.console import ConsoleWriter, MessageStatus
