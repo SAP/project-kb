@@ -7,8 +7,6 @@
             }else{
                 hdr.classList.add('bg-success')
             }
-
-
         }
 
         function exportSelected(){
@@ -23,6 +21,11 @@
             }
 
             navigator.clipboard.writeText(out)
+
+            document.getElementById("copy-popup").classList.toggle("show")
+            setTimeout(() => {
+                document.getElementById("copy-popup").classList.toggle("show")
+            }, 1000)
         }
         
     </script>
