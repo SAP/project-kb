@@ -1,7 +1,7 @@
-<h5 class="card-title">
+<h5 id="commit_id" class="card-title">
     <i class="fas fa-code-branch"></i> {{ annotated_commit.commit_id }}
 </h5>
-<h6 class="card-subtitle mb-2 text-muted">
+<h6  id="repository_url" class="card-subtitle mb-2 text-muted">
     <i class="fab fa-git-alt"></i> {{ annotated_commit.repository }}
     {% if 'github' in annotated_commit.repository %}
     <a

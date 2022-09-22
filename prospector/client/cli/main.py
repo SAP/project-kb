@@ -10,25 +10,24 @@ from pathlib import Path
 
 import requests
 
-# Runtime cannot find local module
 path_root = os.getcwd()
 if path_root not in sys.path:
     sys.path.append(path_root)
 
-import log.config
-import log.util
-from client.cli.console import ConsoleWriter, MessageStatus
-from client.cli.console_report import report_on_console
-from client.cli.html_report import report_as_html
-from client.cli.json_report import report_as_json
-from client.cli.prospector_client import (
-    MAX_CANDIDATES,
-    TIME_LIMIT_AFTER,
-    TIME_LIMIT_BEFORE,
-    prospector,
+import log  # noqa: E402
+
+from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
+from client.cli.console_report import report_on_console  # noqa: E402
+from client.cli.html_report import report_as_html  # noqa: E402
+from client.cli.json_report import report_as_json  # noqa: E402
+from client.cli.prospector_client import (  # noqa: E402
+    MAX_CANDIDATES,  # noqa: E402
+    TIME_LIMIT_AFTER,  # noqa: E402
+    TIME_LIMIT_BEFORE,  # noqa: E402
+    prospector,  # noqa: E402
 )
-from git.git import GIT_CACHE
-from stats.execution import execution_statistics
+from git.git import GIT_CACHE  # noqa: E402
+from stats.execution import execution_statistics  # noqa: E402
 
 _logger = log.util.init_local_logger()
 

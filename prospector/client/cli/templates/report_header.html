@@ -1,27 +1,85 @@
 <div class="col-3 h-100 overflow-scroll bg-light bg-gradient border border-secondary">
+    <script>
+        function selectCard() {
+            let hdr = event.target.closest("div.card-header")
+            if (hdr.classList.contains('bg-success')) {
+                hdr.classList.remove('bg-success')
+            } else {
+                hdr.classList.add('bg-success')
+            }
+        }
+
+        function exportToYaml() {
+            let list = document.querySelectorAll(".card-header.bg-success")
+            if (list.length == 0) {
+                return ""
+            }
+
+            let cve_id = document.getElementById("cve_id").textContent
+            let repo_url = document.getElementById("repository_url").textContent.trim().split("\n")[0]
+            let out = `vulnerability_id: ${cve_id}\nfixes:\n\tcommits:`
+
+            for (let i = 0; i < list.length; i++) {
+                let commit_id = list[i].closest('.card').querySelector('#commit_id').textContent.trim()
+                out += `\n\t- id: ${commit_id}\n\t  repository: ${repo_url}\n`
+            }
+
+            return out
+        }
+
+        function copyToClipboard() {
+            let text = exportToYaml()
+            try {
+                navigator.clipboard.writeText(text)
+                document.getElementById("copy-popup").classList.toggle("show")
+                setTimeout(() => {
+                    document.getElementById("copy-popup").classList.toggle("show")
+                }, 1000)
+            } catch (err) {
+                console.log('Something went wrong', err);
+            }
+        }
+
+        function downloadAsFile() {
+            let text = exportToYaml()
+            if (text == "") {
+                return
+            }
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', "exported-commits.yaml");
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+    </script>
+
     <h2>Filters</h2>
     <p class="text-center">
         Displaying all items with at least one <button class="btn btn-primary btn-sm">on annotation filter</button>.
         You could toggle the filters between <button class="btn btn-primary btn-sm">on</button> and
-        <button class="btn btn-outline-primary btn-sm">off</button> states by left click on them.<br/>
-    {% for annotation, count in present_annotations.items() | sort %}
-        <button
-                class="btn btn-primary btn-sm selector"
-                style="margin: 5pt 5pt 5pt 0;"
-                data-annotation="{{ annotation }}"
-        >{{ annotation }} <span class="badge bg-secondary">{{ count }}</span></button>
-    {% endfor %}
+        <button class="btn btn-outline-primary btn-sm">off</button> states by left click on them.<br />
+        {% for annotation, count in present_annotations.items() | sort %}
+        <button class="btn btn-primary btn-sm selector" style="margin: 5pt 5pt 5pt 0;"
+            data-annotation="{{ annotation }}">{{ annotation }} <span class="badge bg-secondary">{{ count
+                }}</span></button>
+        {% endfor %}
     </p>
     <p>
         <button class="btn btn-primary" id="collapse_all_toggle">Collapse All</button>
     </p>
     <div class="advisory-record">
         <h2>Results based on this Advisory Record</h2>
-        <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b>{{ advisory_record.vulnerability_id }}</b></a><br/>
+        <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b
+                id="cve_id">{{ advisory_record.vulnerability_id }}</b></a><br />
         <p>{{ advisory_record.description }}</p>
         <p style="margin: 10pt 0 0;">
             {% for token in advisory_record.keywords | sort %}
-                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ token }}</span>
+            <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ token }}</span>
             {% endfor %}
         </p>
     </div>
