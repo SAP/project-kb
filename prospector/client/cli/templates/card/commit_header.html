@@ -7,22 +7,23 @@
                 <i>(no commit message found)</i>
                 {% endif %}
             </h5>
-        <p style="margin: 10pt 0 0;">
-            <i class="fas fa-bullhorn"></i>
-            {% for annotation, comment in annotated_commit.annotations.items() | sort %}
+            <p style="margin: 10pt 0 0;">
+                <i class="fas fa-bullhorn"></i>
+                {% for annotation, comment in annotated_commit.annotations.items() | sort %}
                 <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ annotation }}</span>
-            {% endfor %}
-        </p>
+                {% endfor %}
+            </p>
         </div>
         <div class="col col-auto">
             <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
-                data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false"
-                aria-controls="collapseExample">
+                data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false" aria-controls="collapseExample">
                 <i class="fas fa-low-vision"></i>
             </button>
-            <div class="col col-auto">
-                <input class="card-check-input" type="checkbox" height="100px" width="100px"  onchange="colorChange()"/>
-            </div>        
+        </div>
+        <div class="col col-auto">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" onchange="selectCard()">
+            </div>
         </div>
     </div>
 </div>
