@@ -1,14 +1,15 @@
-FROM flyingjoe/uvicorn-gunicorn-fastapi:python3.8-slim
+#FROM flyingjoe/uvicorn-gunicorn-fastapi:python3.8-slim
 #FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
+FROM python:3.8-slim
 
-
+WORKDIR /app
 ADD . .
-COPY docker/api/update-feeds.sh /app/update-feeds.sh
-RUN chmod +x /app/update-feeds.sh
+COPY docker/api/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 COPY ./api /app
 RUN pip install --upgrade pip
 RUN apt update && apt install -y --no-install-recommends gcc g++ libffi-dev python3-dev libpq-dev
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 RUN apt autoremove -y gcc g++ libffi-dev python3-dev && apt clean && rm -rf /var/lib/apt/lists/*
 ENV GIT_CACHE /tmp
 ENV CVE_DATA_PATH /cve_data
@@ -18,3 +19,5 @@ ENV POSTGRES_PORT 5432
 ENV POSTGRES_USER postgres
 ENV POSTGRES_DBNAME postgres
 ENV PYTHONPATH .
+
+CMD ["./start.sh"]
