@@ -43,6 +43,9 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./ddl:/docker-entrypoint-initdb.d
+
 
   redis:
     image: "redis:alpine"
