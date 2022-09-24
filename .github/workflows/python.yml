@@ -42,15 +42,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - name: Setup pipenv environment
+      - name: Setup virtual environment
         run: |
           python -m pip install --upgrade pip
-          pip install pipenv
-      - name: Activate pipenv
-        run: |
           cd prospector
-          pipenv --python 3.8
-          pipenv install --dev
+          virtualenv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
       - name: Flake8
         uses: TrueBrain/actions-flake8@master
         with:
