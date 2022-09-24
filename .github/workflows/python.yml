@@ -69,4 +69,4 @@ jobs:
         run: |
           cd prospector
           [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
-          pipenv run pytest
+          pytest
