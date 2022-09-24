@@ -70,4 +70,4 @@ jobs:
         run: |
           cd prospector
           [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
-          pytest
+          python -m pytest
