@@ -51,6 +51,7 @@ jobs:
           source ../venv/bin/activate
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+          pip install pytest
       - name: Flake8
         uses: TrueBrain/actions-flake8@master
         with:
