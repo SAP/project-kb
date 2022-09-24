@@ -70,4 +70,5 @@ jobs:
         run: |
           cd prospector
           [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
-          python -m pytest
+          source ../venv/bin/activate
+          pytest
