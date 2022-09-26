@@ -51,7 +51,9 @@ async def get_vuln_data(vuln_id):
     json_file = os.path.join(DATA_PATH, year, vuln_id.upper() + ".json")
     if not os.path.isfile(json_file):
         _logger.info("No file found: " + json_file)
-        raise HTTPException(status_code=404, detail="Vulnerability data not found")
+        raise HTTPException(
+            status_code=404, detail=json_file
+        )  # detail="Vulnerability data not found")
 
     _logger.debug("Serving file: " + json_file)
     with open(json_file) as f:

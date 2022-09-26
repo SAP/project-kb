@@ -56,3 +56,4 @@ requests-cache.sqlite
 prospector/output.png
 prospector/output.pstats
 prospector/kaybee-new-statements
+prospector/run.sh

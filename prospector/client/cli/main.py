@@ -5,6 +5,7 @@ import argparse
 import configparser
 import logging
 import os
+import signal
 import sys
 from pathlib import Path
 

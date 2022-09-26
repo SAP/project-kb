@@ -12,15 +12,15 @@ services:
       - db
     environment:
       GIT_CACHE: /tmp
+      CVE_DATA_PATH: /app/cve_data
       REDIS_URL: redis://redis:6379/0
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: example
       POSTGRES_DBNAME: postgres
-      PRE_START_PATH: /app/update-feeds.sh
     volumes:
-      - ${CVE_DATA_PATH:-./cve_data}:/cve_data
+      - ${CVE_DATA_PATH:-./cvedata}:/app/cve_data
 
   worker:
     build:

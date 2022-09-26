@@ -17,11 +17,11 @@
 
             let cve_id = document.getElementById("cve_id").textContent
             let repo_url = document.getElementById("repository_url").textContent.trim().split("\n")[0]
-            let out = `vulnerability_id: ${cve_id}\nfixes:\n\tcommits:`
+            let out = `vulnerability_id: ${cve_id}\nfixes:\n- id: "DEFAULT_BRANCH"\n  commits:`
 
             for (let i = 0; i < list.length; i++) {
                 let commit_id = list[i].closest('.card').querySelector('#commit_id').textContent.trim()
-                out += `\n\t- id: ${commit_id}\n\t  repository: ${repo_url}\n`
+                out += `\n  - id: ${commit_id}\n    repository: ${repo_url}\n`
             }
 
             return out
