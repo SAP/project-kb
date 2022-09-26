@@ -382,6 +382,12 @@ class Git:
 
         return tags
 
+    def get_issue_or_pr_text_from_id(self, id):
+        """
+        Return the text of the issue or PR with the given id
+        """
+        cmd = f"git fetch origin pull/{id}/head"
+
 
 class Commit:
     def __init__(self, repository, commit_id, init_data=None):

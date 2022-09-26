@@ -1,15 +1,17 @@
 from typing import Dict, List
+from unicodedata import name
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from stats.execution import Counter, execution_statistics
 
-from .helpers import (
+from rules.helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
     fetch_candidate_references,
 )
+
 
 SEC_KEYWORDS = [
     "vuln",
@@ -313,10 +315,10 @@ def apply_rule_security_keyword_in_linked_issue(
     explanation_template = (
         "The issue (or pull request) {} contains security-related terms: {}"
     )
-
     candidate = fetch_candidate_references(candidate)
 
     for ref, page_content in candidate.ghissue_refs.items():
+
         if page_content is None:
             continue
 
@@ -376,3 +378,19 @@ RULES_REGISTRY = {
     "JIRA_ISSUE_REF_IN_COMMIT_MSG_AND_ADVISORY": apply_rule_jira_issue_in_commit_msg_and_advisory,
     "SMALL_COMMIT": apply_rule_small_commit,
 }
+
+if __name__ == "__main__":
+    from datamodel.advisory import AdvisoryRecord
+    from datamodel.commit import make_from_raw_commit
+    from git.git import Git
+
+    repo = Git("https://github.com/apache/superset")
+    raw = repo.get_commit("465572325b6c880b81189a94a27417bbb592f540")
+    repo.clone()
+    commit = make_from_raw_commit(raw)
+
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-2020-13952",
+        repository_url="https://github.com/apache/superset",
+    )
+    print(apply_rule_security_keyword_in_linked_issue(commit, record))

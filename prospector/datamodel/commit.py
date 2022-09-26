@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional, Tuple
+import requests
 
 from pydantic import BaseModel, Field
 
@@ -80,3 +81,21 @@ def make_from_raw_commit(git_commit: RawCommit) -> Commit:
     commit.cve_refs = extract_cve_references(commit.message)
 
     return commit
+
+
+if __name__ == "__main__":
+    from git.git import Git
+    from rules.helpers import fetch_candidate_references
+
+    repo = Git("https://github.com/apache/superset")
+    raw = repo.get_commit("465572325b6c880b81189a94a27417bbb592f540")
+    repo.clone()
+    commit = make_from_raw_commit(raw)
+    fetch_candidate_references(commit)
+    print(f"Commit message: {commit.message}\n GHIssues: {commit.ghissue_refs}")
+    # for k, _ in commit.ghissue_refs.items():
+    #     r = requests.get(
+    #         f"https://api.github.com/repos/apache/superset/pulls/{k.replace('#', '')}"
+    #     )
+    #     if r.status_code == 200:
+    #         print(r.json().get("body"))

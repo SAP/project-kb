@@ -2,6 +2,7 @@ from typing import Dict, Set
 
 import pandas
 from bs4 import BeautifulSoup
+import requests
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -199,23 +200,38 @@ def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
 
 def fetch_candidate_references(commit: Commit) -> Commit:
     # FIXME: this is very ad-hoc for GH issue/PR pages
-
     for ref, page_content in commit.ghissue_refs.items():
         if page_content is None:
-            url = commit.repository + "/issues/" + ref.lstrip("#")
-            raw_page_content = fetch_url(url)
+            url = commit.repository + "/pull/" + ref.lstrip("#")
+            # Checks if it is a PR or an issue
+            if requests.head(url).status_code != 200:
+                url = url.replace("pull", "issues")
 
+            raw_page_content = fetch_url(url, False)
             soup = BeautifulSoup(raw_page_content, "html.parser")
             content = ""
-            for comment_block in soup.find_all(
-                True, class_=["markdown-body", "markdown-title"]
-            ):
-                content += comment_block.text
-
+            # print(soup.find(class_="comment-body").get_text())
+            for comment in soup.find_all(class_="comment-body"):
+                content += comment.get_text().replace("\n", "")
+            # for comment_block in soup.find_all(
+            #    "div", class_=["markdown-body", "markdown-title"]
+            # ):
+            #    content += comment_block.get_text()
             if len(content) > 0:
                 commit.ghissue_refs[ref] = content
 
     # TODO: also treat JIRA pages
     # TODO: cache BS extracted text (it takes some time...)
-
     return commit
+
+
+if __name__ == "__main__":
+    from git.git import Git
+    from datamodel.commit import make_from_raw_commit
+
+    repo = Git("https://github.com/apache/superset")
+    raw = repo.get_commit("465572325b6c880b81189a94a27417bbb592f540")
+    repo.clone()
+    commit = make_from_raw_commit(raw)
+    commit = fetch_candidate_references(commit)
+    print(commit.ghissue_refs)
