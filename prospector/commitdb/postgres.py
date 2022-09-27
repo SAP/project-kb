@@ -111,10 +111,11 @@ class PostgresCommitDB(CommitDB):
                     changed_files,
                     message_reference_content,
                     jira_refs,
-                    ghissue_refs,
+                    ghissue_refs_id,
+                    ghissue_refs_content,
                     cve_refs,
                     tags)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET (
                         timestamp,
                         hunks,
@@ -135,7 +136,8 @@ class PostgresCommitDB(CommitDB):
                             EXCLUDED.changed_files,
                             EXCLUDED.message_reference_content,
                             EXCLUDED.jira_refs,
-                            EXCLUDED.ghissue_refs,
+                            EXCLUDED.ghissue_refs_id,
+                            EXCLUDED.ghissue_refs_content,
                             EXCLUDED.cve_refs,
                             EXCLUDED.tags)""",
                 (
@@ -150,6 +152,7 @@ class PostgresCommitDB(CommitDB):
                     commit_obj.message_reference_content,
                     list(commit_obj.jira_refs.keys()),
                     list(commit_obj.ghissue_refs.keys()),
+                    list(commit_obj.ghissue_refs.values()),
                     list(commit_obj.cve_refs.keys()),
                     commit_obj.tags,
                 ),

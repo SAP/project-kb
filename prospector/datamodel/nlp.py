@@ -78,21 +78,25 @@ def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]
 
 def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     """
-    Extract identifiers that are (=look like) references to GH issues
+    Extract identifiers that look like references to GH issues, then extract their content
     """
-    issue_references = dict()
+    refs = dict()
     for result in re.finditer(r"#\d+|gh-\d+", text):
         id = result.group().lstrip("#")
-        print(id)
         url = f"{repository}/issues/{id}"
-        raw_page_content = fetch_url(url, False)
-        if not raw_page_content:
+        content = fetch_url(url, False)
+        if not content:
             return {"": ""}
-        issue_references[id] = ""
-        for comment in raw_page_content.find_all(class_="comment-body"):
-            issue_references[id] += comment.get_text().replace("\n", "")
-
-    return issue_references
+        refs[id] = "".join(
+            [
+                block.get_text().replace("\n", "")
+                for block in content.find_all(
+                    attrs={"class": ["comment-body", "markdown-title"]}
+                )
+            ]
+        )
+        # print(id + ":" + refs[id])
+    return refs
 
 
 def extract_jira_references(repository: str, text: str) -> Dict[str, str]:

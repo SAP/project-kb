@@ -9,7 +9,6 @@ from rules.helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
-    fetch_candidate_references,
 )
 
 
@@ -123,6 +122,7 @@ def apply_rule_references_ghissue(
     )
 
     if len(candidate.ghissue_refs) > 0:
+        candidate.weight += 5
         return explanation_template.format(", ".join(candidate.ghissue_refs))
     return None
 
@@ -134,6 +134,7 @@ def apply_rule_references_jira_issue(
     explanation_template = "The commit message refers to the following Jira issues: {}"
 
     if len(candidate.jira_refs) > 0:
+        candidate.weight += 5
         return explanation_template.format(", ".join(candidate.jira_refs))
     return None
 
@@ -181,6 +182,7 @@ def apply_rule_adv_keywords_in_msg(
     )
 
     if len(matching_keywords) > 0:
+        candidate.weight += 3
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -228,6 +230,7 @@ def apply_rule_security_keyword_in_msg(
     )
 
     if len(matching_keywords) > 0:
+        candidate.weight += 8
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -251,7 +254,6 @@ def apply_rule_adv_keywords_in_paths(
             if token in p
         ]
     )
-
     if len(matches) > 0:
         explained_matches = []
 
@@ -273,7 +275,7 @@ def apply_rule_commit_mentioned_in_adv(
     commit_references = extract_referred_to_by_nvd(candidate, advisory_record)
 
     if len(commit_references) > 0:
-        candidate.weight += 10
+        candidate.weight += 9
         return explanation_template.format(", ".join(commit_references))
 
     return None
@@ -287,6 +289,7 @@ def apply_rule_commit_mentioned_in_reference(
     count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
 
     if count > 0:
+        candidate.weight += 5
         return explanation_template
 
     return None
@@ -304,7 +307,7 @@ def apply_rule_vuln_mentioned_in_linked_issue(
             continue
 
         if advisory_record.vulnerability_id in page_content:
-            candidate.weight += 9
+            candidate.weight += 10
             return explanation_template.format(ref, advisory_record.vulnerability_id)
 
     return None
@@ -344,6 +347,7 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
         if i in j
     ]
     if len(matches) > 0:
+        candidate.weight += 8
         ticket_ids = [id for (id, _) in matches]
         return explanation_template.format(", ".join(ticket_ids))
 

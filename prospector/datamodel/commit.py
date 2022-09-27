@@ -36,6 +36,13 @@ class Commit(BaseModel):
     def hunk_count(self):
         return len(self.hunks)
 
+    # Re-implement these two methods to allow sorting by weight
+    def __lt__(self, other) -> bool:
+        return self.weight < other.weight
+
+    def __eq__(self, other) -> bool:
+        return self.weight == other.weight
+
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
     #     out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
@@ -86,17 +93,8 @@ def make_from_raw_commit(git_commit: RawCommit) -> Commit:
 
 if __name__ == "__main__":
     from git.git import Git
-    from rules.helpers import fetch_candidate_references
 
-    repo = Git("https://github.com/apache/superset")
-    raw = repo.get_commit("465572325b6c880b81189a94a27417bbb592f540")
+    repo = Git("https://github.com/apache/struts")
+    raw = repo.get_commit("93f378809cc73c65c1d689a0e32ec440c52e7ce2")
     repo.clone()
     commit = make_from_raw_commit(raw)
-    fetch_candidate_references(commit)
-    print(f"Commit message: {commit.message}\n GHIssues: {commit.ghissue_refs}")
-    # for k, _ in commit.ghissue_refs.items():
-    #     r = requests.get(
-    #         f"https://api.github.com/repos/apache/superset/pulls/{k.replace('#', '')}"
-    #     )
-    #     if r.status_code == 200:
-    #         print(r.json().get("body"))

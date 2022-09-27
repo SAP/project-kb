@@ -14,7 +14,6 @@ from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
-from ranking import rank
 from rules import apply_rules
 
 # from util.profile import profile
@@ -230,7 +229,7 @@ def prospector(  # noqa: C901
                 preprocessed_commits, advisory_record, rules=rules
             )
 
-            annotated_candidates = rank(annotated_candidates, model_name=model_name)
+            annotated_candidates = sorted(annotated_candidates, reverse=True)
 
     return annotated_candidates, advisory_record
 

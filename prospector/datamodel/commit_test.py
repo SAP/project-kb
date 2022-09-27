@@ -43,3 +43,7 @@ def test_proprocess_commit_set(repository):
         preprocessed_commits.append(make_from_raw_commit(raw_commit))
 
     assert len(preprocessed_commits) == len(commit_set)
+
+
+def test_commit_ordering(repository):
+    print("SIMOLA")
