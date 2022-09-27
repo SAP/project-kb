@@ -298,7 +298,6 @@ def apply_rule_vuln_mentioned_in_linked_issue(
     explanation_template = (
         "The issue (or pull request) {} mentions the vulnerability id {}"
     )
-    # candidate = fetch_candidate_references(candidate)
 
     for ref, page_content in candidate.ghissue_refs.items():
         if not page_content:
@@ -317,7 +316,6 @@ def apply_rule_security_keyword_in_linked_issue(
     explanation_template = (
         "The issue (or pull request) {} contains security-related terms: {}"
     )
-    # candidate = fetch_candidate_references(candidate)
 
     for ref, page_content in candidate.ghissue_refs.items():
 
