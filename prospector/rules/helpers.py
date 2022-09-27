@@ -201,22 +201,20 @@ def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
 def fetch_candidate_references(commit: Commit) -> Commit:
     # FIXME: this is very ad-hoc for GH issue/PR pages
     for ref, page_content in commit.ghissue_refs.items():
-        if page_content is None:
-            url = commit.repository + "/pull/" + ref.lstrip("#")
-            # Checks if it is a PR or an issue
-            if requests.head(url).status_code != 200:
-                url = url.replace("pull", "issues")
-
+        # If we already have the content from the other rule, skip
+        if page_content:
+            break
+        else:
+            # /issues/ auto redirects on /pull/ if issue does not exist
+            url = commit.repository + "/issues/" + ref.lstrip("#")
             raw_page_content = fetch_url(url, False)
-            soup = BeautifulSoup(raw_page_content, "html.parser")
+            if not raw_page_content:
+                return commit
+            # soup = BeautifulSoup(raw_page_content, "html.parser")
             content = ""
-            # print(soup.find(class_="comment-body").get_text())
-            for comment in soup.find_all(class_="comment-body"):
+            for comment in raw_page_content.find_all(class_="comment-body"):
                 content += comment.get_text().replace("\n", "")
-            # for comment_block in soup.find_all(
-            #    "div", class_=["markdown-body", "markdown-title"]
-            # ):
-            #    content += comment_block.get_text()
+
             if len(content) > 0:
                 commit.ghissue_refs[ref] = content
 
@@ -234,4 +232,4 @@ if __name__ == "__main__":
     repo.clone()
     commit = make_from_raw_commit(raw)
     commit = fetch_candidate_references(commit)
-    print(commit.ghissue_refs)
+    # print(commit.ghissue_refs)

@@ -109,6 +109,7 @@ def apply_rule_references_vuln_id(
 
     references_vuln_id = extract_references_vuln_id(candidate, advisory_record)
     if references_vuln_id:
+        candidate.weight += 10
         return explanation_template.format(advisory_record.vulnerability_id)
     return None
 
@@ -122,7 +123,7 @@ def apply_rule_references_ghissue(
     )
 
     if len(candidate.ghissue_refs) > 0:
-        return explanation_template.format(str(candidate.ghissue_refs))
+        return explanation_template.format(", ".join(candidate.ghissue_refs))
     return None
 
 
@@ -272,6 +273,7 @@ def apply_rule_commit_mentioned_in_adv(
     commit_references = extract_referred_to_by_nvd(candidate, advisory_record)
 
     if len(commit_references) > 0:
+        candidate.weight += 10
         return explanation_template.format(", ".join(commit_references))
 
     return None
@@ -296,14 +298,14 @@ def apply_rule_vuln_mentioned_in_linked_issue(
     explanation_template = (
         "The issue (or pull request) {} mentions the vulnerability id {}"
     )
-
-    candidate = fetch_candidate_references(candidate)
+    # candidate = fetch_candidate_references(candidate)
 
     for ref, page_content in candidate.ghissue_refs.items():
-        if page_content is None:
+        if not page_content:
             continue
 
         if advisory_record.vulnerability_id in page_content:
+            candidate.weight += 9
             return explanation_template.format(ref, advisory_record.vulnerability_id)
 
     return None
@@ -315,17 +317,18 @@ def apply_rule_security_keyword_in_linked_issue(
     explanation_template = (
         "The issue (or pull request) {} contains security-related terms: {}"
     )
-    candidate = fetch_candidate_references(candidate)
+    # candidate = fetch_candidate_references(candidate)
 
     for ref, page_content in candidate.ghissue_refs.items():
 
-        if page_content is None:
+        if not page_content:
             continue
 
         matching_keywords = set(
             [kw for kw in SEC_KEYWORDS if kw in page_content.lower()]
         )
         if len(matching_keywords) > 0:
+            candidate.weight += 8
             return explanation_template.format(ref, ", ".join(matching_keywords))
 
     return None
@@ -393,4 +396,5 @@ if __name__ == "__main__":
         vulnerability_id="CVE-2020-13952",
         repository_url="https://github.com/apache/superset",
     )
-    print(apply_rule_security_keyword_in_linked_issue(commit, record))
+    apply_rule_security_keyword_in_linked_issue(commit, record)
+    apply_rule_vuln_mentioned_in_linked_issue(commit, record)

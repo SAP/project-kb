@@ -106,7 +106,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--fetch-references",
-        default=False,
+        default=True,
         action="store_true",
         help="Fetch content of references linked from the advisory",
     )

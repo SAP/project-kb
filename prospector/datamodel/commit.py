@@ -30,6 +30,7 @@ class Commit(BaseModel):
     cve_refs: Dict[str, str] = Field(default_factory=dict)
     tags: List[str] = Field(default_factory=list)
     annotations: Dict[str, str] = Field(default_factory=dict)
+    weight: int = 0
 
     @property
     def hunk_count(self):
@@ -76,9 +77,9 @@ def make_from_raw_commit(git_commit: RawCommit) -> Commit:
     commit.timestamp = int(git_commit.get_timestamp())
     commit.changed_files = git_commit.get_changed_files()
     commit.tags = git_commit.get_tags()
-    commit.jira_refs = extract_jira_references(commit.message)
-    commit.ghissue_refs = extract_ghissue_references(commit.message)
-    commit.cve_refs = extract_cve_references(commit.message)
+    commit.jira_refs = extract_jira_references(commit.repository, commit.message)
+    commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
+    commit.cve_refs = extract_cve_references(commit.repository, commit.message)
 
     return commit
 

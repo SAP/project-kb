@@ -24,7 +24,7 @@ docker-clean: docker-clean.sh
 	bash docker-clean.sh
 
 run: client/cli/main.py
-	python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd --tag-interval FILEUPLOAD_1_3:FILEUPLOAD_1_3_1
+	python client/cli/main.py CVE-2022-29599 --repository https://github.com/apache/maven-shared-utils --use-nvd --tag-interval maven-shared-utils-3.2.0:maven-shared-utils-3.3.3
 
 select-run:
 	python client/cli/main.py $(cve) --repository $(repository) --use-nvd
