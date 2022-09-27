@@ -1,27 +1,51 @@
-#!make
-
+SHELL := /bin/sh
 include .env
 
+GREEN='[\033[0;32m'
+YELLOW='[\033[1;33m'
+END='\033[0m]'	# No Color
+DONE="$(GREEN)DONE$(END)"
+PROGRESS="$(YELLOW)....$(END)"
+
 test:
-	echo "TEST"
+	@echo "$(PROGRESS) TEST"
+	@echo "$(DONE) TEST"
 
 setup: requirements.txt
+	@echo "$(PROGRESS) Installing requirements"
 	pip install -r requirements.txt
-	mkdir -p $(GIT_CACHE)
+	@echo "$(DONE) Installed requirements"
+	@echo "$(PROGRESS) Installing pre-commit and other modules"
+	@pre-commit install
+	@python -m spacy download en_core_web_sm
+	@echo "$(DONE) Installed pre-commit and other modules"
+	@mkdir -p $(GIT_CACHE)
+	@echo "$(DONE) Created directory $(GIT_CACHE)"
 
-dev-setup: requirements.txt requirements-dev.txt
-	mkdir -p $(GIT_CACHE)
-	mkdir -p $(CVE_DATA_PATH)
+dev-setup: setup requirements-dev.txt
+	@mkdir -p $(CVE_DATA_PATH)
+	@echo "$(DONE) Created directory $(CVE_DATA_PATH)"
+	@echo "$(PROGRESS) Installing development requirements"
 	pip install -r requirements-dev.txt
-	pip install -r requirements.txt
+	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
 	mkdir -p $(GIT_CACHE)
 	mkdir -p $(CVE_DATA_PATH)
 	docker-compose up -d --build
 
-docker-clean: docker-clean.sh
-	bash docker-clean.sh
+docker-clean:
+	@echo "$(PROGRESS) Stopping and removing all container and images"
+	@docker-compose down --rmi all -v 2>/dev/null
+	@echo "$(DONE) Stopped and removed all container and images"
+
+	@echo "$(PROGRESS) Cleaning volumes"
+	@docker volume prune -f
+	@echo "$(DONE) Cleaned volumes"
+
+	@echo "$(PROGRESS) Cleaning residue"
+	@docker system prune -a -f
+	@echo "$(DONE) Cleaned residue"
 
 run: client/cli/main.py
 	python3 client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd --tag-interval FILEUPLOAD_1_3:FILEUPLOAD_1_3_1

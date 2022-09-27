@@ -21,6 +21,7 @@ Prerequisites:
 
 * Python 3.8
 * pipenv
+* postgresql
 
 The easiest way to set up Prospector is to clone this repository and then run the following commands:
 
@@ -33,28 +34,34 @@ cp .env-sample .env
 Modify the `.env` file as you see fit (to run the client only the `GIT_CACHE` variable must be set, the rest is for setting up the backend), then continue with:
 
 ```
-source .env
+set -a; source .env; set +a
 mkdir -p $GIT_CACHE
-pipenv --python 3.8
-pipenv install --dev
-pipenv shell
-pre-commit install
-python -m spacy download en_core_web_sm
+```
+
+Before proceding, in order to build the python requirements it is necessary to have the following installed:
+```
+gcc g++ libffi-dev python3-dev libpq-dev
+```
+
+Now you can install the dependencies by running:
+```
+make setup
+```
+or the development dependencies:
+```
+make dev-setup
 ```
 
 This is necessary only the first time you set up your dev. environment.
-Afterwards, you will just have to remember to activate the environment
-with `pipenv shell`.
+Afterwards, you will just have to set the environment variables using the `.env` file.
 
-If at any time you wish to remove the virtual environment and create it from scratch
-(for example, because you want to use a different version of the python interpreter),
-just do `pipenv --rm` and the repeat the steps above.
+If at any time you wish to use a different version of the python interpreter, beware that the `requirements.txt` file contains the exact versioning for `python 3.8.14`.
 
 If you have issues with these steps, please open a Github issue and
 explain in detail what you did and what unexpected behaviour you observed
 (also indicate your operating system and Python version).
 
-*Please note that Windows is not supported*, WSL and WSL2 is fine though.
+*Please note that Windows is not supported*, WSL and WSL2 are fine though.
 
 **IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
 your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
@@ -68,12 +75,9 @@ If you use VSCode, this can be achieved by pasting these lines in your configura
     "editor.formatOnSave": true,
 ```
 
-## Starting the backend database and the job workers
+## Starting the backend database and the job workers [OPTIONAL]
 
-THIS STEP IS OPTIONAL: if the client is invoked but the backend is not running,
-you will just get a warning and miss out on opportunities to have faster response times
-if you make multiple queries. If you only intend to try out the client, feel free to skip
-this section and the next and go straight to "Using the CLI".
+If you run the client without running the backend you will get a warning and have slower response times when making multiple queries. If you only intend to try out the client, feel free to skip this section and the next and go straight to "Using the CLI".
 
 Note: this section and the following assume you have performed succesfully the
 steps in the *setup* section above.
@@ -83,7 +87,7 @@ and working before proceeding.
 
 You can then start the necessary containers with the following command:
 
-`docker-compose up -d --build`
+`make docker-setup`
 
 This also starts a convenient DB administration tool at http://localhost:8080
 
