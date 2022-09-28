@@ -21,7 +21,7 @@ DAYS_BEFORE = 180
 DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
-
+# AttributeError: 'tuple' object has no attribute 'cve_refs'
 def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
     return advisory_record.vulnerability_id in commit.cve_refs
 
@@ -227,8 +227,8 @@ if __name__ == "__main__":
     from git.git import Git
     from datamodel.commit import make_from_raw_commit
 
-    repo = Git("https://github.com/apache/superset")
-    raw = repo.get_commit("465572325b6c880b81189a94a27417bbb592f540")
+    repo = Git("https://github.com/apache/maven-shared-utils")
+    raw = repo.get_commit("336594396f2e9be8a572100e30a611f8123a837d")
     repo.clone()
     commit = make_from_raw_commit(raw)
-    # print(commit.ghissue_refs)
+    print("CVE-00-00" in commit.cve_refs)

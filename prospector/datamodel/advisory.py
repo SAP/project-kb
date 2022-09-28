@@ -90,7 +90,6 @@ class AdvisoryRecord(BaseModel):
         self.references = [
             r for r in self.references if urlparse(r).hostname in ALLOWED_SITES
         ]
-        print(self.references)
         _logger.debug("Relevant references: " + str(self.references))
 
         if fetch_references:

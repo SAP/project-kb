@@ -288,7 +288,7 @@ def main(argv):  # noqa: C901
         _logger.debug("time-limit before: " + str(time_limit_before))
         _logger.debug("time-limit after: " + str(time_limit_after))
 
-        active_rules = ["ALL", "-REF_JIRA_ISSUE"]
+        active_rules = ["ALL"]
 
     results, advisory_record = prospector(
         vulnerability_id=vulnerability_id,
@@ -310,6 +310,9 @@ def main(argv):  # noqa: C901
         limit_candidates=max_candidates,
         rules=active_rules,
     )
+    for r in results:
+        if "JIRA" in r.annotations:
+            print(r.annotations)
 
     with ConsoleWriter("Generating report") as console:
         report_file = None

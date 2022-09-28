@@ -56,7 +56,6 @@ def prospector(  # noqa: C901
     git_cache: str = GIT_CACHE,
     limit_candidates: int = MAX_CANDIDATES,
     rules: "list[str]" = ["ALL"],
-    model_name: str = "",
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
     _logger.debug("begin main commit and CVE processing")

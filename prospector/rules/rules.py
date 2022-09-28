@@ -136,6 +136,7 @@ def apply_rule_references_jira_issue(
     if len(candidate.jira_refs) > 0:
         candidate.weight += 5
         return explanation_template.format(", ".join(candidate.jira_refs))
+
     return None
 
 
@@ -389,14 +390,13 @@ if __name__ == "__main__":
     from datamodel.commit import make_from_raw_commit
     from git.git import Git
 
-    repo = Git("https://github.com/apache/superset")
-    raw = repo.get_commit("465572325b6c880b81189a94a27417bbb592f540")
+    repo = Git("https://github.com/apache/maven-shared-utils")
+    raw = repo.get_commit("336594396f2e9be8a572100e30a611f8123a837d")
     repo.clone()
     commit = make_from_raw_commit(raw)
 
     record = AdvisoryRecord(
-        vulnerability_id="CVE-2020-13952",
-        repository_url="https://github.com/apache/superset",
+        vulnerability_id="CVE-2022-29599",
+        repository_url="https://github.com/apache/maven-shared-utils",
     )
-    apply_rule_security_keyword_in_linked_issue(commit, record)
-    apply_rule_vuln_mentioned_in_linked_issue(commit, record)
+    apply_rules([commit], record)

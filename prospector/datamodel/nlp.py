@@ -95,7 +95,6 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
                 )
             ]
         )
-        # print(id + ":" + refs[id])
     return refs
 
 
@@ -103,6 +102,24 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     """
     Extract identifiers that point to Jira tickets
     """
+    refs = dict()
+    for result in re.finditer(r"[A-Z]+-\d+", text):
+        id = result.group()
+        url = f"https://issues.apache.org/jira/browse/{id}"
+        content = fetch_url(url, False)
+        if not content:
+            return {"": ""}
+        refs[id] = "".join(
+            [
+                block.get_text().replace("\n", "")
+                for block in content.find_all(
+                    # Find correct elemenets
+                    attrs={"id": ["details-module", "descriptionmodule"]}
+                )
+            ]
+        )
+    return refs
+    # print(id + ":" + refs[id])
     return dict.fromkeys(
         [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", text)], ""
     )
