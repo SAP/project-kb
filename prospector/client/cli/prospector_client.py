@@ -114,7 +114,7 @@ def prospector(  # noqa: C901
         core_statistics.sub_collection(name="commit preprocessing")
     ) as timer:
         with ConsoleWriter("Preprocessing commits") as writer:
-            raw_commit_data = dict()
+            retrieved_commits = dict()
             missing = []
             try:
                 # Use the preprocessed commits already stored in the backend
@@ -128,8 +128,16 @@ def prospector(  # noqa: C901
                     _logger.info("Preprocessed commits not found in the backend")
                     missing = candidates
                 else:
-                    raw_commit_data = r.json()
-                    _logger.info(f"Found {len(raw_commit_data)} preprocessed commits")
+                    retrieved_commits = r.json()
+                    _logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
+                    if len(retrieved_commits) != len(candidates):
+                        missing = list(
+                            set(candidates).difference(
+                                rc["commit_id"] for rc in retrieved_commits
+                            )
+                        )
+                        _logger.error(f"Missing {len(missing)} commits")
+
             except requests.exceptions.ConnectionError:
                 print(
                     "Could not reach backend, is it running? The result of commit pre-processing will not be saved. (Check the logs for details)"
@@ -141,9 +149,9 @@ def prospector(  # noqa: C901
                 missing = candidates
 
             preprocessed_commits: "list[Commit]" = []
-            for idx, commit in enumerate(raw_commit_data):
-                if (
-                    commit
+            for idx, commit in enumerate(retrieved_commits):
+                if len(retrieved_commits) + len(missing) == len(
+                    candidates
                 ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
                     preprocessed_commits.append(
                         Commit.parse_obj(commit)
@@ -151,7 +159,7 @@ def prospector(  # noqa: C901
                 else:
                     missing.append(candidates[idx])
 
-            first_missing = len(preprocessed_commits)
+            # first_missing = len(preprocessed_commits)
             pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
             with Counter(
                 timer.collection.sub_collection(name="commit preprocessing")
@@ -166,7 +174,7 @@ def prospector(  # noqa: C901
             _logger.pretty_log(advisory_record)
             _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
 
-            payload = [c.__dict__ for c in preprocessed_commits[first_missing:]]
+            payload = [c.__dict__ for c in preprocessed_commits]
 
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
@@ -284,7 +292,7 @@ def get_candidates(
     time_limit_before,
     time_limit_after,
     filter_extensions,
-) -> List:
+) -> List[str]:
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
