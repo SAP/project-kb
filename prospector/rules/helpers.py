@@ -21,6 +21,7 @@ DAYS_BEFORE = 180
 DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
+
 # AttributeError: 'tuple' object has no attribute 'cve_refs'
 def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
     return advisory_record.vulnerability_id in commit.cve_refs

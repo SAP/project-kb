@@ -46,5 +46,5 @@ def test_proprocess_commit_set(repository):
 
 
 def test_commit_ordering(repository):
-    commit = False
+    print("test")
     # DO SOMETHING
