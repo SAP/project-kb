@@ -56,10 +56,7 @@ requests-cache.sqlite
 prospector/output.png
 prospector/output.pstats
 prospector/kaybee-new-statements
-<<<<<<< HEAD
 prospector/run.sh
-=======
 prospector/cve_data
 .DS_Store
 kaybee/internal/reconcile/debug.test
->>>>>>> origin/prospector-assuremoss
