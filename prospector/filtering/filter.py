@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Tuple
 
 from datamodel.commit import Commit
 
 
 def filter_commits(
     candidates: "list[Commit]",
-) -> (List[Commit], List[Commit]):
+) -> Tuple[List[Commit], List[Commit]]:
     """
     Takes in input a set of candidate (datamodel) commits (coming from the commitdb)
     and returns in output a filtered list obtained by discarding the irrelevant

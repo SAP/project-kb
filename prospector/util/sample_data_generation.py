@@ -107,14 +107,11 @@ def random_list_of_url(max_length: int, max_count: int):
     return [random_url(max_length) for _ in range(randint(0, max_count))]
 
 
-def random_dict_of_cve(max_count: int, min_count: int = 0):
-    return dict.fromkeys(
-        [
-            f"CVE-{randint(1987, 2021)}-{str(randint(10, 99)).rjust(4, '0')}"
-            for _ in range(randint(min_count, max_count))
-        ],
-        "",
-    )
+def random_list_of_cve(max_count: int, min_count: int = 0):
+    return [
+        f"CVE-{randint(1987, 2021)}-{str(randint(10, 99)).rjust(4, '0')}"
+        for _ in range(randint(min_count, max_count))
+    ]
 
 
 def random_commit_hash():

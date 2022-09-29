@@ -5,7 +5,7 @@ import pytest
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit, make_from_raw_commit
 from git.git import Git
-from util.sample_data_generation import random_dict_of_cve
+from util.sample_data_generation import random_list_of_cve
 
 from .helpers import (  # extract_features,
     extract_changed_relevant_paths,
@@ -73,11 +73,11 @@ def test_extract_references_vuln_id():
     commit = Commit(
         commit_id="test_commit",
         repository="test_repository",
-        cve_refs={
-            "test_advisory_record": "",
-            "another_advisory_record": "",
-            "yet_another_advisory_record": "",
-        },
+        cve_refs=[
+            "test_advisory_record",
+            "another_advisory_record",
+            "yet_another_advisory_record",
+        ],
     )
     advisory_record = AdvisoryRecord(vulnerability_id="test_advisory_record")
     result = extract_references_vuln_id(commit, advisory_record)
@@ -194,7 +194,7 @@ def test_extract_other_CVE_in_message():
     commit = Commit(
         commit_id="test_commit",
         repository="test_repository",
-        cve_refs={"CVE-2021-29425": "", "CVE-2021-21251": ""},
+        cve_refs=["CVE-2021-29425", "CVE-2021-21251"],
     )
     advisory_record = AdvisoryRecord(vulnerability_id="CVE-2020-31284")
     assert extract_other_CVE_in_message(commit, advisory_record) == {
@@ -335,7 +335,7 @@ def test_extract_path_similarities():
     ]
     commit = Commit(changed_files=paths)
     advisory = AdvisoryRecord(
-        vulnerability_id=list(random_dict_of_cve(max_count=1, min_count=1).keys())[0],
+        vulnerability_id=list(random_list_of_cve(max_count=1, min_count=1).keys())[0],
         keywords=keywords,
     )
     similarities: pandas.DataFrame = extract_path_similarities(commit, advisory)

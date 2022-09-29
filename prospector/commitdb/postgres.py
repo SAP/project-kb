@@ -195,8 +195,8 @@ class PostgresCommitDB(CommitDB):
         if not self.connection:
             raise Exception("Invalid connection")
 
-        self._run_sql_script("ddl/commit.sql")
-        self._run_sql_script("ddl/users.sql")
+        self._run_sql_script("ddl/10_commit.sql")
+        self._run_sql_script("ddl/20_users.sql")
 
     def _run_sql_script(self, script_file):
         if not self.connection:

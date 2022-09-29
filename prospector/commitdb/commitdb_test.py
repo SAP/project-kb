@@ -9,7 +9,7 @@ from commitdb.postgres import PostgresCommitDB, parse_connect_string
 from datamodel.commit import Commit
 
 
-# @pytest.fixture
+@pytest.fixture
 def setupdb():
     db = PostgresCommitDB()
     db.connect(DB_CONNECT_STRING)
@@ -32,7 +32,7 @@ def test_simple_write(setupdb):
         message_reference_content=[],
         jira_refs={},
         ghissue_refs={},
-        cve_refs={"fasdfads": "", "fsfasf": ""},
+        cve_refs=["simola", "simola2"],
         tags=["tag1"],
     )
     db.save(commit_obj)
@@ -48,25 +48,24 @@ def test_simple_write(setupdb):
         message_reference_content=[],
         jira_refs={},
         ghissue_refs={"hggdhd": ""},
-        cve_refs={"fasdfads": "", "fsfasf": ""},
+        cve_refs=["simola3"],
         tags=["tag1"],
     )
     db.save(commit_obj)
 
 
-def test_lookup():
-    db = PostgresCommitDB()
+def test_lookup(setupdb):
+    db = setupdb
     db.connect(DB_CONNECT_STRING)
     result = db.lookup(
         "https://github.com/apache/maven-shared-utils",
         "f751e614c09df8de1a080dc1153931f3f68991c9",
     )
-    print([d.dict() for d in result])
     assert result is not None
 
 
 def test_upsert(setupdb):
-    db = PostgresCommitDB()
+    db = setupdb
     db.connect(DB_CONNECT_STRING)
     commit_obj = Commit(
         commit_id="42423b2423",
@@ -80,7 +79,7 @@ def test_upsert(setupdb):
         message_reference_content=[],
         jira_refs={},
         ghissue_refs={"hggdhd": ""},
-        cve_refs={"fasdfads": "", "314202": ""},
+        cve_refs=["simola124"],
         tags=["tag1"],
     )
     db.save(commit_obj)
@@ -94,7 +93,3 @@ def test_parse_connect_string():
     assert parsed_connect_string["host"] == "localhost"
     assert parsed_connect_string["user"] == "postgres"
     assert parsed_connect_string["port"] == "5432"
-
-
-if __name__ == "__main__":
-    test_lookup()

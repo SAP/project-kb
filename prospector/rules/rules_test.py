@@ -16,9 +16,9 @@ def candidates():
             message="Blah blah blah fixes CVE-2020-26258 and a few other issues",
             ghissue_refs={"example": ""},
             changed_files={"foo/bar/otherthing.xml", "pom.xml"},
-            cve_refs={"CVE-2020-26258": ""},
+            cve_refs=["CVE-2020-26258"],
         ),
-        Commit(repository="repo2", commit_id="2", cve_refs={"CVE-2020-26258": ""}),
+        Commit(repository="repo2", commit_id="2", cve_refs=["CVE-2020-26258"]),
         Commit(
             repository="repo3",
             commit_id="3",

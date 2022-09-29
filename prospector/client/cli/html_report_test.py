@@ -9,7 +9,7 @@ from util.sample_data_generation import (  # random_list_of_url,
     random_bool,
     random_commit_hash,
     random_dict_of_strs,
-    random_dict_of_cve,
+    random_list_of_cve,
     random_dict_of_github_issue_ids,
     random_list_of_hunks,
     random_dict_of_jira_refs,
@@ -35,7 +35,7 @@ def test_report_generation():
             message_reference_content=random_list_of_strs(42),
             jira_refs=random_dict_of_jira_refs(42),
             ghissue_refs=random_dict_of_github_issue_ids(100000, 42),
-            cve_refs=random_dict_of_cve(42),
+            cve_refs=random_list_of_cve(42),
             tags=random_list_of_strs(42),
             annotations=random_dict_of_strs(16, 10),
         )
@@ -43,7 +43,7 @@ def test_report_generation():
         candidates.append(annotated_candidates)
 
     advisory = AdvisoryRecord(
-        vulnerability_id=list(random_dict_of_cve(max_count=1, min_count=1).keys())[0],
+        vulnerability_id=random_list_of_cve(max_count=1, min_count=1)[0],
         repository_url=random_url(4),
         published_timestamp=randint(0, 100000),
         last_modified_timestamp=randint(0, 100000),

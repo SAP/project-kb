@@ -25,9 +25,9 @@ def test_proprocess_commit(repository):
         "Merge pull request #480 from apache/WW-5117-reorders-stack [WW-5117]"
     )
 
-    assert commit.jira_refs == {"WW-5117": ""}
-    assert commit.ghissue_refs == {"#480": ""}
-    assert commit.cve_refs == {}
+    assert "WW-5117" in commit.jira_refs.keys()
+    assert "480" in commit.ghissue_refs.keys()
+    assert commit.cve_refs == []
 
 
 def test_proprocess_commit_set(repository):
