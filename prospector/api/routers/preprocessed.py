@@ -1,3 +1,4 @@
+import stat
 from typing import List, Optional
 
 from fastapi import APIRouter
@@ -15,7 +16,7 @@ router = APIRouter(
 
 
 # -----------------------------------------------------------------------------
-@router.get("/{repository_url:path}")
+@router.get("/{repository_url:path}", status_code=200)
 async def get_commits(
     repository_url: str,
     commit_id: Optional[str] = None,
@@ -24,14 +25,11 @@ async def get_commits(
     db.connect(DB_CONNECT_STRING)
     # use case: if a particular commit is queried, details should be returned
     data = db.lookup(repository_url, commit_id)
-    res = []
-    if len(data):
-        for d in data:
-            if d:
-                res.append(d.dict())
-            else:
-                res.append(None)
-    return JSONResponse(res)
+    # res = []
+    if not len(data):
+        return JSONResponse(status_code=404, content={"message": "Not found"})
+
+    return JSONResponse([d.dict() for d in data])
 
 
 # -----------------------------------------------------------------------------

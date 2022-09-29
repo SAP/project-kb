@@ -120,21 +120,16 @@ def prospector(  # noqa: C901
                 # Use the preprocessed commits already stored in the backend
                 # and only process those that are missing.
                 r = requests.get(
-                    backend_address
-                    + "/commits/"
-                    + repository_url
-                    + "?commit_id="
-                    + ",".join(candidates)
+                    f"{backend_address}/commits/{repository_url}?commit_id={','.join(candidates)}"
                 )
-                _logger.debug("The backend returned status '%d'" % r.status_code)
+
+                _logger.debug(f"The backend returned status {r.status_code}")
                 if r.status_code != 200:
-                    _logger.error("This is weird...Continuing anyway.")
+                    _logger.info("Preprocessed commits not found in the backend")
                     missing = candidates
                 else:
                     raw_commit_data = r.json()
-                    _logger.info(
-                        "Found {} preprocessed commits".format(len(raw_commit_data))
-                    )
+                    _logger.info(f"Found {len(raw_commit_data)} preprocessed commits")
             except requests.exceptions.ConnectionError:
                 print(
                     "Could not reach backend, is it running? The result of commit pre-processing will not be saved. (Check the logs for details)"

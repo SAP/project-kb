@@ -125,10 +125,8 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     )
 
 
-def extract_cve_references(repository: str, text: str) -> Dict[str, str]:
+def extract_cve_references(repository: str, text: str) -> List[str]:
     """
     Extract CVE identifiers
     """
-    return dict.fromkeys(
-        [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)], ""
-    )
+    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
