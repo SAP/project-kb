@@ -2,6 +2,10 @@ autopep8
 black
 pylint
 pytest
+<<<<<<< HEAD
+=======
+pre-commit
+>>>>>>> origin/prospector-assuremoss
 pytest-cov
 pycodestyle
 flake8
