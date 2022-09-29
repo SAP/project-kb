@@ -32,66 +32,39 @@ class Commit(BaseModel):
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     annotations: Dict[str, str] = Field(default_factory=dict)
-    weight: Optional[int] = 0
+    relevance: Optional[int] = 0
 
     @property
     def hunk_count(self):
         return len(self.hunks)
 
-    # Re-implement these two methods to allow sorting by weight
+    # Re-implement these two methods to allow sorting by relevance
     def __lt__(self, other) -> bool:
-        return self.weight < other.weight
+        return self.relevance < other.relevance
 
     def __eq__(self, other) -> bool:
-        return self.weight == other.weight
+        return self.relevance == other.relevance
+
+    def set_relevance(self, relevance: int):
+        if self.relevance < relevance:  # Only increase relevance
+            self.relevance = relevance
 
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
     #     out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
     #     return out
-    def toJSON(self):
-        return self.json()
 
     def print(self):
         out = f"Commit: {self.commit_id}\nRepository: {self.repository}\nMessage: {self.message}\nTags: {self.tags}\n"
         print(out)
 
 
-def parse_commit(raw_commit_data: DictRow) -> Commit:
+def rank(candidates: List[Commit]) -> List[Commit]:
     """
-    This function is responsible of parsing a preprocessed commit from the database
+    This function is responsible for ranking the list of commits
+    according to their relevance to the advisory record.
     """
-    commit = Commit(
-        commit_id=raw_commit_data["commit_id"],
-        repository=raw_commit_data["repository"],
-        timestamp=int(raw_commit_data["timestamp"]),
-        hunks=get_hunks(raw_commit_data["hunks"]),
-        message=raw_commit_data["message"],
-        diff=raw_commit_data["diff"],
-        changed_files=raw_commit_data["changed_files"],
-        message_reference_content=raw_commit_data["message_reference_content"],
-        jira_refs=dict(
-            zip(raw_commit_data["jira_refs_id"], raw_commit_data["jira_refs_content"])
-        ),
-        ghissue_refs=dict(
-            zip(
-                raw_commit_data["ghissue_refs_id"],
-                raw_commit_data["ghissue_refs_content"],
-            )
-        ),
-        cve_refs=raw_commit_data["cve_refs"],
-        tags=raw_commit_data["tags"],
-    )
-    return commit
-
-
-def get_hunks(raw_hunks: List[str]) -> List[Tuple[int, int]]:
-    """
-    This function is responsible of extracting the hunks from a commit
-    """
-    hunks = [int(x) for x in re.findall("[0-9]+", "".join(raw_hunks))]
-    # They are always pairs so no problem
-    return list(zip(hunks, hunks[2:]))
+    return sorted(candidates, reverse=True)
 
 
 def make_from_raw_commit(git_commit: RawCommit) -> Commit:
@@ -134,12 +107,3 @@ def make_from_raw_commit(git_commit: RawCommit) -> Commit:
     commit.cve_refs = extract_cve_references(commit.repository, commit.message)
 
     return commit
-
-
-if __name__ == "__main__":
-    from git.git import Git
-
-    repo = Git("https://github.com/apache/struts")
-    raw = repo.get_commit("93f378809cc73c65c1d689a0e32ec440c52e7ce2")
-    repo.clone()
-    commit = make_from_raw_commit(raw)

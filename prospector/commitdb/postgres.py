@@ -3,15 +3,14 @@ This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
 import re
-import traceback
-from typing import List
+from typing import List, Tuple
 import psycopg2
 import psycopg2.sql
 from psycopg2.extensions import parse_dsn
-from psycopg2.extras import DictCursor
+from psycopg2.extras import DictCursor, DictRow
 
 import log.util
-from datamodel.commit import Commit, parse_commit
+from datamodel.commit import Commit
 
 from . import CommitDB
 
@@ -53,7 +52,7 @@ class PostgresCommitDB(CommitDB):
 
                     result = cur.fetchall()
                     if len(result):
-                        data.append(parse_commit(result[0]))
+                        data.append(parse_commit_from_database(result[0]))
                     # if not len(result):
                     #     # Workaround for unmarshaling hunks, dict type refs
                     #     hunks = [
@@ -84,7 +83,9 @@ class PostgresCommitDB(CommitDB):
                     #     data.append(parse_commit(result[0]))
                     #    data.append(None)
             else:
-                raise Exception("WTF is wrong here")
+                raise Exception(
+                    "ABORT: Why are you getting every commit of a repository? "
+                )
                 cur.execute(
                     "SELECT * FROM commits WHERE repository = %s",
                     (repository,),
@@ -221,3 +222,40 @@ def parse_connect_string(connect_string):
         raise Exception("Invalid connect string: " + connect_string)
 
     return parsed_string
+
+
+def parse_commit_from_database(raw_commit_data: DictRow) -> Commit:
+    """
+    This function is responsible of parsing a preprocessed commit from the database
+    """
+    commit = Commit(
+        commit_id=raw_commit_data["commit_id"],
+        repository=raw_commit_data["repository"],
+        timestamp=int(raw_commit_data["timestamp"]),
+        hunks=parse_hunks(raw_commit_data["hunks"]),
+        message=raw_commit_data["message"],
+        diff=raw_commit_data["diff"],
+        changed_files=raw_commit_data["changed_files"],
+        message_reference_content=raw_commit_data["message_reference_content"],
+        jira_refs=dict(
+            zip(raw_commit_data["jira_refs_id"], raw_commit_data["jira_refs_content"])
+        ),
+        ghissue_refs=dict(
+            zip(
+                raw_commit_data["ghissue_refs_id"],
+                raw_commit_data["ghissue_refs_content"],
+            )
+        ),
+        cve_refs=raw_commit_data["cve_refs"],
+        tags=raw_commit_data["tags"],
+    )
+    return commit
+
+
+def parse_hunks(raw_hunks: List[str]) -> List[Tuple[int, int]]:
+    """
+    This function is responsible of extracting the hunks from a commit
+    """
+    hunks = [int(x) for x in re.findall("[0-9]+", "".join(raw_hunks))]
+    # They are always pairs so no problem
+    return list(zip(hunks, hunks[2:]))

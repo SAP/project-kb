@@ -5,6 +5,8 @@ from util.http import fetch_url
 
 from datamodel.constants import RELEVANT_EXTENSIONS
 
+JIRA_ISSUE_URL = "https://issues.apache.org/jira/browse/"
+
 
 def extract_special_terms(description: str) -> Tuple[str, ...]:
     """
@@ -105,7 +107,7 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     refs = dict()
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
-        url = f"https://issues.apache.org/jira/browse/{id}"
+        url = JIRA_ISSUE_URL + id
         content = fetch_url(url, False)
         if not content:
             return {"": ""}
@@ -119,10 +121,6 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
             ]
         )
     return refs
-    # print(id + ":" + refs[id])
-    return dict.fromkeys(
-        [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", text)], ""
-    )
 
 
 def extract_cve_references(repository: str, text: str) -> List[str]:

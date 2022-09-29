@@ -9,7 +9,7 @@ from tqdm import tqdm
 import log
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit, make_from_raw_commit
+from datamodel.commit import Commit, make_from_raw_commit, rank
 from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
@@ -145,7 +145,9 @@ def prospector(  # noqa: C901
                 if (
                     commit
                 ):  # None results are not in the DB, collect them to missing list, they need local preprocessing
-                    preprocessed_commits.append(Commit.parse_obj(commit))
+                    preprocessed_commits.append(
+                        Commit.parse_obj(commit)
+                    )  # TODO: Verify this parsing
                 else:
                     missing.append(candidates[idx])
 
@@ -223,7 +225,7 @@ def prospector(  # noqa: C901
                 preprocessed_commits, advisory_record, rules=rules
             )
 
-            annotated_candidates = sorted(annotated_candidates, reverse=True)
+            annotated_candidates = rank(annotated_candidates)
 
     return annotated_candidates, advisory_record
 

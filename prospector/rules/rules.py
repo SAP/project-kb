@@ -108,7 +108,7 @@ def apply_rule_references_vuln_id(
 
     references_vuln_id = extract_references_vuln_id(candidate, advisory_record)
     if references_vuln_id:
-        candidate.weight += 10
+        candidate.relevance += 10
         return explanation_template.format(advisory_record.vulnerability_id)
     return None
 
@@ -122,7 +122,7 @@ def apply_rule_references_ghissue(
     )
 
     if len(candidate.ghissue_refs) > 0:
-        candidate.weight += 5
+        candidate.relevance += 5
         return explanation_template.format(", ".join(candidate.ghissue_refs))
     return None
 
@@ -134,7 +134,7 @@ def apply_rule_references_jira_issue(
     explanation_template = "The commit message refers to the following Jira issues: {}"
 
     if len(candidate.jira_refs) > 0:
-        candidate.weight += 5
+        candidate.relevance += 5
         return explanation_template.format(", ".join(candidate.jira_refs))
 
     return None
@@ -183,7 +183,7 @@ def apply_rule_adv_keywords_in_msg(
     )
 
     if len(matching_keywords) > 0:
-        candidate.weight += 3
+        candidate.relevance += 3
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -231,7 +231,7 @@ def apply_rule_security_keyword_in_msg(
     )
 
     if len(matching_keywords) > 0:
-        candidate.weight += 8
+        candidate.relevance += 8
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -276,7 +276,7 @@ def apply_rule_commit_mentioned_in_adv(
     commit_references = extract_referred_to_by_nvd(candidate, advisory_record)
 
     if len(commit_references) > 0:
-        candidate.weight += 9
+        candidate.relevance += 9
         return explanation_template.format(", ".join(commit_references))
 
     return None
@@ -290,7 +290,7 @@ def apply_rule_commit_mentioned_in_reference(
     count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
 
     if count > 0:
-        candidate.weight += 5
+        candidate.relevance += 5
         return explanation_template
 
     return None
@@ -308,7 +308,7 @@ def apply_rule_vuln_mentioned_in_linked_issue(
             continue
 
         if advisory_record.vulnerability_id in page_content:
-            candidate.weight += 10
+            candidate.relevance += 10
             return explanation_template.format(ref, advisory_record.vulnerability_id)
 
     return None
@@ -330,7 +330,7 @@ def apply_rule_security_keyword_in_linked_issue(
             [kw for kw in SEC_KEYWORDS if kw in page_content.lower()]
         )
         if len(matching_keywords) > 0:
-            candidate.weight += 8
+            candidate.relevance += 8
             return explanation_template.format(ref, ", ".join(matching_keywords))
 
     return None
@@ -348,7 +348,7 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
         if i in j
     ]
     if len(matches) > 0:
-        candidate.weight += 8
+        candidate.relevance += 8
         ticket_ids = [id for (id, _) in matches]
         return explanation_template.format(", ".join(ticket_ids))
 
@@ -366,6 +366,10 @@ def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) 
         return explanation_template.format(candidate.hunk_count)
 
     return None
+
+
+def set_commit_relevance(candidate: Commit, relevance: int) -> None:
+    candidate.set_relevance(relevance)
 
 
 RULES_REGISTRY = {

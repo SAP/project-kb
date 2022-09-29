@@ -196,39 +196,3 @@ def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
         similarities["damerau-levenshtein"] / damerau_levenshtein_max
     )
     return similarities
-
-
-# def fetch_candidate_references(commit: Commit) -> Commit:
-#     # FIXME: this is very ad-hoc for GH issue/PR pages
-#     for ref, page_content in commit.ghissue_refs.items():
-#         # If we already have the content from the other rule, skip
-#         if page_content:
-#             break
-#         else:
-#             # /issues/ auto redirects on /pull/ if issue does not exist
-#             url = commit.repository + "/issues/" + ref.lstrip("#")
-#             raw_page_content = fetch_url(url, False)
-#             if not raw_page_content:
-#                 return commit
-#             # soup = BeautifulSoup(raw_page_content, "html.parser")
-#             content = ""
-#             for comment in raw_page_content.find_all(class_="comment-body"):
-#                 content += comment.get_text().replace("\n", "")
-
-#             if len(content) > 0:
-#                 commit.ghissue_refs[ref] = content
-
-#     # TODO: also treat JIRA pages
-#     # TODO: cache BS extracted text (it takes some time...)
-#     return commit
-
-
-if __name__ == "__main__":
-    from git.git import Git
-    from datamodel.commit import make_from_raw_commit
-
-    repo = Git("https://github.com/apache/maven-shared-utils")
-    raw = repo.get_commit("336594396f2e9be8a572100e30a611f8123a837d")
-    repo.clone()
-    commit = make_from_raw_commit(raw)
-    print("CVE-00-00" in commit.cve_refs)
