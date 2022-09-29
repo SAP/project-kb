@@ -19,6 +19,7 @@ def test_proprocess_commit(repository):
     raw_commit = repo.get_commit("93f378809cc73c65c1d689a0e32ec440c52e7ce2")
 
     commit = make_from_raw_commit(raw_commit)
+    print(commit)
 
     assert commit.message.startswith(
         "Merge pull request #480 from apache/WW-5117-reorders-stack [WW-5117]"
@@ -42,3 +43,7 @@ def test_proprocess_commit_set(repository):
         preprocessed_commits.append(make_from_raw_commit(raw_commit))
 
     assert len(preprocessed_commits) == len(commit_set)
+
+
+def test_commit_ordering(repository):
+    print("SIMOLA")

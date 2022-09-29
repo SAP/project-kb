@@ -14,8 +14,10 @@ CREATE TABLE public.commits (
 	diff varchar[] NULL,
 	changed_files varchar[] NULL,
 	message_reference_content varchar[] NULL,
-	jira_refs varchar[] NULL,
-	ghissue_refs varchar[] NULL,
+	jira_refs_id varchar[] NULL,
+	jira_refs_content varchar[] NULL,
+	ghissue_refs_id varchar[] NULL,
+	ghissue_refs_content varchar[] NULL,
 	cve_refs varchar[] NULL,
 	tags varchar[] NULL,
 	CONSTRAINT commits_pkey PRIMARY KEY (commit_id, repository)

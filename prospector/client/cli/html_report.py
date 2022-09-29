@@ -18,9 +18,9 @@ def report_as_html(
     statistics=None,
 ):
     annotations_count = {}
-    annotated_commit: Commit
-    for annotated_commit in results:
-        for annotation in annotated_commit.annotations.keys():
+    # annotated_commit: Commit
+    for commit in results:
+        for annotation in commit.annotations.keys():
             annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
 
     _logger.info("Writing results to " + filename)

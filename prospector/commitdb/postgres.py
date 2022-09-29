@@ -2,13 +2,16 @@
 This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
+import re
+import traceback
+from typing import List
 import psycopg2
 import psycopg2.sql
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor
 
 import log.util
-from datamodel.commit import Commit
+from datamodel.commit import Commit, parse_commit
 
 from . import CommitDB
 
@@ -50,24 +53,38 @@ class PostgresCommitDB(CommitDB):
 
                     result = cur.fetchall()
                     if len(result):
-                        # Workaround for unmarshaling hunks, dict type refs
-                        lis = []
-                        for r in result[0]["hunks"]:
-                            a, b = r.strip("()").split(",")
-                            lis.append((int(a), int(b)))
-                        result[0]["hunks"] = lis
-                        result[0]["jira_refs"] = dict.fromkeys(
-                            result[0]["jira_refs"], ""
-                        )
-                        result[0]["ghissue_refs"] = dict.fromkeys(
-                            result[0]["ghissue_refs"], ""
-                        )
-                        result[0]["cve_refs"] = dict.fromkeys(result[0]["cve_refs"], "")
-                        parsed_commit = Commit.parse_obj(result[0])
-                        data.append(parsed_commit)
-                    else:
-                        data.append(None)
+                        data.append(parse_commit(result[0]))
+                    # if not len(result):
+                    #     # Workaround for unmarshaling hunks, dict type refs
+                    #     hunks = [
+                    #         int(x)
+                    #         for x in re.findall("[0-9]+", "".join(result[0]["hunks"]))
+                    #     ]
+                    #     # They are always pairs so no problem
+                    #     result[0]["hunks"] = list(zip(hunks, hunks[2:]))
+
+                    #     result[0]["jira_refs_id"] = dict(
+                    #         zip(
+                    #             result[0]["jira_refs_id"],
+                    #             result[0]["jira_refs_content"],
+                    #         )
+                    #     )
+                    #     result[0]["ghissue_refs_id"] = dict(
+                    #         zip(
+                    #             result[0]["ghissue_refs_id"],
+                    #             result[0]["ghissue_refs_content"],
+                    #         )
+                    #     )
+                    #     result[0]["cve_refs"] = list(result[0]["cve_refs"])
+                    #     # result[0]["cve_refs"] = dict.fromkeys(result[0]["cve_refs"], "")
+                    #     parsed_commit = Commit.parse_obj(result[0])
+
+                    #     data.append(parsed_commit)
+                    # else:
+                    #     data.append(parse_commit(result[0]))
+                    #    data.append(None)
             else:
+                raise Exception("WTF is wrong here")
                 cur.execute(
                     "SELECT * FROM commits WHERE repository = %s",
                     (repository,),
@@ -110,11 +127,13 @@ class PostgresCommitDB(CommitDB):
                     diff,
                     changed_files,
                     message_reference_content,
-                    jira_refs,
-                    ghissue_refs,
+                    jira_refs_id,
+                    jira_refs_content,
+                    ghissue_refs_id,
+                    ghissue_refs_content,
                     cve_refs,
                     tags)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET (
                         timestamp,
                         hunks,
@@ -123,8 +142,10 @@ class PostgresCommitDB(CommitDB):
                         diff,
                         changed_files,
                         message_reference_content,
-                        jira_refs,
-                        ghissue_refs,
+                        jira_refs_id,
+                        jira_refs_content,
+                        ghissue_refs_id,
+                        ghissue_refs_content,
                         cve_refs,
                         tags) = (
                             EXCLUDED.timestamp,
@@ -134,8 +155,10 @@ class PostgresCommitDB(CommitDB):
                             EXCLUDED.diff,
                             EXCLUDED.changed_files,
                             EXCLUDED.message_reference_content,
-                            EXCLUDED.jira_refs,
-                            EXCLUDED.ghissue_refs,
+                            EXCLUDED.jira_refs_id,
+                            EXCLUDED.jira_refs_content,
+                            EXCLUDED.ghissue_refs_id,
+                            EXCLUDED.ghissue_refs_content,
                             EXCLUDED.cve_refs,
                             EXCLUDED.tags)""",
                 (
@@ -149,8 +172,10 @@ class PostgresCommitDB(CommitDB):
                     commit_obj.changed_files,
                     commit_obj.message_reference_content,
                     list(commit_obj.jira_refs.keys()),
+                    list(commit_obj.jira_refs.values()),
                     list(commit_obj.ghissue_refs.keys()),
-                    list(commit_obj.cve_refs.keys()),
+                    list(commit_obj.ghissue_refs.values()),
+                    commit_obj.cve_refs,
                     commit_obj.tags,
                 ),
             )

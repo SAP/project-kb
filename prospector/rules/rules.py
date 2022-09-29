@@ -1,15 +1,16 @@
 from typing import Dict, List
+from unicodedata import name
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from stats.execution import Counter, execution_statistics
 
-from .helpers import (
+from rules.helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
-    fetch_candidate_references,
 )
+
 
 SEC_KEYWORDS = [
     "vuln",
@@ -107,6 +108,7 @@ def apply_rule_references_vuln_id(
 
     references_vuln_id = extract_references_vuln_id(candidate, advisory_record)
     if references_vuln_id:
+        candidate.weight += 10
         return explanation_template.format(advisory_record.vulnerability_id)
     return None
 
@@ -120,7 +122,8 @@ def apply_rule_references_ghissue(
     )
 
     if len(candidate.ghissue_refs) > 0:
-        return explanation_template.format(str(candidate.ghissue_refs))
+        candidate.weight += 5
+        return explanation_template.format(", ".join(candidate.ghissue_refs))
     return None
 
 
@@ -131,7 +134,9 @@ def apply_rule_references_jira_issue(
     explanation_template = "The commit message refers to the following Jira issues: {}"
 
     if len(candidate.jira_refs) > 0:
+        candidate.weight += 5
         return explanation_template.format(", ".join(candidate.jira_refs))
+
     return None
 
 
@@ -178,6 +183,7 @@ def apply_rule_adv_keywords_in_msg(
     )
 
     if len(matching_keywords) > 0:
+        candidate.weight += 3
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -225,6 +231,7 @@ def apply_rule_security_keyword_in_msg(
     )
 
     if len(matching_keywords) > 0:
+        candidate.weight += 8
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -248,7 +255,6 @@ def apply_rule_adv_keywords_in_paths(
             if token in p
         ]
     )
-
     if len(matches) > 0:
         explained_matches = []
 
@@ -270,6 +276,7 @@ def apply_rule_commit_mentioned_in_adv(
     commit_references = extract_referred_to_by_nvd(candidate, advisory_record)
 
     if len(commit_references) > 0:
+        candidate.weight += 9
         return explanation_template.format(", ".join(commit_references))
 
     return None
@@ -283,6 +290,7 @@ def apply_rule_commit_mentioned_in_reference(
     count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
 
     if count > 0:
+        candidate.weight += 5
         return explanation_template
 
     return None
@@ -295,13 +303,12 @@ def apply_rule_vuln_mentioned_in_linked_issue(
         "The issue (or pull request) {} mentions the vulnerability id {}"
     )
 
-    candidate = fetch_candidate_references(candidate)
-
     for ref, page_content in candidate.ghissue_refs.items():
-        if page_content is None:
+        if not page_content:
             continue
 
         if advisory_record.vulnerability_id in page_content:
+            candidate.weight += 10
             return explanation_template.format(ref, advisory_record.vulnerability_id)
 
     return None
@@ -314,16 +321,16 @@ def apply_rule_security_keyword_in_linked_issue(
         "The issue (or pull request) {} contains security-related terms: {}"
     )
 
-    candidate = fetch_candidate_references(candidate)
-
     for ref, page_content in candidate.ghissue_refs.items():
-        if page_content is None:
+
+        if not page_content:
             continue
 
         matching_keywords = set(
             [kw for kw in SEC_KEYWORDS if kw in page_content.lower()]
         )
         if len(matching_keywords) > 0:
+            candidate.weight += 8
             return explanation_template.format(ref, ", ".join(matching_keywords))
 
     return None
@@ -341,6 +348,7 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
         if i in j
     ]
     if len(matches) > 0:
+        candidate.weight += 8
         ticket_ids = [id for (id, _) in matches]
         return explanation_template.format(", ".join(ticket_ids))
 
@@ -376,3 +384,19 @@ RULES_REGISTRY = {
     "JIRA_ISSUE_REF_IN_COMMIT_MSG_AND_ADVISORY": apply_rule_jira_issue_in_commit_msg_and_advisory,
     "SMALL_COMMIT": apply_rule_small_commit,
 }
+
+if __name__ == "__main__":
+    from datamodel.advisory import AdvisoryRecord
+    from datamodel.commit import make_from_raw_commit
+    from git.git import Git
+
+    repo = Git("https://github.com/apache/maven-shared-utils")
+    raw = repo.get_commit("336594396f2e9be8a572100e30a611f8123a837d")
+    repo.clone()
+    commit = make_from_raw_commit(raw)
+
+    record = AdvisoryRecord(
+        vulnerability_id="CVE-2022-29599",
+        repository_url="https://github.com/apache/maven-shared-utils",
+    )
+    apply_rules([commit], record)

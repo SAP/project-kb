@@ -1,5 +1,7 @@
 import re
 from typing import Dict, List, Tuple
+from util.http import fetch_url
+
 
 from datamodel.constants import RELEVANT_EXTENSIONS
 
@@ -74,33 +76,57 @@ def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]
     return paths
 
 
-def extract_ghissue_references(text: str) -> Dict[str, str]:
+def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     """
-    Extract identifiers that are (=look like) references to GH issues
+    Extract identifiers that look like references to GH issues, then extract their content
     """
-    issue_references = dict()
-    issue_references.update(
-        dict.fromkeys([result.group(0) for result in re.finditer(r"#\d+", text)], "")
-    )
-    issue_references.update(
-        dict.fromkeys([result.group(0) for result in re.finditer(r"gh-\d+", text)], "")
-    )
-    return issue_references
+    refs = dict()
+    for result in re.finditer(r"#\d+|gh-\d+", text):
+        id = result.group().lstrip("#")
+        url = f"{repository}/issues/{id}"
+        content = fetch_url(url, False)
+        if not content:
+            return {"": ""}
+        refs[id] = "".join(
+            [
+                block.get_text().replace("\n", "")
+                for block in content.find_all(
+                    attrs={"class": ["comment-body", "markdown-title"]}
+                )
+            ]
+        )
+    return refs
 
 
-def extract_jira_references(text: str) -> Dict[str, str]:
+def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     """
     Extract identifiers that point to Jira tickets
     """
+    refs = dict()
+    for result in re.finditer(r"[A-Z]+-\d+", text):
+        id = result.group()
+        url = f"https://issues.apache.org/jira/browse/{id}"
+        content = fetch_url(url, False)
+        if not content:
+            return {"": ""}
+        refs[id] = "".join(
+            [
+                block.get_text().replace("\n", "")
+                for block in content.find_all(
+                    # Find correct elemenets
+                    attrs={"id": ["details-module", "descriptionmodule"]}
+                )
+            ]
+        )
+    return refs
+    # print(id + ":" + refs[id])
     return dict.fromkeys(
         [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", text)], ""
     )
 
 
-def extract_cve_references(text: str) -> Dict[str, str]:
+def extract_cve_references(repository: str, text: str) -> List[str]:
     """
     Extract CVE identifiers
     """
-    return dict.fromkeys(
-        [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)], ""
-    )
+    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]

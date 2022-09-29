@@ -14,7 +14,6 @@ from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
 from log.util import init_local_logger
-from ranking import rank
 from rules import apply_rules
 
 # from util.profile import profile
@@ -57,7 +56,6 @@ def prospector(  # noqa: C901
     git_cache: str = GIT_CACHE,
     limit_candidates: int = MAX_CANDIDATES,
     rules: "list[str]" = ["ALL"],
-    model_name: str = "",
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
     _logger.debug("begin main commit and CVE processing")
@@ -122,21 +120,16 @@ def prospector(  # noqa: C901
                 # Use the preprocessed commits already stored in the backend
                 # and only process those that are missing.
                 r = requests.get(
-                    backend_address
-                    + "/commits/"
-                    + repository_url
-                    + "?commit_id="
-                    + ",".join(candidates)
+                    f"{backend_address}/commits/{repository_url}?commit_id={','.join(candidates)}"
                 )
-                _logger.debug("The backend returned status '%d'" % r.status_code)
+
+                _logger.debug(f"The backend returned status {r.status_code}")
                 if r.status_code != 200:
-                    _logger.error("This is weird...Continuing anyway.")
+                    _logger.info("Preprocessed commits not found in the backend")
                     missing = candidates
                 else:
                     raw_commit_data = r.json()
-                    _logger.info(
-                        "Found {} preprocessed commits".format(len(raw_commit_data))
-                    )
+                    _logger.info(f"Found {len(raw_commit_data)} preprocessed commits")
             except requests.exceptions.ConnectionError:
                 print(
                     "Could not reach backend, is it running? The result of commit pre-processing will not be saved. (Check the logs for details)"
@@ -230,7 +223,7 @@ def prospector(  # noqa: C901
                 preprocessed_commits, advisory_record, rules=rules
             )
 
-            annotated_candidates = rank(annotated_candidates, model_name=model_name)
+            annotated_candidates = sorted(annotated_candidates, reverse=True)
 
     return annotated_candidates, advisory_record
 

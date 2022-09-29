@@ -9,7 +9,7 @@ from commitdb.postgres import PostgresCommitDB, parse_connect_string
 from datamodel.commit import Commit
 
 
-@pytest.fixture
+# @pytest.fixture
 def setupdb():
     db = PostgresCommitDB()
     db.connect(DB_CONNECT_STRING)
@@ -54,15 +54,19 @@ def test_simple_write(setupdb):
     db.save(commit_obj)
 
 
-def test_simple_read(setupdb):
-    db = setupdb
+def test_lookup():
+    db = PostgresCommitDB()
     db.connect(DB_CONNECT_STRING)
-    result = db.lookup("https://blabla.com/zxyufd/fdafa", "1234")
+    result = db.lookup(
+        "https://github.com/apache/maven-shared-utils",
+        "f751e614c09df8de1a080dc1153931f3f68991c9",
+    )
+    print([d.dict() for d in result])
     assert result is not None
 
 
 def test_upsert(setupdb):
-    db = setupdb
+    db = PostgresCommitDB()
     db.connect(DB_CONNECT_STRING)
     commit_obj = Commit(
         commit_id="42423b2423",
@@ -90,3 +94,7 @@ def test_parse_connect_string():
     assert parsed_connect_string["host"] == "localhost"
     assert parsed_connect_string["user"] == "postgres"
     assert parsed_connect_string["port"] == "5432"
+
+
+if __name__ == "__main__":
+    test_lookup()

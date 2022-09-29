@@ -2,6 +2,7 @@ from typing import Dict, Set
 
 import pandas
 from bs4 import BeautifulSoup
+import requests
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -20,7 +21,7 @@ DAYS_BEFORE = 180
 DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
-
+# AttributeError: 'tuple' object has no attribute 'cve_refs'
 def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
     return advisory_record.vulnerability_id in commit.cve_refs
 
@@ -197,25 +198,37 @@ def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
     return similarities
 
 
-def fetch_candidate_references(commit: Commit) -> Commit:
-    # FIXME: this is very ad-hoc for GH issue/PR pages
+# def fetch_candidate_references(commit: Commit) -> Commit:
+#     # FIXME: this is very ad-hoc for GH issue/PR pages
+#     for ref, page_content in commit.ghissue_refs.items():
+#         # If we already have the content from the other rule, skip
+#         if page_content:
+#             break
+#         else:
+#             # /issues/ auto redirects on /pull/ if issue does not exist
+#             url = commit.repository + "/issues/" + ref.lstrip("#")
+#             raw_page_content = fetch_url(url, False)
+#             if not raw_page_content:
+#                 return commit
+#             # soup = BeautifulSoup(raw_page_content, "html.parser")
+#             content = ""
+#             for comment in raw_page_content.find_all(class_="comment-body"):
+#                 content += comment.get_text().replace("\n", "")
 
-    for ref, page_content in commit.ghissue_refs.items():
-        if page_content is None:
-            url = commit.repository + "/issues/" + ref.lstrip("#")
-            raw_page_content = fetch_url(url)
+#             if len(content) > 0:
+#                 commit.ghissue_refs[ref] = content
 
-            soup = BeautifulSoup(raw_page_content, "html.parser")
-            content = ""
-            for comment_block in soup.find_all(
-                True, class_=["markdown-body", "markdown-title"]
-            ):
-                content += comment_block.text
+#     # TODO: also treat JIRA pages
+#     # TODO: cache BS extracted text (it takes some time...)
+#     return commit
 
-            if len(content) > 0:
-                commit.ghissue_refs[ref] = content
 
-    # TODO: also treat JIRA pages
-    # TODO: cache BS extracted text (it takes some time...)
+if __name__ == "__main__":
+    from git.git import Git
+    from datamodel.commit import make_from_raw_commit
 
-    return commit
+    repo = Git("https://github.com/apache/maven-shared-utils")
+    raw = repo.get_commit("336594396f2e9be8a572100e30a611f8123a837d")
+    repo.clone()
+    commit = make_from_raw_commit(raw)
+    print("CVE-00-00" in commit.cve_refs)
