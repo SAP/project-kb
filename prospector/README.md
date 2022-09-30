@@ -6,8 +6,6 @@ Prospector is a tool to reduce the effort needed to find security fixes for
 It takes a vulnerability description (in natural language) in input and
 produces in output a ranked list of commits, in decreasing order of relevance.
 
-<img src="docs/img/prospector-assuremoss-arch.png"/>
-
 **WARNING** Please keep in mind that Prospector is a research prototype, currently
 under development: feel free to try it out, but do expect some rough edges.
 
