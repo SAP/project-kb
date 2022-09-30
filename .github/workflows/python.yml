@@ -5,9 +5,9 @@ name: Python
 
 on:
   push:
-    branches: [prospector-assuremoss]
+    branches: [test-merge-inv]
   pull_request:
-    branches: [prospector-assuremoss]
+    branches: [test-merge-inv]
 
 jobs:
   build:
