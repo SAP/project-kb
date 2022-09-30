@@ -18,7 +18,7 @@ def report_as_html(
     statistics=None,
 ):
     annotations_count = {}
-    # annotated_commit: Commit
+    annotation: Commit
     for commit in results:
         for annotation in commit.annotations.keys():
             annotations_count[annotation] = annotations_count.get(annotation, 0) + 1

@@ -121,6 +121,13 @@ def parseArguments(args):
         help="Format of the report (options: console, json, html)",
     )
 
+    parser.add_argument(
+        "--report-file",
+        default="prospector-report.html",
+        dest="report_filename",
+        help="File where to save the report",
+    )
+
     parser.add_argument("-c", "--conf", help="specify configuration file")
 
     parser.add_argument(
@@ -195,7 +202,7 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
 
 def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
-        args = parseArguments(argv)
+        args = parseArguments(argv)  # print(args)
         configuration = getConfiguration(args.conf)
 
         if args.log_level:
@@ -317,9 +324,13 @@ def main(argv):  # noqa: C901
         if report == "console":
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
         elif report == "json":
-            report_file = report_as_json(results, advisory_record)
+            report_file = report_as_json(
+                results, advisory_record, str(args.report_filename)
+            )
         elif report == "html":
-            report_file = report_as_html(results, advisory_record)
+            report_file = report_as_html(
+                results, advisory_record, str(args.report_filename)
+            )
         else:
             _logger.warning("Invalid report type specified, using 'console'")
             console.set_status(MessageStatus.WARNING)
