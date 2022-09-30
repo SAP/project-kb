@@ -3,9 +3,7 @@ from typing import List, Tuple
 from datamodel.commit import Commit
 
 
-def filter_commits(
-    candidates: "list[Commit]",
-) -> Tuple[List[Commit], List[Commit]]:
+def filter_commits(candidates: List[Commit]) -> Tuple[List[Commit], List[Commit]]:
     """
     Takes in input a set of candidate (datamodel) commits (coming from the commitdb)
     and returns in output a filtered list obtained by discarding the irrelevant
@@ -19,12 +17,14 @@ def filter_commits(
 
     # TODO: maybe this could become a dictionary, with keys indicating "reasons" for rejection
     # which would enable a more useful output
-    rejected = []
 
-    for c in candidates:
-        if len(c.hunks) > MAX_HUNKS:
+    rejected = []
+    for c in list(candidates):
+        if c.hunk_count > MAX_HUNKS:
+            candidates.remove(c)
             rejected.append(c)
         if len(c.changed_files) > MAX_FILES:
+            candidates.remove(c)
             rejected.append(c)
 
-    return [c for c in candidates if c not in rejected], [r.commit_id for r in rejected]
+    return candidates, rejected

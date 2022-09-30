@@ -45,9 +45,8 @@ class Commit(BaseModel):
     def __eq__(self, other) -> bool:
         return self.relevance == other.relevance
 
-    def set_relevance(self, relevance: int):
-        if self.relevance < relevance:  # Only increase relevance
-            self.relevance = relevance
+    def update_relevance(self, relevance: int):
+        self.relevance += relevance
 
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
@@ -59,7 +58,7 @@ class Commit(BaseModel):
         print(out)
 
 
-def rank(candidates: List[Commit]) -> List[Commit]:
+def apply_ranking(candidates: List[Commit]) -> List[Commit]:
     """
     This function is responsible for ranking the list of commits
     according to their relevance to the advisory record.

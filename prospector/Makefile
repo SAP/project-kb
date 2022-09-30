@@ -48,7 +48,9 @@ docker-clean:
 	@echo "$(DONE) Cleaned residue"
 
 run: client/cli/main.py
-	python client/cli/main.py CVE-2022-29599 --repository https://github.com/apache/maven-shared-utils --use-nvd --tag-interval maven-shared-utils-3.2.0:maven-shared-utils-3.3.3
+#python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd --tag-interval FILEUPLOAD_1_3_RC1:FILEUPLOAD_1_3_2_RC1
+	python client/cli/main.py CVE-2022-29599 --repository https://github.com/apache/maven-shared-utils --use-nvd
+#--tag-interval maven-shared-utils-0.1:maven-shared-utils-3.3.4
 
 select-run:
 	python client/cli/main.py $(cve) --repository $(repository) --use-nvd
@@ -56,4 +58,5 @@ select-run:
 clean:
 	rm prospector-report.html
 	rm -f all.log* error.log*
+	rm -rf $(GIT_CACHE)/*
 	rm -rf __pycache__

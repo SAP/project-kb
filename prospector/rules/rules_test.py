@@ -103,8 +103,6 @@ def test_apply_rules_selected(
         ],
     )
 
-    print(annotated_candidates[0].annotations)
-
     assert len(annotated_candidates[0].annotations) > 0
     assert "REF_ADV_VULN_ID" in annotated_candidates[0].annotations
     assert "REF_GH_ISSUE" in annotated_candidates[0].annotations

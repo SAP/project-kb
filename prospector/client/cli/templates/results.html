@@ -22,34 +22,42 @@
                 </div>
                 <div id="col accordion">
                     {% for annotated_commit in candidates %}
+                    {% if annotated_commit.relevance > 10 %}
                     <div class="card commit d-flex"
-                        data-annotations="{{ annotated_commit.annotations | tojson | forceescape }}">
+                        data-annotations="{{ annotated_commit.annotations | tojson | forceescape }}"
+                        data-relevances="{{annotated_commit.relevance}}">
+                        {% else %}
+                        <div class="card commit d-none"
+                            data-annotations="{{ annotated_commit.annotations | tojson | forceescape }}"
+                            data-relevances="{{annotated_commit.relevance}}">
+                            {% endif %}
 
-                        <div class="card-header" id="candidateheader{{ loop.index }}">
-                            {% include "card/commit_header.html" %}
-                        </div>
+                            <div class="card-header" id="candidateheader{{ loop.index }}">
+                                {% include "card/commit_header.html" %}
+                            </div>
 
 
 
-                        <div id="candidatebody-{{ loop.index }}" class="collapse show"
-                            aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
-                            <div class="card-body">
-                                {% include "card/commit_title_block.html" %}
-                                {% include "card/annotations_block.html" %}
-                                {% include "card/message_block.html" %}
-                                {% include "card/relevant_paths_block.html" %}
-                                {% include "card/changed_paths_block.html" %}
-                                {% include "card/mentioned_cves_block.html" %}
-                                {% include "card/pages_linked_from_advisories_block.html" %}
+
+                            <div id="candidatebody-{{ loop.index }}" class="collapse show"
+                                aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
+                                <div class="card-body">
+                                    {% include "card/commit_title_block.html" %}
+                                    {% include "card/annotations_block.html" %}
+                                    {% include "card/message_block.html" %}
+                                    {% include "card/relevant_paths_block.html" %}
+                                    {% include "card/changed_paths_block.html" %}
+                                    {% include "card/mentioned_cves_block.html" %}
+                                    {% include "card/pages_linked_from_advisories_block.html" %}
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% include "filtering_scripts.html" %}
-{% include "collapse_all_scripts.html" %}
-{% endblock %}
+    {% include "filtering_scripts.html" %}
+    {% include "collapse_all_scripts.html" %}
+    {% endblock %}

@@ -310,9 +310,7 @@ def main(argv):  # noqa: C901
         limit_candidates=max_candidates,
         rules=active_rules,
     )
-    for r in results:
-        if "JIRA" in r.annotations:
-            print(r.annotations)
+    # print(advisory_record)
 
     with ConsoleWriter("Generating report") as console:
         report_file = None

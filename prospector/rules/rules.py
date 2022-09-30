@@ -98,43 +98,40 @@ def get_enabled_rules(rules: List) -> Dict:
 
 # TODO change signature to accept "Commit", not "CommitWithFeatures"
 # in all apply_rule_* funcs
+# What do you mean? I don't understand
 def apply_rule_references_vuln_id(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
-
+    RELEVANCE = 10
     explanation_template = (
         "The commit message mentions the vulnerability identifier '{}'"
     )
 
     references_vuln_id = extract_references_vuln_id(candidate, advisory_record)
     if references_vuln_id:
-        candidate.relevance += 10
+        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(advisory_record.vulnerability_id)
     return None
 
 
-def apply_rule_references_ghissue(
-    candidate: Commit, advisory_record: AdvisoryRecord
-) -> str:
-
+def apply_rule_references_ghissue(candidate: Commit, _) -> str:
+    RELEVANCE = 3
     explanation_template = (
         "The commit message refers to the following GitHub issues: '{}'"
     )
 
-    if len(candidate.ghissue_refs) > 0:
-        candidate.relevance += 5
+    if len(candidate.ghissue_refs):
+        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(candidate.ghissue_refs))
     return None
 
 
-def apply_rule_references_jira_issue(
-    candidate: Commit, advisory_record: AdvisoryRecord
-) -> str:
-
+def apply_rule_references_jira_issue(candidate: Commit, _) -> str:
+    RELEVANCE = 3
     explanation_template = "The commit message refers to the following Jira issues: {}"
 
-    if len(candidate.jira_refs) > 0:
-        candidate.relevance += 5
+    if len(candidate.jira_refs):
+        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(candidate.jira_refs))
 
     return None
@@ -147,9 +144,7 @@ def apply_rule_changes_relevant_path(
     This rule matches commits that touch some file that is mentioned
     in the text of the advisory.
     """
-
-    relevant_paths = []
-
+    RELEVANCE = 5
     explanation_template = "This commit touches the following relevant paths: {}"
 
     relevant_paths = set(
@@ -161,9 +156,9 @@ def apply_rule_changes_relevant_path(
         ]
     )
 
-    if len(relevant_paths) > 0:
-        explanation = explanation_template.format(", ".join(relevant_paths))
-        return explanation
+    if len(relevant_paths):
+        candidate.update_relevance(RELEVANCE)
+        return explanation_template.format(", ".join(relevant_paths))
 
     return None
 
@@ -175,15 +170,15 @@ def apply_rule_adv_keywords_in_msg(
     This rule matches commits whose commit message contain some of the special "code tokens"
     extracted from the advisory.
     """
-
+    RELEVANCE = 5
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
         [kw for kw in advisory_record.keywords if kw in candidate.message]
     )
 
-    if len(matching_keywords) > 0:
-        candidate.relevance += 3
+    if len(matching_keywords):
+        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -211,27 +206,25 @@ def apply_rule_adv_keywords_in_diff(
         ]
     )
 
-    if len(matching_keywords) > 0:
+    if len(matching_keywords):
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
 
 
-def apply_rule_security_keyword_in_msg(
-    candidate: Commit, advisory_record: AdvisoryRecord
-) -> str:
+def apply_rule_security_keyword_in_msg(candidate: Commit, _) -> str:
     """
     This rule matches commits whose message contains one or more "security-related" keywords
     """
-
+    RELEVANCE = 5
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
         [kw for kw in SEC_KEYWORDS if kw in candidate.message.lower()]
     )
 
-    if len(matching_keywords) > 0:
-        candidate.relevance += 8
+    if len(matching_keywords):
+        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -244,7 +237,7 @@ def apply_rule_adv_keywords_in_paths(
     This rule matches commits that modify paths that correspond to a code token extracted
     from the advisory.
     """
-
+    RELEVANCE = 3
     explanation_template = "The commit modifies the following paths: {}"
 
     matches = set(
@@ -255,7 +248,8 @@ def apply_rule_adv_keywords_in_paths(
             if token in p
         ]
     )
-    if len(matches) > 0:
+    if len(matches):
+        candidate.update_relevance(RELEVANCE)
         explained_matches = []
 
         for m in matches:
@@ -272,25 +266,27 @@ def apply_rule_commit_mentioned_in_adv(
     explanation_template = (
         "One or more links to this commit appear in the advisory page: ({})"
     )
-
+    RELEVANCE = 10
     commit_references = extract_referred_to_by_nvd(candidate, advisory_record)
 
-    if len(commit_references) > 0:
-        candidate.relevance += 9
+    if len(commit_references):
+        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(commit_references))
 
     return None
 
 
+# Is this working?
 def apply_rule_commit_mentioned_in_reference(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
+    RELEVANCE = 8
     explanation_template = "This commit is mentioned in one or more referenced pages"
 
     count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
 
-    if count > 0:
-        candidate.relevance += 5
+    if count:
+        candidate.update_relevance(RELEVANCE)
         return explanation_template
 
     return None
@@ -299,6 +295,8 @@ def apply_rule_commit_mentioned_in_reference(
 def apply_rule_vuln_mentioned_in_linked_issue(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
+    RELEVANCE = 8
+
     explanation_template = (
         "The issue (or pull request) {} mentions the vulnerability id {}"
     )
@@ -308,15 +306,14 @@ def apply_rule_vuln_mentioned_in_linked_issue(
             continue
 
         if advisory_record.vulnerability_id in page_content:
-            candidate.relevance += 10
+            candidate.update_relevance(RELEVANCE)
             return explanation_template.format(ref, advisory_record.vulnerability_id)
 
     return None
 
 
-def apply_rule_security_keyword_in_linked_issue(
-    candidate: Commit, advisory_record: AdvisoryRecord
-) -> str:
+def apply_rule_security_keyword_in_linked_issue(candidate: Commit, _) -> str:
+    RELEVANCE = 5
     explanation_template = (
         "The issue (or pull request) {} contains security-related terms: {}"
     )
@@ -329,8 +326,8 @@ def apply_rule_security_keyword_in_linked_issue(
         matching_keywords = set(
             [kw for kw in SEC_KEYWORDS if kw in page_content.lower()]
         )
-        if len(matching_keywords) > 0:
-            candidate.relevance += 8
+        if len(matching_keywords):
+            candidate.update_relevance(RELEVANCE)
             return explanation_template.format(ref, ", ".join(matching_keywords))
 
     return None
@@ -339,6 +336,7 @@ def apply_rule_security_keyword_in_linked_issue(
 def apply_rule_jira_issue_in_commit_msg_and_advisory(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
+    RELEVANCE = 8
     explanation_template = "The issue(s) {} (mentioned in the commit message) is referenced by the advisory"
 
     matches = [
@@ -347,8 +345,8 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
         for j in advisory_record.references
         if i in j
     ]
-    if len(matches) > 0:
-        candidate.relevance += 8
+    if len(matches):
+        candidate.update_relevance(RELEVANCE)
         ticket_ids = [id for (id, _) in matches]
         return explanation_template.format(", ".join(ticket_ids))
 
@@ -356,20 +354,17 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
 
 
 def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) -> str:
-
+    RELEVANCE = 1
     MAX_HUNKS = 10
     explanation_template = (
         "This commit modifies only {} hunks (groups of contiguous lines of code)"
     )
 
     if candidate.hunk_count <= MAX_HUNKS:
+        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(candidate.hunk_count)
 
     return None
-
-
-def set_commit_relevance(candidate: Commit, relevance: int) -> None:
-    candidate.set_relevance(relevance)
 
 
 RULES_REGISTRY = {

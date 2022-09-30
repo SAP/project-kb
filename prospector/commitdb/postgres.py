@@ -256,6 +256,8 @@ def parse_hunks(raw_hunks: List[str]) -> List[Tuple[int, int]]:
     """
     This function is responsible of extracting the hunks from a commit
     """
-    hunks = [int(x) for x in re.findall("[0-9]+", "".join(raw_hunks))]
-    # They are always pairs so no problem
-    return list(zip(hunks, hunks[2:]))
+    hunks = []
+    for hunk in raw_hunks:
+        a, b = hunk.strip("()").split(",")
+        hunks.append((int(a), int(b)))
+    return hunks

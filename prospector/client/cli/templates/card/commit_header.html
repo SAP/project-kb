@@ -7,7 +7,10 @@
                 <i>(no commit message found)</i>
                 {% endif %}
             </h5>
-            <p style="margin: 10pt 0 0;">
+            <h6 style="margin: 5pt 0 0;" class="mb-0">
+                Relevance: {{ annotated_commit.relevance }}
+            </h6>
+            <p style="margin: 5pt 0 0;">
                 <i class="fas fa-bullhorn"></i>
                 {% for annotation, comment in annotated_commit.annotations.items() | sort %}
                 <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ annotation }}</span>

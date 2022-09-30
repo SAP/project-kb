@@ -9,7 +9,7 @@ from tqdm import tqdm
 import log
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit, make_from_raw_commit, rank
+from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
@@ -179,7 +179,7 @@ def prospector(  # noqa: C901
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
     # -------------------------------------------------------------------------
-    if len(payload) > 0:
+    if len(payload) > 0 and len(missing) > 0:
         with ExecutionTimer(
             core_statistics.sub_collection(name="save preprocessed commits to backend")
         ):
@@ -205,7 +205,7 @@ def prospector(  # noqa: C901
         _logger.warning("No preprocessed commits to send to backend.")
 
     # -------------------------------------------------------------------------
-    # analyze candidates by applying rules and ML predictor
+    # analyze candidates by applying rules
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -219,10 +219,10 @@ def prospector(  # noqa: C901
         console.print(f"Filtering {candidate_count} candidates")
 
         preprocessed_commits, rejected = filter_commits(preprocessed_commits)
-
         if len(rejected) > 0:
             console.print(f"Dropped {len(rejected)} candidates")
-            console.print(f"{rejected}")
+            # Maybe print reasons for rejection?
+            # console.print(f"{rejected}")
 
     with ExecutionTimer(
         core_statistics.sub_collection(name="analyze candidates")
@@ -233,7 +233,7 @@ def prospector(  # noqa: C901
                 preprocessed_commits, advisory_record, rules=rules
             )
 
-            annotated_candidates = rank(annotated_candidates)
+            annotated_candidates = apply_ranking(annotated_candidates)
 
     return annotated_candidates, advisory_record
 

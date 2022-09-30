@@ -7,7 +7,6 @@ testpaths = [
     "client",
     "git",
     "api",
-    "ranking",
     "filtering",
     "stats",
     "util"
