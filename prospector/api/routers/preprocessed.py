@@ -25,7 +25,7 @@ async def get_commits(
     db.connect(DB_CONNECT_STRING)
     # use case: if a particular commit is queried, details should be returned
     data = db.lookup(repository_url, commit_id)
-    # res = []
+
     if not len(data):
         return JSONResponse(status_code=404, content={"message": "Not found"})
 

@@ -238,7 +238,6 @@ class StatisticCollection(dict):
                     icon = '<i class="fas fa-hourglass-half"></i>'
                 else:
                     icon = '<i class="fas fa-info-circle"></i>'
-
                 if (
                     isinstance(child, list)
                     and len(child) > 1

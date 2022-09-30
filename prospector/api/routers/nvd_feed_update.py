@@ -93,7 +93,7 @@ def do_fetch_full(start_from_year=START_FROM_YEAR, quiet=False):
             _logger.error("Could not fetch data for year " + str(y))
 
 
-def do_fetch(what, quiet=False):
+def do_fetch(what, quiet=True):
     """
     the 'what' parameter can be a year or 'recent' or 'modified'
     """

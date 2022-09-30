@@ -1,13 +1,15 @@
 # Prospector
 
+## What is it
 Prospector is a tool to reduce the effort needed to find security fixes for
 *known* vulnerabilities in open source software repositories.
 
 It takes a vulnerability description (in natural language) in input and
 produces in output a ranked list of commits, in decreasing order of relevance.
 
-**WARNING** Please keep in mind that Prospector is a research prototype, currently
-under development: feel free to try it out, but do expect some rough edges.
+**WARNING** Please keep in mind that Prospector is a research prototype,
+currently under development: feel free to try it out, but do expect some rough
+edges.
 
 If you find a bug, please open an issue. If you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
@@ -21,7 +23,11 @@ Prerequisites:
 * pipenv
 * postgresql
 
-The easiest way to set up Prospector is to clone this repository and then run the following commands:
+
+## Setup (for development, testing, and demonstration purposes only!)
+
+The easiest way to set up Prospector is to clone this repository and then run
+the following commands:
 
 ```
 git clone -b prospector-assuremoss https://github.com/sap/project-kb
@@ -127,12 +133,22 @@ To run the tests, run:
 
 Note, that `pytest` requires running instances of the backend and database either in containers or by previous commands.
 
-## Credits
+The approach implemented in patch-finder is described in detail in this
+document: https://arxiv.org/pdf/2103.13375.pdf
 
 This project is inspired by the prototype developed by Daan Hommersom as part of his thesis
 done in partial fulfillment of the requirements for the degree of Master of
 Science in Data Science & Entrepreneurship at the Jheronimus Academy of Data
 Science during a graduation internship at SAP.
+The document can be cited as follows:
 
-The original code developed by Daan Hommersom [can be retrieved
-here](https://github.com/SAP/project-kb/releases/tag/DAAN_HOMMERSOM_THESIS).
+@misc{hommersom2021mapping,
+    title = {Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories},
+    author = {Hommersom, Daan and
+    Sabetta, Antonino and
+    Coppola, Bonaventura and
+    Tamburri, Damian A. },
+    year = {2021},
+    month = {March},
+    url = {https://arxiv.org/pdf/2103.13375.pdf}
+}

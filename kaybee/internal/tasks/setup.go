@@ -100,7 +100,7 @@ func (t *SetupTask) Execute() (success bool) {
 }
 
 func getDefaultConfig() string {
-	box, err := pkger.Open("/kaybee/internal/tasks/data/default_config.yaml")
+	box, err := pkger.Open("/internal/tasks/data/default_config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}

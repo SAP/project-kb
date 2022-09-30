@@ -227,7 +227,6 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection(name="analyze candidates")
     ) as timer:
-
         with ConsoleWriter("Applying rules"):
             annotated_candidates = apply_rules(
                 preprocessed_commits, advisory_record, rules=rules

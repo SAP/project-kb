@@ -42,6 +42,7 @@ prospector/data/nvd.csv
 prospector/cov_html/*
 prospector/client/cli/cov_html/*
 prospector/.coverage.*
+prospector/.coverage
 **/cov_html/*
 .coverage
 prospector/prospector.code-workspace

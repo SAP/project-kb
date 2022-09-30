@@ -279,7 +279,7 @@ class Git:
                 "--ancestry-path",
                 commit_id_from + ".." + commit_id_to,
             ]
-            path = list(list(self._exec.run(cmd, cache=True)))
+            path = list(list(self._exec.run(cmd, cache=True)))  # ???
             if len(path) > 0:
                 path.pop(0)
                 path.reverse()
