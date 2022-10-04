@@ -8,8 +8,7 @@ import os
 import signal
 import sys
 from pathlib import Path
-
-import requests
+from typing import Any, Dict
 
 path_root = os.getcwd()
 if path_root not in sys.path:
@@ -29,11 +28,11 @@ from client.cli.prospector_client import (  # noqa: E402
 )
 from git.git import GIT_CACHE  # noqa: E402
 from stats.execution import execution_statistics  # noqa: E402
+from util.http import ping_backend  # noqa: E402
 
 _logger = log.util.init_local_logger()
 
 DEFAULT_BACKEND = "http://localhost:8000"
-
 # VERSION = '0.1.0'
 # SCRIPT_PATH=os.path.dirname(os.path.realpath(__file__))
 # print(SCRIPT_PATH)
@@ -116,15 +115,22 @@ def parseArguments(args):
     )
 
     parser.add_argument(
+        "--use-backend",
+        default="always",
+        action="store_true",
+        help="Use the backend server",
+    )
+
+    parser.add_argument(
         "--report",
         default="html",
         help="Format of the report (options: console, json, html)",
     )
 
     parser.add_argument(
-        "--report-file",
+        "--report-filename",
         default="prospector-report.html",
-        dest="report_filename",
+        type=str,
         help="File where to save the report",
     )
 
@@ -171,39 +177,24 @@ def getConfiguration(customConfigFile=None):
 
     _logger.info("Loading configuration from " + configFile)
     config.read(configFile)
-    return config
+    return parse_config(config)
 
 
-def ping_backend(server_url: str, verbose: bool = False) -> bool:
-    """Tries to contact backend server
-
-    Args:
-        server_url (str): the URL of the server endpoint
-        verbose (bool, optional): enable verbose output. Defaults to False.
-    """
-
-    if verbose:
-        _logger.info("Contacting server " + server_url)
-
-    try:
-        response = requests.get(server_url)
-        if response.status_code != 200:
-            _logger.error(
-                f"Server replied with an unexpected status: {response.status_code}"
-            )
-            return False
-        else:
-            _logger.info("Server ok!")
-            return True
-    except Exception:
-        _logger.error("Server did not reply", exc_info=True)
-        return False
+def parse_config(configuration: configparser.ConfigParser) -> Dict[str, Any]:
+    """Parse the configuration file and return the options as a dictionary."""
+    options = {}
+    for section in configuration.sections():
+        for option in configuration.options(section):
+            try:
+                options[option] = configuration.getboolean(section, option)
+            except ValueError:
+                options[option] = configuration.get(section, option)
+    return options
 
 
 def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
         args = parseArguments(argv)  # print(args)
-        configuration = getConfiguration(args.conf)
 
         if args.log_level:
             log.config.level = getattr(logging, args.log_level)
@@ -220,20 +211,17 @@ def main(argv):  # noqa: C901
             )
             return False
 
+        configuration = getConfiguration(args.conf)
+
         if configuration is None:
             _logger.error("Invalid configuration, exiting.")
             return False
 
-        report = configuration["global"].getboolean("report")
-        if args.report:
-            report = args.report
+        report = args.report or configuration.get("report")
 
-        if configuration["global"].get("nvd_rest_endpoint"):
-            nvd_rest_endpoint = configuration["global"].get("nvd_rest_endpoint")
+        nvd_rest_endpoint = configuration.get("nvd_rest_endpoint", "")  # default ???
 
-        backend = configuration["global"].get("backend") or DEFAULT_BACKEND
-        if args.backend:
-            backend = args.backend
+        backend = args.backend or configuration.get("backend", DEFAULT_BACKEND)  # ???
 
         if args.ping:
             return ping_backend(backend, log.config.level < logging.INFO)
@@ -245,6 +233,7 @@ def main(argv):  # noqa: C901
 
         filter_extensions = "*." + args.filter_extensions
 
+        # if no backend the filters on the advisory do not work
         use_nvd = False
         if args.vulnerability_id.lower().startswith("cve-"):
             use_nvd = True
@@ -253,16 +242,16 @@ def main(argv):  # noqa: C901
         elif args.no_use_nvd is True:
             use_nvd = False
 
-        fetch_references = configuration["global"].get("fetch_references") or False
-        if args.fetch_references:
-            fetch_references = args.fetch_references
+        fetch_references = args.fetch_references or configuration.get(
+            "fetch_references", False
+        )
 
         tag_interval = args.tag_interval
         version_interval = args.version_interval
         time_limit_before = TIME_LIMIT_BEFORE
         time_limit_after = TIME_LIMIT_AFTER
         max_candidates = args.max_candidates
-        modified_files = args.modified_files.split(",")
+        modified_files = args.modified_files.split(",") if args.modified_files else []
         advisory_keywords = (
             args.advisory_keywords.split(",")
             if args.advisory_keywords is not None
@@ -277,19 +266,12 @@ def main(argv):  # noqa: C901
             # time_limit_before = int(time_limit_before / 5)
             # time_limit_after = int(time_limit_after / 2)
 
-        git_cache = GIT_CACHE
-        if os.environ["GIT_CACHE"]:
-            git_cache = os.environ["GIT_CACHE"]
-        if configuration["global"].get("git_cache"):
-            git_cache = configuration["global"].get("git_cache")
+        git_cache = os.getenv("GIT_CACHE", default=GIT_CACHE)
+
+        git_cache = configuration.get("git_cache", git_cache)
 
         _logger.debug("Using the following configuration:")
-        _logger.pretty_log(
-            {
-                section: dict(configuration[section])
-                for section in configuration.sections()
-            }
-        )
+        _logger.pretty_log(configuration)
 
         _logger.debug("Vulnerability ID: " + vulnerability_id)
         _logger.debug("time-limit before: " + str(time_limit_before))
@@ -317,7 +299,6 @@ def main(argv):  # noqa: C901
         limit_candidates=max_candidates,
         rules=active_rules,
     )
-    # print(advisory_record)
 
     with ConsoleWriter("Generating report") as console:
         report_file = None
@@ -347,5 +328,11 @@ def main(argv):  # noqa: C901
         return True
 
 
+def signal_handler(signal, frame):
+    _logger.info("Exited with keyboard interrupt")
+    sys.exit(0)
+
+
 if __name__ == "__main__":  # pragma: no cover
+    signal.signal(signal.SIGINT, signal_handler)
     main(sys.argv)
