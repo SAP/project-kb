@@ -5,9 +5,9 @@ name: Python
 
 on:
   push:
-    branches: [main]
+    branches: [fix-pytest]
   pull_request:
-    branches: [main]
+    branches: [fix-pytest]
 
 jobs:
   build:
