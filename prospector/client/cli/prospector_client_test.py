@@ -35,6 +35,7 @@ def test_main_runonce(setupdb):
         "--repository",
         "https://github.com/cloudfoundry/uaa",
         "--tag-interval=v74.0.0:v74.1.0",
+        "--use-backend=optional",
     ]
     execution_statistics.drop_all()
     main(args)
