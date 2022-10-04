@@ -223,6 +223,8 @@ def main(argv):  # noqa: C901
 
         backend = args.backend or configuration.get("backend", DEFAULT_BACKEND)  # ???
 
+        use_backend = args.use_backend
+
         if args.ping:
             return ping_backend(backend, log.config.level < logging.INFO)
 
@@ -295,6 +297,7 @@ def main(argv):  # noqa: C901
         nvd_rest_endpoint=nvd_rest_endpoint,
         fetch_references=fetch_references,
         backend_address=backend,
+        use_backend=use_backend,
         git_cache=git_cache,
         limit_candidates=max_candidates,
         rules=active_rules,
