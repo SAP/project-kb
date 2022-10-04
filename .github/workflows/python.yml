@@ -5,9 +5,9 @@ name: Python
 
 on:
   push:
-    branches: [test-merge-inv]
+    branches: [main]
   pull_request:
-    branches: [test-merge-inv]
+    branches: [main]
 
 jobs:
   build:
