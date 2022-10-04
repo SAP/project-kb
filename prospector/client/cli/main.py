@@ -117,7 +117,7 @@ def parseArguments(args):
     parser.add_argument(
         "--use-backend",
         default="always",
-        action="store_true",
+        choices=["always", "never", "optional"],
         help="Use the backend server",
     )
 
