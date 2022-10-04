@@ -9,7 +9,7 @@ from .commit import make_from_raw_commit
 
 @pytest.fixture
 def repository():
-    repo = Git("https://github.com/apache/struts")
+    repo = Git("https://github.com/apache/struts.git")
     repo.clone()
     return repo
 

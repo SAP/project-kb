@@ -1,10 +1,11 @@
+from typing import List
 import pytest
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
 # from datamodel.commit_features import CommitWithFeatures
-from .rules import apply_rules
+from .rules import apply_rules, RULES
 
 
 @pytest.fixture
@@ -54,12 +55,8 @@ def advisory_record():
     )
 
 
-def test_apply_rules_all(candidates: "list[Commit]", advisory_record: AdvisoryRecord):
-    annotated_candidates = apply_rules(
-        candidates=candidates, advisory_record=advisory_record, rules=["ALL"]
-    )
-
-    print(annotated_candidates[0].annotations)
+def test_apply_rules_all(candidates: List[Commit], advisory_record: AdvisoryRecord):
+    annotated_candidates = apply_rules(candidates, advisory_record)
 
     assert len(annotated_candidates[0].annotations) > 0
     assert "REF_ADV_VULN_ID" in annotated_candidates[0].annotations
@@ -88,7 +85,7 @@ def test_apply_rules_all(candidates: "list[Commit]", advisory_record: AdvisoryRe
 
 
 def test_apply_rules_selected(
-    candidates: "list[Commit]", advisory_record: AdvisoryRecord
+    candidates: List[Commit], advisory_record: AdvisoryRecord
 ):
     annotated_candidates = apply_rules(
         candidates=candidates,
@@ -130,15 +127,13 @@ def test_apply_rules_selected(
 
 
 def test_apply_rules_selected_rules(
-    candidates: "list[Commit]", advisory_record: AdvisoryRecord
+    candidates: List[Commit], advisory_record: AdvisoryRecord
 ):
     annotated_candidates = apply_rules(
         candidates=candidates,
         advisory_record=advisory_record,
         rules=["ALL", "-REF_ADV_VULN_ID"],
     )
-
-    print(annotated_candidates[0].annotations)
 
     assert len(annotated_candidates[0].annotations) > 0
     assert "REF_ADV_VULN_ID" not in annotated_candidates[0].annotations
