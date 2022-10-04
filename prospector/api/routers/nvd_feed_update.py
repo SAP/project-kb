@@ -29,9 +29,9 @@ import log.util
 _logger = log.util.init_local_logger()
 
 # note: The NVD has not data older than 2002
-START_FROM_YEAR = os.environ.get("CVE_DATA_AS_OF_YEAR") or "2002"
-DATA_PATH = os.environ.get("CVE_DATA_PATH") or "data/"
-FEED_SCHEMA_VERSION = os.environ.get("FEED_SCHEMA_VERSION") or "1.1"
+START_FROM_YEAR = os.getenv("CVE_DATA_AS_OF_YEAR", "2002")
+DATA_PATH = os.getenv("CVE_DATA_PATH", "data/")
+FEED_SCHEMA_VERSION = os.getenv("FEED_SCHEMA_VERSION", "1,1")
 
 
 def do_update(quiet=False):
