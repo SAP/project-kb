@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 from unicodedata import name
 
 from datamodel.advisory import AdvisoryRecord
@@ -11,7 +11,6 @@ from rules.helpers import (
     extract_referred_to_by_nvd,
 )
 
-
 SEC_KEYWORDS = [
     "vuln",
     "exploit",
@@ -23,9 +22,26 @@ SEC_KEYWORDS = [
     "insecur",
     "inject",
     "unsafe",
+    "patch",
     "remote execution",
     "malicious",
+    " rce ",  # standalone RCE is a thing
 ]
+
+
+class Rule:
+    def __init__(self, rule_fun: Callable, relevance: int):
+        self.rule_fun = rule_fun
+        self.relevance = relevance
+
+    def apply(
+        self, candidate: Commit, advisory_record: AdvisoryRecord
+    ) -> Tuple[str, int]:
+        return self.rule_fun(candidate, advisory_record), self.relevance
+
+    def __repr__(self):
+        return f"Rule({self.rule_id}, {self.relevance})"
+
 
 """
 QUICK GUIDE: HOW TO IMPLEMENT A NEW RULE
@@ -67,27 +83,26 @@ def apply_rules(
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")
         for candidate in candidates:
-            for rule_id in enabled_rules:
-                apply_rule_func = enabled_rules[rule_id]
-                rule_explanation = apply_rule_func(candidate, advisory_record)
-                if rule_explanation:
+            for id, rule in enabled_rules.items():
+                result, relevance = rule.apply(candidate, advisory_record)
+                if result:
                     counter.increment("matches")
-                    candidate.annotations[rule_id] = rule_explanation
-
+                    candidate.annotations[id] = result
+                    candidate.relevance += relevance
     return candidates
 
 
-def get_enabled_rules(rules: List) -> Dict:
+def get_enabled_rules(rules: List[str]) -> Dict[str, Rule]:
     enabled_rules = dict()
 
     if "ALL" in rules:
-        enabled_rules = RULES_REGISTRY
+        enabled_rules = RULES  # RULES_REGISTRY
 
     for r in rules:
         if r == "ALL":
             continue
         if r[0] != "-":
-            enabled_rules[r] = RULES_REGISTRY[r]
+            enabled_rules[r] = RULES[r]
         elif r[0] == "-":
             rule_to_exclude = r[1:]
             if rule_to_exclude in enabled_rules:
@@ -96,42 +111,35 @@ def get_enabled_rules(rules: List) -> Dict:
     return enabled_rules
 
 
-# TODO change signature to accept "Commit", not "CommitWithFeatures"
-# in all apply_rule_* funcs
-# What do you mean? I don't understand
-def apply_rule_references_vuln_id(
-    candidate: Commit, advisory_record: AdvisoryRecord
-) -> str:
-    RELEVANCE = 10
+def apply_rule_cve_id_in_msg(candidate: Commit, advisory_record: AdvisoryRecord) -> str:
+    """Matches commits that refer to the CVE-ID in the commit message."""  # Check if works for the title or comments
+
     explanation_template = (
         "The commit message mentions the vulnerability identifier '{}'"
     )
 
     references_vuln_id = extract_references_vuln_id(candidate, advisory_record)
     if references_vuln_id:
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(advisory_record.vulnerability_id)
     return None
 
 
 def apply_rule_references_ghissue(candidate: Commit, _) -> str:
-    RELEVANCE = 3
+    """Matches commits that refer to a GitHub issue in the commit message or title."""  # Check if works for the title or comments
     explanation_template = (
         "The commit message refers to the following GitHub issues: '{}'"
     )
 
     if len(candidate.ghissue_refs):
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(candidate.ghissue_refs))
     return None
 
 
 def apply_rule_references_jira_issue(candidate: Commit, _) -> str:
-    RELEVANCE = 3
+    """Matches commits that refer to a JIRA issue in the commit message or title."""  # Check if works for the title, comments
     explanation_template = "The commit message refers to the following Jira issues: {}"
 
     if len(candidate.jira_refs):
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(candidate.jira_refs))
 
     return None
@@ -144,7 +152,6 @@ def apply_rule_changes_relevant_path(
     This rule matches commits that touch some file that is mentioned
     in the text of the advisory.
     """
-    RELEVANCE = 5
     explanation_template = "This commit touches the following relevant paths: {}"
 
     relevant_paths = set(
@@ -157,7 +164,6 @@ def apply_rule_changes_relevant_path(
     )
 
     if len(relevant_paths):
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(relevant_paths))
 
     return None
@@ -166,11 +172,7 @@ def apply_rule_changes_relevant_path(
 def apply_rule_adv_keywords_in_msg(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
-    """
-    This rule matches commits whose commit message contain some of the special "code tokens"
-    extracted from the advisory.
-    """
-    RELEVANCE = 5
+    """Matches commits whose message contain any of the special "code tokens" extracted from the advisory."""
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
@@ -178,7 +180,6 @@ def apply_rule_adv_keywords_in_msg(
     )
 
     if len(matching_keywords):
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -187,10 +188,7 @@ def apply_rule_adv_keywords_in_msg(
 def apply_rule_adv_keywords_in_diff(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
-    """
-    This rule matches commits whose diff contain some of the special "code tokens"
-    extracted from the advisory.
-    """
+    """Matches commits whose diff contain any of the special "code tokens" extracted from the advisory."""
 
     # FIXME: this is hardcoded, read it from an "config" object passed to the rule function
     skip_tokens = ["IO"]
@@ -213,10 +211,7 @@ def apply_rule_adv_keywords_in_diff(
 
 
 def apply_rule_security_keyword_in_msg(candidate: Commit, _) -> str:
-    """
-    This rule matches commits whose message contains one or more "security-related" keywords
-    """
-    RELEVANCE = 5
+    """Matches commits whose message contains one or more "security-related" keywords."""
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
@@ -224,7 +219,6 @@ def apply_rule_security_keyword_in_msg(candidate: Commit, _) -> str:
     )
 
     if len(matching_keywords):
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(matching_keywords))
 
     return None
@@ -233,11 +227,7 @@ def apply_rule_security_keyword_in_msg(candidate: Commit, _) -> str:
 def apply_rule_adv_keywords_in_paths(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
-    """
-    This rule matches commits that modify paths that correspond to a code token extracted
-    from the advisory.
-    """
-    RELEVANCE = 3
+    """Matches commits that modify paths corresponding to a code token extracted from the advisory."""
     explanation_template = "The commit modifies the following paths: {}"
 
     matches = set(
@@ -249,12 +239,9 @@ def apply_rule_adv_keywords_in_paths(
         ]
     )
     if len(matches):
-        candidate.update_relevance(RELEVANCE)
-        explained_matches = []
-
-        for m in matches:
-            explained_matches.append("{} ({})".format(m[0], m[1]))
-
+        explained_matches = [f"{m[0]} ({m[1]})" for m in matches]
+        # for m in matches:
+        #     explained_matches.append(f"{m[0]} ({m[1]})") for m in matches
         return explanation_template.format(", ".join(explained_matches))
 
     return None
@@ -263,14 +250,13 @@ def apply_rule_adv_keywords_in_paths(
 def apply_rule_commit_mentioned_in_adv(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
+    """Matches commits that are linked in the advisory page."""
     explanation_template = (
         "One or more links to this commit appear in the advisory page: ({})"
     )
-    RELEVANCE = 10
     commit_references = extract_referred_to_by_nvd(candidate, advisory_record)
 
     if len(commit_references):
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(", ".join(commit_references))
 
     return None
@@ -280,13 +266,12 @@ def apply_rule_commit_mentioned_in_adv(
 def apply_rule_commit_mentioned_in_reference(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
-    RELEVANCE = 8
+    """Matches commits that are mentioned in the links contained in the advisory page."""
     explanation_template = "This commit is mentioned in one or more referenced pages"
 
     count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
 
     if count:
-        candidate.update_relevance(RELEVANCE)
         return explanation_template
 
     return None
@@ -295,7 +280,7 @@ def apply_rule_commit_mentioned_in_reference(
 def apply_rule_vuln_mentioned_in_linked_issue(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
-    RELEVANCE = 8
+    """Matches commits linked to an issue containing the CVE-ID."""
 
     explanation_template = (
         "The issue (or pull request) {} mentions the vulnerability id {}"
@@ -306,14 +291,14 @@ def apply_rule_vuln_mentioned_in_linked_issue(
             continue
 
         if advisory_record.vulnerability_id in page_content:
-            candidate.update_relevance(RELEVANCE)
+
             return explanation_template.format(ref, advisory_record.vulnerability_id)
 
     return None
 
 
 def apply_rule_security_keyword_in_linked_issue(candidate: Commit, _) -> str:
-    RELEVANCE = 5
+    """Matches commits linked to an issue containing one or more "security-related" keywords."""
     explanation_template = (
         "The issue (or pull request) {} contains security-related terms: {}"
     )
@@ -327,16 +312,15 @@ def apply_rule_security_keyword_in_linked_issue(candidate: Commit, _) -> str:
             [kw for kw in SEC_KEYWORDS if kw in page_content.lower()]
         )
         if len(matching_keywords):
-            candidate.update_relevance(RELEVANCE)
             return explanation_template.format(ref, ", ".join(matching_keywords))
 
     return None
 
 
-def apply_rule_jira_issue_in_commit_msg_and_advisory(
+def apply_rule_jira_issue_in_commit_msg_and_adv(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
-    RELEVANCE = 8
+    """Matches commits whose message contains a JIRA issue ID and the advisory mentions the same JIRA issue."""
     explanation_template = "The issue(s) {} (mentioned in the commit message) is referenced by the advisory"
 
     matches = [
@@ -346,7 +330,6 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
         if i in j
     ]
     if len(matches):
-        candidate.update_relevance(RELEVANCE)
         ticket_ids = [id for (id, _) in matches]
         return explanation_template.format(", ".join(ticket_ids))
 
@@ -354,48 +337,33 @@ def apply_rule_jira_issue_in_commit_msg_and_advisory(
 
 
 def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) -> str:
-    RELEVANCE = 1
+    """Matches small commits (i.e., they modify a small number of contiguous lines of code)."""
     MAX_HUNKS = 10
     explanation_template = (
         "This commit modifies only {} hunks (groups of contiguous lines of code)"
     )
 
     if candidate.hunk_count <= MAX_HUNKS:
-        candidate.update_relevance(RELEVANCE)
         return explanation_template.format(candidate.hunk_count)
 
     return None
 
 
-RULES_REGISTRY = {
-    "REF_ADV_VULN_ID": apply_rule_references_vuln_id,
-    "TOKENS_IN_DIFF": apply_rule_adv_keywords_in_diff,
-    "TOKENS_IN_COMMIT_MSG": apply_rule_adv_keywords_in_msg,
-    "TOKENS_IN_MODIFIED_PATHS": apply_rule_adv_keywords_in_paths,
-    "SEC_KEYWORD_IN_COMMIT_MSG": apply_rule_security_keyword_in_msg,
-    "REF_GH_ISSUE": apply_rule_references_ghissue,
-    "REF_JIRA_ISSUE": apply_rule_references_jira_issue,
-    "CH_REL_PATH": apply_rule_changes_relevant_path,
-    "COMMIT_MENTIONED_IN_ADV": apply_rule_commit_mentioned_in_adv,
-    "COMMIT_MENTIONED_IN_REFERENCE": apply_rule_commit_mentioned_in_reference,
-    "VULN_MENTIONED_IN_LINKED_ISSUE": apply_rule_vuln_mentioned_in_linked_issue,
-    "SEC_KEYWORD_MENTIONED_IN_LINKED_ISSUE": apply_rule_security_keyword_in_linked_issue,
-    "JIRA_ISSUE_REF_IN_COMMIT_MSG_AND_ADVISORY": apply_rule_jira_issue_in_commit_msg_and_advisory,
-    "SMALL_COMMIT": apply_rule_small_commit,
+RULES = {
+    "CVE_ID_IN_COMMIT_MSG": Rule(apply_rule_cve_id_in_msg, 10),
+    "TOKENS_IN_DIFF": Rule(apply_rule_adv_keywords_in_diff, 5),
+    "TOKENS_IN_COMMIT_MSG": Rule(apply_rule_adv_keywords_in_msg, 10),
+    "TOKENS_IN_MODIFIED_PATHS": Rule(apply_rule_adv_keywords_in_paths, 10),
+    "SEC_KEYWORD_IN_COMMIT_MSG": Rule(apply_rule_security_keyword_in_msg, 5),
+    "GH_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_ghissue, 3),
+    "JIRA_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_jira_issue, 3),
+    "CH_REL_PATH": Rule(apply_rule_changes_relevant_path, 5),
+    "COMMIT_IN_ADV": Rule(apply_rule_commit_mentioned_in_adv, 10),
+    "COMMIT_IN_REFERENCE": Rule(apply_rule_commit_mentioned_in_reference, 8),
+    "VULN_IN_LINKED_ISSUE": Rule(apply_rule_vuln_mentioned_in_linked_issue, 8),
+    "SEC_KEYWORD_IN_LINKED_ISSUE": Rule(apply_rule_security_keyword_in_linked_issue, 5),
+    "JIRA_ISSUE_IN_COMMIT_MSG_AND_ADV": Rule(
+        apply_rule_jira_issue_in_commit_msg_and_adv, 8
+    ),
+    "SMALL_COMMIT": Rule(apply_rule_small_commit, 1),
 }
-
-if __name__ == "__main__":
-    from datamodel.advisory import AdvisoryRecord
-    from datamodel.commit import make_from_raw_commit
-    from git.git import Git
-
-    repo = Git("https://github.com/apache/maven-shared-utils")
-    raw = repo.get_commit("336594396f2e9be8a572100e30a611f8123a837d")
-    repo.clone()
-    commit = make_from_raw_commit(raw)
-
-    record = AdvisoryRecord(
-        vulnerability_id="CVE-2022-29599",
-        repository_url="https://github.com/apache/maven-shared-utils",
-    )
-    apply_rules([commit], record)
