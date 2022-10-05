@@ -269,13 +269,12 @@ def build_advisory_record(
     )
 
     _logger.pretty_log(advisory_record)
-
     advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
     _logger.debug(f"{advisory_record.keywords=}")
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
-            datetime.strptime(publication_date, r"%Y-%m-%dT%H:%M%z").timestamp()
+            datetime.fromisoformat(publication_date).timestamp()
         )
 
     if len(advisory_keywords) > 0:

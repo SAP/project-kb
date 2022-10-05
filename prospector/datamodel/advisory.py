@@ -48,9 +48,10 @@ ALLOWED_SITES = [
 
 _logger = log.util.init_local_logger()
 
-NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
+LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
+NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
 
-
+# TODO: refactor and clean
 class AdvisoryRecord(BaseModel):
     """
     The advisory record captures all relevant information on the vulnerability advisory
@@ -68,24 +69,30 @@ class AdvisoryRecord(BaseModel):
     relevant_tags: List[str] = None
     versions: List[str] = Field(default_factory=list)
     from_nvd: bool = False
-    nvd_rest_endpoint: str = NVD_REST_ENDPOINT
+    nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
     paths: List[str] = Field(default_factory=list)
     keywords: Tuple[str, ...] = Field(default_factory=tuple)
+
+    # def __init__(self, vulnerability_id, repository_url, from_nvd, nvd_rest_endpoint):
+    #     self.vulnerability_id = vulnerability_id
+    #     self.repository_url = repository_url
+    #     self.from_nvd = from_nvd
+    #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(self, use_nvd: bool = False, fetch_references=False):
         self.from_nvd = use_nvd
 
         if self.from_nvd:
-            self._get_from_nvd(self.vulnerability_id, self.nvd_rest_endpoint)
+            self.get_advisory(self.vulnerability_id, self.nvd_rest_endpoint)
 
         self.versions = union_of(self.versions, extract_versions(self.description))
 
         self.affected_products = union_of(
             self.affected_products, extract_products(self.description)
         )
+
         self.paths = union_of(self.paths, extract_path_tokens(self.description))
         self.keywords = union_of(self.keywords, extract_special_terms(self.description))
-
         _logger.debug("References: " + str(self.references))
         self.references = [
             r for r in self.references if urlparse(r).hostname in ALLOWED_SITES
@@ -98,32 +105,40 @@ class AdvisoryRecord(BaseModel):
                     _logger.debug("Fetched content of reference " + r)
                     self.references_content.append(ref_content)
 
-    def _get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
+    # TODO check behavior when some of the data attributes of the AdvisoryRecord
+    # class contain data (e.g. passed explicitly as input by the useer);
+    # In that case, shall the data from NVD be appended to the exiting data,
+    # replace it, be ignored? (note: right now, it just replaces it)
+    def get_advisory(
+        self, vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
+    ):
         """
         populate object field using NVD data
         returns: description, published_timestamp, last_modified timestamp, list of references
         """
 
-        # TODO check behavior when some of the data attributes of the AdvisoryRecord
-        # class contain data (e.g. passed explicitly as input by the useer);
-        # In that case, shall the data from NVD be appended to the exiting data,
-        # replace it, be ignored?
-        # (note: right now, it just replaces it)
+        if not self.get_from_local_db(vuln_id, nvd_rest_endpoint):
+            print("Could not retrieve vulnerability data from local db")
+            print("Trying to retrieve data from NVD")
+            self.get_from_nvd(vuln_id)
+
+    # TODO: refactor this stuff
+    def get_from_local_db(
+        self, vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
+    ):
+        """
+        Get an advisory from the local NVD database
+        """
         try:
             response = requests.get(nvd_rest_endpoint + vuln_id)
             if response.status_code != 200:
-                return
-            # data = response.json()["result"]["CVE_Items"][0]
+                return False
             data = response.json()
             self.published_timestamp = int(
-                datetime.strptime(
-                    data["publishedDate"], r"%Y-%m-%dT%H:%M%z"
-                ).timestamp()
+                datetime.fromisoformat(data["publishedDate"]).timestamp()
             )
             self.last_modified_timestamp = int(
-                datetime.strptime(
-                    data["lastModifiedDate"], r"%Y-%m-%dT%H:%M%z"
-                ).timestamp()
+                datetime.fromisoformat(data["lastModifiedDate"]).timestamp()
             )
 
             self.description = data["cve"]["description"]["description_data"][0][
@@ -132,12 +147,41 @@ class AdvisoryRecord(BaseModel):
             self.references = [
                 r["url"] for r in data["cve"]["references"]["reference_data"]
             ]
-
-        except Exception:
+            return True
+        except Exception as e:
+            # Might fail either or json parsing error or for connection error
             _logger.error(
                 "Could not retrieve vulnerability data from NVD for " + vuln_id,
                 exc_info=log.config.level < logging.INFO,
             )
+            print(e)
+            return False
+
+    def get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
+        """
+        Get an advisory from the NVD dtabase
+        """
+        try:
+            response = requests.get(nvd_rest_endpoint + vuln_id)
+            if response.status_code != 200:
+                return False
+            data = response.json()["vulnerabilities"][0]["cve"]
+            self.published_timestamp = int(
+                datetime.fromisoformat(data["published"]).timestamp()
+            )
+            self.last_modified_timestamp = int(
+                datetime.fromisoformat(data["lastModified"]).timestamp()
+            )
+            self.description = data["descriptions"][0]["value"]
+            self.references = [r["url"] for r in data["references"]]
+        except Exception as e:
+            # Might fail either or json parsing error or for connection error
+            _logger.error(
+                "Could not retrieve vulnerability data from NVD for " + vuln_id,
+                exc_info=log.config.level < logging.INFO,
+            )
+            print(e)
+            return False
 
 
 # might be used in the future
