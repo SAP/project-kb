@@ -13,7 +13,7 @@ from util.collection import union_of
 from util.http import fetch_url
 
 from .nlp import (
-    extract_path_tokens,
+    extract_affected_files_paths,
     extract_products,
     extract_special_terms,
     extract_versions,
@@ -91,7 +91,10 @@ class AdvisoryRecord(BaseModel):
             self.affected_products, extract_products(self.description)
         )
 
-        self.paths = union_of(self.paths, extract_path_tokens(self.description))
+        # TODO: if an exact file is found when applying the rules, the relevance must be updated i think
+        self.paths = union_of(
+            self.paths, extract_affected_files_paths(self.description)
+        )
         self.keywords = union_of(self.keywords, extract_special_terms(self.description))
         _logger.debug("References: " + str(self.references))
         self.references = [

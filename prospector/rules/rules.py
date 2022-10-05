@@ -22,9 +22,9 @@ SEC_KEYWORDS = [
     "insecur",
     "inject",
     "unsafe",
-    "patch",
     "remote execution",
     "malicious",
+    "cwe-",
     " rce ",  # standalone RCE is a thing
 ]
 
@@ -162,7 +162,6 @@ def apply_rule_changes_relevant_path(
             if adv_path in path
         ]
     )
-
     if len(relevant_paths):
         return explanation_template.format(", ".join(relevant_paths))
 

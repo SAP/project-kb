@@ -45,9 +45,6 @@ class Commit(BaseModel):
     def __eq__(self, other) -> bool:
         return self.relevance == other.relevance
 
-    def update_relevance(self, relevance: int):
-        self.relevance += relevance
-
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
     #     out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))

@@ -45,37 +45,63 @@ def extract_products(text: str) -> List[str]:
     return [p for p in result if len(p) > 2]
 
 
-def extract_path_tokens(text: str, strict_extensions: bool = False) -> List[str]:
-    """
-    Used to look for paths in the text (i.e. vulnerability description)
-
-    Input:
-        text (str)
-        strict_extensions (bool): this function will always extract tokens with (back) slashes,
-            but it will only match single file names if they have the correct extension, if this argument is True
-
-    Returns:
-        list: a list of paths that are found
-    """
-    tokens = re.split(r"\s+", text)  # split the text into words
-    tokens = [
-        token.strip(",.:;-+!?)]}'\"") for token in tokens
+def extract_affected_files_paths(text: str, strict_extensions: bool = False):
+    words = text.split()
+    words = [
+        word.strip("_,.:;-+!?)]}'\"") for word in words
     ]  # removing common punctuation marks
     paths = []
-    for token in tokens:
-        contains_path_separators = ("\\" in token) or ("/" in token)
-        separated_with_period = "." in token
-        has_relevant_extension = token.split(".")[-1] in RELEVANT_EXTENSIONS
-        is_xml_tag = token.startswith("<")
-        is_property = token.endswith("=")
+    for word in words:
+        is_xml_tag = word.startswith("<")
+        is_property = word.endswith("=")
+        is_unusual = check_unusual_stuff(word)
+        not_relevant = is_xml_tag or is_property or is_unusual
 
-        is_path = contains_path_separators or (
-            has_relevant_extension if strict_extensions else separated_with_period
-        )
-        probably_not_path = is_xml_tag or is_property
-        if is_path and not probably_not_path:
-            paths.append(token)
+        if not_relevant:
+            continue
+
+        if check_if_path(word):
+            paths.append(word)
+
+        if check_if_file(word):
+            paths.append(word.split(".")[0].split("::")[0])
+
     return paths
+
+
+def check_unusual_stuff(text: str) -> bool:
+    return '"' in text or "," in text
+
+
+def check_if_path(text: str) -> bool:
+    return "/" in text or "\\" in text
+
+
+# TODO: look if there are others
+def check_if_file(text: str) -> bool:
+    file = text.split(".")
+    if len(file) == 1:
+        file = file[0].split("::")
+
+    flag = False
+    # Check if there is an extension
+    if file[-1] in RELEVANT_EXTENSIONS:
+        return True
+
+    # Common name pattern for files or methods with underscores
+    if "_" in file[0] or "_" in file[-1]:
+        return True
+
+    # Common methods to refer to methods inside class (e.g. Class.method, Class::method)
+    if ("." in text or "::" in text) and file[0].isalpha():
+        return True
+    # Common name for files or methods with uppercase letter in the middle
+    if bool(re.match(r"(?=.*[a-z])(?=.*[A-Z])", file[0][1:])) or bool(
+        re.match(r"(?=.*[a-z])(?=.*[A-Z])", file[-1][1:])
+    ):
+        return True
+
+    return flag
 
 
 def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
