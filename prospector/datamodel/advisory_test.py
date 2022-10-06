@@ -1,5 +1,10 @@
 # from dataclasses import asdict
-from datamodel.advisory import AdvisoryRecord
+import time
+from unittest import result
+
+from pytest import skip
+from datamodel.advisory import AdvisoryRecord, build_advisory_record
+from .nlp import RELEVANT_EXTENSIONS
 
 # import pytest
 
@@ -87,6 +92,57 @@ def test_adv_record_keywords():
             '"limited"',
         )
     )
+
+
+def test_build():
+    record = build_advisory_record(
+        "CVE-2014-0050", "", "", "", "", True, "", "", "", "*.java"
+    )
+    assert "MultipartStream" in record.paths
+    assert record.vulnerability_id == "CVE-2014-0050"
+
+
+@skip(reason="Slow connections make it fail")
+def test_filenames_extraction():
+    cve = {
+        "CVE-2014-0050": "MultipartStream",
+        "CVE-2021-22696": "JwtRequestCodeFilter",  # Should match JwtRequestCodeFilter
+        "CVE-2021-27582": "OAuthConfirmationController",
+        "CVE-2021-29425": "FileNameUtils",
+        "CVE-2021-30468": "JsonMapObjectReaderWriter",
+    }
+
+    result1 = build_advisory_record(
+        "CVE-2014-0050", "", "", "", "", True, "", "", "", ""
+    )
+    result2 = build_advisory_record(
+        "CVE-2021-22696", "", "", "", "", True, "", "", "", ""
+    )
+    result3 = build_advisory_record(
+        "CVE-2021-27582", "", "", "", "", True, "", "", "", ""
+    )
+    result4 = build_advisory_record(
+        "CVE-2021-29425", "", "", "", "", True, "", "", "", ""
+    )
+    result5 = build_advisory_record(
+        "CVE-2021-30468", "", "", "", "", True, "", "", "", ""
+    )
+    assert (
+        result1.paths.sort() == ["MultiPartStream", "FileUpload"].sort()
+    )  # Content-Type
+    assert result2.paths.sort() == ["JwtRequestCodeFilter", "request_uri"].sort()
+    assert (
+        result3.paths.sort()
+        == [
+            "OAuthConfirmationController",
+            "@ModelAttribute",
+            "authorizationRequest",
+        ].sort()
+    )
+    assert result4.paths.sort() == ["FileNameUtils"].sort()
+    assert result5.paths.sort() == ["JsonMapObjectReaderWriter"].sort()
+
+    # raise Exception("Test failed")
 
 
 # def test_adv_record_project_data():

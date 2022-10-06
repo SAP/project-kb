@@ -13,7 +13,7 @@ from util.collection import union_of
 from util.http import fetch_url
 
 from .nlp import (
-    extract_affected_files_paths,
+    extract_affected_filenames,
     extract_products,
     extract_special_terms,
     extract_versions,
@@ -79,7 +79,9 @@ class AdvisoryRecord(BaseModel):
     #     self.from_nvd = from_nvd
     #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
-    def analyze(self, use_nvd: bool = False, fetch_references=False):
+    def analyze(
+        self, use_nvd: bool = False, fetch_references=False, relevant_extensions=[]
+    ):
         self.from_nvd = use_nvd
 
         if self.from_nvd:
@@ -93,7 +95,8 @@ class AdvisoryRecord(BaseModel):
 
         # TODO: if an exact file is found when applying the rules, the relevance must be updated i think
         self.paths = union_of(
-            self.paths, extract_affected_files_paths(self.description)
+            self.paths,
+            extract_affected_filenames(self.description, relevant_extensions),
         )
         self.keywords = union_of(self.keywords, extract_special_terms(self.description))
         _logger.debug("References: " + str(self.references))
@@ -185,6 +188,57 @@ class AdvisoryRecord(BaseModel):
             )
             print(e)
             return False
+
+
+# Moved here since it is a factory method basicall
+def build_advisory_record(
+    vulnerability_id,
+    repository_url,
+    vuln_descr,
+    nvd_rest_endpoint,
+    fetch_references,
+    use_nvd,
+    publication_date,
+    advisory_keywords,
+    modified_files,
+    filter_extensions,
+) -> AdvisoryRecord:
+
+    advisory_record = AdvisoryRecord(
+        vulnerability_id=vulnerability_id,
+        repository_url=repository_url,
+        description=vuln_descr,
+        from_nvd=use_nvd,
+        nvd_rest_endpoint=nvd_rest_endpoint,
+    )
+
+    _logger.pretty_log(advisory_record)
+    advisory_record.analyze(
+        use_nvd=use_nvd,
+        fetch_references=fetch_references,
+        # relevant_extensions=filter_extensions.split(".")[
+        #    1
+        # ],  # the *. is added early in the main and is needed multiple times in the git so let's leave it there
+    )
+    _logger.debug(f"{advisory_record.keywords=}")
+
+    if publication_date != "":
+        advisory_record.published_timestamp = int(
+            datetime.fromisoformat(publication_date).timestamp()
+        )
+
+    if len(advisory_keywords) > 0:
+        advisory_record.keywords += tuple(advisory_keywords)
+        # drop duplicates
+        advisory_record.keywords = list(set(advisory_record.keywords))
+
+    if len(modified_files) > 0:
+        advisory_record.paths += modified_files
+
+    _logger.debug(f"{advisory_record.keywords=}")
+    _logger.debug(f"{advisory_record.paths=}")
+
+    return advisory_record
 
 
 # might be used in the future

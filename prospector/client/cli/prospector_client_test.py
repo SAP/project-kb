@@ -1,6 +1,7 @@
 import pytest
 
 from api import DB_CONNECT_STRING
+from client.cli.prospector_client import build_advisory_record
 from commitdb.postgres import PostgresCommitDB
 from stats.execution import execution_statistics
 
