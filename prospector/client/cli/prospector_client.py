@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 import log
 from client.cli.console import ConsoleWriter, MessageStatus
-from datamodel.advisory import AdvisoryRecord
+from datamodel.advisory import AdvisoryRecord, build_advisory_record
 from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
@@ -25,6 +25,7 @@ from stats.execution import (
 )
 
 _logger = init_local_logger()
+
 
 SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
@@ -73,6 +74,7 @@ def prospector(  # noqa: C901
             publication_date,
             advisory_keywords,
             modified_files,
+            filter_extensions,
         )
 
     with ConsoleWriter("Obtaining initial set of candidates") as writer:
@@ -248,49 +250,7 @@ def save_preprocessed_commits(backend_address, payload):
             )
 
 
-def build_advisory_record(
-    vulnerability_id,
-    repository_url,
-    vuln_descr,
-    nvd_rest_endpoint,
-    fetch_references,
-    use_nvd,
-    publication_date,
-    advisory_keywords,
-    modified_files,
-) -> AdvisoryRecord:
-
-    advisory_record = AdvisoryRecord(
-        vulnerability_id=vulnerability_id,
-        repository_url=repository_url,
-        description=vuln_descr,
-        from_nvd=use_nvd,
-        nvd_rest_endpoint=nvd_rest_endpoint,
-    )
-
-    _logger.pretty_log(advisory_record)
-    advisory_record.analyze(use_nvd=use_nvd, fetch_references=fetch_references)
-    _logger.debug(f"{advisory_record.keywords=}")
-
-    if publication_date != "":
-        advisory_record.published_timestamp = int(
-            datetime.fromisoformat(publication_date).timestamp()
-        )
-
-    if len(advisory_keywords) > 0:
-        advisory_record.keywords += tuple(advisory_keywords)
-        # drop duplicates
-        advisory_record.keywords = list(set(advisory_record.keywords))
-
-    if len(modified_files) > 0:
-        advisory_record.paths += modified_files
-
-    _logger.debug(f"{advisory_record.keywords=}")
-    _logger.debug(f"{advisory_record.paths=}")
-
-    return advisory_record
-
-
+# TODO: Cleanup many parameters should be recovered from the advisory record object
 def get_candidates(
     advisory_record,
     repository,

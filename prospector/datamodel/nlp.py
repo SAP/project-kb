@@ -45,63 +45,88 @@ def extract_products(text: str) -> List[str]:
     return [p for p in result if len(p) > 2]
 
 
-def extract_affected_files_paths(text: str, strict_extensions: bool = False):
-    words = text.split()
-    words = [
-        word.strip("_,.:;-+!?)]}'\"") for word in words
-    ]  # removing common punctuation marks
-    paths = []
-    for word in words:
-        is_xml_tag = word.startswith("<")
-        is_property = word.endswith("=")
-        is_unusual = check_unusual_stuff(word)
-        not_relevant = is_xml_tag or is_property or is_unusual
+def extract_affected_filenames(
+    text: str, extensions: List[str] = RELEVANT_EXTENSIONS
+) -> List[str]:
+    paths = set()
+    for word in text.split():
+        res = word.strip("_,.:;-+!?()]}'\"")
+        res = extract_filename_from_path(res)
+        res = check_file_class_method_names(res, extensions)
+        if res:
+            paths.add(res)
 
-        if not_relevant:
-            continue
-
-        if check_if_path(word):
-            paths.append(word)
-
-        if check_if_file(word):
-            paths.append(word.split(".")[0].split("::")[0])
-
-    return paths
+    return list(paths)
 
 
-def check_unusual_stuff(text: str) -> bool:
-    return '"' in text or "," in text
+# TODO: enhanche this with extensions
+# If looks like a path-to-file try to get the filename.extension or just filename
+def extract_filename_from_path(text: str) -> str:
+    # Pattern //path//to//file or \\path\\to\\file, extract file
+    # res = re.search(r"^(?:(?:\/{,2}|\\{,2})([\w\-\.]+))+$", text)
+    # if res:
+    #     return res.group(1), True
+    # # Else simply return the text
+    # return text, False
+    res = text.split("/")
+
+    return res[-1]  # , len(res) > 1
 
 
-def check_if_path(text: str) -> bool:
-    return "/" in text or "\\" in text
+def check_file_class_method_names(text: str, relevant_extensions: List[str]) -> str:
+    # Covers cases file.extension if extension is relevant, extensions come from CLI parameter
+    extensions_regex = r"^([\w\-]+)\.({})?$".format("|".join(relevant_extensions))
+    res = re.search(extensions_regex, text)
+    if res:
+        return res.group(1)
+
+    # Covers cases like: class::method, class.method,
+    res = re.search(r"^(\w+)(?:\.|:{2})(\w+)$", text)  # ^(\w{2,})(?:\.|:{2})(\w{2,})$
+    # Check if it is not a number
+    if res and not bool(re.match(r"^\d+$", res.group(1))):
+        return res.group(1)
+
+    # Covers cases like: className or class_name (normal string with underscore), this may have false positive but often related to some code
+    if bool(re.search(r"[a-z]{2}[A-Z]+[a-z]{2}", text)) or "_" in text:
+        return text
+
+    return None
 
 
-# TODO: look if there are others
-def check_if_file(text: str) -> bool:
-    file = text.split(".")
-    if len(file) == 1:
-        file = file[0].split("::")
+# def check_unusual_stuff(text: str) -> bool:
+#     return '"' in text or "," in text
 
-    flag = False
-    # Check if there is an extension
-    if file[-1] in RELEVANT_EXTENSIONS:
-        return True
 
-    # Common name pattern for files or methods with underscores
-    if "_" in file[0] or "_" in file[-1]:
-        return True
+# def check_if_path(text: str) -> bool:
+#     return "/" in text or "\\" in text
 
-    # Common methods to refer to methods inside class (e.g. Class.method, Class::method)
-    if ("." in text or "::" in text) and file[0].isalpha():
-        return True
-    # Common name for files or methods with uppercase letter in the middle
-    if bool(re.match(r"(?=.*[a-z])(?=.*[A-Z])", file[0][1:])) or bool(
-        re.match(r"(?=.*[a-z])(?=.*[A-Z])", file[-1][1:])
-    ):
-        return True
 
-    return flag
+# # TODO: look if there are others
+# def check_if_file(text: str) -> str:
+#     file = text.split(".")
+#     if len(file) == 1:
+#         file = file[0].split("::")
+
+#     flag = False
+#     # Is a filename with extension
+#     # TODO: dynamic extension using the --filter-extensions from CLI to reduce computations
+#     if file[-1] in RELEVANT_EXTENSIONS:
+#         return file[0]
+
+#     # Common name pattern for files or methods with underscores
+#     if "_" in file[0] or "_" in file[-1]:
+#         return True
+
+#     # Contains "." or "::" can be a Class.Method (Class::Method), letters only
+#     if ("." in text or "::" in text) and file[0].isalpha():
+#         return True
+#     # Contains UPPERCASE and lowercase letters excluding the first and last
+#     if bool(re.match(r"(?=.*[a-z])(?=.*[A-Z])", file[0][1:-1])) or bool(
+#         re.match(r"(?=.*[a-z])(?=.*[A-Z])", file[-1][1:-1])
+#     ):
+#         return True
+
+#     return flag
 
 
 def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
