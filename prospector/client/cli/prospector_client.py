@@ -252,13 +252,13 @@ def save_preprocessed_commits(backend_address, payload):
 
 # TODO: Cleanup many parameters should be recovered from the advisory record object
 def get_candidates(
-    advisory_record,
-    repository,
-    tag_interval,
-    version_interval,
-    time_limit_before,
-    time_limit_after,
-    filter_extensions,
+    advisory_record: AdvisoryRecord,
+    repository: Git,
+    tag_interval: str,
+    version_interval: str,
+    time_limit_before: int,
+    time_limit_after: int,
+    filter_extensions: str,
 ) -> List[str]:
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
@@ -277,6 +277,7 @@ def get_candidates(
         with ConsoleWriter("Candidate commit retrieval"):
             prev_tag = None
             following_tag = None
+
             if tag_interval != "":
                 prev_tag, following_tag = tag_interval.split(":")
             elif version_interval != "":
@@ -289,7 +290,7 @@ def get_candidates(
             if advisory_record.published_timestamp:
                 since = advisory_record.published_timestamp - time_limit_before
                 until = advisory_record.published_timestamp + time_limit_after
-
+            # Here i need to strip the github tags of useless stuff
             candidates = repository.get_commits(
                 since=since,
                 until=until,

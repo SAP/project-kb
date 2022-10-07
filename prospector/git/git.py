@@ -250,7 +250,7 @@ class Git:
             cmd.append("^" + exclude_ancestors_of)
 
         if filter_files:
-            cmd.append(filter_files)
+            cmd.append("*." + filter_files)
 
         if find_in_code:
             cmd.append('-S"%s"' % find_in_code)
@@ -261,11 +261,25 @@ class Git:
         try:
             _logger.debug(" ".join(cmd))
             out = self._exec.run(cmd, cache=True)
+            #  cmd_test = ["git", "diff", "--name-only", self._id + "^.." + self._id]
+            # out = self._exec.run(cmd, cache=True)
         except Exception:
             _logger.error("Git command failed, cannot get commits", exc_info=True)
             out = []
 
         out = [l.strip() for l in out]
+        # res = []
+        # try:
+        #     for id in out:
+        #         cmd = ["git", "diff", "--name-only", id + "^.." + id]
+        #         o = self._exec.run(cmd, cache=True)
+        #         for f in o:
+        #             if "mod_auth_digest" in f:
+        #                 res.append(id)
+        # except Exception:
+        #     _logger.error("Changed files retrieval failed", exc_info=True)
+        #     res = out
+
         return out
 
     def get_commits_between_two_commit(self, commit_id_from: str, commit_id_to: str):
@@ -360,6 +374,8 @@ class Git:
         except subprocess.CalledProcessError as exc:
             _logger.error("Git command failed." + str(exc.output), exc_info=True)
             sys.exit(1)
+        # else:
+        #     return commit_id.strip()
         if not commit_id:
             return None
         return commit_id.strip()
@@ -458,7 +474,7 @@ class Commit:
                     self._id + "^.." + self._id,
                 ]
                 if filter_files:
-                    cmd.append(filter_files)
+                    cmd.append("*." + filter_files)
                 self._attributes["diff"] = self._exec.run(cmd, cache=True)
             except Exception:
                 _logger.error(

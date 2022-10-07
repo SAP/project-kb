@@ -96,22 +96,13 @@ def test_adv_record_keywords():
 
 def test_build():
     record = build_advisory_record(
-        "CVE-2014-0050", "", "", "", "", True, "", "", "", "*.java"
+        "CVE-2014-0050", "", "", "", "", True, "", "", "", "java"
     )
     assert "MultipartStream" in record.paths
     assert record.vulnerability_id == "CVE-2014-0050"
 
 
-@skip(reason="Slow connections make it fail")
 def test_filenames_extraction():
-    cve = {
-        "CVE-2014-0050": "MultipartStream",
-        "CVE-2021-22696": "JwtRequestCodeFilter",  # Should match JwtRequestCodeFilter
-        "CVE-2021-27582": "OAuthConfirmationController",
-        "CVE-2021-29425": "FileNameUtils",
-        "CVE-2021-30468": "JsonMapObjectReaderWriter",
-    }
-
     result1 = build_advisory_record(
         "CVE-2014-0050", "", "", "", "", True, "", "", "", ""
     )

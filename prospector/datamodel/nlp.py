@@ -32,7 +32,8 @@ def extract_versions(text: str) -> List[str]:
     """
     Extract all versions mentioned in the text
     """
-    return re.findall(r"[0-9]+\.[0-9]+[0-9a-z.]*", text)
+    return list(set(re.findall(r"(\d+(?:\.\d+)+)", text)))  # Should be more accurate
+    # return re.findall(r"[0-9]+\.[0-9]+[0-9a-z.]*", text)
 
 
 def extract_products(text: str) -> List[str]:
@@ -50,7 +51,7 @@ def extract_affected_filenames(
 ) -> List[str]:
     paths = set()
     for word in text.split():
-        res = word.strip("_,.:;-+!?()]}'\"")
+        res = word.strip("_,.:;-+!?()]}@'\"")
         res = extract_filename_from_path(res)
         res = check_file_class_method_names(res, extensions)
         if res:
@@ -59,18 +60,14 @@ def extract_affected_filenames(
     return list(paths)
 
 
-# TODO: enhanche this with extensions
-# If looks like a path-to-file try to get the filename.extension or just filename
+# TODO: enhanche this
+# Now we just try a split by / and then we pass everything to the other checker, it might be done better
 def extract_filename_from_path(text: str) -> str:
+    return text.split("/")[-1]
     # Pattern //path//to//file or \\path\\to\\file, extract file
     # res = re.search(r"^(?:(?:\/{,2}|\\{,2})([\w\-\.]+))+$", text)
     # if res:
-    #     return res.group(1), True
-    # # Else simply return the text
-    # return text, False
-    res = text.split("/")
-
-    return res[-1]  # , len(res) > 1
+    #     return res.group(1)
 
 
 def check_file_class_method_names(text: str, relevant_extensions: List[str]) -> str:
@@ -158,8 +155,7 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     refs = dict()
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
-        url = JIRA_ISSUE_URL + id
-        content = fetch_url(url, False)
+        content = fetch_url(JIRA_ISSUE_URL + id, False)
         if not content:
             return {"": ""}
         refs[id] = "".join(

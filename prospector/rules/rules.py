@@ -145,7 +145,7 @@ def apply_rule_references_jira_issue(candidate: Commit, _) -> str:
     return None
 
 
-def apply_rule_changes_relevant_path(
+def apply_rule_changes_relevant_file(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """
@@ -154,16 +154,16 @@ def apply_rule_changes_relevant_path(
     """
     explanation_template = "This commit touches the following relevant paths: {}"
 
-    relevant_paths = set(
+    relevant_files = set(
         [
-            path
-            for path in candidate.changed_files
+            file
+            for file in candidate.changed_files
             for adv_path in advisory_record.paths
-            if adv_path in path
+            if adv_path in file
         ]
     )
-    if len(relevant_paths):
-        return explanation_template.format(", ".join(relevant_paths))
+    if len(relevant_files):
+        return explanation_template.format(", ".join(relevant_files))
 
     return None
 
@@ -356,7 +356,7 @@ RULES = {
     "SEC_KEYWORD_IN_COMMIT_MSG": Rule(apply_rule_security_keyword_in_msg, 5),
     "GH_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_ghissue, 3),
     "JIRA_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_jira_issue, 3),
-    "CH_REL_PATH": Rule(apply_rule_changes_relevant_path, 5),
+    "CHANGES_RELEVANT_FILE": Rule(apply_rule_changes_relevant_file, 8),
     "COMMIT_IN_ADV": Rule(apply_rule_commit_mentioned_in_adv, 10),
     "COMMIT_IN_REFERENCE": Rule(apply_rule_commit_mentioned_in_reference, 8),
     "VULN_IN_LINKED_ISSUE": Rule(apply_rule_vuln_mentioned_in_linked_issue, 8),
