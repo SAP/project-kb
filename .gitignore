@@ -3,6 +3,7 @@ site
 .kaybee
 */cpu.prof
 *.pyc
+*git-cache*
 kaybee/internal/repository/profile001.pdf
 kaybee/internal/repository/repository.test
 kaybee/internal/tasks/.kaybee
@@ -41,6 +42,7 @@ prospector/data/nvd.csv
 .vscode/settings.json
 prospector/cov_html/*
 prospector/client/cli/cov_html/*
+prospector/client/web/node-app/node_modules
 prospector/.coverage.*
 prospector/.coverage
 **/cov_html/*
