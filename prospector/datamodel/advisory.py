@@ -51,6 +51,7 @@ _logger = log.util.init_local_logger()
 LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
 
+
 # TODO: refactor and clean
 class AdvisoryRecord(BaseModel):
     """
@@ -86,9 +87,7 @@ class AdvisoryRecord(BaseModel):
 
         if self.from_nvd:
             self.get_advisory(self.vulnerability_id, self.nvd_rest_endpoint)
-
         self.versions = union_of(self.versions, extract_versions(self.description))
-
         self.affected_products = union_of(
             self.affected_products, extract_products(self.description)
         )
@@ -216,9 +215,7 @@ def build_advisory_record(
     advisory_record.analyze(
         use_nvd=use_nvd,
         fetch_references=fetch_references,
-        # relevant_extensions=filter_extensions.split(".")[
-        #    1
-        # ],  # the *. is added early in the main and is needed multiple times in the git so let's leave it there
+        relevant_extensions=filter_extensions,
     )
     _logger.debug(f"{advisory_record.keywords=}")
 

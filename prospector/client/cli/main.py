@@ -230,10 +230,8 @@ def main(argv):  # noqa: C901
 
         vulnerability_id = args.vulnerability_id
         repository_url = args.repository
-
         vuln_descr = args.descr
-
-        filter_extensions = "*." + args.filter_extensions
+        filter_extensions = args.filter_extensions
 
         # if no backend the filters on the advisory do not work
         use_nvd = False
@@ -255,18 +253,16 @@ def main(argv):  # noqa: C901
         max_candidates = args.max_candidates
         modified_files = args.modified_files.split(",") if args.modified_files else []
         advisory_keywords = (
-            args.advisory_keywords.split(",")
-            if args.advisory_keywords is not None
-            else []
+            args.advisory_keywords.split(",") if args.advisory_keywords else []
         )
 
         publication_date = ""
         if args.pub_date != "":
             publication_date = args.pub_date + "T00:00Z"
-            # if the date is forced manually, the time interval can
-            # be restricted
-            # time_limit_before = int(time_limit_before / 5)
-            # time_limit_after = int(time_limit_after / 2)
+        # if the date is forced manually, the time interval can
+        # be restricted
+        # time_limit_before = int(time_limit_before / 5)
+        # time_limit_after = int(time_limit_after / 2)
 
         git_cache = os.getenv("GIT_CACHE", default=GIT_CACHE)
 

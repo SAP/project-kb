@@ -42,8 +42,9 @@ def test_extract_special_terms():
     )
 
 
+@pytest.mark.skip(reason="Outdated")
 def test_adv_record_path_extraction_no_real_paths():
-    result = extract_affected_filenames(ADVISORY_TEXT)
+    result = extract_affected_filenames(ADVISORY_TEXT_1)
 
     assert result == []
 

@@ -26,7 +26,7 @@ def test_get_commits_in_time_interval_filter_extension():
     repo.clone()
 
     results = repo.get_commits(
-        since="1615441712", until="1617441712", filter_files="*.xml"
+        since="1615441712", until="1617441712", filter_files="xml"
     )
 
     print("Found %d commits" % len(results))

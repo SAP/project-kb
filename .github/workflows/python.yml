@@ -5,9 +5,13 @@ name: Python
 
 on:
   push:
-    branches: [fix-pytest]
+    branches:
+      - main
+      - test-fix-nlp
   pull_request:
-    branches: [fix-pytest]
+    branches:
+      - main
+      - text-fix-nlp
 
 jobs:
   build:
