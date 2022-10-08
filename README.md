@@ -10,16 +10,13 @@
 [![Pytest](https://github.com/SAP/project-kb/actions/workflows/python.yml/badge.svg)](https://github.com/SAP/project-kb/actions/workflows/python.yml)
 
 
-`Project KB` supports the creation, management and aggregation of a
+The goal of `Project KB` is to enable the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities that affect
 open-source software.
 
-This repository contains a [vulnerability knowledge-base](vulnerability-data)
-as well as set of tools to support its creation and management.
+`Project KB` consists of vulnerability data [vulnerability knowledge-base](vulnerability-data)
+as well as set of tools to support the mining, curation and management of such data.
 
-Additionally, the [MSR2019](MSR2019) folder contains the package associated with
-the paper we published at the Mining Software Repository conference in 2019 (see
-below).
 
 ## Why this project
 
@@ -50,6 +47,7 @@ collaborative, comprehensive knowledge base where each party remains in control
 of the data they produce and of how they aggregate and consume data from the
 other sources.
 
+
 ### What can project "KB" be used for, in practice
 
 (work in progress)
@@ -70,59 +68,32 @@ The **toolkit** comprises:
 
 The **knowledge base**, offers a set of vulnerability statements that can be consumed using the `kaybee` tool.
 
-## Getting started
 
-### Installing the `kaybee` tool
+
+
+## Project KB in a nutshell
+
+### Vulnerability data
+
+The vulnerability data of Project KB are stored in textual form as a set of YAML files, in branch `vulnerability-data`.
+
+### Tools
+
+#### Vulnerability Data Management: `kaybee`
 
 With `kaybee` it is possible to fetch the vulnerability statements from this
 repository (or from any other repository) and export them to a number of
 formats, including a script to import them to a [Steady
 backend](https://github.com/eclipse/steady).
 
-There is nothing to install actually, just [download a
-binary](https://github.com/SAP/project-kb/releases/latest) compatible with your
-operating system, make sure it has execution permissions if applicable, and then
-run it.
+See https://github.com/SAP/project-kb/tree/main/kaybee for details. 
 
-Optionally, for your convenience, you may want to make sure that the binary is
-in your `$PATH`.
+#### Vulnerability Data Mining Tool: `prospector`
 
-For example, in Linux you would put the following line in your `.bashrc` file:
+Prospector is a tool to reduce the effort needed to find security fixes for known vulnerabilities in open source software repositories.
+The tool takes a vulnerability description (in natural language) as input and produces a ranked list of commits, in decreasing order of relevance.
 
-    export PATH=$PATH:/usr/local/bin/kaybee
-
-(please, make sure you adjust the path to the `kaybee` binary as necessary)
-
-Alternatively, you can clone this repository and build it yourself (you will need `go` and `make`).
-You can do so with the `make` command; inspecting the Makefile first is a good idea.
-
-### Usage
-
-Once you have downloaded or built the binary, you can see the list of supported
-commands with:
-
-`kaybee --help`
-
-## Documentation
-
-Please check out the [project "KB" home page](https://sap.github.io/project-kb/).
-
-### Importing vulnerability data in Eclipse Steady
-
-Run the following command:
-
-```kaybee pull```
-
-This will retrieve all the statements from all the sources configured in your
-`kaybeeconf.yaml` file.
-
-You can then run:
-
-```kaybee export --target steady```
-
-to generate a script `steady.sh`; edit the top of the script to indicate the URL of
-your Steady backend and change the other variables as you see fit (there are comments
-in the file to guide you), then run it.
+See https://github.com/SAP/project-kb/tree/main/prospector for details.
 
 ## Publications
 
@@ -148,6 +119,8 @@ If you use the dataset for your research work, please cite it as:
 **MSR 2019 DATA SHOWCASE SUBMISSION**: please find [here the data and the
 scripts described in that paper](MSR2019)
 
+> If you wrote a paper that uses the data or the tools from this repository, please let us know (through an issue) and we'll add it to this list.
+
 ## Credits
 
 ### EU-funded research projects
@@ -167,8 +140,7 @@ See also [this notice](NOTICE.txt).
 
 ## Requirements
 
-None, the `kaybee` binary is self-contained. Binary versions for Windows, Linux,
-MacOS are available for [download](https://github.com/SAP/project-kb/releases).
+See the README files for `kaybee` and `prospector`.
 
 ## Limitations and Known Issues
 
