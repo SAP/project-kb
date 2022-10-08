@@ -47,30 +47,6 @@ collaborative, comprehensive knowledge base where each party remains in control
 of the data they produce and of how they aggregate and consume data from the
 other sources.
 
-
-### What can project "KB" be used for, in practice
-
-(work in progress)
-
-Project "KB" consists essentially of two things: a toolkit and a knowledge base.
-
-The **toolkit** comprises:
-
-  * `kaybee`, a tool to:
-    - create vulnerability statements; a vulnerability statement is a plain-text file in yaml format
-      that contains data about a given vulnerability, such as the commits that provide a fix for it,
-      a set of notes and references to related Web pages, a list of open-source components that
-      are directly affected by the vulnerability at hand, and so on.
-    - fetch vulnerability statements from one or more remote sources (git repositories)
-    - merge the content of multiple sources of statements, based on a conflict resolution policy
-    - export the result of the merge operation to a variety of different formats
-  * `prospector`, a research prototype to help map vulnerability advisories onto the commits that contain fixes for those vulnerabilities.
-
-The **knowledge base**, offers a set of vulnerability statements that can be consumed using the `kaybee` tool.
-
-
-
-
 ## Project KB in a nutshell
 
 ### Vulnerability data
