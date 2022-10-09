@@ -1,15 +1,16 @@
-from typing import Any, Callable, Dict, List, Tuple
-from unicodedata import name
+from typing import Callable, Dict, List, Tuple
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from stats.execution import Counter, execution_statistics
-
 from rules.helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
     extract_referred_to_by_nvd,
 )
+from stats.execution import Counter, execution_statistics
+
+# from unicodedata import name
+
 
 SEC_KEYWORDS = [
     "vuln",
@@ -350,19 +351,19 @@ def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) 
 
 RULES = {
     "CVE_ID_IN_COMMIT_MSG": Rule(apply_rule_cve_id_in_msg, 10),
-    "TOKENS_IN_DIFF": Rule(apply_rule_adv_keywords_in_diff, 5),
+    "TOKENS_IN_DIFF": Rule(apply_rule_adv_keywords_in_diff, 7),
     "TOKENS_IN_COMMIT_MSG": Rule(apply_rule_adv_keywords_in_msg, 10),
     "TOKENS_IN_MODIFIED_PATHS": Rule(apply_rule_adv_keywords_in_paths, 10),
     "SEC_KEYWORD_IN_COMMIT_MSG": Rule(apply_rule_security_keyword_in_msg, 5),
-    "GH_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_ghissue, 3),
-    "JIRA_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_jira_issue, 3),
+    "GH_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_ghissue, 2),
+    "JIRA_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_jira_issue, 2),
     "CHANGES_RELEVANT_FILE": Rule(apply_rule_changes_relevant_file, 8),
     "COMMIT_IN_ADV": Rule(apply_rule_commit_mentioned_in_adv, 10),
-    "COMMIT_IN_REFERENCE": Rule(apply_rule_commit_mentioned_in_reference, 8),
-    "VULN_IN_LINKED_ISSUE": Rule(apply_rule_vuln_mentioned_in_linked_issue, 8),
+    "COMMIT_IN_REFERENCE": Rule(apply_rule_commit_mentioned_in_reference, 9),
+    "VULN_IN_LINKED_ISSUE": Rule(apply_rule_vuln_mentioned_in_linked_issue, 9),
     "SEC_KEYWORD_IN_LINKED_ISSUE": Rule(apply_rule_security_keyword_in_linked_issue, 5),
     "JIRA_ISSUE_IN_COMMIT_MSG_AND_ADV": Rule(
-        apply_rule_jira_issue_in_commit_msg_and_adv, 8
+        apply_rule_jira_issue_in_commit_msg_and_adv, 9
     ),
-    "SMALL_COMMIT": Rule(apply_rule_small_commit, 1),
+    "SMALL_COMMIT": Rule(apply_rule_small_commit, 0),
 }

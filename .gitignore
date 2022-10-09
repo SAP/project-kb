@@ -63,3 +63,4 @@ prospector/run.sh
 prospector/cve_data
 .DS_Store
 kaybee/internal/reconcile/debug.test
+prospector/client/web/node-app/build
