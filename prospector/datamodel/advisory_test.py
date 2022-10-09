@@ -3,7 +3,11 @@ import time
 from unittest import result
 
 from pytest import skip
-from datamodel.advisory import AdvisoryRecord, build_advisory_record
+from datamodel.advisory import (
+    LOCAL_NVD_REST_ENDPOINT,
+    AdvisoryRecord,
+    build_advisory_record,
+)
 from .nlp import RELEVANT_EXTENSIONS
 
 # import pytest
@@ -96,10 +100,9 @@ def test_adv_record_keywords():
 
 def test_build():
     record = build_advisory_record(
-        "CVE-2014-0050", "", "", "", "", True, "", "", "", "java"
+        "CVE-2022-2839", "", "", LOCAL_NVD_REST_ENDPOINT, True, True, "", "", "", ""
     )
-    assert "MultipartStream" in record.paths
-    assert record.vulnerability_id == "CVE-2014-0050"
+    assert record.vulnerability_id == "CVE-2022-2839"
 
 
 def test_filenames_extraction():
@@ -135,3 +138,7 @@ def test_filenames_extraction():
 
 #     # print(record)
 #     assert "Chrysler" in record.affected_products
+
+
+if __name__ == "__main__":
+    test_build()

@@ -2,6 +2,7 @@
 # from datamodel import BaseModel
 import logging
 from datetime import datetime
+from os import system
 from typing import List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
@@ -73,7 +74,6 @@ class AdvisoryRecord(BaseModel):
     nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
     paths: Set[str] = Field(default_factory=set)
     keywords: Set[str] = Field(default_factory=set)
-
     # def __init__(self, vulnerability_id, repository_url, from_nvd, nvd_rest_endpoint):
     #     self.vulnerability_id = vulnerability_id
     #     self.repository_url = repository_url
@@ -84,7 +84,6 @@ class AdvisoryRecord(BaseModel):
         self, use_nvd: bool = False, fetch_references=False, relevant_extensions=[]
     ):
         self.from_nvd = use_nvd
-
         if self.from_nvd:
             self.get_advisory(self.vulnerability_id, self.nvd_rest_endpoint)
 
@@ -128,13 +127,11 @@ class AdvisoryRecord(BaseModel):
         """
 
         if not self.get_from_local_db(vuln_id, nvd_rest_endpoint):
-            print("Could not retrieve vulnerability data from local db")
-            print("Trying to retrieve data from NVD")
             self.get_from_nvd(vuln_id)
 
     # TODO: refactor this stuff
     def get_from_local_db(
-        self, vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
+        self, vuln_id: str = "", nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
     ):
         """
         Get an advisory from the local NVD database
@@ -145,10 +142,12 @@ class AdvisoryRecord(BaseModel):
                 return False
             data = response.json()
             self.published_timestamp = int(
-                datetime.fromisoformat(data["publishedDate"]).timestamp()
+                datetime.fromisoformat(data["publishedDate"][:-1] + ":00").timestamp()
             )
             self.last_modified_timestamp = int(
-                datetime.fromisoformat(data["lastModifiedDate"]).timestamp()
+                datetime.fromisoformat(
+                    data["lastModifiedDate"][:-1] + ":00"
+                ).timestamp()
             )
 
             self.description = data["cve"]["description"]["description_data"][0][
@@ -179,6 +178,7 @@ class AdvisoryRecord(BaseModel):
             self.published_timestamp = int(
                 datetime.fromisoformat(data["published"]).timestamp()
             )
+
             self.last_modified_timestamp = int(
                 datetime.fromisoformat(data["lastModified"]).timestamp()
             )
