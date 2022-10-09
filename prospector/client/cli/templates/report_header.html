@@ -60,9 +60,9 @@
 
     <h2>Filters</h2>
     <p class="text-justify">
-        There are XYZ candidates, by default only those with <button class="btn btn-primary btn-sm">relevance >
-            10</button> displayed, you can show more
-        candidates using the underlying buttons.
+        By default, only the candidates with relevance score of at least
+            10 are shown displayed (you can the buttons below to show more
+        candidates).
     </p>
     <div class="row">
         <div class="d-grid gap-2 col-6 mx-auto">
@@ -93,14 +93,25 @@
         <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b
                 id="cve_id">{{ advisory_record.vulnerability_id }}</b></a><br />
         <p class="text-justify">{{ advisory_record.description }}</p>
-        <p style="margin: 10pt 0 0;">
+        <p style="margin: 10pt">
             {% for token in advisory_record.keywords | sort %}
             <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ token }}</span>
             {% endfor %}
         </p>
     </div>
-    <div class="statistics" style="margin-top: 3ex">
-        <h2>Execution statistics</h2>
-        {{ execution_statistics | safe }}
+
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+        Show exec. stats
+    </button>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasExampleLabel">Execution Statistics</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            {{ execution_statistics | safe }}
+        </div>
     </div>
+
 </div>
