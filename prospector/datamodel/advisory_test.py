@@ -56,16 +56,6 @@ def test_adv_record_versions():
     assert "15.26" not in record.versions
 
 
-# def test_adv_record_nvd():
-#     record = AdvisoryRecord(vulnerability_id="CVE-2014-0050")
-
-#     record.analyze(use_nvd=True)
-
-#     # print(record)
-#     assert "1.3.1" in record.versions
-#     assert "1.3" not in record.versions
-
-
 def test_adv_record_products():
     record = AdvisoryRecord(vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT)
     record.analyze()
@@ -94,14 +84,6 @@ def test_adv_record_keywords():
     # )
 
 
-def test_build():
-    record = build_advisory_record(
-        "CVE-2014-0050", "", "", "", "", True, "", "", "", "java"
-    )
-    assert "MultipartStream" in record.paths
-    assert record.vulnerability_id == "CVE-2014-0050"
-
-
 def test_filenames_extraction():
     result1 = build_advisory_record(
         "CVE-2014-0050", "", "", "", "", True, "", "", "", ""
@@ -126,8 +108,6 @@ def test_filenames_extraction():
     assert result4.paths == set(["FileNameUtils"])
     assert result5.paths == set(["JsonMapObjectReaderWriter"])
 
-    # raise Exception("Test failed")
-
 
 def test_build():
     record = build_advisory_record(
@@ -135,40 +115,6 @@ def test_build():
     )
     assert "MultipartStream" in record.paths
     assert record.vulnerability_id == "CVE-2014-0050"
-
-
-def test_filenames_extraction():
-    result1 = build_advisory_record(
-        "CVE-2014-0050", "", "", "", "", True, "", "", "", ""
-    )
-    result2 = build_advisory_record(
-        "CVE-2021-22696", "", "", "", "", True, "", "", "", ""
-    )
-    result3 = build_advisory_record(
-        "CVE-2021-27582", "", "", "", "", True, "", "", "", ""
-    )
-    result4 = build_advisory_record(
-        "CVE-2021-29425", "", "", "", "", True, "", "", "", ""
-    )
-    result5 = build_advisory_record(
-        "CVE-2021-30468", "", "", "", "", True, "", "", "", ""
-    )
-    assert (
-        result1.paths.sort() == ["MultiPartStream", "FileUpload"].sort()
-    )  # Content-Type
-    assert result2.paths.sort() == ["JwtRequestCodeFilter", "request_uri"].sort()
-    assert (
-        result3.paths.sort()
-        == [
-            "OAuthConfirmationController",
-            "@ModelAttribute",
-            "authorizationRequest",
-        ].sort()
-    )
-    assert result4.paths.sort() == ["FileNameUtils"].sort()
-    assert result5.paths.sort() == ["JsonMapObjectReaderWriter"].sort()
-
-    # raise Exception("Test failed")
 
 
 # def test_adv_record_project_data():
