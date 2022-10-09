@@ -103,6 +103,7 @@ class AdvisoryRecord(BaseModel):
         # )
         self.keywords.update(extract_special_terms(self.description))
         # self.keywords = union_of(self.keywords, extract_special_terms(self.description))
+
         _logger.debug("References: " + str(self.references))
         self.references = [
             r for r in self.references if urlparse(r).hostname in ALLOWED_SITES

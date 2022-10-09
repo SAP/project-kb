@@ -131,15 +131,6 @@ def extract_jira_references(text: str) -> Dict[str, str]:
             attr_name="id",
             attr_value=["details-module", "descriptionmodule"],
         )
-        # "".join(
-        #     [
-        #         block.get_text().replace("\n", "")
-        #         for block in content.find_all(
-        #             # Find correct elemenets
-        #             attrs={"id": ["details-module", "descriptionmodule"]}
-        #         )
-        #     ]
-        # )
 
     return refs
 
