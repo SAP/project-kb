@@ -15,12 +15,14 @@ def filter_commits(candidates: List[Commit]) -> Tuple[List[Commit], List[Commit]
     MAX_HUNKS = 200
     MAX_FILES = 100
 
+    MIN_HUNKS = 1
+
     # TODO: maybe this could become a dictionary, with keys indicating "reasons" for rejection
     # which would enable a more useful output
 
     rejected = []
     for c in list(candidates):
-        if c.hunk_count > MAX_HUNKS:
+        if c.hunk_count > MAX_HUNKS or c.hunk_count < MIN_HUNKS:
             candidates.remove(c)
             rejected.append(c)
         if len(c.changed_files) > MAX_FILES:

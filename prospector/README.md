@@ -15,16 +15,14 @@ If you find a bug, please open an issue. If you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
 but fails without it)
 
-## Setup (for development and demonstration purposes only!)
+
+## Setup (for development, testing, and demonstration purposes only!)
 
 Prerequisites:
 
 * Python 3.8
 * pipenv
 * postgresql
-
-
-## Setup (for development, testing, and demonstration purposes only!)
 
 The easiest way to set up Prospector is to clone this repository and then run
 the following commands:
