@@ -60,24 +60,6 @@ def test_adv_record_versions():
     assert "15.26" not in record.versions
 
 
-# def test_adv_record_nvd():
-#     record = AdvisoryRecord(vulnerability_id="CVE-2014-0050")
-
-#     record.analyze(use_nvd=True)
-
-#     # print(record)
-#     assert "1.3.1" in record.versions
-#     assert "1.3" not in record.versions
-
-
-def test_adv_record_products():
-    record = AdvisoryRecord(vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT)
-    record.analyze()
-
-    # print(record)
-    assert "Chrysler" in record.affected_products
-
-
 def test_adv_record_keywords():
     record = AdvisoryRecord(
         vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2
@@ -107,19 +89,19 @@ def test_build():
 
 def test_filenames_extraction():
     result1 = build_advisory_record(
-        "CVE-2014-0050", "", "", "", "", True, "", "", "", ""
+        "CVE-2014-0050", "", "", LOCAL_NVD_REST_ENDPOINT, "", True, "", "", "", ""
     )
     result2 = build_advisory_record(
-        "CVE-2021-22696", "", "", "", "", True, "", "", "", ""
+        "CVE-2021-22696", "", "", LOCAL_NVD_REST_ENDPOINT, "", True, "", "", "", ""
     )
     result3 = build_advisory_record(
-        "CVE-2021-27582", "", "", "", "", True, "", "", "", ""
+        "CVE-2021-27582", "", "", LOCAL_NVD_REST_ENDPOINT, "", True, "", "", "", ""
     )
     result4 = build_advisory_record(
-        "CVE-2021-29425", "", "", "", "", True, "", "", "", ""
+        "CVE-2021-29425", "", "", LOCAL_NVD_REST_ENDPOINT, "", True, "", "", "", ""
     )
     result5 = build_advisory_record(
-        "CVE-2021-30468", "", "", "", "", True, "", "", "", ""
+        "CVE-2021-30468", "", "", LOCAL_NVD_REST_ENDPOINT, "", True, "", "", "", ""
     )
     assert result1.paths == set(["MultipartStream", "FileUpload"])  # Content-Type
     assert result2.paths == set(["JwtRequestCodeFilter", "request_uri"])
@@ -128,17 +110,3 @@ def test_filenames_extraction():
     )
     assert result4.paths == set(["FileNameUtils"])
     assert result5.paths == set(["JsonMapObjectReaderWriter"])
-
-    # raise Exception("Test failed")
-
-
-# def test_adv_record_project_data():
-#     record = AdvisoryRecord(vulnerability_id="CVE-XXXX-YYYY", description=ADVISORY_TEXT_2)
-#     record.analyze()
-
-#     # print(record)
-#     assert "Chrysler" in record.affected_products
-
-
-if __name__ == "__main__":
-    test_build()

@@ -326,7 +326,7 @@ class Git:
         """
         # return Levenshtein.ratio('hello world', 'hello')
         version = re.sub("[^0-9]", "", version)
-
+        print(version)
         tags = self.get_tags()
         best_match = ("", 0.0)
         for tag in tags:
@@ -341,7 +341,6 @@ class Git:
     # Return the timestamp for given a version if version exist or None
     def extract_timestamp_from_version(self, version: str) -> int:
         tag = self.get_tag_for_version(version)
-
         if tag[1] < 1:
             return None
 
