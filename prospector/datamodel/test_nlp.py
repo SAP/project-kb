@@ -66,18 +66,17 @@ def test_extract_affected_filenames():
     result3 = extract_affected_filenames(ADVISORY_TEXT_3)
     result4 = extract_affected_filenames(ADVISORY_TEXT_4)
     result5 = extract_affected_filenames(ADVISORY_TEXT_5)
-    assert result1.sort() == ["JwtRequestCodeFilter", "request_uri"].sort()
-    assert (
-        result2.sort()
-        == [
+    assert result1 == set(["JwtRequestCodeFilter", "request_uri"])
+    assert result2 == set(
+        [
             "OAuthConfirmationController",
             "@ModelAttribute",
             "authorizationRequest",
-        ].sort()
+        ]
     )
-    assert result3.sort() == ["FileNameUtils"].sort()
-    assert result4.sort() == ["MultiPartStream", "FileUpload"].sort()  # Content-Type
-    assert result5.sort() == ["JsonMapObjectReaderWriter"].sort()
+    assert result3 == set(["FileNameUtils"])
+    assert result4 == set(["MultipartStream", "FileUpload"])  # Content-Type
+    assert result5 == set(["JsonMapObjectReaderWriter"])
 
 
 def test_adv_record_path_extraction_has_real_paths():

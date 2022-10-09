@@ -1,7 +1,7 @@
 import logging
 import sys
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import requests
 from tqdm import tqdm
@@ -46,8 +46,8 @@ def prospector(  # noqa: C901
     tag_interval: str = "",
     filter_extensions: str = "",
     version_interval: str = "",
-    modified_files: "list[str]" = [],
-    advisory_keywords: "list[str]" = [],
+    modified_files: Set[str] = set(),
+    advisory_keywords: Set[str] = set(),
     time_limit_before: int = TIME_LIMIT_BEFORE,
     time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = True,
@@ -57,7 +57,7 @@ def prospector(  # noqa: C901
     use_backend: str = "always",
     git_cache: str = GIT_CACHE,
     limit_candidates: int = MAX_CANDIDATES,
-    rules: "list[str]" = ["ALL"],
+    rules: List[str] = ["ALL"],
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
     _logger.debug("begin main commit and CVE processing")

@@ -41,16 +41,19 @@ DEFAULT_BACKEND = "http://localhost:8000"
 def parseArguments(args):
     parser = argparse.ArgumentParser(description="Prospector CLI")
     parser.add_argument(
-        "vulnerability_id", nargs="?", help="ID of the vulnerability to analyze"
+        "vulnerability_id",
+        nargs="?",
+        type=str,
+        help="ID of the vulnerability to analyze",
     )
 
-    parser.add_argument("--repository", default="", help="Git repository")
+    parser.add_argument("--repository", default="", type=str, help="Git repository")
 
     parser.add_argument(
         "--pub-date", default="", help="Publication date of the advisory"
     )
 
-    parser.add_argument("--descr", default="", help="Text of the advisory")
+    parser.add_argument("--descr", default="", type=str, help="Text of the advisory")
 
     parser.add_argument(
         "--max-candidates",
@@ -111,19 +114,22 @@ def parseArguments(args):
     )
 
     parser.add_argument(
-        "--backend", default=DEFAULT_BACKEND, help="URL of the backend server"
+        "--backend", default=DEFAULT_BACKEND, type=str, help="URL of the backend server"
     )
 
     parser.add_argument(
         "--use-backend",
         default="always",
         choices=["always", "never", "optional"],
+        type=str,
         help="Use the backend server",
     )
 
     parser.add_argument(
         "--report",
         default="html",
+        choices=["html", "json", "console"],
+        type=str,
         help="Format of the report (options: console, json, html)",
     )
 
@@ -235,7 +241,7 @@ def main(argv):  # noqa: C901
 
         # if no backend the filters on the advisory do not work
         use_nvd = False
-        if args.vulnerability_id.lower().startswith("cve-"):
+        if args.vulnerability_id.casefold().startswith("cve-"):
             use_nvd = True
         if args.use_nvd is True:
             use_nvd = True

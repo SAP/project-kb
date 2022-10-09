@@ -1,4 +1,5 @@
-from typing import Union
+import re
+from typing import List, Union
 import requests
 import requests_cache
 from bs4 import BeautifulSoup
@@ -56,3 +57,17 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
     except Exception:
         _logger.error("Server did not reply", exc_info=True)
         return False
+
+
+def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str:
+
+    content = fetch_url(url, False)
+    if not content:
+        return ""
+
+    return " ".join(
+        [
+            re.sub(r"\s+", " ", block.get_text())
+            for block in content.find_all(attrs={attr_name: attr_value})
+        ]
+    ).strip()

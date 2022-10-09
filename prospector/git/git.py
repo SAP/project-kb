@@ -305,11 +305,11 @@ class Git:
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, key, by="id"):
         if by == "id":
-            return Commit(self, key)
+            return RawCommit(self, key)
         if by == "fingerprint":
             # TODO implement computing fingerprints
             c_id = self._fingerprints[key]
-            return Commit(self, c_id)
+            return RawCommit(self, c_id)
 
         return None
 
@@ -347,7 +347,7 @@ class Git:
 
         commit_id = self.get_commit_id_for_tag(tag[0])
         commit = self.get_commit(commit_id)
-        return int(commit.get_timestamp())
+        return commit.get_timestamp()
 
     # def pretty_print_tag_ref(self, ref):
     #     return ref.split('/')[-1]
@@ -405,8 +405,8 @@ class Git:
         cmd = f"git fetch origin pull/{id}/head"
 
 
-class Commit:
-    def __init__(self, repository, commit_id, init_data=None):
+class RawCommit:
+    def __init__(self, repository: Git, commit_id: str, init_data=None):
         self._attributes = {}
 
         self._repository = repository
@@ -418,7 +418,7 @@ class Commit:
             for k in init_data:
                 self._attributes[k] = init_data[k]
 
-    def get_id(self):
+    def get_id(self) -> str:
         if "full_id" not in self._attributes:
             try:
                 cmd = ["git", "log", "--format=%H", "-n1", self._id]
@@ -492,7 +492,7 @@ class Commit:
             return datetime.utcfromtimestamp(
                 int(self._attributes["timestamp"])
             ).strftime(date_format)
-        return self._attributes["timestamp"]
+        return int(self._attributes["timestamp"])
 
     @measure_execution_time(
         execution_statistics.sub_collection("core"),
@@ -501,13 +501,21 @@ class Commit:
     def get_changed_files(self):
         if "changed_files" not in self._attributes:
             cmd = ["git", "diff", "--name-only", self._id + "^.." + self._id]
-            out = self._exec.run(cmd, cache=True)
-            self._attributes["changed_files"] = out
+            try:
+                out = self._exec.run(cmd, cache=True)
+                self._attributes["changed_files"] = out  # This is a tuple
+            # This exception is raised when the commit is the first commit in the repository
+            except Exception as e:
+                _logger.error(
+                    f"Failed to obtain changed files for commit {self._id}, it may be the first commit of the repository. Processing anyway...",
+                    exc_info=True,
+                )
+                self._attributes["changed_files"] = []
+
         return self._attributes["changed_files"]
 
     def get_changed_paths(self, other_commit=None, match=None):
         # TODO refactor, this overlaps with changed_files
-
         if other_commit is None:
             other_commit_id = self._id + "^"
         else:
@@ -722,7 +730,7 @@ class Commit:
         )
 
 
-class CommitSet:
+class RawCommitSet:
     def __init__(self, repo=None, commit_ids=[], prefetch=False):
 
         if repo is not None:
@@ -760,16 +768,16 @@ class CommitSet:
                         commit_data[current_field] += "\n" + line
 
                 self._commits.append(
-                    Commit(self._repository, cid, init_data=commit_data)
+                    RawCommit(self._repository, cid, init_data=commit_data)
                 )
         else:
-            self._commits = [Commit(self._repository, c) for c in commit_ids]
+            self._commits = [RawCommit(self._repository, c) for c in commit_ids]
 
     def get_all(self):
         return self._commits
 
     def add(self, commit_id):
-        self._commits.append(Commit(self._repository, commit_id))
+        self._commits.append(RawCommit(self._repository, commit_id))
         return self
 
     def filter_by_msg(self, word):
@@ -833,7 +841,12 @@ class Exec:
 
     def _execute(self, cmd_l):
         try:
-            proc = subprocess.Popen(cmd_l, cwd=self._workdir, stdout=subprocess.PIPE)
+            proc = subprocess.Popen(
+                cmd_l,
+                cwd=self._workdir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Needed to have properly prinded error output
+            )
             out, _ = proc.communicate()
 
             if proc.returncode != 0:

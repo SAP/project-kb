@@ -1,13 +1,10 @@
 from typing import Dict, Set
 
 import pandas
-from bs4 import BeautifulSoup
-import requests
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from git.git import Git
-from util.http import fetch_url
 from util.similarity import (
     damerau_levenshtein_edit_distance,
     jaccard_set_similarity,
@@ -20,7 +17,6 @@ from util.tokenize import tokenize_non_nl_term
 DAYS_BEFORE = 180
 DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
-
 
 # AttributeError: 'tuple' object has no attribute 'cve_refs'
 def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
