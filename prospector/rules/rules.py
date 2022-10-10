@@ -1,4 +1,7 @@
-from typing import Callable, Dict, List, Tuple
+import re
+from typing import Any, Callable, Dict, List, Tuple
+from unicodedata import name
+
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -26,8 +29,10 @@ SEC_KEYWORDS = [
     "remote execution",
     "malicious",
     "cwe-",
-    " rce ",  # standalone RCE is a thing
+    "rce",
 ]
+
+KEYWORDS_REGEX = r"(?:^|[.,:\s]|\b)({})(?:$|[.,:\s]|\b)".format("|".join(SEC_KEYWORDS))
 
 
 class Rule:
@@ -160,7 +165,9 @@ def apply_rule_changes_relevant_file(
             file
             for file in candidate.changed_files
             for adv_path in advisory_record.paths
-            if adv_path in file
+            if adv_path.casefold() in file.casefold()
+            and len(adv_path)
+            > 3  # TODO: when fixed extraction the >3 should be useless
         ]
     )
     if len(relevant_files):
@@ -169,6 +176,7 @@ def apply_rule_changes_relevant_file(
     return None
 
 
+# TODO: this is empty now
 def apply_rule_adv_keywords_in_msg(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
@@ -185,6 +193,7 @@ def apply_rule_adv_keywords_in_msg(
     return None
 
 
+# TODO: with proper filename and msg search this could be deprecated ?
 def apply_rule_adv_keywords_in_diff(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
@@ -215,7 +224,7 @@ def apply_rule_security_keyword_in_msg(candidate: Commit, _) -> str:
     explanation_template = "The commit message includes the following keywords: {}"
 
     matching_keywords = set(
-        [kw for kw in SEC_KEYWORDS if kw in candidate.message.lower()]
+        [r.group(1) for r in re.finditer(KEYWORDS_REGEX, candidate.message, flags=re.I)]
     )
 
     if len(matching_keywords):
@@ -239,10 +248,12 @@ def apply_rule_adv_keywords_in_paths(
         ]
     )
     if len(matches):
-        explained_matches = [f"{m[0]} ({m[1]})" for m in matches]
+        # explained_matches = [f"{m[0]} ({m[1]})" for m in matches]
         # for m in matches:
         #     explained_matches.append(f"{m[0]} ({m[1]})") for m in matches
-        return explanation_template.format(", ".join(explained_matches))
+        return explanation_template.format(
+            ", ".join([f"{m[0]} ({m[1]})" for m in matches])
+        )
 
     return None
 
@@ -269,14 +280,13 @@ def apply_rule_commit_mentioned_in_reference(
     """Matches commits that are mentioned in the links contained in the advisory page."""
     explanation_template = "This commit is mentioned in one or more referenced pages"
 
-    count = extract_commit_mentioned_in_linked_pages(candidate, advisory_record)
-
-    if count:
+    if extract_commit_mentioned_in_linked_pages(candidate, advisory_record):
         return explanation_template
 
     return None
 
 
+# TODO: refactor these rules to not scan multiple times the same commit
 def apply_rule_vuln_mentioned_in_linked_issue(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
@@ -287,36 +297,47 @@ def apply_rule_vuln_mentioned_in_linked_issue(
     )
 
     for ref, page_content in candidate.ghissue_refs.items():
-        if not page_content:
-            continue
-
         if advisory_record.vulnerability_id in page_content:
-
             return explanation_template.format(ref, advisory_record.vulnerability_id)
 
     return None
 
 
-def apply_rule_security_keyword_in_linked_issue(candidate: Commit, _) -> str:
+def apply_rule_security_keyword_in_linked_gh(candidate: Commit, _) -> str:
     """Matches commits linked to an issue containing one or more "security-related" keywords."""
     explanation_template = (
         "The issue (or pull request) {} contains security-related terms: {}"
     )
 
-    for ref, page_content in candidate.ghissue_refs.items():
-
-        if not page_content:
-            continue
+    for id, issue_content in candidate.ghissue_refs.items():
 
         matching_keywords = set(
-            [kw for kw in SEC_KEYWORDS if kw in page_content.lower()]
+            [r.group(1) for r in re.finditer(KEYWORDS_REGEX, issue_content, flags=re.I)]
         )
+
         if len(matching_keywords):
-            return explanation_template.format(ref, ", ".join(matching_keywords))
+            return explanation_template.format(id, ", ".join(matching_keywords))
 
     return None
 
 
+def apply_rule_security_keyword_in_linked_jira(candidate: Commit, _) -> str:
+    """Matches commits linked to an issue containing one or more "security-related" keywords."""
+    explanation_template = "The jira issue {} contains security-related terms: {}"
+
+    for id, issue_content in candidate.jira_refs.items():
+
+        matching_keywords = set(
+            [r.group(1) for r in re.finditer(KEYWORDS_REGEX, issue_content, flags=re.I)]
+        )
+
+        if len(matching_keywords):
+            return explanation_template.format(id, ", ".join(matching_keywords))
+
+    return None
+
+
+# TODO: this and the above are very similar, we can refactor everything to save code
 def apply_rule_jira_issue_in_commit_msg_and_adv(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
@@ -327,7 +348,7 @@ def apply_rule_jira_issue_in_commit_msg_and_adv(
         (i, j)
         for i in candidate.jira_refs
         for j in advisory_record.references
-        if i in j
+        if i in j and "jira" in j
     ]
     if len(matches):
         ticket_ids = [id for (id, _) in matches]
@@ -336,8 +357,29 @@ def apply_rule_jira_issue_in_commit_msg_and_adv(
     return None
 
 
+def apply_rule_gh_issue_in_commit_msg_and_adv(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    """Matches commits whose message contains a GitHub issue ID and the advisory mentions the same GitHub issue."""
+    explanation_template = "The issue(s) {} (mentioned in the commit message) is referenced by the advisory"
+    matches = [
+        (i, j)
+        for i in candidate.ghissue_refs
+        for j in advisory_record.references
+        if i in j and "github" in j
+    ]
+    if len(matches):
+        ticket_ids = [id for (id, _) in matches]
+        return explanation_template.format(", ".join(ticket_ids))
+
+    return None
+
+
+# TODO: is this really useful?
 def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) -> str:
     """Matches small commits (i.e., they modify a small number of contiguous lines of code)."""
+    return None
+    # unreachable code
     MAX_HUNKS = 10
     explanation_template = (
         "This commit modifies only {} hunks (groups of contiguous lines of code)"
@@ -361,9 +403,13 @@ RULES = {
     "COMMIT_IN_ADV": Rule(apply_rule_commit_mentioned_in_adv, 10),
     "COMMIT_IN_REFERENCE": Rule(apply_rule_commit_mentioned_in_reference, 9),
     "VULN_IN_LINKED_ISSUE": Rule(apply_rule_vuln_mentioned_in_linked_issue, 9),
-    "SEC_KEYWORD_IN_LINKED_ISSUE": Rule(apply_rule_security_keyword_in_linked_issue, 5),
+    "SEC_KEYWORD_IN_LINKED_GH": Rule(apply_rule_security_keyword_in_linked_gh, 5),
+    "SEC_KEYWORD_IN_LINKED_JIRA": Rule(apply_rule_security_keyword_in_linked_jira, 5),
     "JIRA_ISSUE_IN_COMMIT_MSG_AND_ADV": Rule(
         apply_rule_jira_issue_in_commit_msg_and_adv, 9
+    ),
+    "GH_ISSUE_IN_COMMIT_MSG_AND_ADV": Rule(
+        apply_rule_gh_issue_in_commit_msg_and_adv, 9
     ),
     "SMALL_COMMIT": Rule(apply_rule_small_commit, 0),
 }

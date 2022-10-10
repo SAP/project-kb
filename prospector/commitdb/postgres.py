@@ -53,60 +53,29 @@ class PostgresCommitDB(CommitDB):
                     result = cur.fetchall()
                     if len(result):
                         data.append(parse_commit_from_database(result[0]))
-                    # if not len(result):
-                    #     # Workaround for unmarshaling hunks, dict type refs
-                    #     hunks = [
-                    #         int(x)
-                    #         for x in re.findall("[0-9]+", "".join(result[0]["hunks"]))
-                    #     ]
-                    #     # They are always pairs so no problem
-                    #     result[0]["hunks"] = list(zip(hunks, hunks[2:]))
-
-                    #     result[0]["jira_refs_id"] = dict(
-                    #         zip(
-                    #             result[0]["jira_refs_id"],
-                    #             result[0]["jira_refs_content"],
-                    #         )
-                    #     )
-                    #     result[0]["ghissue_refs_id"] = dict(
-                    #         zip(
-                    #             result[0]["ghissue_refs_id"],
-                    #             result[0]["ghissue_refs_content"],
-                    #         )
-                    #     )
-                    #     result[0]["cve_refs"] = list(result[0]["cve_refs"])
-                    #     # result[0]["cve_refs"] = dict.fromkeys(result[0]["cve_refs"], "")
-                    #     parsed_commit = Commit.parse_obj(result[0])
-
-                    #     data.append(parsed_commit)
-                    # else:
-                    #     data.append(parse_commit(result[0]))
-                    #    data.append(None)
-            else:
-                raise Exception(
-                    "ABORT: Why are you getting every commit of a repository? "
-                )
-                cur.execute(
-                    "SELECT * FROM commits WHERE repository = %s",
-                    (repository,),
-                )
-                result = cur.fetchall()
-                if len(result):
-                    for res in result:
-                        # Workaround for unmarshaling hunks, dict type refs
-                        lis = []
-                        for r in res[3]:
-                            a, b = r.strip("()").split(",")
-                            lis.append((int(a), int(b)))
-                        res[3] = lis
-                        res[9] = dict.fromkeys(res[8], "")
-                        res[10] = dict.fromkeys(res[9], "")
-                        res[11] = dict.fromkeys(res[10], "")
-                        parsed_commit = Commit.parse_obj(res)
-                        data.append(parsed_commit)
+            # else:
+            #     cur.execute(
+            #         "SELECT * FROM commits WHERE repository = %s",
+            #         (repository,),
+            #     )
+            #     result = cur.fetchall()
+            #     if len(result):
+            #         for res in result:
+            #             # Workaround for unmarshaling hunks, dict type refs
+            #             lis = []
+            #             for r in res[3]:
+            #                 a, b = r.strip("()").split(",")
+            #                 lis.append((int(a), int(b)))
+            #             res[3] = lis
+            #             res[9] = dict.fromkeys(res[8], "")
+            #             res[10] = dict.fromkeys(res[9], "")
+            #             res[11] = dict.fromkeys(res[10], "")
+            #             parsed_commit = Commit.parse_obj(res)
+            #             data.append(parsed_commit)
             cur.close()
         except Exception:
             _logger.error("Could not lookup commit vector in database", exc_info=True)
+            cur.close()
             raise Exception("Could not lookup commit vector in database")
 
         return data

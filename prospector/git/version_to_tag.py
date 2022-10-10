@@ -10,7 +10,7 @@ import difflib
 # pylint: disable=singleton-comparison,unidiomatic-typecheck, dangerous-default-value
 import re
 
-from .git import Commit, Git
+from .git import RawCommit, Git
 
 
 def recursively_split_version_string(input_version: str, output_version: list = []):

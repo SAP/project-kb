@@ -1,13 +1,10 @@
 from typing import Dict, Set
 
 import pandas
-from bs4 import BeautifulSoup
-import requests
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from git.git import Git
-from util.http import fetch_url
 from util.similarity import (
     damerau_levenshtein_edit_distance,
     jaccard_set_similarity,

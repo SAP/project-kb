@@ -139,3 +139,7 @@ def test_apply_rules_selected_rules(
     assert "REF_ADV_VULN_ID" not in annotated_candidates[0].annotations
     assert "REF_GH_ISSUE" in annotated_candidates[0].annotations
     assert "CH_REL_PATH" in annotated_candidates[0].annotations
+
+
+def test_sec_keywords_in_linked_issue():
+    print("TODO")

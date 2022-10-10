@@ -9,32 +9,29 @@ from .commit import make_from_raw_commit
 
 @pytest.fixture
 def repository():
-    repo = Git("https://github.com/apache/struts.git")
+    repo = Git("https://github.com/slackhq/nebula")
     repo.clone()
     return repo
 
 
-def test_proprocess_commit(repository):
+def test_preprocess_commit(repository):
 
     repo = repository
-    raw_commit = repo.get_commit("93f378809cc73c65c1d689a0e32ec440c52e7ce2")
+    raw_commit = repo.get_commit("e434ba6523c4d6d22625755f9890039728e6676a")
 
     commit = make_from_raw_commit(raw_commit)
 
-    assert commit.message.startswith(
-        "Merge pull request #480 from apache/WW-5117-reorders-stack [WW-5117]"
-    )
+    assert commit.message.startswith("fix unsafe routes darwin (#610)")
 
-    assert "WW-5117" in commit.jira_refs.keys()
-    assert "480" in commit.ghissue_refs.keys()
+    assert "610" in commit.ghissue_refs.keys()
     assert commit.cve_refs == []
 
 
-def test_proprocess_commit_set(repository):
+def test_preprocess_commit_set(repository):
 
     repo = repository
     commit_set = repo.get_commits(
-        since="1615441712", until="1617441712", filter_files="*.java"
+        since="1615441712", until="1617441712", filter_files="go"
     )
     preprocessed_commits = []
 
