@@ -1,6 +1,8 @@
 from typing import Dict, Set
 
 import pandas
+from spacy import load
+import spacy
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit

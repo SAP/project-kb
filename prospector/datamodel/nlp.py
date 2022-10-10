@@ -1,10 +1,8 @@
 import os
 import re
-from typing import Dict, List, Set
-import requests
-
-# from util.http import extract_from_webpage, fetch_url, get_from_xml
-from spacy import load
+from typing import Dict, List, Set, Tuple
+from util.http import extract_from_webpage, fetch_url
+from spacy import Language, load
 from datamodel.constants import RELEVANT_EXTENSIONS
 from util.http import extract_from_webpage, get_from_xml
 
@@ -35,25 +33,20 @@ def extract_special_terms(description: str) -> Set[str]:
     return tuple(result)
 
 
-def extract_words_from_text(text: str) -> Set[str]:
-    """Use spacy to extract "relevant words" from text"""
-    # Lemmatization
-    return set(
-        [
-            token.lemma_.casefold()
-            for token in nlp(text)
-            if token.pos_ in ("NOUN", "VERB", "PROPN") and len(token.lemma_) > 3
-        ]
-    )
+def extract_nouns_from_text(text: str) -> List[str]:
+    """Use spacy to extract nouns from text"""
+    return [
+        token.text
+        for token in nlp(text)
+        if token.pos_ == "NOUN" and len(token.text) > 3
+    ]
 
 
-def find_similar_words(adv_words: Set[str], commit_msg: str, exclude: str) -> Set[str]:
+def extract_similar_words(
+    adv_words: Set[str], commit_msg: str, blocklist: Set[str]
+) -> List[str]:
     """Extract nouns from commit message that appears in the advisory text"""
-    commit_words = {
-        word for word in extract_words_from_text(commit_msg) if word not in exclude
-    }
-    return commit_words.intersection(adv_words)
-    # return [word for word in extract_words_from_text(commit_msg) if word in adv_words]
+    return [word for word in extract_nouns_from_text(commit_msg) if word in adv_words]
 
 
 def extract_versions(text: str) -> List[str]:

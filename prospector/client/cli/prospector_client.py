@@ -75,19 +75,38 @@ def prospector(  # noqa: C901
             filter_extensions,
         )
 
-    # obtain a repository object
-    repository = Git(repository_url, git_cache)
+    with ConsoleWriter("Obtaining initial set of candidates") as writer:
 
-    # retrieve of commit candidates
-    candidates = get_candidates(
-        advisory_record,
-        repository,
-        tag_interval,
-        version_interval,
-        time_limit_before,
-        time_limit_after,
-        limit_candidates,
-    )
+        # obtain a repository object
+        repository = Git(repository_url, git_cache)
+
+        # retrieve of commit candidates
+        candidates = get_candidates(
+            advisory_record,
+            repository,
+            tag_interval,
+            version_interval,
+            time_limit_before,
+            time_limit_after,
+            filter_extensions[0],
+        )
+        _logger.debug(f"Collected {len(candidates)} candidates")
+
+        if len(candidates) > limit_candidates:
+            _logger.error(
+                "Number of candidates exceeds %d, aborting." % limit_candidates
+            )
+            _logger.error(
+                "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
+            )
+            writer.print(
+                f"Found {len(candidates)} candidates, too many to proceed.",
+                status=MessageStatus.ERROR,
+            )
+            writer.print("Please try running the tool again.")
+            sys.exit(-1)
+
+        writer.print(f"Found {len(candidates)} candidates")
 
     with ExecutionTimer(
         core_statistics.sub_collection("commit preprocessing")

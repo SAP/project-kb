@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from datamodel.nlp import find_similar_words
+from datamodel.nlp import extract_similar_words
 from rules.helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_security_keywords,
@@ -142,9 +142,16 @@ class ChangesRelevantFiles(Rule):
             return True
         return False
 
+def apply_rule_adv_keywords_in_msg(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    """Matches commits whose message contain any of the special "code tokens" extracted from the advisory."""
+    explanation_template = "The commit message includes the following keywords: {}"
 
-class AdvKeywordsInMsg(Rule):
-    """Matches commits whose message contain any of the keywords extracted from the advisory."""
+    matching_keywords = set(extract_similar_words(advisory_record.keywords, candidate.message, set()))
+    # matching_keywords = set(
+    #     [kw for kw in advisory_record.keywords if kw in candidate.message]
+    # )
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         matching_keywords = find_similar_words(
@@ -158,8 +165,30 @@ class AdvKeywordsInMsg(Rule):
 
 
 # TODO: with proper filename and msg search this could be deprecated ?
-class AdvKeywordsInDiffs(Rule):
-    """Matches commits whose diffs contain any of the keywords extracted from the advisory."""
+def apply_rule_adv_keywords_in_diff(
+    candidate: Commit, advisory_record: AdvisoryRecord
+) -> str:
+    """Matches commits whose diff contain any of the special "code tokens" extracted from the advisory."""
+    return None
+    # FIXME: this is hardcoded, read it from an "config" object passed to the rule function
+    skip_tokens = ["IO"]
+
+    explanation_template = "The commit diff includes the following keywords: {}"
+
+    matching_keywords = set(
+        [
+            kw
+            for kw in advisory_record.keywords
+            for diff_line in candidate.diff
+            if kw in diff_line and kw not in skip_tokens
+        ]
+    )
+
+    if len(matching_keywords):
+        return explanation_template.format(", ".join(matching_keywords))
+
+    return None
+
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         return False
@@ -290,61 +319,38 @@ class CrossReferencedGhLink(Rule):
 
 class SmallCommit(Rule):
     """Matches small commits (i.e., they modify a small number of contiguous lines of code)."""
+    return None
+    # unreachable code
+    MAX_HUNKS = 10
+    explanation_template = (
+        "This commit modifies only {} hunks (groups of contiguous lines of code)"
+    )
 
-    def apply(self, candidate: Commit, _: AdvisoryRecord):
-        return False
-        if candidate.get_hunks() < 10:  # 10
-            self.message = (
-                f"This commit modifies only {candidate.hunks} contiguous lines of code"
-            )
-            return True
-        return False
+    if candidate.hunk_count <= MAX_HUNKS:
+        return explanation_template.format(candidate.hunk_count)
 
-
-# TODO: implement properly
-class CommitMentionedInReference(Rule):
-    """Matches commits that are mentioned in any of the links contained in the advisory page."""
-
-    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if extract_commit_mentioned_in_linked_pages(candidate, advisory_record):
-            self.message = "A page linked in the advisory mentions this commit"
-
-            return True
-        return False
+    return None
 
 
-class CommitHasTwins(Rule):
-    def apply(self, candidate: Commit, _: AdvisoryRecord) -> bool:
-        if not Rule.lsh_index.is_empty():
-            # TODO: the twin search must be done at the beginning, in the raw commits
-
-            candidate.twins = Rule.lsh_index.query(decode_minhash(candidate.minhash))
-            candidate.twins.remove(candidate.commit_id)
-        # self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
-        if len(candidate.twins) > 0:
-            self.message = (
-                f"This commit has one or more twins: {', '.join(candidate.twins)}"
-            )
-            return True
-        return False
-
-
-RULES = [
-    CveIdInMessage("CVE_ID_IN_MESSAGE", 20),
-    CommitMentionedInAdv("COMMIT_IN_ADVISORY", 20),
-    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 20),
-    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 20),
-    CommitMentionedInReference("COMMIT_IN_REFERENCE", 9),
-    CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 9),
-    ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 9),
-    AdvKeywordsInDiffs("ADV_KEYWORDS_IN_DIFFS", 5),
-    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 5),
-    AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 5),
-    SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 5),
-    SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 5),
-    SecurityKeywordInLinkedJiraIssue("SEC_KEYWORDS_IN_LINKED_JIRA", 5),
-    ReferencesGhIssue("GITHUB_ISSUE_IN_MESSAGE", 2),
-    ReferencesJiraIssue("JIRA_ISSUE_IN_MESSAGE", 2),
-    SmallCommit("SMALL_COMMIT", 0),
-    CommitHasTwins("COMMIT_HAS_TWINS", 5),
-]
+RULES = {
+    "CVE_ID_IN_COMMIT_MSG": Rule(apply_rule_cve_id_in_msg, 10),
+    "TOKENS_IN_DIFF": Rule(apply_rule_adv_keywords_in_diff, 7),
+    "TOKENS_IN_COMMIT_MSG": Rule(apply_rule_adv_keywords_in_msg, 5),
+    "TOKENS_IN_MODIFIED_PATHS": Rule(apply_rule_adv_keywords_in_paths, 10),
+    "SEC_KEYWORD_IN_COMMIT_MSG": Rule(apply_rule_security_keyword_in_msg, 5),
+    "GH_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_ghissue, 2),
+    "JIRA_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_jira_issue, 2),
+    "CHANGES_RELEVANT_FILE": Rule(apply_rule_changes_relevant_file, 8),
+    "COMMIT_IN_ADV": Rule(apply_rule_commit_mentioned_in_adv, 10),
+    "COMMIT_IN_REFERENCE": Rule(apply_rule_commit_mentioned_in_reference, 9),
+    "VULN_IN_LINKED_ISSUE": Rule(apply_rule_vuln_mentioned_in_linked_issue, 9),
+    "SEC_KEYWORD_IN_LINKED_GH": Rule(apply_rule_security_keyword_in_linked_gh, 5),
+    "SEC_KEYWORD_IN_LINKED_JIRA": Rule(apply_rule_security_keyword_in_linked_jira, 5),
+    "JIRA_ISSUE_IN_COMMIT_MSG_AND_ADV": Rule(
+        apply_rule_jira_issue_in_commit_msg_and_adv, 9
+    ),
+    "GH_ISSUE_IN_COMMIT_MSG_AND_ADV": Rule(
+        apply_rule_gh_issue_in_commit_msg_and_adv, 9
+    ),
+    "SMALL_COMMIT": Rule(apply_rule_small_commit, 0),
+}

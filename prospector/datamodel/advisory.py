@@ -8,13 +8,14 @@ from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel, Field
+import spacy
 
 from log.logger import logger, pretty_log, get_level
 from util.http import fetch_url
 
 from .nlp import (
     extract_affected_filenames,
-    extract_words_from_text,
+    extract_nouns_from_text,
     extract_products,
     extract_versions,
 )
@@ -81,33 +82,22 @@ class AdvisoryRecord(BaseModel):
     #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(
-        self,
-        use_nvd: bool = False,
-        fetch_references: bool = False,
-        relevant_extensions: List[str] = [],
+        self, use_nvd: bool = False, fetch_references: bool = False, relevant_extensions: List[str] = []
     ):
         self.from_nvd = use_nvd
         if self.from_nvd:
             self.get_advisory(self.vulnerability_id, self.nvd_rest_endpoint)
 
-        # Union of also removed duplicates...
-        self.versions.extend(extract_versions(self.description))
-        self.versions = list(set(self.versions))
-        # = union_of(self.versions, extract_versions(self.description))
-        self.affected_products.extend(extract_products(self.description))
-        self.affected_products = list(set(self.affected_products))
-
-        #  = union_of(
-        #     self.affected_products, extract_products(self.description)
-        # )
-        # TODO: use a set where possible to speed up the rule application time
-        self.files.update(
-            extract_affected_filenames(self.description)
-            # TODO: this could be done on the words extracted from the description
+        self.versions = union_of(self.versions, extract_versions(self.description))
+        self.affected_products = union_of(
+            self.affected_products, extract_products(self.description)
         )
-        # print(self.files)
+        # TODO: use a set where possible to speed up the rule application time
+        self.paths.update(
+            extract_affected_filenames(self.description, relevant_extensions)  # TODO: this could be done on the words extracted from the description
+        )
 
-        self.keywords.update(extract_words_from_text(self.description))
+        self.keywords.update(extract_nouns_from_text(self.description))
 
         logger.debug("References: " + str(self.references))
         self.references = [
@@ -237,7 +227,7 @@ def build_advisory_record(
         advisory_record.keywords.update(advisory_keywords)
 
     if len(modified_files) > 0:
-        advisory_record.files.update(modified_files)
+        advisory_record.paths.update(modified_files)
 
     logger.debug(f"{advisory_record.keywords=}")
     logger.debug(f"{advisory_record.files=}")
