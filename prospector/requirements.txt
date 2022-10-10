@@ -30,3 +30,4 @@ tzlocal==4.2
 uvicorn==0.15.0
 validators==0.20.0
 pre-commit==2.20.0
+datasketch==1.5.8
