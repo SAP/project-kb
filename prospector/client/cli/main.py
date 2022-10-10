@@ -42,13 +42,19 @@ def main(argv):  # noqa: C901
         logger.setLevel(config.log_level)
         logger.info(f"Global log level set to {get_level(string=True)}")
 
-        if config.cve_id is None:
-            logger.error("No vulnerability id was specified. Cannot proceed.")
-            console.print(
-                "No vulnerability id was specified. Cannot proceed.",
-                status=MessageStatus.ERROR,
-            )
-            return
+        nvd_rest_endpoint = configuration.get("nvd_rest_endpoint", "")  # default ???
+
+        backend = args.backend or configuration.get("backend", DEFAULT_BACKEND)  # ???
+
+        use_backend = args.use_backend
+
+        if args.ping:
+            return ping_backend(backend, log.config.level < logging.INFO)
+
+        vulnerability_id = args.vulnerability_id
+        repository_url = args.repository
+        vuln_descr = args.descr
+        filter_extensions = args.filter_extensions.split(",")
 
         # if args.get("ping"):
         #     return ping_backend(backend, get_level() < logging.INFO)
@@ -70,15 +76,15 @@ def main(argv):  # noqa: C901
         logger.debug(f"time-limit after: {time_limit_after}")
 
     results, advisory_record = prospector(
-        vulnerability_id=config.cve_id,
-        repository_url=config.repository,
-        publication_date=config.pub_date,
-        vuln_descr=config.description,
-        tag_interval=config.tag_interval,
-        filter_extensions=config.filter_extensions.split(","),
-        version_interval=config.version_interval,
-        modified_files=set(config.modified_files.split(",")),
-        advisory_keywords=set(config.keywords.split(",")),
+        vulnerability_id=vulnerability_id,
+        repository_url=repository_url,
+        publication_date=publication_date,
+        vuln_descr=vuln_descr,
+        tag_interval=tag_interval,
+        filter_extensions=filter_extensions,
+        version_interval=version_interval,
+        modified_files=set(modified_files),
+        advisory_keywords=set(advisory_keywords),
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=config.use_nvd,
