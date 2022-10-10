@@ -4,12 +4,19 @@ from typing import List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
-from dateutil.parser import isoparse
+from pydantic import BaseModel, Field
+import spacy
 
 from log.logger import get_level, logger, pretty_log
 from util.http import fetch_url
 
-from .nlp import extract_affected_filenames, extract_products, extract_words_from_text
+from .nlp import (
+    extract_affected_filenames,
+    extract_nouns_from_text,
+    extract_products,
+    extract_special_terms,
+    extract_versions,
+)
 
 ALLOWED_SITES = [
     "github.com",
@@ -38,40 +45,39 @@ ALLOWED_SITES = [
 
 
 LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
-NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-NVD_API_KEY = os.getenv("NVD_API_KEY", "")
+NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
 
 
-class AdvisoryRecord:
-    """The advisory record captures all relevant information on the vulnerability advisory"""
+# TODO: refactor and clean
+class AdvisoryRecord(BaseModel):
+    """
+    The advisory record captures all relevant information on the vulnerability advisory
+    """
 
-    def __init__(
-        self,
-        cve_id: str,
-        description: str = "",
-        published_timestamp: int = 0,
-        last_modified_timestamp: int = 0,
-        references: List[str] = None,
-        references_content: List[str] = None,
-        affected_products: List[str] = None,
-        versions: List[Tuple[str, str]] = None,
-        files: Set[str] = None,
-        keywords: Set[str] = None,
-    ):
-        self.cve_id = cve_id
-        self.description = description
-        self.published_timestamp = published_timestamp
-        self.last_modified_timestamp = last_modified_timestamp
-        self.references = references or list()
-        self.references_content = references_content or list()
-        self.affected_products = affected_products or list()
-        self.versions = versions or list()
-        self.files = files or set()
-        self.keywords = keywords or set()
+    vulnerability_id: str
+    repository_url: str = ""
+    published_timestamp: int = 0
+    last_modified_timestamp: int = 0
+    references: List[str] = Field(default_factory=list)
+    references_content: List[str] = Field(default_factory=list)
+    affected_products: List[str] = Field(default_factory=list)
+    description: Optional[str] = ""
+    preprocessed_vulnerability_description: str = ""
+    relevant_tags: List[str] = None
+    versions: List[str] = Field(default_factory=list)
+    from_nvd: bool = False
+    nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
+    paths: Set[str] = Field(default_factory=set)
+    keywords: Set[str] = Field(default_factory=set)
+
+    # def __init__(self, vulnerability_id, repository_url, from_nvd, nvd_rest_endpoint):
+    #     self.vulnerability_id = vulnerability_id
+    #     self.repository_url = repository_url
+    #     self.from_nvd = from_nvd
+    #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(
-        self,
-        fetch_references: bool = False,
+        self, use_nvd: bool = False, fetch_references: bool = False, relevant_extensions: List[str] = []
     ):
         self.versions = [
             version for version in self.versions if version[0] != version[1]
@@ -79,17 +85,18 @@ class AdvisoryRecord:
         # self.versions.extend(extract_versions(self.description))
         # self.versions = list(set(self.versions))
 
-        self.affected_products.extend(extract_products(self.description))
-        self.affected_products = list(set(self.affected_products))
+        self.versions = union_of(self.versions, extract_versions(self.description))
+        self.affected_products = union_of(
+            self.affected_products, extract_products(self.description)
+        )
+        # TODO: use a set where possible to speed up the rule application time
+        self.paths.update(
+            extract_affected_filenames(self.description, relevant_extensions)  # TODO: this could be done on the words extracted from the description
+        )
 
-        # TODO: this could be done on the words extracted from the description
-        self.files.update(extract_affected_filenames(self.description))
+        self.keywords.update(extract_nouns_from_text(self.description))
 
-        self.keywords.update(extract_words_from_text(self.description))
-
-        logger.debug("References: " + str(self.references))
-        # TODO: misses something because of subdomains not considered e.g. lists.apache.org
-
+        _logger.debug("References: " + str(self.references))
         self.references = [
             r
             for r in self.references
@@ -156,15 +163,16 @@ def get_from_local(vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOIN
 
 
 def build_advisory_record(
-    cve_id: str,
-    description: str = None,
-    nvd_rest_endpoint: str = None,
-    fetch_references: bool = False,
-    use_nvd: bool = True,
-    publication_date: str = None,
-    advisory_keywords: Set[str] = None,
-    modified_files: Set[str] = None,
-    filter_extensions: List[str] = None,
+    vulnerability_id: str,
+    repository_url: str,
+    vuln_descr: str,
+    nvd_rest_endpoint: str,
+    fetch_references: bool,
+    use_nvd: bool,
+    publication_date: str,
+    advisory_keywords: Set[str],
+    modified_files: Set[str],
+    filter_extensions: List[str],
 ) -> AdvisoryRecord:
 
     advisory_record = AdvisoryRecord(
@@ -187,11 +195,11 @@ def build_advisory_record(
             isoparse(publication_date).timestamp()
         )
 
-    if advisory_keywords and len(advisory_keywords) > 0:
+    if len(advisory_keywords) > 0:
         advisory_record.keywords.update(advisory_keywords)
 
-    if modified_files and len(modified_files) > 0:
-        advisory_record.files.update(modified_files)
+    if len(modified_files) > 0:
+        advisory_record.paths.update(modified_files)
 
     logger.debug(f"{advisory_record.keywords=}")
     logger.debug(f"{advisory_record.files=}")
