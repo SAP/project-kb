@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel, Field
+import spacy
 
 import log.util
 from util.collection import union_of
@@ -15,6 +16,7 @@ from util.http import fetch_url
 
 from .nlp import (
     extract_affected_filenames,
+    extract_nouns_from_text,
     extract_products,
     extract_special_terms,
     extract_versions,
@@ -74,6 +76,7 @@ class AdvisoryRecord(BaseModel):
     nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
     paths: Set[str] = Field(default_factory=set)
     keywords: Set[str] = Field(default_factory=set)
+
     # def __init__(self, vulnerability_id, repository_url, from_nvd, nvd_rest_endpoint):
     #     self.vulnerability_id = vulnerability_id
     #     self.repository_url = repository_url
@@ -81,7 +84,7 @@ class AdvisoryRecord(BaseModel):
     #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(
-        self, use_nvd: bool = False, fetch_references=False, relevant_extensions=[]
+        self, use_nvd: bool = False, fetch_references: bool = False, relevant_extensions: List[str] = []
     ):
         self.from_nvd = use_nvd
         if self.from_nvd:
@@ -91,17 +94,12 @@ class AdvisoryRecord(BaseModel):
         self.affected_products = union_of(
             self.affected_products, extract_products(self.description)
         )
-
         # TODO: use a set where possible to speed up the rule application time
         self.paths.update(
-            extract_affected_filenames(self.description, relevant_extensions)
+            extract_affected_filenames(self.description, relevant_extensions)  # TODO: this could be done on the words extracted from the description
         )
-        # self.paths = union_of(
-        #     self.paths,
-        #     extract_affected_filenames(self.description, relevant_extensions),
-        # )
-        self.keywords.update(extract_special_terms(self.description))
-        # self.keywords = union_of(self.keywords, extract_special_terms(self.description))
+
+        self.keywords.update(extract_nouns_from_text(self.description))
 
         _logger.debug("References: " + str(self.references))
         self.references = [
@@ -202,10 +200,10 @@ def build_advisory_record(
     nvd_rest_endpoint: str,
     fetch_references: bool,
     use_nvd: bool,
-    publication_date,
-    advisory_keywords,
-    modified_files,
-    filter_extensions,
+    publication_date: str,
+    advisory_keywords: Set[str],
+    modified_files: Set[str],
+    filter_extensions: List[str],
 ) -> AdvisoryRecord:
 
     advisory_record = AdvisoryRecord(
@@ -230,12 +228,10 @@ def build_advisory_record(
         )
 
     if len(advisory_keywords) > 0:
-        advisory_record.keywords += tuple(advisory_keywords)
-        # drop duplicates
-        advisory_record.keywords = list(set(advisory_record.keywords))
+        advisory_record.keywords.update(advisory_keywords)
 
     if len(modified_files) > 0:
-        advisory_record.paths += modified_files
+        advisory_record.paths.update(modified_files)
 
     _logger.debug(f"{advisory_record.keywords=}")
     _logger.debug(f"{advisory_record.paths=}")

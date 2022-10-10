@@ -4,42 +4,16 @@ from .nlp import (
     extract_cve_references,
     extract_jira_references,
     extract_affected_filenames,
+    extract_similar_words,
     extract_special_terms,
 )
 
 
-def test_extract_special_terms():
-    description = (
-        "org.apache.http.conn.ssl.AbstractVerifier in Apache HttpComponents HttpClient "
-        "before 4.3.5 and HttpAsyncClient before 4.0.2 does not properly verify that the "
-        "server hostname matches a domain name in the subject's Common Name (CN) or "
-        "subjectAltName field of the X.509 certificate, which allows man-in-the-middle "
-        'attackers to spoof SSL servers via a "CN=" string in a field in the distinguished '
-        'name (DN) of a certificate, as demonstrated by the "foo,CN=www.apache.org" string in '
-        "the O field."
-    )
-
-    terms = extract_special_terms(description)
-
-    # TODO replace when NLP implementation is done
-    # see, https://github.com/SAP/project-kb/issues/256#issuecomment-927639866
-    assert terms == () or terms == (
-        "org.apache.http.conn.ssl.AbstractVerifier",
-        "HttpComponents",
-        "HttpClient",
-        "4.3.5",
-        "HttpAsyncClient",
-        "4.0.2",
-        "subject's",
-        "(CN)",
-        "subjectAltName",
-        "X.509",
-        "man-in-the-middle",
-        "SSL",
-        '"CN="',
-        "(DN)",
-        '"foo,CN=www.apache.org"',
-    )
+def test_extract_similar_words():
+    commit_msg = "This is a commit message"
+    adv_text = "This is an advisory text"
+    similarities = extract_similar_words(adv_text, commit_msg, set())
+    assert similarities.sort() == ["This"].sort()
 
 
 @pytest.mark.skip(reason="Outdated")

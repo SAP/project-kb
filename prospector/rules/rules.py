@@ -5,6 +5,7 @@ from unicodedata import name
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
+from datamodel.nlp import extract_similar_words
 from rules.helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_references_vuln_id,
@@ -176,16 +177,16 @@ def apply_rule_changes_relevant_file(
     return None
 
 
-# TODO: this is empty now
 def apply_rule_adv_keywords_in_msg(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """Matches commits whose message contain any of the special "code tokens" extracted from the advisory."""
     explanation_template = "The commit message includes the following keywords: {}"
 
-    matching_keywords = set(
-        [kw for kw in advisory_record.keywords if kw in candidate.message]
-    )
+    matching_keywords = set(extract_similar_words(advisory_record.keywords, candidate.message, set()))
+    # matching_keywords = set(
+    #     [kw for kw in advisory_record.keywords if kw in candidate.message]
+    # )
 
     if len(matching_keywords):
         return explanation_template.format(", ".join(matching_keywords))
@@ -198,7 +199,7 @@ def apply_rule_adv_keywords_in_diff(
     candidate: Commit, advisory_record: AdvisoryRecord
 ) -> str:
     """Matches commits whose diff contain any of the special "code tokens" extracted from the advisory."""
-
+    return None
     # FIXME: this is hardcoded, read it from an "config" object passed to the rule function
     skip_tokens = ["IO"]
 
@@ -394,7 +395,7 @@ def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) 
 RULES = {
     "CVE_ID_IN_COMMIT_MSG": Rule(apply_rule_cve_id_in_msg, 10),
     "TOKENS_IN_DIFF": Rule(apply_rule_adv_keywords_in_diff, 7),
-    "TOKENS_IN_COMMIT_MSG": Rule(apply_rule_adv_keywords_in_msg, 10),
+    "TOKENS_IN_COMMIT_MSG": Rule(apply_rule_adv_keywords_in_msg, 5),
     "TOKENS_IN_MODIFIED_PATHS": Rule(apply_rule_adv_keywords_in_paths, 10),
     "SEC_KEYWORD_IN_COMMIT_MSG": Rule(apply_rule_security_keyword_in_msg, 5),
     "GH_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_ghissue, 2),
