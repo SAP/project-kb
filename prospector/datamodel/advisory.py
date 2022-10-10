@@ -1,9 +1,9 @@
-# from typing import Tuple
 # from datamodel import BaseModel
 import logging
 from datetime import datetime
-from os import system
-from typing import List, Optional, Set, Tuple
+
+# from os import system
+from typing import List, Optional, Set
 from urllib.parse import urlparse
 
 import requests
@@ -203,7 +203,7 @@ def build_advisory_record(
     fetch_references: bool,
     use_nvd: bool,
     publication_date,
-    advisory_keywords,
+    advisory_keywords: Set[str],
     modified_files,
     filter_extensions,
 ) -> AdvisoryRecord:
@@ -230,7 +230,10 @@ def build_advisory_record(
         )
 
     if len(advisory_keywords) > 0:
-        advisory_record.keywords += tuple(advisory_keywords)
+        # TODO: modify the following to allow the tool to automatically extract keywords and the user to
+        # provide additional ones (the current implementation uses the user-supplied ones to override
+        # whatever was automatically extracted)
+        advisory_record.keywords = advisory_keywords
         # drop duplicates
         advisory_record.keywords = list(set(advisory_record.keywords))
 

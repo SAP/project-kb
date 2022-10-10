@@ -1,7 +1,5 @@
 import re
-from typing import Any, Callable, Dict, List, Tuple
-from unicodedata import name
-
+from typing import Callable, Dict, List, Tuple
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -11,6 +9,9 @@ from rules.helpers import (
     extract_referred_to_by_nvd,
 )
 from stats.execution import Counter, execution_statistics
+
+# from unicodedata import name
+
 
 # from unicodedata import name
 
@@ -393,9 +394,9 @@ def apply_rule_small_commit(candidate: Commit, advisory_record: AdvisoryRecord) 
 
 RULES = {
     "CVE_ID_IN_COMMIT_MSG": Rule(apply_rule_cve_id_in_msg, 10),
-    "TOKENS_IN_DIFF": Rule(apply_rule_adv_keywords_in_diff, 7),
-    "TOKENS_IN_COMMIT_MSG": Rule(apply_rule_adv_keywords_in_msg, 10),
-    "TOKENS_IN_MODIFIED_PATHS": Rule(apply_rule_adv_keywords_in_paths, 10),
+    "KEYWORDS_IN_DIFF": Rule(apply_rule_adv_keywords_in_diff, 4),
+    "KEYWORDS_IN_COMMIT_MSG": Rule(apply_rule_adv_keywords_in_msg, 4),
+    "KEYWORDS_IN_MODIFIED_PATHS": Rule(apply_rule_adv_keywords_in_paths, 4),
     "SEC_KEYWORD_IN_COMMIT_MSG": Rule(apply_rule_security_keyword_in_msg, 5),
     "GH_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_ghissue, 2),
     "JIRA_ISSUE_IN_COMMIT_MSG": Rule(apply_rule_references_jira_issue, 2),
