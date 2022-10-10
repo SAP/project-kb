@@ -44,7 +44,7 @@ def prospector(  # noqa: C901
     publication_date: str = "",
     vuln_descr: str = "",
     tag_interval: str = "",
-    filter_extensions: str = "",
+    filter_extensions: List[str] = [],
     version_interval: str = "",
     modified_files: Set[str] = set(),
     advisory_keywords: Set[str] = set(),
@@ -90,7 +90,7 @@ def prospector(  # noqa: C901
             version_interval,
             time_limit_before,
             time_limit_after,
-            filter_extensions,
+            filter_extensions[0],
         )
         _logger.debug(f"Collected {len(candidates)} candidates")
 

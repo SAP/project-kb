@@ -237,7 +237,7 @@ def main(argv):  # noqa: C901
         vulnerability_id = args.vulnerability_id
         repository_url = args.repository
         vuln_descr = args.descr
-        filter_extensions = args.filter_extensions
+        filter_extensions = args.filter_extensions.split(",")
 
         # if no backend the filters on the advisory do not work
         use_nvd = False
@@ -291,8 +291,8 @@ def main(argv):  # noqa: C901
         tag_interval=tag_interval,
         filter_extensions=filter_extensions,
         version_interval=version_interval,
-        modified_files=modified_files,
-        advisory_keywords=advisory_keywords,
+        modified_files=set(modified_files),
+        advisory_keywords=set(advisory_keywords),
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
