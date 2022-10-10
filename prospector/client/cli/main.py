@@ -135,7 +135,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--report-filename",
-        default="prospector-report.html",
+        default="prospector-report",
         type=str,
         help="File where to save the report",
     )
@@ -311,11 +311,11 @@ def main(argv):  # noqa: C901
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
         elif report == "json":
             report_file = report_as_json(
-                results, advisory_record, str(args.report_filename)
+                results, advisory_record, args.report_filename + ".json"
             )
         elif report == "html":
             report_file = report_as_html(
-                results, advisory_record, str(args.report_filename)
+                results, advisory_record, args.report_filename + ".html"
             )
         else:
             _logger.warning("Invalid report type specified, using 'console'")
