@@ -326,12 +326,13 @@ def main(argv):  # noqa: C901
         if report == "console":
             report_on_console(results, advisory_record, get_level() < logging.INFO)
         elif report == "json":
-            report_file = as_json(results, advisory_record, report_filename)
+            report_file = report_as_json(
+                results, advisory_record, args.report_filename + ".json"
+            )
         elif report == "html":
-            report_file = as_html(results, advisory_record, report_filename)
-        elif report == "allfiles":
-            as_json(results, advisory_record, report_filename)
-            as_html(results, advisory_record, report_filename)
+            report_file = report_as_html(
+                results, advisory_record, args.report_filename + ".html"
+            )
         else:
             logger.warning("Invalid report type specified, using 'console'")
             console.set_status(MessageStatus.WARNING)
