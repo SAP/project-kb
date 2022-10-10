@@ -6,6 +6,7 @@ from datamodel.commit import Commit
 
 _logger = log.util.init_local_logger()
 
+
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
