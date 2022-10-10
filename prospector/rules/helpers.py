@@ -19,40 +19,8 @@ DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
 
-SEC_KEYWORDS = [
-    "vuln",
-    "vulnerability",
-    "exploit",
-    "attack",
-    "security",
-    "secure",
-    "xxe",
-    "xss",
-    "cross-site",
-    "dos",
-    "insecure",
-    "inject",
-    "injection",
-    "unsafe",
-    "remote execution",
-    "malicious",
-    "sanitize",
-    "cwe-",
-    "rce",
-]
-
-KEYWORDS_REGEX = r"(?:^|[.,:\s]|\b)({})(?:$|[.,:\s]|\b)".format("|".join(SEC_KEYWORDS))
-
-
-# TODO: this stuff could be made better considering lemmatization, etc
-def extract_security_keywords(text: str) -> Set[str]:
-    """
-    Return the list of the security keywords found in the text
-    """
-    # TODO: use a regex to catch all possible words consider spaces, commas, dots, etc
-    return set([word for word in SEC_KEYWORDS if word in text.casefold().split()])
-
-    # set([r.group(1) for r in re.finditer(KEYWORDS_REGEX, text, flags=re.I)])
+def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
+    return advisory_record.vulnerability_id in commit.cve_refs
 
 
 # Unused
@@ -142,7 +110,7 @@ def is_commit_reachable_from_given_tag(
     return True
 
 
-# TODO: implement this properly
+# TODO: implement ????
 def extract_commit_mentioned_in_linked_pages(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> int:
