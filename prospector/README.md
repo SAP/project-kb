@@ -1,34 +1,36 @@
 # Prospector
 
-## What is it
+:warning: **WARNING** Prospector is a research prototype,
+currently under development: the instructions below are intended for development, testing and demonstration purposes only!
+
+## Description
+***
 Prospector is a tool to reduce the effort needed to find security fixes for
-*known* vulnerabilities in open source software repositories.
+*known* vulnerabilities in open source software repositories
 
 It takes a vulnerability description (in natural language) in input and
 produces in output a ranked list of commits, in decreasing order of relevance.
-
-**WARNING** Please keep in mind that Prospector is a research prototype,
-currently under development: feel free to try it out, but do expect some rough
-edges.
 
 If you find a bug, please open an issue. If you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
 but fails without it)
 
 
-## Setup (for development, testing, and demonstration purposes only!)
+## Setup
+***
+
+:exclamation: Please note that **Windows is not supported** while WSL and WSL2 are fine.
 
 Prerequisites:
 
 * Python 3.8
-* pipenv
 * postgresql
+* gcc g++ libffi-dev python3-dev libpq-dev (to build python dependencies)
 
-The easiest way to set up Prospector is to clone this repository and then run
-the following commands:
+The easiest way to set up Prospector is to clone the project KB repository and then navigate to the prospector folder:
 
 ```
-git clone -b prospector-assuremoss https://github.com/sap/project-kb
+git clone https://github.com/sap/project-kb
 cd project-kb/prospector
 cp .env-sample .env
 ```
@@ -38,11 +40,6 @@ Modify the `.env` file as you see fit (to run the client only the `GIT_CACHE` va
 ```
 set -a; source .env; set +a
 mkdir -p $GIT_CACHE
-```
-
-Before proceding, in order to build the python requirements it is necessary to have the following installed:
-```
-gcc g++ libffi-dev python3-dev libpq-dev
 ```
 
 Now you can install the dependencies by running:
@@ -63,9 +60,8 @@ If you have issues with these steps, please open a Github issue and
 explain in detail what you did and what unexpected behaviour you observed
 (also indicate your operating system and Python version).
 
-*Please note that Windows is not supported*, WSL and WSL2 are fine though.
 
-**IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
+:exclamation: **IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
 your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
 black is run prior to committing anyway, but the auto-formatting might save you some time
 and avoid frustration.
@@ -125,11 +121,11 @@ In the example above, the tag interval has been chosen by considering the text o
 
 ## Testing
 
-To run the tests, run:
+Prospector makes use of `pytest`.
 
-`pytest`
+:exclamation: **NOTE:** before using it please make sure to have running instances of the backend and the database.
 
-Note, that `pytest` requires running instances of the backend and database either in containers or by previous commands.
+## Extra
 
 The approach implemented in patch-finder is described in detail in this
 document: https://arxiv.org/pdf/2103.13375.pdf

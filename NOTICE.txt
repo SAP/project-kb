@@ -1,2 +1,0 @@
-3rd party information from NVD and MITRE has been used as input for compiling this
-knowledge base (http://cve.mitre.org/about/termsofuse.html).
