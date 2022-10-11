@@ -1,4 +1,4 @@
-# project "KB"
+# Project KB
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/sap/project-kb)](https://goreportcard.com/report/github.com/sap/project-kb)
 [![Go](https://github.com/sap/project-kb/workflows/Go/badge.svg)](https://github.com/SAP/project-kb/actions?query=workflow%3AGo)
@@ -9,16 +9,17 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/sap/project-kb)](https://api.reuse.software/info/github.com/sap/project-kb)
 [![Pytest](https://github.com/SAP/project-kb/actions/workflows/python.yml/badge.svg)](https://github.com/SAP/project-kb/actions/workflows/python.yml)
 
-
+## Description
+***
 The goal of `Project KB` is to enable the creation, management and aggregation of a
-distributed, collaborative knowledge base of vulnerabilities that affect
+distributed, collaborative knowledge base of vulnerabilities affecting
 open-source software.
 
 `Project KB` consists of vulnerability data [vulnerability knowledge-base](vulnerability-data)
 as well as set of tools to support the mining, curation and management of such data.
 
 
-## Why this project
+### Why this project?
 
 In order to feed [Eclipse Steady](https://github.com/eclipse/steady/) with fresh
 data, we have spent a considerable amount of time, in the past few years, mining
@@ -47,32 +48,29 @@ collaborative, comprehensive knowledge base where each party remains in control
 of the data they produce and of how they aggregate and consume data from the
 other sources.
 
-## Project KB in a nutshell
 
-### Vulnerability data
-
-The vulnerability data of Project KB are stored in textual form as a set of YAML files, in branch `vulnerability-data`.
-
-### Tools
-
-#### Vulnerability Data Management: `kaybee`
-
-With `kaybee` it is possible to fetch the vulnerability statements from this
+## Kaybee
+***
+Kaybee is a vulnerability data management tool, it makes possible to fetch the vulnerability statements from this
 repository (or from any other repository) and export them to a number of
 formats, including a script to import them to a [Steady
 backend](https://github.com/eclipse/steady).
 
-See https://github.com/SAP/project-kb/tree/main/kaybee for details. 
+For details and usage instructions check out the [kaybee README](https://github.com/SAP/project-kb/tree/main/kaybee).
 
-#### Vulnerability Data Mining Tool: `prospector`
-
-Prospector is a tool to reduce the effort needed to find security fixes for known vulnerabilities in open source software repositories.
+## Prospector
+***
+Prospector is a vulnerability data mining tool that aims at reducing the effort needed to find security fixes for known vulnerabilities in open source software repositories.
 The tool takes a vulnerability description (in natural language) as input and produces a ranked list of commits, in decreasing order of relevance.
 
-See https://github.com/SAP/project-kb/tree/main/prospector for details.
+For details and usage instructions check out the [prospector README](https://github.com/SAP/project-kb/tree/main/prospector).
+
+## Vulnerability data
+***
+The vulnerability data of Project KB are stored in textual form as a set of YAML files, in the [vulnerability-data branch](https://github.com/SAP/project-kb/tree/vulnerability-data).
 
 ## Publications
-
+***
 In early 2019, a snapshot of the knowlege base from project "KB" was described in:
 
   - Serena E. Ponta, Henrik Plate, Antonino Sabetta, Michele Bezzi, Cédric
@@ -98,25 +96,20 @@ scripts described in that paper](MSR2019)
 > If you wrote a paper that uses the data or the tools from this repository, please let us know (through an issue) and we'll add it to this list.
 
 ## Credits
+***
 
 ### EU-funded research projects
 
-The development of Project KB is partly supported by the following EU-funded projects:
+The development of Project KB is partially supported by the following projects:
 
 * [AssureMOSS](https://assuremoss.eu) (Grant No.952647).
 * [Sparta](https://www.sparta.eu/) (Grant No.830892).
 
 
-### 3rd party vulnerability data sources
+### Vulnerability data sources
 
-3rd party information from NVD and MITRE might have been used as input
-for compiling parts of this knowledge base. See MITRE's [Terms of
-Use](http://cve.mitre.org/about/termsofuse.html) for more information.
-See also [this notice](NOTICE.txt).
-
-## Requirements
-
-See the README files for `kaybee` and `prospector`.
+Vulnerability information from NVD and MITRE might have been used as input
+for building parts of this knowledge base. See MITRE's [CVE Usage license](http://cve.mitre.org/about/termsofuse.html) for more information.
 
 ## Limitations and Known Issues
 
