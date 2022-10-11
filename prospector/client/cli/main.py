@@ -135,7 +135,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--report-filename",
-        default="prospector-report.html",
+        default="prospector-report",
         type=str,
         help="File where to save the report",
     )
@@ -237,7 +237,7 @@ def main(argv):  # noqa: C901
         vulnerability_id = args.vulnerability_id
         repository_url = args.repository
         vuln_descr = args.descr
-        filter_extensions = args.filter_extensions
+        filter_extensions = args.filter_extensions.split(",")
 
         # if no backend the filters on the advisory do not work
         use_nvd = False
@@ -291,8 +291,8 @@ def main(argv):  # noqa: C901
         tag_interval=tag_interval,
         filter_extensions=filter_extensions,
         version_interval=version_interval,
-        modified_files=modified_files,
-        advisory_keywords=advisory_keywords,
+        modified_files=set(modified_files),
+        advisory_keywords=set(advisory_keywords),
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=use_nvd,
@@ -311,11 +311,11 @@ def main(argv):  # noqa: C901
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
         elif report == "json":
             report_file = report_as_json(
-                results, advisory_record, str(args.report_filename)
+                results, advisory_record, args.report_filename + ".json"
             )
         elif report == "html":
             report_file = report_as_html(
-                results, advisory_record, str(args.report_filename)
+                results, advisory_record, args.report_filename + ".html"
             )
         else:
             _logger.warning("Invalid report type specified, using 'console'")

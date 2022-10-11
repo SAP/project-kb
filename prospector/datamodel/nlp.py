@@ -1,20 +1,21 @@
 import re
 from typing import Dict, List, Set, Tuple
 from util.http import extract_from_webpage, fetch_url
-
-
+from spacy import Language, load
 from datamodel.constants import RELEVANT_EXTENSIONS
 
 JIRA_ISSUE_URL = "https://issues.apache.org/jira/browse/"
 
+nlp = load("en_core_web_sm")
 
-def extract_special_terms(description: str) -> Tuple[str, ...]:
+
+def extract_special_terms(description: str) -> Set[str]:
     """
     Extract all words (space delimited) which presumably cannot be part of an natural language sentence.
     These are usually code fragments and names of code entities, or paths.
     """
 
-    return ()
+    return set()
     # TODO replace this with NLP implementation
     # see, https://github.com/SAP/project-kb/issues/256#issuecomment-927639866
     # noinspection PyUnreachableCode
@@ -28,15 +29,20 @@ def extract_special_terms(description: str) -> Tuple[str, ...]:
     return tuple(result)
 
 
-def extract_similar_words(
-    adv_text: str, commit_msg: str, blocklist: Set[str]
-) -> List[str]:
-    output = set()
-    for word in commit_msg.split():
-        if word in adv_text and word.casefold() not in blocklist:
-            output.add(word)
+def extract_nouns_from_text(text: str) -> List[str]:
+    """Use spacy to extract nouns from text"""
+    return [
+        token.text
+        for token in nlp(text)
+        if token.pos_ == "NOUN" and len(token.text) > 3
+    ]
 
-    return list(output)
+
+def extract_similar_words(
+    adv_words: Set[str], commit_msg: str, blocklist: Set[str]
+) -> List[str]:
+    """Extract nouns from commit message that appears in the advisory text"""
+    return [word for word in extract_nouns_from_text(commit_msg) if word in adv_words]
 
 
 def extract_versions(text: str) -> List[str]:
