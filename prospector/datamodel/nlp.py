@@ -42,9 +42,7 @@ def extract_nouns_from_text(text: str) -> List[str]:
     ]
 
 
-def extract_similar_words(
-    adv_words: Set[str], commit_msg: str, blocklist: Set[str]
-) -> List[str]:
+def extract_similar_words(adv_words: Set[str], commit_msg: str) -> List[str]:
     """Extract nouns from commit message that appears in the advisory text"""
     return [word for word in extract_nouns_from_text(commit_msg) if word in adv_words]
 

@@ -42,21 +42,26 @@ class PostgresCommitDB(CommitDB):
         results = list()
         try:
             cur = self.connection.cursor(cursor_factory=DictCursor)
-
-            if commit_id is None:
-                cur.execute(
-                    "SELECT * FROM commits WHERE repository = %s", (repository,)
-                )
-                results = cur.fetchall()
-            else:
+            if commit_id:
                 for id in commit_id.split(","):
                     cur.execute(
                         "SELECT * FROM commits WHERE repository = %s AND commit_id = %s",
-                        (repository, id),
+                        (
+                            repository,
+                            id,
+                        ),
                     )
                     results.append(cur.fetchone())
 
-            return [dict(row) for row in results]  # parse_commit_from_db
+                    result = cur.fetchall()
+                    if len(result):
+                        data.append(parse_commit_from_database(result[0]))
+            else:
+                cur.execute("SELECT * FROM commits WHERE repository = %s", repository)
+                result = cur.fetchall()
+                for row in result:
+                    data.append(parse_commit_from_database(row))
+            cur.close()
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
             return None
