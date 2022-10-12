@@ -1,6 +1,9 @@
-from typing import Any, Dict, List, Optional
+from ctypes import Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
+from datasketch.lean_minhash import LeanMinHash
+from util.lsh import compute_minhash, decode_minhash, encode_minhash
 
 from datamodel.nlp import (
     extract_cve_references,
@@ -17,6 +20,10 @@ class Commit(BaseModel):
     to the save() and lookup() functions of the database module.
     """
 
+    # TODO: a more elegant fix
+    class Config:
+        arbitrary_types_allowed = True
+
     commit_id: str = ""
     repository: str = ""
     timestamp: Optional[int] = 0
@@ -29,8 +36,10 @@ class Commit(BaseModel):
     ghissue_refs: Dict[str, str] = Field(default_factory=dict)
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
+    # annotations: Dict[str, str] = Field(default_factory=dict)
     relevance: Optional[int] = 0
-    matched_rules: List[Tuple[str, str, int]] = Field(default_factory=list)
+    matched_rules: List[Dict[str, Any]] = list()
+    minhash: LeanMinHash = None
 
     def to_dict(self):
         d = dict(self.__dict__)
@@ -52,10 +61,10 @@ class Commit(BaseModel):
         self.matched_rules.append(rule_details)
 
     def compute_relevance(self):
-        self.relevance = sum([rule[2] for rule in self.matched_rules])
+        self.relevance = sum([rule.get("relevance") for rule in self.matched_rules])
 
     def get_relevance(self) -> int:
-        return sum([rule[2] for rule in self.matched_rules])
+        return sum([rule.get("relevance") for rule in self.matched_rules])
 
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
@@ -72,8 +81,8 @@ class Commit(BaseModel):
     def deserialize_minhash(self, binary_minhash):
         self.minhash = decode_minhash(binary_minhash)
 
-    def as_dict(self, no_hash: bool = True, no_rules: bool = True):
-        out = {
+    def as_dict(self):
+        return {
             "commit_id": self.commit_id,
             "repository": self.repository,
             "timestamp": self.timestamp,
@@ -86,22 +95,8 @@ class Commit(BaseModel):
             "ghissue_refs": self.ghissue_refs,
             "cve_refs": self.cve_refs,
             "tags": self.tags,
+            "minhash": encode_minhash(self.minhash),
         }
-        if not no_hash:
-            out["minhash"] = encode_minhash(self.minhash)
-        if not no_rules:
-            out["matched_rules"] = self.matched_rules
-        return out
-
-    def find_twin(self, commit_list: List["Commit"]):
-        index = build_lsh_index()
-        for commit in commit_list:
-            index.insert(commit.commit_id, commit.minhash)
-
-        result = index.query(self.minhash)
-
-        # Might be empty
-        return [id for id in result if id != self.commit_id]
 
 
 def make_from_dict(dict: Dict[str, Any]) -> Commit:
@@ -121,7 +116,7 @@ def make_from_dict(dict: Dict[str, Any]) -> Commit:
         ghissue_refs=dict["ghissue_refs"],
         cve_refs=dict["cve_refs"],
         tags=dict["tags"],
-        # decode_minhash(dict["minhash"]),
+        minhash=decode_minhash(dict["minhash"]),
     )
 
 
@@ -157,6 +152,19 @@ def make_from_raw_commit(raw: RawCommit) -> Commit:
     # (e.g. do not depend on a particular Advisory Record)
     # should be computed here so that they can be stored in the db.
     # Space-efficiency is important.
+    commit.diff = raw_commit.get_diff()
+
+    commit.hunks = raw_commit.get_hunks()
+    commit.message = raw_commit.get_msg()
+    commit.timestamp = int(raw_commit.get_timestamp())
+
+    commit.changed_files = raw_commit.get_changed_files()
+
+    commit.tags = raw_commit.get_tags()
+    commit.jira_refs = extract_jira_references(commit.message)
+    commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
+    commit.cve_refs = extract_cve_references(commit.message)
+    commit.minhash = compute_minhash(commit.message[:128])
 
     commit.diff, commit.hunks = raw.get_diff()
     if commit.hunks < 200:

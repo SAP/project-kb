@@ -4,7 +4,7 @@
 {% block body %}
 <p>
     {% for rule in annotated_commit.matched_rules %}
-    <button type="button" class="btn btn-primary position-relative m-2" style="pointer-events: none;">
+    <button type="button" class="btn btn-primary position-relative m-2" disabled>
         {{ rule.message }}
         <span
             class="position-absolute top-0 start-0 translate-middle-y badge rounded-pill bg-light border border-primary text-primary">
