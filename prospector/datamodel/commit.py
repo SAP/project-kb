@@ -30,9 +30,7 @@ class Commit(BaseModel):
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     relevance: Optional[int] = 0
-    matched_rules: List[Dict[str, str | int]] = Field(default_factory=list)
-    minhash: Optional[str] = ""
-    twins: List[str] = Field(default_factory=list)
+    matched_rules: List[Tuple[str, str, int]] = Field(default_factory=list)
 
     def to_dict(self):
         d = dict(self.__dict__)
@@ -50,19 +48,19 @@ class Commit(BaseModel):
     def __eq__(self, other: "Commit") -> bool:
         return self.relevance == other.relevance
 
-    def add_match(self, rule: Dict[str, Any]):
-        for i, r in enumerate(self.matched_rules):
-            if rule["relevance"] == r["relevance"]:
-                self.matched_rules.insert(i, rule)
-                return
-
-        self.matched_rules.append(rule)
+    def add_match(self, rule_details: Tuple[str, str, int]):
+        self.matched_rules.append(rule_details)
 
     def compute_relevance(self):
-        self.relevance = sum([rule.get("relevance") for rule in self.matched_rules])
+        self.relevance = sum([rule[2] for rule in self.matched_rules])
 
     def get_relevance(self) -> int:
-        return sum([rule.get("relevance") for rule in self.matched_rules])
+        return sum([rule[2] for rule in self.matched_rules])
+
+    # def format(self):
+    #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
+    #     out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
+    #     return out
 
     def print(self):
         out = f"Commit: {self.commit_id}\nRepository: {self.repository}\nMessage: {self.message}\nTags: {self.tags}\n"
