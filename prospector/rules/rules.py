@@ -30,6 +30,13 @@ class Rule:
     def get_message(self):
         return self.message
 
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "message": self.message,
+            "relevance": self.relevance,
+        }
+
     def get_rule_as_tuple(self) -> Tuple[str, str, int]:
         return (self.id, self.message, self.relevance)
 
@@ -50,8 +57,7 @@ def apply_rules(
             for rule in enabled_rules:
                 if rule.apply(candidate, advisory_record):
                     counter.increment("matches")
-                    candidate.add_match(rule.get_rule_as_tuple())
-                    # candidate.annotations[rule.id] = rule.message
+                    candidate.add_match(rule.as_dict())
             candidate.compute_relevance()
 
     return candidates
@@ -192,7 +198,7 @@ class SecurityKeywordsInMsg(Rule):
 
     id = "SEC_KEYWORDS_IN_MESSAGE"
 
-    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord = None):
+    def apply(self, candidate: Commit, _: AdvisoryRecord = None):
         matching_keywords = extract_security_keywords(candidate.message)
         if len(matching_keywords) > 0:
             self.message = f"The commit message contains the following security-related keywords: {', '.join(matching_keywords)}"
@@ -241,7 +247,7 @@ class SecurityKeywordInLinkedGhIssue(Rule):
 
     id = "SEC_KEYWORDS_IN_LINKED_GH"
 
-    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord = None):
+    def apply(self, candidate: Commit, _: AdvisoryRecord = None):
         for id, issue_content in candidate.ghissue_refs.items():
 
             matching_keywords = extract_security_keywords(issue_content)
@@ -317,6 +323,7 @@ class SmallCommit(Rule):
         return False
 
 
+# TODO: implement properly
 class CommitMentionedInReference(Rule):
     """Matches commits that are mentioned in any of the links contained in the advisory page."""
 

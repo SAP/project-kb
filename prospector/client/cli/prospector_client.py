@@ -9,7 +9,7 @@ from tqdm import tqdm
 import log
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
-from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
+from datamodel.commit import Commit, apply_ranking, make_from_dict, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
@@ -151,7 +151,7 @@ def prospector(  # noqa: C901
 
             _logger.pretty_log(advisory_record)
             _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
-            payload = [c.__dict__ for c in preprocessed_commits]
+            payload = [c.as_dict() for c in preprocessed_commits]
 
     # -------------------------------------------------------------------------
     # save preprocessed commits to backend
@@ -220,10 +220,8 @@ def retrieve_preprocessed_commits(repository_url, backend_address, candidates):
 
     preprocessed_commits: "list[Commit]" = []
     for idx, commit in enumerate(retrieved_commits):
-        if len(retrieved_commits) + len(missing) == len(
-            candidates
-        ):  # Parsing like this is possible because the backend handles the major work
-            preprocessed_commits.append(Commit.parse_obj(commit))
+        if len(retrieved_commits) + len(missing) == len(candidates):
+            preprocessed_commits.append(make_from_dict(commit))
         else:
             missing.append(candidates[idx])
     return missing, preprocessed_commits
@@ -233,7 +231,11 @@ def save_preprocessed_commits(backend_address, payload):
     with ConsoleWriter("Saving preprocessed commits to backend") as writer:
         _logger.debug("Sending preprocessing commits to backend...")
         try:
-            r = requests.post(backend_address + "/commits/", json=payload)
+            r = requests.post(
+                backend_address + "/commits/",
+                json=payload,
+                headers={"Content-type": "application/json"},
+            )
             _logger.debug(
                 "Saving to backend completed (status code: %d)" % r.status_code
             )

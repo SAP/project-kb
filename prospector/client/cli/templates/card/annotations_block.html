@@ -3,12 +3,12 @@
 {% set icon = "fas fa-bullhorn" %}
 {% block body %}
 <p>
-    {% for id, msg, _ in annotated_commit.matched_rules | sort %}
+    {% for rule in annotated_commit.matched_rules %}
     <button type="button" class="btn btn-primary position-relative m-2" disabled>
-        {{ msg }}
+        {{ rule.message }}
         <span
             class="position-absolute top-0 start-0 translate-middle-y badge rounded-pill bg-light border border-primary text-primary">
-            {{ id }}
+            {{ rule.id }}
         </span>
     </button>
     {% endfor %}

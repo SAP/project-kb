@@ -2,15 +2,14 @@
 This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
-import re
-from typing import List, Tuple
+from typing import Dict, List, Any
 import psycopg2
-import psycopg2.sql
+
+# import psycopg2.sql
 from psycopg2.extensions import parse_dsn
-from psycopg2.extras import DictCursor, DictRow
+from psycopg2.extras import DictCursor, DictRow, Json
 
 import log.util
-from datamodel.commit import Commit
 
 from . import CommitDB
 
@@ -32,8 +31,8 @@ class PostgresCommitDB(CommitDB):
         parse_connect_string(connect_string)
         self.connection = psycopg2.connect(connect_string)
 
-    def lookup(self, repository: str, commit_id: str = None):
-        # Returns the results of the query as list of Commit objects
+    def lookup(self, repository: str, commit_id: str = None) -> List[Dict[str, Any]]:
+        # Returns the results of the query as list of dicts
         if not self.connection:
             raise Exception("Invalid connection")
 
@@ -66,7 +65,8 @@ class PostgresCommitDB(CommitDB):
 
         return data
 
-    def save(self, commit_obj: Commit):
+    # TODO: use dict to eliminate dependencies from commit and avoid loading spacy in the backend
+    def save(self, commit: Dict[str, Any]):
         if not self.connection:
             raise Exception("Invalid connection")
 
@@ -83,13 +83,12 @@ class PostgresCommitDB(CommitDB):
                     diff,
                     changed_files,
                     message_reference_content,
-                    jira_refs_id,
-                    jira_refs_content,
-                    ghissue_refs_id,
-                    ghissue_refs_content,
+                    jira_refs,
+                    ghissue_refs,
                     cve_refs,
-                    tags)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    tags,
+                    minhash)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET (
                         timestamp,
                         hunks,
@@ -98,12 +97,11 @@ class PostgresCommitDB(CommitDB):
                         diff,
                         changed_files,
                         message_reference_content,
-                        jira_refs_id,
-                        jira_refs_content,
-                        ghissue_refs_id,
-                        ghissue_refs_content,
+                        jira_refs,
+                        ghissue_refs,
                         cve_refs,
-                        tags) = (
+                        tags,
+                        minhash) = (
                             EXCLUDED.timestamp,
                             EXCLUDED.hunks,
                             EXCLUDED.hunk_count,
@@ -111,28 +109,26 @@ class PostgresCommitDB(CommitDB):
                             EXCLUDED.diff,
                             EXCLUDED.changed_files,
                             EXCLUDED.message_reference_content,
-                            EXCLUDED.jira_refs_id,
-                            EXCLUDED.jira_refs_content,
-                            EXCLUDED.ghissue_refs_id,
-                            EXCLUDED.ghissue_refs_content,
+                            EXCLUDED.jira_refs,
+                            EXCLUDED.ghissue_refs,
                             EXCLUDED.cve_refs,
-                            EXCLUDED.tags)""",
+                            EXCLUDED.tags,
+                            EXCLUDED.minhash)""",
                 (
-                    commit_obj.commit_id,
-                    commit_obj.repository,
-                    commit_obj.timestamp,
-                    commit_obj.hunks,
-                    commit_obj.hunk_count,
-                    commit_obj.message,
-                    commit_obj.diff,
-                    commit_obj.changed_files,
-                    commit_obj.message_reference_content,
-                    list(commit_obj.jira_refs.keys()),
-                    list(commit_obj.jira_refs.values()),
-                    list(commit_obj.ghissue_refs.keys()),
-                    list(commit_obj.ghissue_refs.values()),
-                    commit_obj.cve_refs,
-                    commit_obj.tags,
+                    commit.get("commit_id"),
+                    commit.get("repository"),
+                    commit.get("timestamp"),
+                    commit.get("hunks"),
+                    commit.get("hunk_count"),
+                    commit.get("message"),
+                    commit.get("diff"),
+                    commit.get("changed_files"),
+                    commit.get("message_reference_content"),
+                    Json(commit.get("jira_refs")),
+                    Json(commit.get("ghissue_refs")),
+                    commit.get("cve_refs"),
+                    commit.get("tags"),
+                    commit.get("minhash"),
                 ),
             )
             self.connection.commit()
@@ -179,40 +175,25 @@ def parse_connect_string(connect_string):
     return parsed_string
 
 
-def parse_commit_from_database(raw_commit_data: DictRow) -> Commit:
+def parse_commit_from_database(raw_data: DictRow) -> Dict[str, Any]:
     """
     This function is responsible of parsing a preprocessed commit from the database
     """
-    commit = Commit(
-        commit_id=raw_commit_data["commit_id"],
-        repository=raw_commit_data["repository"],
-        timestamp=int(raw_commit_data["timestamp"]),
-        hunks=parse_hunks(raw_commit_data["hunks"]),
-        message=raw_commit_data["message"],
-        diff=raw_commit_data["diff"],
-        changed_files=raw_commit_data["changed_files"],
-        message_reference_content=raw_commit_data["message_reference_content"],
-        jira_refs=dict(
-            zip(raw_commit_data["jira_refs_id"], raw_commit_data["jira_refs_content"])
-        ),
-        ghissue_refs=dict(
-            zip(
-                raw_commit_data["ghissue_refs_id"],
-                raw_commit_data["ghissue_refs_content"],
-            )
-        ),
-        cve_refs=raw_commit_data["cve_refs"],
-        tags=raw_commit_data["tags"],
-    )
-    return commit
-
-
-def parse_hunks(raw_hunks: List[str]) -> List[Tuple[int, int]]:
-    """
-    This function is responsible of extracting the hunks from a commit
-    """
-    hunks = []
-    for hunk in raw_hunks:
-        a, b = hunk.strip("()").split(",")
-        hunks.append((int(a), int(b)))
-    return hunks
+    return {
+        "commit_id": raw_data["commit_id"],
+        "repository": raw_data["repository"],
+        "timestamp": raw_data["timestamp"],
+        "hunks": [
+            (int(x[0]), int(x[1])) for x in raw_data["hunks"]
+        ],  # Converts to tuples of ints
+        "hunk_count": raw_data["hunk_count"],
+        "message": raw_data["message"],
+        "diff": raw_data["diff"],
+        "changed_files": raw_data["changed_files"],
+        "message_reference_content": raw_data["message_reference_content"],
+        "jira_refs": raw_data["jira_refs"],
+        "ghissue_refs": raw_data["ghissue_refs"],
+        "cve_refs": raw_data["cve_refs"],
+        "tags": raw_data["tags"],
+        "minhash": raw_data["minhash"],
+    }

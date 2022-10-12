@@ -1,6 +1,9 @@
-from typing import Dict, List, Optional, Tuple
+from ctypes import Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
+from datasketch.lean_minhash import LeanMinHash
+from util.lsh import compute_minhash, decode_minhash, encode_minhash
 
 from datamodel.nlp import (
     extract_cve_references,
@@ -16,6 +19,10 @@ class Commit(BaseModel):
     to the save() and lookup() functions of the database module.
     """
 
+    # TODO: a more elegant fix
+    class Config:
+        arbitrary_types_allowed = True
+
     commit_id: str = ""
     repository: str = ""
     timestamp: Optional[int] = 0
@@ -28,9 +35,10 @@ class Commit(BaseModel):
     ghissue_refs: Dict[str, str] = Field(default_factory=dict)
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
-    annotations: Dict[str, str] = Field(default_factory=dict)
+    # annotations: Dict[str, str] = Field(default_factory=dict)
     relevance: Optional[int] = 0
-    matched_rules: List[Tuple[str, str, int]] = Field(default_factory=list)
+    matched_rules: List[Dict[str, Any]] = list()
+    minhash: LeanMinHash = None
 
     @property
     def hunk_count(self):
@@ -47,10 +55,10 @@ class Commit(BaseModel):
         self.matched_rules.append(rule_details)
 
     def compute_relevance(self):
-        self.relevance = sum([rule[2] for rule in self.matched_rules])
+        self.relevance = sum([rule.get("relevance") for rule in self.matched_rules])
 
     def get_relevance(self) -> int:
-        return sum([rule[2] for rule in self.matched_rules])
+        return sum([rule.get("relevance") for rule in self.matched_rules])
 
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
@@ -60,6 +68,50 @@ class Commit(BaseModel):
     def print(self):
         out = f"Commit: {self.commit_id}\nRepository: {self.repository}\nMessage: {self.message}\nTags: {self.tags}\n"
         print(out)
+
+    def serialize_minhash(self):
+        return encode_minhash(self.minhash)
+
+    def deserialize_minhash(self, binary_minhash):
+        self.minhash = decode_minhash(binary_minhash)
+
+    def as_dict(self):
+        return {
+            "commit_id": self.commit_id,
+            "repository": self.repository,
+            "timestamp": self.timestamp,
+            "hunks": self.hunks,
+            "message": self.message,
+            "diff": self.diff,
+            "changed_files": self.changed_files,
+            "message_reference_content": self.message_reference_content,
+            "jira_refs": self.jira_refs,
+            "ghissue_refs": self.ghissue_refs,
+            "cve_refs": self.cve_refs,
+            "tags": self.tags,
+            "minhash": encode_minhash(self.minhash),
+        }
+
+
+def make_from_dict(dict: Dict[str, Any]) -> Commit:
+    """
+    This function is responsible of translating a dict into a Commit object.
+    """
+    return Commit(
+        commit_id=dict["commit_id"],
+        repository=dict["repository"],
+        timestamp=dict["timestamp"],
+        hunks=dict["hunks"],
+        message=dict["message"],
+        diff=dict["diff"],
+        changed_files=dict["changed_files"],
+        message_reference_content=dict["message_reference_content"],
+        jira_refs=dict["jira_refs"],
+        ghissue_refs=dict["ghissue_refs"],
+        cve_refs=dict["cve_refs"],
+        tags=dict["tags"],
+        minhash=decode_minhash(dict["minhash"]),
+    )
 
 
 def apply_ranking(candidates: List[Commit]) -> List[Commit]:
@@ -99,5 +151,6 @@ def make_from_raw_commit(raw_commit: RawCommit) -> Commit:
     commit.jira_refs = extract_jira_references(commit.message)
     commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
     commit.cve_refs = extract_cve_references(commit.message)
+    commit.minhash = compute_minhash(commit.message[:128])
 
     return commit
