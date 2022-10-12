@@ -62,6 +62,7 @@ def test_apply_rules_all(candidates: List[Commit], advisory_record: AdvisoryReco
     assert len(annotated_candidates[0].matched_rules) == 4
     assert annotated_candidates[0].matched_rules[0][0] == "CVE_ID_IN_MESSAGE"
     assert "CVE-2020-26258" in annotated_candidates[0].matched_rules[0][1]
+
     # assert len(annotated_candidates[0].annotations) > 0
     # assert "REF_ADV_VULN_ID" in annotated_candidates[0].annotations
     # assert "REF_GH_ISSUE" in annotated_candidates[0].annotations
