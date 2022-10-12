@@ -134,7 +134,7 @@ def is_commit_reachable_from_given_tag(
     return True
 
 
-# TODO: implement ????
+# TODO: implement this properly
 def extract_commit_mentioned_in_linked_pages(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> int:

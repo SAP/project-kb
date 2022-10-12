@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
-from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
+from datamodel.commit import Commit, apply_ranking, make_from_dict, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
@@ -141,17 +141,21 @@ def prospector(  # noqa: C901
                     # TODO: here we need to check twins with the commit not already in the backend and update everything
                     preprocessed_commits.append(make_from_raw_commit(raw_commit))
 
-            # Cleanup candidates to save memory
-            del candidates
+            _logger.pretty_log(advisory_record)
+            _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
+            payload = [c.as_dict() for c in preprocessed_commits]
 
-            pretty_log(logger, advisory_record)
-            logger.debug(
-                f"preprocessed {len(preprocessed_commits)} commits are only composed of test files"
-            )
-            payload = [c.to_dict() for c in preprocessed_commits]
+    # -------------------------------------------------------------------------
+    # save preprocessed commits to backend
+    # -------------------------------------------------------------------------
 
-    if len(payload) > 0 and use_backend != "never":
-        save_preprocessed_commits(backend_address, payload)
+    if (
+        len(payload) > 0 and use_backend != "never"
+    ):  # and len(missing) > 0:  # len(missing) is useless
+        with ExecutionTimer(
+            core_statistics.sub_collection(name="save preprocessed commits to backend")
+        ):
+            save_preprocessed_commits(backend_address, payload)
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
 
@@ -211,33 +215,38 @@ def retrieve_preprocessed_commits(
 
         logger.error(f"Missing {len(missing)} commits")
 
-    return missing, [Commit.parse_obj(rc) for rc in retrieved_commits]
+    preprocessed_commits: "list[Commit]" = []
+    for idx, commit in enumerate(retrieved_commits):
+        if len(retrieved_commits) + len(missing) == len(candidates):
+            preprocessed_commits.append(make_from_dict(commit))
+        else:
+            missing.append(candidates[idx])
+    return missing, preprocessed_commits
 
 
 def save_preprocessed_commits(backend_address, payload):
-    with ExecutionTimer(core_statistics.sub_collection(name="save commits to backend")):
-        with ConsoleWriter("Saving preprocessed commits to backend") as writer:
-            logger.debug("Sending preprocessing commits to backend...")
-            try:
-                r = requests.post(
-                    backend_address + "/commits/",
-                    json=payload,
-                    headers={"Content-type": "application/json"},
-                )
-                logger.debug(
-                    f"Saving to backend completed (status code: {r.status_code})"
-                )
-            except requests.exceptions.ConnectionError:
-                logger.error(
-                    "Could not reach backend, is it running?"
-                    "The result of commit pre-processing will not be saved."
-                    "Continuing anyway.....",
-                    exc_info=get_level() < logging.WARNING,
-                )
-                writer.print(
-                    "Could not save preprocessed commits to backend",
-                    status=MessageStatus.WARNING,
-                )
+    with ConsoleWriter("Saving preprocessed commits to backend") as writer:
+        _logger.debug("Sending preprocessing commits to backend...")
+        try:
+            r = requests.post(
+                backend_address + "/commits/",
+                json=payload,
+                headers={"Content-type": "application/json"},
+            )
+            _logger.debug(
+                "Saving to backend completed (status code: %d)" % r.status_code
+            )
+        except requests.exceptions.ConnectionError:
+            _logger.error(
+                "Could not reach backend, is it running?"
+                "The result of commit pre-processing will not be saved."
+                "Continuing anyway.....",
+                exc_info=log.config.level < logging.WARNING,
+            )
+            writer.print(
+                "Could not save preprocessed commits to backend",
+                status=MessageStatus.WARNING,
+            )
 
 
 def get_candidates(

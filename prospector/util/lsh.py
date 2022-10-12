@@ -1,3 +1,5 @@
+import base64
+import pickle
 from typing import List
 from datasketch import MinHash, MinHashLSH
 from datasketch.lean_minhash import LeanMinHash
@@ -8,16 +10,17 @@ def string_encoder(string: str) -> List[bytes]:
     return [w.encode("utf-8") for w in string.split()]
 
 
-def encode_minhash(mhash: LeanMinHash) -> bytearray:
+def encode_minhash(mhash: LeanMinHash) -> str:
     """Encode a MinHash object into a bytearray"""
+    return base64.b64encode(pickle.dumps(mhash)).decode("utf-8")
     buf = bytearray(mhash.bytesize())
     mhash.serialize(buf)
     return buf
 
 
-def decode_minhash(buf: bytearray) -> LeanMinHash:
+def decode_minhash(buf: str) -> LeanMinHash:
     """Decode a LeanMinHash object from a bytearray"""
-    return LeanMinHash.deserialize(buf)
+    return pickle.loads(base64.b64decode(buf.encode("utf-8")))
 
 
 def compute_minhash(string: str) -> LeanMinHash:
