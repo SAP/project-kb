@@ -1,3 +1,4 @@
+import re
 from typing import Dict, Set
 
 import pandas
@@ -19,8 +20,31 @@ DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
 
-def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
-    return advisory_record.vulnerability_id in commit.cve_refs
+SEC_KEYWORDS = [
+    "vuln",
+    "exploit",
+    "attack",
+    "secur",
+    "xxe",
+    "xss",
+    "dos",
+    "insecur",
+    "inject",
+    "unsafe",
+    "remote execution",
+    "malicious",
+    "cwe-",
+    "rce",
+]
+
+KEYWORDS_REGEX = r"(?:^|[.,:\s]|\b)({})(?:$|[.,:\s]|\b)".format("|".join(SEC_KEYWORDS))
+
+
+def extract_security_keywords(text: str) -> Set[str]:
+    """
+    Return the list of the security keywords found in the text
+    """
+    return set([r.group(1) for r in re.finditer(KEYWORDS_REGEX, text, flags=re.I)])
 
 
 # Unused

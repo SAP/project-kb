@@ -41,37 +41,23 @@ class PostgresCommitDB(CommitDB):
         try:
             cur = self.connection.cursor(cursor_factory=DictCursor)
             if commit_id:
-                for cid in commit_id.split(","):
+                for id in commit_id.split(","):
                     cur.execute(
-                        "SELECT * FROM commits WHERE repository = %s AND commit_id =%s",
+                        "SELECT * FROM commits WHERE repository = %s AND commit_id = %s",
                         (
                             repository,
-                            cid,
+                            id,
                         ),
                     )
 
                     result = cur.fetchall()
                     if len(result):
                         data.append(parse_commit_from_database(result[0]))
-            # else:
-            #     cur.execute(
-            #         "SELECT * FROM commits WHERE repository = %s",
-            #         (repository,),
-            #     )
-            #     result = cur.fetchall()
-            #     if len(result):
-            #         for res in result:
-            #             # Workaround for unmarshaling hunks, dict type refs
-            #             lis = []
-            #             for r in res[3]:
-            #                 a, b = r.strip("()").split(",")
-            #                 lis.append((int(a), int(b)))
-            #             res[3] = lis
-            #             res[9] = dict.fromkeys(res[8], "")
-            #             res[10] = dict.fromkeys(res[9], "")
-            #             res[11] = dict.fromkeys(res[10], "")
-            #             parsed_commit = Commit.parse_obj(res)
-            #             data.append(parsed_commit)
+            else:
+                cur.execute("SELECT * FROM commits WHERE repository = %s", repository)
+                result = cur.fetchall()
+                for row in result:
+                    data.append(parse_commit_from_database(row))
             cur.close()
         except Exception:
             _logger.error("Could not lookup commit vector in database", exc_info=True)

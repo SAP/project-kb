@@ -24,11 +24,11 @@
                     {% for annotated_commit in candidates %}
                     {% if annotated_commit.relevance > 10 %}
                     <div class="card commit d-flex"
-                        data-annotations="{{ annotated_commit.annotations | tojson | forceescape }}"
+                        data-annotations="{{ annotated_commit.matched_rules | tojson | forceescape }}"
                         data-relevances="{{annotated_commit.relevance}}">
                         {% else %}
                         <div class="card commit d-none"
-                            data-annotations="{{ annotated_commit.annotations | tojson | forceescape }}"
+                            data-annotations="{{ annotated_commit.matched_rules | tojson | forceescape }}"
                             data-relevances="{{annotated_commit.relevance}}">
                             {% endif %}
 

@@ -30,6 +30,7 @@ class Commit(BaseModel):
     tags: List[str] = Field(default_factory=list)
     annotations: Dict[str, str] = Field(default_factory=dict)
     relevance: Optional[int] = 0
+    matched_rules: List[Tuple[str, str, int]] = Field(default_factory=list)
 
     @property
     def hunk_count(self):
@@ -41,6 +42,15 @@ class Commit(BaseModel):
 
     def __eq__(self, other) -> bool:
         return self.relevance == other.relevance
+
+    def add_match(self, rule_details: Tuple[str, str, int]):
+        self.matched_rules.append(rule_details)
+
+    def compute_relevance(self):
+        self.relevance = sum([rule[2] for rule in self.matched_rules])
+
+    def get_relevance(self) -> int:
+        return sum([rule[2] for rule in self.matched_rules])
 
     # def format(self):
     #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)

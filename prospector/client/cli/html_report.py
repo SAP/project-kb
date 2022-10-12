@@ -18,10 +18,13 @@ def report_as_html(
     statistics=None,
 ):
     annotations_count = {}
-    annotation: Commit
+    # annotation: Commit
+    # Match number per rules
     for commit in results:
-        for annotation in commit.annotations.keys():
-            annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
+        for id, _, _ in commit.matched_rules:
+            annotations_count[id] = annotations_count.get(id, 0) + 1
+        # for annotation in commit.annotations.keys():
+        #     annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
 
     _logger.info("Writing results to " + filename)
     environment = jinja2.Environment(
