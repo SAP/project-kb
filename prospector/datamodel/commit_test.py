@@ -14,7 +14,7 @@ def repository():
     return repo
 
 
-def test_preprocess_commit(repository):
+def test_preprocess_commit(repository: Git):
 
     repo = repository
     raw_commit = repo.get_commit("e434ba6523c4d6d22625755f9890039728e6676a")
@@ -27,7 +27,7 @@ def test_preprocess_commit(repository):
     assert commit.cve_refs == []
 
 
-def test_preprocess_commit_set(repository):
+def test_preprocess_commit_set(repository: Git):
 
     repo = repository
     commit_set = repo.get_commits(
@@ -42,9 +42,9 @@ def test_preprocess_commit_set(repository):
     assert len(preprocessed_commits) == len(commit_set)
 
 
-def test_commit_ordering(repository):
+def test_commit_ordering(repository: Git):
     assert True
 
 
-def test_find_twin(repository):
+def test_find_twin(repository: Git):
     assert True

@@ -147,7 +147,6 @@ def prospector(  # noqa: C901
                 counter.initialize("preprocessed commits", unit="commit")
                 for commit_id in pbar:
                     counter.increment("preprocessed commits")
-
                     preprocessed_commits.append(
                         make_from_raw_commit(repository.get_commit(commit_id))
                     )
