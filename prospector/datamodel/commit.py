@@ -1,16 +1,15 @@
-from ctypes import Union
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 from datasketch.lean_minhash import LeanMinHash
-from util.lsh import compute_minhash, decode_minhash, encode_minhash
+from util.lsh import build_lsh_index, compute_minhash, decode_minhash, encode_minhash
 
 from datamodel.nlp import (
     extract_cve_references,
     extract_ghissue_references,
     extract_jira_references,
 )
-from git.git import RawCommit
+from git.raw_commit import RawCommit
 
 
 class Commit(BaseModel):
@@ -20,6 +19,7 @@ class Commit(BaseModel):
     """
 
     # TODO: a more elegant fix
+    # Why are we using BaseModel
     class Config:
         arbitrary_types_allowed = True
 
@@ -35,7 +35,6 @@ class Commit(BaseModel):
     ghissue_refs: Dict[str, str] = Field(default_factory=dict)
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
-    # annotations: Dict[str, str] = Field(default_factory=dict)
     relevance: Optional[int] = 0
     matched_rules: List[Dict[str, Any]] = list()
     minhash: LeanMinHash = None
@@ -45,25 +44,20 @@ class Commit(BaseModel):
         return len(self.hunks)
 
     # These two methods allow to sort by relevance
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: "Commit") -> bool:
         return self.relevance < other.relevance
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: "Commit") -> bool:
         return self.relevance == other.relevance
 
-    def add_match(self, rule_details: Tuple[str, str, int]):
-        self.matched_rules.append(rule_details)
+    def add_match(self, rule: Dict[str, Any]):
+        self.matched_rules.append(rule)
 
     def compute_relevance(self):
         self.relevance = sum([rule.get("relevance") for rule in self.matched_rules])
 
     def get_relevance(self) -> int:
         return sum([rule.get("relevance") for rule in self.matched_rules])
-
-    # def format(self):
-    #     out = "Commit: {} {}".format(self.repository.get_url(), self.commit_id)
-    #     out += "\nhunk_count: %d   diff_size: %d" % (self.hunk_count, len(self.diff))
-    #     return out
 
     def print(self):
         out = f"Commit: {self.commit_id}\nRepository: {self.repository}\nMessage: {self.message}\nTags: {self.tags}\n"
@@ -91,6 +85,16 @@ class Commit(BaseModel):
             "tags": self.tags,
             "minhash": encode_minhash(self.minhash),
         }
+
+    def find_twin(self, commit_list: List["Commit"]):
+        index = build_lsh_index()
+        for commit in commit_list:
+            index.insert(commit.commit_id, commit.minhash)
+
+        result = index.query(self.minhash)
+
+        # Might be empty
+        return [id for id in result if id != self.commit_id]
 
 
 def make_from_dict(dict: Dict[str, Any]) -> Commit:
@@ -129,7 +133,7 @@ def make_from_raw_commit(raw_commit: RawCommit) -> Commit:
     and later used by the ranking/ML module.
     """
     commit = Commit(
-        commit_id=raw_commit.get_id(), repository=raw_commit.get_repository()
+        commit_id=raw_commit.get_id(), repository=raw_commit.get_repository_url()
     )
 
     # This is where all the attributes of the preprocessed commit
@@ -151,6 +155,8 @@ def make_from_raw_commit(raw_commit: RawCommit) -> Commit:
     commit.jira_refs = extract_jira_references(commit.message)
     commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
     commit.cve_refs = extract_cve_references(commit.message)
-    commit.minhash = compute_minhash(commit.message[:128])
+    commit.minhash = compute_minhash(
+        commit.message[:64]
+    )  # TODO: Only if is the first time
 
     return commit

@@ -43,5 +43,8 @@ def test_preprocess_commit_set(repository):
 
 
 def test_commit_ordering(repository):
-    print("test")
-    # DO SOMETHING
+    assert True
+
+
+def test_find_twin(repository):
+    assert True
