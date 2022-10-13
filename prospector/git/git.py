@@ -13,60 +13,24 @@ import sys
 from typing import Dict, List
 from urllib.parse import urlparse
 
-import requests
-
 from git.exec import Exec
 from git.raw_commit import RawCommit
-from log.logger import logger
+
+import log.util
+
 from stats.execution import execution_statistics, measure_execution_time
-from util.lsh import (
-    build_lsh_index,
-    compute_minhash,
-    encode_minhash,
-    get_encoded_minhash,
-)
 
-# GIT_CACHE = os.getenv("GIT_CACHE")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+_logger = log.util.init_local_logger()
 
-GIT_SEPARATOR = "-@-@-@-@-"
+# If we don't parse .env file, we can't use the environment variables
+# load_dotenv()
 
-FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
-RELEVANT_EXTENSIONS = [
-    "java",
-    "c",
-    "cpp",
-    "h",
-    "py",
-    "js",
-    "xml",
-    "go",
-    "rb",
-    "php",
-    "sh",
-    "scale",
-    "lua",
-    "m",
-    "pl",
-    "ts",
-    "swift",
-    "sql",
-    "groovy",
-    "erl",
-    "swf",
-    "vue",
-    "bat",
-    "s",
-    "ejs",
-    "yaml",
-    "yml",
-    "jar",
-]
+GIT_CACHE = os.getenv("GIT_CACHE")
 
-# if not os.path.isdir(GIT_CACHE):
-#     raise ValueError(
-#         f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
-#     )
+if not os.path.isdir(GIT_CACHE):
+    raise ValueError(
+        f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
+    )
 
 
 def do_clone(url, output_folder, shallow=False, skip_existing=False):
@@ -97,6 +61,7 @@ def clone_repo_multiple(
 def path_from_url(url: str, base_path):
     url = url.rstrip("/")
     parsed_url = urlparse(url)
+    print(parsed_url)
     return os.path.join(
         base_path, parsed_url.netloc + parsed_url.path.replace("/", "_")
     )
@@ -109,19 +74,20 @@ class Git:
         cache_path=os.path.abspath("/tmp/gitcache"),
         shallow: bool = False,
     ):
-        pathlib.Path(cache_path).mkdir(parents=True, exist_ok=True)
-        self.repository_type = "GIT"
-        self.url = url
-        self.path = path_from_url(url, cache_path)
-        self.fingerprints = dict()
-        self.exec_timeout = None
-        self.shallow_clone = shallow
-        self.exec = Exec(workdir=self.path)
-        self.storage = None
-        # self.lsh_index = build_lsh_index()
+        self._repository_type = "GIT"
+        self._url = url
+        self._path = path_from_url(url, cache_path)
+        self._fingerprints = dict()
+        self._exec_timeout = None
+        self._shallow_clone = shallow
+        self.set_exec()
+        self._storage = None
 
-    def execute(self, cmd: str, silent: bool = False):
-        return self.exec.run(cmd, silent=silent, cache=True)
+    def set_exec(self, exec_obj=None):
+        if not exec_obj:
+            self._exec = Exec(workdir=self._path)
+        else:
+            self._exec = exec_obj
 
     def get_url(self):
         return self.url
@@ -271,92 +237,10 @@ class Git:
             since = self.extract_tag_timestamp(exclude_ancestors_of)
 
         if since:
-            cmd += f" --since={since}"
+            cmd.append(f"--since={since}")
 
         if until:
-            cmd += f" --until={until}"
-
-        # for ext in FILTERING_EXTENSIONS:
-        #     cmd += f" *.{ext}"
-
-        try:
-            logger.debug(cmd)
-            out = self.execute(cmd)
-            # if --all is used, we are traversing all branches and therefore we can check for twins
-
-            # TODO: problem -> twins can be merge commits, same commits for different branches, not only security related fixes
-
-            return self.parse_git_output(out, find_twins)
-
-        except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
-            return dict()
-
-    # def populate_lsh_index(self, msg: str, id: str):
-    #     mh = compute_minhash(msg[:64])
-    #     possible_twins = self.lsh_index.query(mh)
-
-    #     self.lsh_index.insert(id, mh)
-    #     return encode_minhash(mh), possible_twins
-
-    def parse_git_output(self, raw: List[str], find_twins: bool = False):
-
-        commits: Dict[str, RawCommit] = dict()
-        commit = None
-        sector = 0
-        for line in raw:
-            if line == GIT_SEPARATOR:
-                if sector == 3:
-                    sector = 1
-                    if 0 < len(commit.changed_files) < 100:
-                        commit.msg = commit.msg.strip()
-                        if find_twins:
-                            # minhash, twins = self.populate_lsh_index(
-                            #     commit.msg, commit.id
-                            # )
-                            commit.minhash = get_encoded_minhash(commit.msg[:64])
-                            # commit.twins = twins
-                            # for twin in twins:
-                            #     commits[twin].twins.append(commit.id)
-
-                        commits[commit.id] = commit
-
-                else:
-                    sector += 1
-            else:
-                if sector == 1:
-                    id, timestamp, parent = line.split(":")
-                    parent = parent.split(" ")[0]
-                    commit = RawCommit(self, id, int(timestamp), parent)
-                elif sector == 2:
-                    commit.msg += line + " "
-                elif sector == 3 and "test" not in line:
-                    commit.add_changed_file(line)
-
-        return commits
-
-    def get_issues(self, since=None) -> Dict[str, str]:
-        owner, repo = self.url.split("/")[-2:]
-        query_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
-        # /repos/{owner}/{repo}/issues/{issue_number}
-        params = {
-            "state": "closed",
-            "per_page": 100,
-            "since": since,
-            "page": 1,
-        }
-        headers = {
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
-            "Accept": "application/vnd.github+json",
-        }
-        r = requests.get(query_url, params=params, headers=headers)
-
-        while len(r.json()) > 0:
-            for elem in r.json():
-                body = elem["body"] or ""
-                self.issues[str(elem["number"])] = (
-                    elem["title"] + " " + " ".join(body.split())
-                )
+            cmd.append(f"--until={until}")
 
             params["page"] += 1
             if params["page"] > 10:
@@ -384,32 +268,30 @@ class Git:
             until = self.extract_tag_timestamp(ancestors_of)
 
         if exclude_ancestors_of:
-            cmd += f" ^{exclude_ancestors_of}"
-            since = self.extract_tag_timestamp(exclude_ancestors_of)
+            cmd.append(f"^{exclude_ancestors_of}")
 
-        if since:
-            cmd += f" --since={since}"
-
-        if until:
-            cmd += f" --until={until}"
-
-        for ext in FILTERING_EXTENSIONS:
-            cmd += f" *.{ext}"
+        if filter_files:
+            cmd.append(f"*.{filter_files}")
 
         # What is this??
         if find_in_code:
-            cmd += f" -S{find_in_code}"
+            cmd.append(f"-S{find_in_code}")
 
         if find_in_msg:
-            cmd += f" --grep={find_in_msg}"
+            cmd.append(f"--grep={find_in_msg}")
 
         try:
-            logger.debug(cmd)
-            out = self.execute(cmd)
+            _logger.debug(" ".join(cmd))
+            out = self._exec.run(cmd, cache=True)
+        #     --cherry-mark
+        # Like --cherry-pick (see below) but mark equivalent commits with =
+        # rather than omitting them, and inequivalent ones with +.
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             out = []
+
+        out = [l.strip() for l in out]
 
         return out
 
@@ -430,8 +312,15 @@ class Git:
             return []
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
-    def get_commit(self, id):
-        return RawCommit(self, id)
+    def get_commit(self, key, by="id"):
+        if by == "id":
+            return RawCommit(self._url, key, self._exec)
+        if by == "fingerprint":
+            # TODO implement computing fingerprints
+            c_id = self._fingerprints[key]
+            return RawCommit(self._url, c_id, self._exec)
+
+        return None
 
     def get_random_commits(self, count):
         """
@@ -500,6 +389,14 @@ class Git:
         except subprocess.CalledProcessError as e:
             logger.error("Git command failed." + str(e.output), exc_info=True)
             return []
+
+        return tags
+
+    def get_issue_or_pr_text_from_id(self, id):
+        """
+        Return the text of the issue or PR with the given id
+        """
+        cmd = f"git fetch origin pull/{id}/head"
 
 
 # Donald Knuth's "reservoir sampling"
