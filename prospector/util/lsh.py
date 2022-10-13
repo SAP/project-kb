@@ -3,6 +3,7 @@ import pickle
 from typing import List
 from datasketch import MinHash, MinHashLSH
 from datasketch.lean_minhash import LeanMinHash
+from validators import Min
 
 
 def string_encoder(string: str) -> List[bytes]:
@@ -37,6 +38,18 @@ def compute_multiple_minhashes(strings: List[str]) -> List[LeanMinHash]:
         LeanMinHash(mh)
         for mh in MinHash.bulk([string_encoder(s) for s in strings], num_perm=128)
     ]
+
+
+def create(threshold: float, permutations: int):
+    return MinHashLSH(threshold=threshold, num_perm=permutations)
+
+
+def insert(lsh: MinHashLSH, id: str, hash: LeanMinHash):
+    lsh.insert(id, hash)
+
+
+def build_lsh_index() -> MinHashLSH:
+    return MinHashLSH(threshold=1, num_perm=128)
 
 
 def create_lsh_from_data(ids: List[str], data: List[str]) -> MinHashLSH:
