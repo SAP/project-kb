@@ -1,7 +1,7 @@
 import hashlib
 import re
 import sys
-import datetime
+from datetime import datetime
 import log.util
 from git.exec import Exec
 from stats.execution import execution_statistics, measure_execution_time
@@ -32,7 +32,7 @@ class RawCommit:
 
     def find_parent_id(self):
         try:
-            cmd = ["git", "log", "--format=%P", "-1", self.id]
+            cmd = f"git log --format=%P -1 {self.id}"
             parent = self.execute(cmd)  # self._exec.run(cmd, cache=True)
             if len(parent) > 0:
                 return parent[0]
@@ -51,7 +51,7 @@ class RawCommit:
 
     def get_msg(self):
         try:
-            cmd = ["git", "log", "--format=%B", "-1", self.id]
+            cmd = f"git log --format=%B -1 {self.id}"
             return " ".join(self.execute(cmd))
         except Exception:
             _logger.error(
@@ -64,14 +64,10 @@ class RawCommit:
         if self.parent_id == "":
             return ""
         try:
-            cmd = [
-                "git",
-                "diff",
-                f"--unified={context_size}",
-                f"{self.id}^!",
-            ]
+            cmd = f"git diff --unified={context_size} {self.id}^!"
+
             if filter_files:
-                cmd.append(f"*.{filter_files}")
+                cmd += f" *.{filter_files}"
 
             return self.execute(cmd)
 
@@ -101,7 +97,7 @@ class RawCommit:
             return []
 
         try:
-            cmd = ["git", "diff", "--name-only", f"{self.id}^!"]
+            cmd = f"git diff --name-only {self.id}^!"
             return self.execute(cmd)  # This is a tuple
         # This exception is raised when the commit is the first commit in the repository
         except Exception:
@@ -119,24 +115,17 @@ class RawCommit:
         else:
             other_id = other.id
 
-        cmd = [
-            "git",
-            "log",
-            "--name-only",
-            "--format=%n",
-            "--full-index",
-            other_id + ".." + self.id,
-        ]
         try:
+            cmd = f"git log --name-only --format=%n --full-index {other_id}..{self.id}"
+
             out = self.execute(cmd)
         except Exception as e:
-            out = str()
             sys.stderr.write(str(e))
             sys.stderr.write(
                 "There was a problem when getting the list of commits in the interval %s..%s\n"
                 % (other.id()[0], self.id)
             )
-            return out
+            return ""
 
         if match:
             out = [l.strip() for l in out if re.match(match, l)]
@@ -203,15 +192,9 @@ class RawCommit:
         return self.get_fingerprint() == other.get_fingerprint()
 
     def get_fingerprint(self):
-        if "fingerprint" not in self.attributes:
-            # try:
-            cmd = ["git", "show", '--format="%t"', "--numstat", self.id]
-            out = self.execute(cmd)
-            self.attributes["fingerprint"] = hashlib.md5(
-                "\n".join(out).encode()
-            ).hexdigest()
-
-        return self.attributes["fingerprint"]
+        cmd = ["git", "show", '--format="%t"', "--numstat", self.id]
+        out = self.execute(cmd)
+        return hashlib.md5("\n".join(out).encode()).hexdigest()
 
     def get_timing_data(self):
         data = self._get_timing_data()
@@ -314,7 +297,7 @@ class RawCommit:
             self.id,
             self.get_timestamp(date_format="%Y-%m-%d %H:%M:%S"),
             self.get_timestamp(),
-            self.repository.get_url(),
+            self.repository_url,
             self.get_msg(),
             len(self.get_hunks()),
             len(self.get_changed_paths()),

@@ -9,36 +9,36 @@ _logger = log.util.init_local_logger()
 
 class Exec:
     def __init__(self, workdir=None, encoding="latin-1", timeout=None):
-        self._encoding = encoding
-        self._timeout = timeout
+        self.encoding = encoding
+        self.timeout = timeout
         self.setDir(workdir)
 
     def setDir(self, path):
         if os.path.isabs(path):
             self._workdir = path
         else:
-            raise ValueError("Path must be absolute for Exec to work: " + path)
+            raise ValueError(f"Path must be absolute for Exec to work: {path}")
 
-    def run(self, cmd, ignore_output=False, cache: bool = False):
+    def run(self, cmd: str, silent=False, cache: bool = False):
         if cache:
-            result = self._run_cached(
-                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
-            )
+            result = self._run_cached(cmd, silent)
         else:
-            result = self._run_uncached(
-                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
-            )
+            result = self._run_uncached(cmd, silent)
+
         return result
 
+    # lru_cache only works for one python process.
+    # If you are running multiple subprocesses,
+    # or running the same script over and over, lru_cache will not work.
     @lru_cache(maxsize=10000)
-    def _run_cached(self, cmd, ignore_output=False):
-        return self._run_uncached(cmd, ignore_output=ignore_output)
+    def _run_cached(self, cmd, silent=False):
+        return self._run_uncached(cmd, silent=silent)
 
-    def _run_uncached(self, cmd, ignore_output=False):
+    def _run_uncached(self, cmd, silent=False):
         if isinstance(cmd, str):
             cmd = cmd.split()
 
-        if ignore_output:
+        if silent:
             self._execute_no_output(cmd)
             return ()
 
@@ -58,9 +58,9 @@ class Exec:
             )
         except subprocess.TimeoutExpired:  # pragma: no cover
             _logger.error(
-                "Timeout exceeded (" + self._timeout + " seconds)", exc_info=True
+                "Timeout exceeded (" + self.timeout + " seconds)", exc_info=True
             )
-            raise Exception("Process did not respond for " + self._timeout + " seconds")
+            raise Exception("Process did not respond for " + self.timeout + " seconds")
 
     def _execute(self, cmd_l):
         try:
@@ -70,6 +70,7 @@ class Exec:
                 stdout=subprocess.PIPE,
                 # stderr=subprocess.STDOUT,  # Needed to have properly prinded error output
             )
+            # This is blocking, who wrote this?
             out, _ = proc.communicate()
 
             if proc.returncode != 0:
@@ -80,11 +81,11 @@ class Exec:
             #     traceback.print_exc()
             #     raise Exception('Execution failed')
 
-            raw_output_list = out.decode(self._encoding).split("\n")
+            raw_output_list = out.decode(self.encoding).split("\n")
             return [r for r in raw_output_list if r.strip() != ""]
         except subprocess.TimeoutExpired:  # pragma: no cover
-            _logger.error(f"Timeout exceeded ({self._timeout} seconds)", exc_info=True)
-            raise Exception(f"Process did not respond for {self._timeout} seconds")
+            _logger.error(f"Timeout exceeded ({self.timeout} seconds)", exc_info=True)
+            raise Exception(f"Process did not respond for {self.timeout} seconds")
             # return None
         # except Exception as ex:                 # pragma: no cover
         #     traceback.print_exc()
