@@ -40,9 +40,9 @@ def test_preprocess_commit_set(repository: Git):
     assert len(preprocessed_commits) == len(commit_set)
 
 
-def test_commit_ordering(repository):
+def test_commit_ordering(repository: Git):
     assert True
 
 
-def test_find_twin(repository):
+def test_find_twin(repository: Git):
     assert True
