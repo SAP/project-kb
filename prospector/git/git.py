@@ -101,7 +101,6 @@ def clone_repo_multiple(
 def path_from_url(url: str, base_path):
     url = url.rstrip("/")
     parsed_url = urlparse(url)
-    print(parsed_url)
     return os.path.join(
         base_path, parsed_url.netloc + parsed_url.path.replace("/", "_")
     )
@@ -129,6 +128,9 @@ class Git:
         else:
             self._exec = exec_obj
 
+    def execute(self, cmd: str, silent: bool = False):
+        return self._exec.run(cmd, silent=silent, cache=True)
+
     def get_url(self):
         return self.url
 
@@ -141,7 +143,7 @@ class Git:
 
         try:
             cmd = "git ls-remote -q"
-            # self.exec._encoding = 'utf-8'
+            # self._exec._encoding = 'utf-8'
             l_raw_output = self.execute(cmd)
 
             logger.debug(
@@ -170,7 +172,7 @@ class Git:
         # ...then search the corresponding treeish among the local references
         try:
             cmd = "git show-ref"
-            # self.exec._encoding = 'utf-8'
+            # self._exec._encoding = 'utf-8'
             l_raw_output = self.execute(cmd)
 
             logger.debug("Processing {} references".format(len(l_raw_output)))
@@ -187,7 +189,7 @@ class Git:
                 + self.path
             )
 
-            logger.error(str(ex))
+            _logger.error(str(ex))
             return None
 
     def clone(self, shallow=None, skip_existing=False):
@@ -209,6 +211,7 @@ class Git:
                 logger.debug(f"Found repo {self.url} in {self.path}.\nFetching....")
 
                 self.execute("git fetch --progress --all --tags")
+                # , cwd=self._path, timeout=self._exec_timeout)
             return
 
         if os.path.exists(self.path):
@@ -219,12 +222,12 @@ class Git:
 
         logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
 
-        if not self.execute("git init", silent=False):
-            logger.error(f"Failed to initialize repository in {self.path}")
+        if not self.execute("git init", silent=True):
+            _logger.error(f"Failed to initialize repository in {self._path}")
 
         try:
-            self.exec.run(
-                f"git remote add origin {self.url}",
+            self._exec.run(
+                f"git remote add origin {self._url}",
                 silent=True,
             )
         except Exception as e:
@@ -233,13 +236,17 @@ class Git:
             raise e
 
         try:
-            if self.shallow_clone:
-                self.execute("git fetch --depth 1")
+            if self._shallow_clone:
+                self.execute("git fetch --depth 1")  # , cwd=self._path)
+                # sh.git.fetch('--depth', '1', 'origin', _cwd=self._path)
             else:
+                # sh.git.fetch('--all', '--tags', _cwd=self._path)
                 self.execute("git fetch --progress --all --tags")
-        except Exception as e:
-            logger.error(
-                f"Could not fetch {self.url} (shallow={self.shallow_clone}) in {self.path}",
+                # , cwd=self._path)
+                # self._exec.run_l(['git', 'fetch', '--tags'], cwd=self._path)
+        except Exception as ex:
+            _logger.error(
+                f"Could not fetch {self._url} (shallow={str(self._shallow_clone)}) in {self._path}",
                 exc_info=True,
             )
             shutil.rmtree(self.path)
@@ -258,23 +265,11 @@ class Git:
         until=None,
         find_in_code="",
         find_in_msg="",
-        find_twins=True,
-    ) -> Dict[str, RawCommit]:
-        cmd = f"git log --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+    ):
+        cmd = ["git", "rev-list"]
 
-        if ancestors_of is None or find_twins:
-            cmd += " --all"
-
-        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
-        if ancestors_of:
-            if not find_twins:
-                cmd += f" {ancestors_of}"
-            until = self.extract_tag_timestamp(ancestors_of)
-        # TODO: if find twins is true, we dont need the ancestors, only the timestamps
-        if exclude_ancestors_of:
-            if not find_twins:
-                cmd += f" ^{exclude_ancestors_of}"
-            since = self.extract_tag_timestamp(exclude_ancestors_of)
+        if ancestors_of is None:
+            cmd.append("--all")
 
         if since:
             cmd.append(f"--since={since}")
@@ -392,7 +387,7 @@ class Git:
 
         try:
             _logger.debug(" ".join(cmd))
-            out = self._exec.run(cmd, cache=True)
+            out = self.execute(" ".join(cmd))
         #     --cherry-mark
         # Like --cherry-pick (see below) but mark equivalent commits with =
         # rather than omitting them, and inequivalent ones with +.
@@ -401,9 +396,7 @@ class Git:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             out = []
 
-        out = [l.strip() for l in out]
-
-        return out
+        return [l.strip() for l in out]
 
     def get_commits_between_two_commit(self, commit_from: str, commit_to: str):
         """
@@ -412,7 +405,7 @@ class Git:
         try:
             cmd = f"git rev-list --ancestry-path {commit_from}..{commit_to}"
 
-            path = self.execute(cmd)  # ???
+            path = list(self.execute(cmd))  # ???
             if len(path) > 0:
                 path.pop(0)
                 path.reverse()
@@ -422,15 +415,8 @@ class Git:
             return []
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
-    def get_commit(self, key, by="id"):
-        if by == "id":
-            return RawCommit(self._url, key, self._exec)
-        if by == "fingerprint":
-            # TODO implement computing fingerprints
-            c_id = self._fingerprints[key]
-            return RawCommit(self._url, c_id, self._exec)
-
-        return None
+    def get_commit(self, id):
+        return RawCommit(self._url, id, self._exec)
 
     def get_random_commits(self, count):
         """
@@ -467,18 +453,19 @@ class Git:
             return None
 
         commit_id = self.get_commit_id_for_tag(tag[0])
-        return self.get_commit(commit_id).get_timestamp()
+        commit = self.get_commit(commit_id)
+        return commit.get_timestamp()
 
     def get_tags(self):
         try:
-            return self.execute("git tag")
+            tags = self.execute("git tag")
         except subprocess.CalledProcessError as exc:
             logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []
 
     def get_commit_id_for_tag(self, tag):
-        cmd = f"git rev-list -1 {tag}"
-        commit_id = ""
+        cmd = f"git rev-list -1 {tag}".split(" ")
+
         try:
             commit_id = self.execute(cmd)
             if len(commit_id) > 0:
@@ -493,11 +480,10 @@ class Git:
         cmd = f"git describe --abbrev=0 --all --tags --always {commit}^"
 
         try:
+            # @TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
             tags = self.execute(cmd)
-            if len(tags) > 0:
-                return tags
         except subprocess.CalledProcessError as e:
-            logger.error("Git command failed." + str(e.output), exc_info=True)
+            _logger.error("Git command failed." + str(e.output), exc_info=True)
             return []
 
         if not tags:

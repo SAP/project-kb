@@ -145,7 +145,6 @@ def prospector(  # noqa: C901
                 # Now pbar has Raw commits inside so we can skip the "get_commit" call
                 for raw_commit in pbar:
                     counter.increment("preprocessed commits")
-
                     preprocessed_commits.append(
                         make_from_raw_commit(repository.get_commit(commit_id))
                     )
