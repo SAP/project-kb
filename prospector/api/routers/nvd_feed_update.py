@@ -28,6 +28,8 @@ from log.logger import logger
 
 NVD_API_KEY = os.getenv("NVD_API_KEY", "")
 
+NVD_API_KEY = os.getenv("NVD_API_KEY", "")
+
 # note: The NVD has not data older than 2002
 START_FROM_YEAR = os.getenv("CVE_DATA_AS_OF_YEAR", "2002")
 DATA_PATH = os.getenv("CVE_DATA_PATH", "data/")
