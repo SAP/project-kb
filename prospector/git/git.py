@@ -12,12 +12,12 @@ import sys
 from typing import Dict, List
 from urllib.parse import urlparse
 
-import requests
-
 from git.exec import Exec
 from git.raw_commit import RawCommit
 
-from log.logger import logger
+import log.util
+
+from stats.execution import execution_statistics, measure_execution_time
 
 from stats.execution import execution_statistics, measure_execution_time
 from util.lsh import (
@@ -27,6 +27,8 @@ from util.lsh import (
     get_encoded_minhash,
 )
 
+# If we don't parse .env file, we can't use the environment variables
+# load_dotenv()
 
 GIT_CACHE = os.getenv("GIT_CACHE")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -99,6 +101,7 @@ def clone_repo_multiple(
 def path_from_url(url: str, base_path):
     url = url.rstrip("/")
     parsed_url = urlparse(url)
+    print(parsed_url)
     return os.path.join(
         base_path, parsed_url.netloc + parsed_url.path.replace("/", "_")
     )
@@ -111,18 +114,20 @@ class Git:
         cache_path=os.path.abspath("/tmp/gitcache"),
         shallow: bool = False,
     ):
-        self.repository_type = "GIT"
-        self.url = url
-        self.path = path_from_url(url, cache_path)
-        self.fingerprints = dict()
-        self.exec_timeout = None
-        self.shallow_clone = shallow
-        self.exec = Exec(workdir=self.path)
-        self.storage = None
-        # self.lsh_index = build_lsh_index()
+        self._repository_type = "GIT"
+        self._url = url
+        self._path = path_from_url(url, cache_path)
+        self._fingerprints = dict()
+        self._exec_timeout = None
+        self._shallow_clone = shallow
+        self.set_exec()
+        self._storage = None
 
-    def execute(self, cmd: str, silent: bool = False):
-        return self.exec.run(cmd, silent=silent, cache=True)
+    def set_exec(self, exec_obj=None):
+        if not exec_obj:
+            self._exec = Exec(workdir=self._path)
+        else:
+            self._exec = exec_obj
 
     def get_url(self):
         return self.url
@@ -272,22 +277,10 @@ class Git:
             since = self.extract_tag_timestamp(exclude_ancestors_of)
 
         if since:
-            cmd += f" --since={since}"
+            cmd.append(f"--since={since}")
 
         if until:
-            cmd += f" --until={until}"
-
-        # for ext in FILTERING_EXTENSIONS:
-        #     cmd += f" *.{ext}"
-
-        try:
-            logger.debug(cmd)
-            out = self.execute(cmd)
-            # if --all is used, we are traversing all branches and therefore we can check for twins
-
-            # TODO: problem -> twins can be merge commits, same commits for different branches, not only security related fixes
-
-            return self.parse_git_output(out, find_twins)
+            cmd.append(f"--until={until}")
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
@@ -385,32 +378,30 @@ class Git:
             until = self.extract_tag_timestamp(ancestors_of)
 
         if exclude_ancestors_of:
-            cmd += f" ^{exclude_ancestors_of}"
-            since = self.extract_tag_timestamp(exclude_ancestors_of)
+            cmd.append(f"^{exclude_ancestors_of}")
 
-        if since:
-            cmd += f" --since={since}"
-
-        if until:
-            cmd += f" --until={until}"
-
-        for ext in FILTERING_EXTENSIONS:
-            cmd += f" *.{ext}"
+        if filter_files:
+            cmd.append(f"*.{filter_files}")
 
         # What is this??
         if find_in_code:
-            cmd += f" -S{find_in_code}"
+            cmd.append(f"-S{find_in_code}")
 
         if find_in_msg:
-            cmd += f" --grep={find_in_msg}"
+            cmd.append(f"--grep={find_in_msg}")
 
         try:
-            logger.debug(cmd)
-            out = self.execute(cmd)
+            _logger.debug(" ".join(cmd))
+            out = self._exec.run(cmd, cache=True)
+        #     --cherry-mark
+        # Like --cherry-pick (see below) but mark equivalent commits with =
+        # rather than omitting them, and inequivalent ones with +.
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             out = []
+
+        out = [l.strip() for l in out]
 
         return out
 
@@ -431,8 +422,15 @@ class Git:
             return []
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
-    def get_commit(self, id):
-        return RawCommit(self, id)
+    def get_commit(self, key, by="id"):
+        if by == "id":
+            return RawCommit(self._url, key, self._exec)
+        if by == "fingerprint":
+            # TODO implement computing fingerprints
+            c_id = self._fingerprints[key]
+            return RawCommit(self._url, c_id, self._exec)
+
+        return None
 
     def get_random_commits(self, count):
         """
@@ -501,6 +499,17 @@ class Git:
         except subprocess.CalledProcessError as e:
             logger.error("Git command failed." + str(e.output), exc_info=True)
             return []
+
+        if not tags:
+            return []
+
+        return tags
+
+    def get_issue_or_pr_text_from_id(self, id):
+        """
+        Return the text of the issue or PR with the given id
+        """
+        cmd = f"git fetch origin pull/{id}/head"
 
 
 # Donald Knuth's "reservoir sampling"
