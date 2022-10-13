@@ -5,6 +5,9 @@ from typing import Dict, List, Set, Tuple
 
 import requests
 from tqdm import tqdm
+from datamodel import commit
+
+import log
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
 from datamodel.commit import Commit, apply_ranking, make_from_dict, make_from_raw_commit
@@ -90,6 +93,7 @@ def prospector(  # noqa: C901
             time_limit_after,
             filter_extensions[0],
         )
+
         _logger.debug(f"Collected {len(candidates)} candidates")
 
         if len(candidates) > limit_candidates:
@@ -141,17 +145,10 @@ def prospector(  # noqa: C901
                 # Now pbar has Raw commits inside so we can skip the "get_commit" call
                 for raw_commit in pbar:
                     counter.increment("preprocessed commits")
-                    # TODO: here we need to check twins with the commit not already in the backend and update everything
-                    preprocessed_commits.append(make_from_raw_commit(raw_commit))
 
-            # Cleanup candidates to save memory
-            del candidates
-
-            pretty_log(logger, advisory_record)
-            logger.debug(
-                f"preprocessed {len(preprocessed_commits)} commits are only composed of test files"
-            )
-            payload = [c.to_dict() for c in preprocessed_commits]
+                    preprocessed_commits.append(
+                        make_from_raw_commit(repository.get_commit(commit_id))
+                    )
 
             _logger.pretty_log(advisory_record)
             _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")

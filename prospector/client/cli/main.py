@@ -17,11 +17,11 @@ if path_root not in sys.path:
 # Loading .env file before doint anything else
 load_dotenv()
 
-# Load logger before doing anything else
-from log.logger import logger, get_level, pretty_log  # noqa: E402
+import log.util  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from client.cli.report import as_json, as_html, report_on_console  # noqa: E402
+from client.cli.console_report import report_on_console  # noqa: E402
+from client.cli.report import as_json, as_html  # noqa: E402
 from client.cli.prospector_client import (  # noqa: E402
     MAX_CANDIDATES,  # noqa: E402
     TIME_LIMIT_AFTER,  # noqa: E402
@@ -326,11 +326,11 @@ def main(argv):  # noqa: C901
         if report == "console":
             report_on_console(results, advisory_record, get_level() < logging.INFO)
         elif report == "json":
-            report_file = report_as_json(
+            report_file = as_json(
                 results, advisory_record, args.report_filename + ".json"
             )
         elif report == "html":
-            report_file = report_as_html(
+            report_file = as_html(
                 results, advisory_record, args.report_filename + ".html"
             )
         else:
