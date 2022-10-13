@@ -1,10 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
+
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 # from .dependencies import oauth2_scheme
 from api.routers import jobs, nvd, preprocessed, users
+
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},

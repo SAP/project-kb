@@ -3,17 +3,23 @@ import logging
 import os
 import signal
 import sys
+from pathlib import Path
+from typing import Any, Dict
+from dotenv import load_dotenv
+
 
 path_root = os.getcwd()
 if path_root not in sys.path:
     sys.path.append(path_root)
 
-import log  # noqa: E402
+# Loading .env file before doint anything else
+load_dotenv()
+
+import log.util  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.console_report import report_on_console  # noqa: E402
-from client.cli.html_report import report_as_html  # noqa: E402
-from client.cli.json_report import report_as_json  # noqa: E402
+from client.cli.report import as_json, as_html  # noqa: E402
 from client.cli.prospector_client import (  # noqa: E402
     MAX_CANDIDATES,  # noqa: E402
     TIME_LIMIT_AFTER,  # noqa: E402
@@ -42,6 +48,19 @@ def parseArguments(args):
     )
 
     parser.add_argument("--repository", default="", type=str, help="Git repository")
+
+    parser.add_argument(
+        "--find-twin",
+        default="",
+        type=str,
+        help="Lookup for a twin of the specified commit",
+    )
+
+    parser.add_argument(
+        "--preprocess-only",
+        action="store_true",
+        help="Only preprocess the commits for the specified repository",
+    )
 
     parser.add_argument(
         "--pub-date", default="", help="Publication date of the advisory"
@@ -254,16 +273,19 @@ def main(argv):  # noqa: C901
         rules=["ALL"],
     )
 
+    if args.preprocess_only:
+        return True
+
     with ConsoleWriter("Generating report") as console:
         report_file = None
         if report == "console":
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
         elif report == "json":
-            report_file = report_as_json(
+            report_file = as_json(
                 results, advisory_record, args.report_filename + ".json"
             )
         elif report == "html":
-            report_file = report_as_html(
+            report_file = as_html(
                 results, advisory_record, args.report_filename + ".html"
             )
         else:
