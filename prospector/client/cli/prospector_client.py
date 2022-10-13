@@ -5,6 +5,7 @@ from typing import List, Set, Tuple
 
 import requests
 from tqdm import tqdm
+from datamodel import commit
 
 import log
 from client.cli.console import ConsoleWriter, MessageStatus
@@ -92,6 +93,7 @@ def prospector(  # noqa: C901
             time_limit_after,
             filter_extensions[0],
         )
+
         _logger.debug(f"Collected {len(candidates)} candidates")
 
         if len(candidates) > limit_candidates:
@@ -145,6 +147,7 @@ def prospector(  # noqa: C901
                 counter.initialize("preprocessed commits", unit="commit")
                 for commit_id in pbar:
                     counter.increment("preprocessed commits")
+
                     preprocessed_commits.append(
                         make_from_raw_commit(repository.get_commit(commit_id))
                     )
@@ -252,7 +255,6 @@ def save_preprocessed_commits(backend_address, payload):
             )
 
 
-# TODO: Cleanup many parameters should be recovered from the advisory record object
 def get_candidates(
     advisory_record: AdvisoryRecord,
     repository: Git,
