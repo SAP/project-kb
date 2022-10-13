@@ -105,7 +105,6 @@ def check_file_class_method_names(text: str, relevant_extensions: List[str]) -> 
     return None
 
 
-# TODO: refactoring to use w/o repository
 def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     """
     Extract identifiers that look like references to GH issues, then extract their content
