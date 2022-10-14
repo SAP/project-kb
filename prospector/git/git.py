@@ -66,6 +66,10 @@ def path_from_url(url: str, base_path):
     )
 
 
+def create_exec(workdir: str):
+    return Exec(workdir=workdir)
+
+
 class Git:
     def __init__(
         self,
@@ -73,23 +77,20 @@ class Git:
         cache_path=os.path.abspath("/tmp/gitcache"),
         shallow: bool = False,
     ):
-        self._repository_type = "GIT"
-        self._url = url
-        self._path = path_from_url(url, cache_path)
-        self._fingerprints = dict()
-        self._exec_timeout = None
-        self._shallow_clone = shallow
-        self.set_exec()
-        self._storage = None
+        self.repository_type = "GIT"
+        self.url = url
+        self.path = path_from_url(url, cache_path)
+        self.fingerprints = dict()
+        self.exec_timeout = None
+        self.shallow_clone = shallow
+        self.exec = create_exec(self.path)
+        self.storage = None
 
     def set_exec(self, exec_obj=None):
-        if not exec_obj:
-            self._exec = Exec(workdir=self._path)
-        else:
-            self._exec = exec_obj
+        return Exec(workdir=self.path)
 
     def execute(self, cmd: str, silent: bool = False):
-        return self._exec.run(cmd, silent=silent, cache=True)
+        return self.exec.run(cmd, silent=silent, cache=True)
 
     def get_url(self):
         return self.url
@@ -99,11 +100,11 @@ class Git:
         Identifies the default branch of the remote repository for the local git
         repo
         """
-        logger.debug("Identifiying remote branch for %s", self.path)
+        _logger.debug("Identifiying remote branch for %s", self.path)
 
         try:
             cmd = "git ls-remote -q"
-            # self._exec._encoding = 'utf-8'
+            # self.exec._encoding = 'utf-8'
             l_raw_output = self.execute(cmd)
 
             logger.debug(
@@ -132,7 +133,7 @@ class Git:
         # ...then search the corresponding treeish among the local references
         try:
             cmd = "git show-ref"
-            # self._exec._encoding = 'utf-8'
+            # self.exec._encoding = 'utf-8'
             l_raw_output = self.execute(cmd)
 
             logger.debug("Processing {} references".format(len(l_raw_output)))
@@ -157,66 +158,64 @@ class Git:
         Clones the specified repository checking out the default branch in a subdir of output_folder.
         Shallow=true speeds up considerably the operation, but gets no history.
         """
-        if shallow is not None:
+        if shallow:
             self.shallow_clone = shallow
 
         if not self.url:
-            raise Exception("Invalid or missing url.")
+            _logger.error("Invalid url specified.")
+            sys.exit(-1)
 
         # TODO rearrange order of checks
         if os.path.isdir(os.path.join(self.path, ".git")):
             if skip_existing:
-                logger.debug(f"Skipping fetch of {self.url} in {self.path}")
+                _logger.debug(f"Skipping fetch of {self.url} in {self.path}")
             else:
-                _logger.debug(
-                    f"\nFound repo {self._url} in {self._path}.\nFetching...."
-                )
+                _logger.debug(f"\nFound repo {self.url} in {self.path}.\nFetching....")
 
                 self.execute("git fetch --progress --all --tags")
-                # , cwd=self._path, timeout=self._exec_timeout)
+                # , cwd=self.path, timeout=self.exec_timeout)
             return
 
         if os.path.exists(self.path):
-            logger.debug(f"Folder {self.path} is not a git repository.")
+            _logger.debug(
+                "Folder {} exists but it contains no git repository.".format(self.path)
+            )
             return
 
         os.makedirs(self.path)
 
-        logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
+        _logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
 
         if not self.execute("git init", silent=True):
-            _logger.error(f"Failed to initialize repository in {self._path}")
+            _logger.error(f"Failed to initialize repository in {self.path}")
 
         try:
-            self._exec.run(
-                f"git remote add origin {self._url}",
+            self.exec.run(
+                f"git remote add origin {self.url}",
                 silent=True,
             )
-        except Exception as e:
-            logger.error(f"Could not update remote in {self.path}", exc_info=True)
+            #  , cwd=self.path)
+        except Exception as ex:
+            _logger.error(f"Could not update remote in {self.path}", exc_info=True)
             shutil.rmtree(self.path)
-            raise e
+            raise ex
 
         try:
-            if self._shallow_clone:
-                self.execute("git fetch --depth 1")  # , cwd=self._path)
-                # sh.git.fetch('--depth', '1', 'origin', _cwd=self._path)
+            if self.shallow_clone:
+                self.execute("git fetch --depth 1")  # , cwd=self.path)
+                # sh.git.fetch('--depth', '1', 'origin', _cwd=self.path)
             else:
-                # sh.git.fetch('--all', '--tags', _cwd=self._path)
+                # sh.git.fetch('--all', '--tags', _cwd=self.path)
                 self.execute("git fetch --progress --all --tags")
-                # , cwd=self._path)
-                # self._exec.run_l(['git', 'fetch', '--tags'], cwd=self._path)
+                # , cwd=self.path)
+                # self.exec.run_l(['git', 'fetch', '--tags'], cwd=self.path)
         except Exception as ex:
             _logger.error(
-                f"Could not fetch {self._url} (shallow={str(self._shallow_clone)}) in {self._path}",
+                f"Could not fetch {self.url} (shallow={str(self.shallow_clone)}) in {self.path}",
                 exc_info=True,
             )
             shutil.rmtree(self.path)
-            raise e
-
-    def get_tags():
-        cmd = "git log --tags --format=%H - %D"
-        pass
+            raise ex
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def create_commits(
@@ -228,16 +227,16 @@ class Git:
         find_in_code="",
         find_in_msg="",
     ):
-        cmd = ["git", "rev-list"]
+        cmd = "git rev-list"
 
         if ancestors_of is None:
-            cmd.append("--all")
+            cmd += " --all"
 
         if since:
-            cmd.append(f"--since={since}")
+            cmd += f" --since={since}"
 
         if until:
-            cmd.append(f"--until={until}")
+            cmd += f" --until={until}"
 
             params["page"] += 1
             if params["page"] > 10:
@@ -261,25 +260,24 @@ class Git:
 
         # by filtering the dates of the tags we can reduce the commit range safely (in theory)
         if ancestors_of:
-            cmd += f" {ancestors_of}"
-            until = self.extract_tag_timestamp(ancestors_of)
+            cmd += str(ancestors_of)
 
         if exclude_ancestors_of:
-            cmd.append(f"^{exclude_ancestors_of}")
+            cmd += f" ^{exclude_ancestors_of}"
 
         if filter_files:
-            cmd.append(f"*.{filter_files}")
+            cmd += f" *.{filter_files}"
 
         # What is this??
         if find_in_code:
-            cmd.append(f"-S{find_in_code}")
+            cmd += f" -S{find_in_code}"
 
         if find_in_msg:
-            cmd.append(f"--grep={find_in_msg}")
+            cmd += f" --grep={find_in_msg}"
 
         try:
-            _logger.debug(" ".join(cmd))
-            out = self.execute(" ".join(cmd))
+            _logger.debug(cmd)
+            out = self.execute(cmd)
         #     --cherry-mark
         # Like --cherry-pick (see below) but mark equivalent commits with =
         # rather than omitting them, and inequivalent ones with +.
@@ -308,7 +306,7 @@ class Git:
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, id):
-        return RawCommit(self._url, id, self._exec)
+        return RawCommit(self.url, id, self.exec)
 
     def get_random_commits(self, count):
         """
@@ -345,25 +343,26 @@ class Git:
             return None
 
         commit_id = self.get_commit_id_for_tag(tag[0])
-        commit = self.get_commit(commit_id)
-        return commit.get_timestamp()
+        return self.get_commit(commit_id).get_timestamp()
 
     def get_tags(self):
         try:
             tags = self.execute("git tag")
+            return tags
         except subprocess.CalledProcessError as exc:
-            logger.error("Git command failed." + str(exc.output), exc_info=True)
+            _logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []
 
     def get_commit_id_for_tag(self, tag):
-        cmd = f"git rev-list -1 {tag}".split(" ")
-
+        cmd = f"git rev-list -1 {tag}"
+        commit_id = ""
         try:
+            # TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
             commit_id = self.execute(cmd)
             if len(commit_id) > 0:
                 return commit_id[0].strip()
         except subprocess.CalledProcessError as e:
-            logger.error("Git command failed." + str(e.output), exc_info=True)
+            _logger.error("Git command failed." + str(e.output), exc_info=True)
             sys.exit(1)
 
     def get_previous_tag(self, tag):
@@ -372,16 +371,12 @@ class Git:
         cmd = f"git describe --abbrev=0 --all --tags --always {commit}^"
 
         try:
-            # @TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
             tags = self.execute(cmd)
+            if len(tags) > 0:
+                return tags
         except subprocess.CalledProcessError as e:
             _logger.error("Git command failed." + str(e.output), exc_info=True)
             return []
-
-        if not tags:
-            return []
-
-        return tags
 
     def get_issue_or_pr_text_from_id(self, id):
         """
