@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+import argparse
+import configparser
 import logging
 import os
 import signal
@@ -15,7 +17,8 @@ if path_root not in sys.path:
 # Loading .env file before doint anything else
 load_dotenv()
 
-import log.util  # noqa: E402
+# Load logger before doing anything else
+from log.logger import get_level, logger  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.console_report import report_on_console  # noqa: E402
@@ -30,7 +33,6 @@ from git.git import GIT_CACHE  # noqa: E402
 from stats.execution import execution_statistics  # noqa: E402
 from util.http import ping_backend  # noqa: E402
 
-_logger = log.util.init_local_logger()
 
 DEFAULT_BACKEND = "http://localhost:8000"
 # VERSION = '0.1.0'
@@ -188,12 +190,9 @@ def getConfiguration(customConfigFile=None):
 # Loading .env file before doint anything else
 # load_dotenv()
 
-from client.cli.config_parser import get_configuration  # noqa: E402
-from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from client.cli.prospector_client import TIME_LIMIT_AFTER  # noqa: E402
-from client.cli.prospector_client import TIME_LIMIT_BEFORE  # noqa: E402
-from client.cli.prospector_client import prospector  # noqa: E402; noqa: E402
-from client.cli.report import as_html, as_json, report_on_console  # noqa: E402
+    logger.info("Loading configuration from " + configFile)
+    config.read(configFile)
+    return parse_config(config)
 
 # Load logger before doing anything else
 from log.logger import get_level, logger, pretty_log  # noqa: E402
@@ -206,14 +205,25 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
         config = get_configuration(argv)
 
-        if not config:
-            logger.error("No configuration file found. Cannot proceed.")
+        # THis is not working now
+        if args.log_level:
+            logger.setLevel(args.log_level)
 
+        logger.info(f"global log level is set to {get_level(logger)}")
+
+        if args.vulnerability_id is None:
+            logger.error("No vulnerability id was specified. Cannot proceed.")
             console.print(
                 "No configuration file found.",
                 status=MessageStatus.ERROR,
             )
-            return
+            return False
+
+        configuration = getConfiguration(args.conf)
+
+        if configuration is None:
+            logger.error("Invalid configuration, exiting.")
+            return False
 
         logger.setLevel(config.log_level)
         logger.info(f"Global log level set to {get_level(string=True)}")
@@ -245,11 +255,13 @@ def main(argv):  # noqa: C901
         git_cache = config.git_cache
 
         logger.debug("Using the following configuration:")
-        pretty_log(logger, config.__dict__)
+        logger.pretty_log(configuration)
 
-        logger.debug("Vulnerability ID: " + config.cve_id)
-        logger.debug(f"time-limit before: {time_limit_before}")
-        logger.debug(f"time-limit after: {time_limit_after}")
+        logger.debug("Vulnerability ID: " + vulnerability_id)
+        logger.debug("time-limit before: " + str(time_limit_before))
+        logger.debug("time-limit after: " + str(time_limit_after))
+
+        active_rules = ["ALL"]
 
     results, advisory_record = prospector(
         vulnerability_id=vulnerability_id,
@@ -289,31 +301,12 @@ def main(argv):  # noqa: C901
                 results, advisory_record, args.report_filename + ".html"
             )
         else:
-            _logger.warning("Invalid report type specified, using 'console'")
+            logger.warning("Invalid report type specified, using 'console'")
             console.set_status(MessageStatus.WARNING)
             console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
             )
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
-
-    with ConsoleWriter("Generating report") as console:
-        match config.report:
-            case "console":
-                report_on_console(results, advisory_record, get_level() < logging.INFO)
-            case "json":
-                as_json(results, advisory_record, config.report_filename)
-            case "html":
-                as_html(results, advisory_record, config.report_filename)
-            case "allfiles":
-                as_json(results, advisory_record, config.report_filename)
-                as_html(results, advisory_record, config.report_filename)
-            case _:
-                logger.warning("Invalid report type specified, using 'console'")
-                console.set_status(MessageStatus.WARNING)
-                console.print(
-                    f"{config.report} is not a valid report type, 'console' will be used instead",
-                )
-                report_on_console(results, advisory_record, get_level() < logging.INFO)
 
         logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]

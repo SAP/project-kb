@@ -51,9 +51,9 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
             )
             return False
         else:
-            logger.info("Server sok!")
+            logger.info("Server ok!")
             return True
-    except requests.RequestException:
+    except Exception:
         logger.error("Server did not reply", exc_info=True)
         return False
 

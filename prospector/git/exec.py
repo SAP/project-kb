@@ -3,9 +3,7 @@ import subprocess
 from functools import lru_cache
 from typing import List, Optional
 
-import log.util
-
-_logger = log.util.init_local_logger()
+from log.logger import logger
 
 
 class Exec:
@@ -60,5 +58,5 @@ class Exec:
 
             return [r for r in out.stdout.split("\n") if r.strip() != ""]
         except subprocess.TimeoutExpired:
-            _logger.error(f"Timeout exceeded ({self.timeout} seconds)", exc_info=True)
+            logger.error(f"Timeout exceeded ({self.timeout} seconds)", exc_info=True)
             raise Exception(f"Process did not respond for {self.timeout} seconds")

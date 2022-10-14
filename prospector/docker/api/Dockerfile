@@ -11,6 +11,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN apt autoremove -y gcc g++ libffi-dev python3-dev && apt clean && rm -rf /var/lib/apt/lists/*
 ENV PYTHONPATH .
 RUN rm -rf /app/client /app/rules
-RUN mkdir /app/cve_data
 
 CMD ["./start.sh"]

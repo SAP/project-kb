@@ -12,14 +12,17 @@ from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
 from git.version_to_tag import get_tag_for_version
-from log.logger import get_level, logger, pretty_log
-from rules.rules import apply_rules
+from log.logger import logger
+from rules import apply_rules
+
+# from util.profile import profile
 from stats.execution import (
     Counter,
     ExecutionTimer,
     execution_statistics,
     measure_execution_time,
 )
+
 
 SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
@@ -88,13 +91,13 @@ def prospector(  # noqa: C901
             filter_extensions[0],
         )
 
-        _logger.debug(f"Collected {len(candidates)} candidates")
+        logger.debug(f"Collected {len(candidates)} candidates")
 
         if len(candidates) > limit_candidates:
-            _logger.error(
+            logger.error(
                 "Number of candidates exceeds %d, aborting." % limit_candidates
             )
-            _logger.error(
+            logger.error(
                 "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
             )
             writer.print(
@@ -118,6 +121,7 @@ def prospector(  # noqa: C901
                         candidates,
                     )
             except requests.exceptions.ConnectionError:
+                print("Backend not reachable", end="")
                 logger.error(
                     "Backend not reachable",
                     exc_info=get_level() < logging.WARNING,
@@ -143,8 +147,8 @@ def prospector(  # noqa: C901
                         make_from_raw_commit(repository.get_commit(commit_id))
                     )
 
-            _logger.pretty_log(advisory_record)
-            _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
+            logger.pretty_log(advisory_record)
+            logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
             payload = [c.as_dict() for c in preprocessed_commits]
 
     # -------------------------------------------------------------------------
@@ -159,7 +163,7 @@ def prospector(  # noqa: C901
         ):
             save_preprocessed_commits(backend_address, payload)
     else:
-        logger.warning("Preprocessed commits are not being sent to backend")
+        logger.warning("No preprocessed commits to send to backend.")
 
     # filter commits
     preprocessed_commits = filter(preprocessed_commits)
@@ -205,17 +209,18 @@ def retrieve_preprocessed_commits(
 
     retrieved_commits = [commit for response in responses for commit in response]
 
-    logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
-
-    if len(retrieved_commits) != len(candidates):
-        missing = [
-            candidates[c]
-            for c in set(candidates.keys()).difference(
-                rc["commit_id"] for rc in retrieved_commits
+    logger.debug(f"The backend returned status {r.status_code}")
+    if r.status_code != 200:
+        logger.info("Preprocessed commits not found in the backend")
+        missing = candidates
+    else:
+        retrieved_commits = r.json()
+        logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
+        if len(retrieved_commits) != len(candidates):
+            missing = list(
+                set(candidates).difference(rc["commit_id"] for rc in retrieved_commits)
             )
-        ]
-
-        logger.error(f"Missing {len(missing)} commits")
+            logger.error(f"Missing {len(missing)} commits")
 
     preprocessed_commits: "list[Commit]" = []
     for idx, commit in enumerate(retrieved_commits):
@@ -228,18 +233,18 @@ def retrieve_preprocessed_commits(
 
 def save_preprocessed_commits(backend_address, payload):
     with ConsoleWriter("Saving preprocessed commits to backend") as writer:
-        _logger.debug("Sending preprocessing commits to backend...")
+        logger.debug("Sending preprocessing commits to backend...")
         try:
             r = requests.post(
                 backend_address + "/commits/",
                 json=payload,
                 headers={"Content-type": "application/json"},
             )
-            _logger.debug(
+            logger.debug(
                 "Saving to backend completed (status code: %d)" % r.status_code
             )
         except requests.exceptions.ConnectionError:
-            _logger.error(
+            logger.error(
                 "Could not reach backend, is it running?"
                 "The result of commit pre-processing will not be saved."
                 "Continuing anyway.....",
@@ -264,15 +269,13 @@ def get_candidates(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
         with ConsoleWriter("Git repository cloning"):
-            _logger.info(
-                f"Downloading repository {repository.url} in {repository.path}"
-            )
+            logger.info(f"Downloading repository {repository.url} in {repository.path}")
             repository.clone()
 
             tags = repository.get_tags()
 
-            _logger.debug(f"Found tags: {tags}")
-            _logger.info(f"Done retrieving {repository.url}")
+            logger.debug(f"Found tags: {tags}")
+            logger.info(f"Done retrieving {repository.url}")
 
         with ConsoleWriter("Candidate commit retrieval") as writer:
             prev_tag = None
@@ -302,16 +305,5 @@ def get_candidates(
 
             core_statistics.record("candidates", len(candidates), unit="commits")
             logger.info("Found %d candidates" % len(candidates))
-        writer.print(f"Found {len(candidates)} candidates")
-
-        if len(candidates) > limit_candidates:
-            logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
-
-            writer.print(
-                f"Found {len(candidates)} candidates, too many to proceed.",
-                status=MessageStatus.ERROR,
-            )
-            writer.print("Please try running the tool again.")
-            sys.exit(-1)
 
     return candidates
