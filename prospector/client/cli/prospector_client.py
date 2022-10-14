@@ -1,11 +1,10 @@
 from datetime import datetime
 import logging
 import sys
-from typing import Dict, List, Set, Tuple
+from typing import List, Set, Tuple
 
 import requests
 from tqdm import tqdm
-from datamodel import commit
 
 import log
 from client.cli.console import ConsoleWriter, MessageStatus
@@ -269,14 +268,16 @@ def get_candidates(
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
-        with ConsoleWriter("Git repository cloning") as _:
-            logger.info(f"Downloading repository {repository.url} in {repository.path}")
+        with ConsoleWriter("Git repository cloning"):
+            _logger.info(
+                f"Downloading repository {repository.url} in {repository.path}"
+            )
             repository.clone()
 
             tags = repository.get_tags()
 
-            logger.debug(f"Found tags: {tags}")
-            logger.info(f"Done retrieving {repository.url}")
+            _logger.debug(f"Found tags: {tags}")
+            _logger.info(f"Done retrieving {repository.url}")
 
         with ConsoleWriter("Candidate commit retrieval") as writer:
             prev_tag = None

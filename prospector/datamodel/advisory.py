@@ -1,14 +1,12 @@
 # from typing import Tuple
 # from datamodel import BaseModel
 import logging
-import os
 from dateutil.parser import isoparse
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel, Field
-import spacy
 
 from log.logger import logger, pretty_log, get_level
 from util.http import fetch_url
@@ -82,7 +80,10 @@ class AdvisoryRecord(BaseModel):
     #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(
-        self, use_nvd: bool = False, fetch_references: bool = False, relevant_extensions: List[str] = []
+        self,
+        use_nvd: bool = False,
+        fetch_references: bool = False,
+        relevant_extensions: List[str] = [],
     ):
         self.from_nvd = use_nvd
         if self.from_nvd:
@@ -94,7 +95,9 @@ class AdvisoryRecord(BaseModel):
         )
         # TODO: use a set where possible to speed up the rule application time
         self.paths.update(
-            extract_affected_filenames(self.description, relevant_extensions)  # TODO: this could be done on the words extracted from the description
+            extract_affected_filenames(
+                self.description, relevant_extensions
+            )  # TODO: this could be done on the words extracted from the description
         )
 
         self.keywords.update(extract_nouns_from_text(self.description))
@@ -154,9 +157,9 @@ class AdvisoryRecord(BaseModel):
             return True
         except Exception:
             # Might fail either or json parsing error or for connection error
-            logger.error(
+            _logger.error(
                 f"Could not retrieve {vuln_id} from the local database",
-                exc_info=get_level() < logging.INFO,
+                exc_info=log.config.level < logging.INFO,
             )
             return False
 
@@ -180,9 +183,9 @@ class AdvisoryRecord(BaseModel):
             self.references = [r["url"] for r in data["references"]]
         except Exception as e:
             # Might fail either or json parsing error or for connection error
-            logger.error(
+            _logger.error(
                 f"Could not retrieve {vuln_id} from the NVD api",
-                exc_info=get_level() < logging.INFO,
+                exc_info=log.config.level < logging.INFO,
             )
             raise Exception(
                 f"Could not retrieve {vuln_id} from the NVD api {e}",
