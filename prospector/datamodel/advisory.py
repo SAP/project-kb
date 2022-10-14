@@ -1,11 +1,10 @@
 import logging
-import os
-from typing import List, Set, Tuple
+from dateutil.parser import isoparse
+from typing import List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel, Field
-import spacy
 
 from log.logger import get_level, logger, pretty_log
 from util.http import fetch_url
@@ -48,7 +47,6 @@ LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
 
 
-# TODO: refactor and clean
 class AdvisoryRecord(BaseModel):
     """
     The advisory record captures all relevant information on the vulnerability advisory
@@ -77,7 +75,10 @@ class AdvisoryRecord(BaseModel):
     #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(
-        self, use_nvd: bool = False, fetch_references: bool = False, relevant_extensions: List[str] = []
+        self,
+        use_nvd: bool = False,
+        fetch_references: bool = False,
+        relevant_extensions: List[str] = [],
     ):
         self.versions = [
             version for version in self.versions if version[0] != version[1]
@@ -91,7 +92,9 @@ class AdvisoryRecord(BaseModel):
         )
         # TODO: use a set where possible to speed up the rule application time
         self.paths.update(
-            extract_affected_filenames(self.description, relevant_extensions)  # TODO: this could be done on the words extracted from the description
+            extract_affected_filenames(
+                self.description, relevant_extensions
+            )  # TODO: this could be done on the words extracted from the description
         )
 
         self.keywords.update(extract_nouns_from_text(self.description))
@@ -112,54 +115,63 @@ class AdvisoryRecord(BaseModel):
     def get_advisory(self):
         data = get_from_local(self.cve_id) or get_from_nvd(self.cve_id)
 
-        if data is None:
-            raise Exception("Backend error and NVD error. Missing API key?")
-
-        self.parse_advisory(data)
-
-    def parse_advisory(self, data):
-        self.published_timestamp = int(isoparse(data["published"]).timestamp())
-        self.last_modified_timestamp = int(isoparse(data["lastModified"]).timestamp())
-        self.description = data["descriptions"][0]["value"]
-        self.references = [r["url"] for r in data.get("references", [])]
-        self.versions = [
-            (
-                item.get("versionStartIncluding", item.get("versionStartExcluding")),
-                item.get("versionEndExcluding", item.get("versionEndIncluding")),
+    # TODO: refactor this stuff
+    def get_from_local_db(
+        self, vuln_id: str = "", nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
+    ):
+        """
+        Get an advisory from the local NVD database
+        """
+        try:
+            response = requests.get(nvd_rest_endpoint + vuln_id)
+            if response.status_code != 200:
+                return False
+            data = response.json()
+            self.published_timestamp = int(isoparse(data["publishedDate"]).timestamp())
+            self.last_modified_timestamp = int(
+                isoparse(data["lastModifiedDate"]).timestamp()
             )
-            for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
-        ]
 
+            self.description = data["cve"]["description"]["description_data"][0][
+                "value"
+            ]
+            self.references = [
+                r["url"] for r in data["cve"]["references"]["reference_data"]
+            ]
+            return True
+        except Exception as e:
+            # Might fail either or json parsing error or for connection error
+            _logger.error(
+                f"Could not retrieve {vuln_id} from the local database",
+                exc_info=log.config.level < logging.INFO,
+            )
+            return False
 
-def get_from_nvd(cve_id: str):
-    """Get an advisory from the NVD dtabase"""
-    try:
-        headers = {"apiKey": NVD_API_KEY} if NVD_API_KEY else None
-        params = {"cveId": cve_id}
+    def get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
+        """
+        Get an advisory from the NVD dtabase
+        """
+        try:
+            response = requests.get(nvd_rest_endpoint + vuln_id)
+            if response.status_code != 200:
+                return False
+            data = response.json()["vulnerabilities"][0]["cve"]
+            self.published_timestamp = int(isoparse(data["published"]).timestamp())
 
-        response = requests.get(NVD_REST_ENDPOINT, headers=headers, params=params)
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()["vulnerabilities"][0]["cve"]
-
-    except Exception:
-        logger.error(
-            f"Could not retrieve {cve_id} from the NVD api",
-            exc_info=get_level() < logging.INFO,
-        )
-        return None
-
-
-def get_from_local(vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT):
-    try:
-        response = requests.get(nvd_rest_endpoint + vuln_id)
-        if response.status_code != 200:
-            return None
-        return response.json()
-    except Exception:
-        return None
+            self.last_modified_timestamp = int(
+                isoparse(data["lastModified"]).timestamp()
+            )
+            self.description = data["descriptions"][0]["value"]
+            self.references = [r["url"] for r in data["references"]]
+        except Exception as e:
+            # Might fail either or json parsing error or for connection error
+            _logger.error(
+                f"Could not retrieve {vuln_id} from the NVD api",
+                exc_info=log.config.level < logging.INFO,
+            )
+            raise Exception(
+                f"Could not retrieve {vuln_id} from the NVD api {e}",
+            )
 
 
 def build_advisory_record(

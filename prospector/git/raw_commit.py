@@ -1,7 +1,9 @@
+import sys
+
 import hashlib
 import re
-import sys
-from datetime import datetime
+from datetime import timezone
+from dateutil.parser import isoparse
 import log.util
 from git.exec import Exec
 from stats.execution import execution_statistics, measure_execution_time
@@ -17,12 +19,8 @@ class RawCommit:
         self.repository_url = repository_url
         self.id = commit_id
         self.exec = exec_link
-        self.parent_id = self.find_parent_id()
-
-        # the following attributes will be initialized lazily and memoized, unless init_data is not None
-        # if init_data:
-        #     for k in init_data:
-        #         self.attributes[k] = init_data[k]
+        self.timestamp = self.extract_timestamp()
+        self.parent_id = self.extract_parent_id()
 
     def execute(self, cmd):
         return self.exec.run(cmd, cache=True)
@@ -30,10 +28,10 @@ class RawCommit:
     def get_id(self) -> str:
         return self.id
 
-    def find_parent_id(self):
+    def extract_parent_id(self):
         try:
             cmd = f"git log --format=%P -1 {self.id}"
-            parent = self.execute(cmd)  # self._exec.run(cmd, cache=True)
+            parent = self.execute(cmd)
             if len(parent) > 0:
                 return parent[0]
         except:
@@ -42,6 +40,9 @@ class RawCommit:
                 exc_info=True,
             )
         return ""
+
+    def get_timestamp(self):
+        return self.timestamp
 
     def get_parent_id(self):
         return self.parent_id
@@ -78,15 +79,25 @@ class RawCommit:
             )
             return ""
 
-    def get_timestamp(self, date_format=None):
+    def extract_timestamp(self, format_date=False):
+        try:
+            if not format_date:
+                cmd = f"git log --format=%at -1 {self.id}"
+                return int(self.execute(cmd)[0])
+            else:
+                cmd = f"git log --format=%aI -1 {self.id}"
+                return (
+                    isoparse(self.execute(cmd)[0])
+                    .astimezone(timezone.utc)
+                    .strftime("%Y-%m-%d %H:%M:%S")
+                )
 
-        data = self.get_timing_data()
-        # self._timestamp = self.timing_data()[2]
-        if date_format:
-            return datetime.utcfromtimestamp(int(data.get("timestamp"))).strftime(
-                date_format
+        except Exception as e:
+            _logger.error(
+                f"Failed to obtain timestamp for commit: {self.id}",
+                exc_info=True,
             )
-        return int(data.get("timestamp"))
+            raise Exception("Failed to obtain timestamp for commit: " + self.id)
 
     @measure_execution_time(
         execution_statistics.sub_collection("core"),
@@ -122,8 +133,7 @@ class RawCommit:
         except Exception as e:
             sys.stderr.write(str(e))
             sys.stderr.write(
-                "There was a problem when getting the list of commits in the interval %s..%s\n"
-                % (other.id()[0], self.id)
+                f"Problem retriving the list of commits in the interval {other.id}..{self.id}\n"
             )
             return ""
 
@@ -151,13 +161,12 @@ class RawCommit:
         hunks = []
 
         diff_lines = self.get_diff()
-        # pprint(diff_lines)
 
         first_line_of_current_hunk = -1
         current_group = []
         line_no = 0
         for line_no, line in enumerate(diff_lines):
-            # print(line_no, line)
+            # print(line_no, " : ", line)
             if is_new_file(line):
                 if len(current_group) > 0:
                     hunks.append(current_group)
@@ -185,6 +194,9 @@ class RawCommit:
         else:
             return flatten_groups(hunks)
 
+    # def __eq__(self, other: "RawCommit") -> bool:
+    #     return self.get_fingerprint == other.get_fingerprint()
+
     def equals(self, other: "RawCommit"):
         """
         Return true if the two commits contain the same changes (despite different commit messages)
@@ -192,7 +204,7 @@ class RawCommit:
         return self.get_fingerprint() == other.get_fingerprint()
 
     def get_fingerprint(self):
-        cmd = ["git", "show", '--format="%t"', "--numstat", self.id]
+        cmd = f"git show --format=%t --numstat {self.id}"
         out = self.execute(cmd)
         return hashlib.md5("\n".join(out).encode()).hexdigest()
 
@@ -205,45 +217,24 @@ class RawCommit:
             "timestamp": data[2],
             "time_to_tag": data[3],
         }
-        self.attributes["next_tag"] = data[0]
-        # self._next_tag = data[0]
 
-        self.attributes["next_tag_timestamp"] = data[1]
-        # self._next_tag_timestamp = data[1]
-
-        self.attributes["timestamp"] = data[2]
-        # self._timestamp = data[2]
-
-        self.attributes["time_to_tag"] = data[3]
-        # self._time_to_tag = data[3]
-
-    # TODO refactor
-    # this method should become private and should be invoked to initialize (lazily)
-    # # the relevant attributes.
-    # NO IDEA HOW
+    # TODO: deprecated / unused stuff
     def _get_timing_data(self):
-        # print("WARNING: deprecated method Commit::timing_data(), use Commit::get_next_tag() instead.")
-        # if not os.path.exists(self._path):
-        #     print('Folder ' + self._path + ' must exist!')
-        #     return None
 
-        # # get tag info
-        # raw_out = execute(
-        #     f"git tag --sort=taggerdate --contains {self.id}"
-        # )  # ,  cwd=self._path)
+        # get tag info
+        tags = self.execute(f"git tag --sort=taggerdate --contains {self.id}")
 
-        # if raw_out:
-        #     tag = raw_out[0]
-        #     print('git show -s --format="%at" ' + tag + "^{commit}")
-        #     tag_timestamp = execute(
-        #         'git show -s --format="%at" ' + tag + "^{commit}"
-        #     )[0][1:-1]
-        # else:
         tag = ""
         tag_timestamp = "0"
 
+        if len(tags) > 0:
+            tag = tags[0]
+            tag_timestamp = self.execute(f"git show -s --format=%at {tag}^{self.id}")[
+                0
+            ][1:-1]
+
         try:
-            commit_timestamp = self.execute('git show -s --format="%at" ' + self.id)[0][
+            commit_timestamp = self.execute(f"git show -s --format=%at {self.id}")[0][
                 1:-1
             ]
             time_delta = int(tag_timestamp) - int(commit_timestamp)
@@ -252,27 +243,6 @@ class RawCommit:
         except:
             commit_timestamp = "0"
             time_delta = 0
-
-        # tag_date = datetime.utcfromtimestamp(int(tag_timestamp)).strftime(
-        #     "%Y-%m-%d %H:%M:%S"
-        # )
-        # commit_date = datetime.utcfromtimestamp(int(commit_timestamp)).strftime(
-        #     "%Y-%m-%d %H:%M:%S"
-        # )
-
-        # if self._verbose:
-        #     print("repository:                 " + self.repository._url)
-        #     print("commit:                     " + self.id)
-        #     print("commit_date:                " + commit_timestamp)
-        #     print("                            " + commit_date)
-        #     print("tag:                        " + tag)
-        #     print("tag_timestamp:              " + tag_timestamp)
-        #     print("                            " + tag_date)
-        #     print(
-        #         "Commit-to-release interval: {0:.2f} days".format(
-        #             time_delta / (3600 * 24)
-        #         )
-        #     )
 
         self._timestamp = commit_timestamp
         return (tag, tag_timestamp, commit_timestamp, time_delta)
