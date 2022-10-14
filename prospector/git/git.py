@@ -15,17 +15,9 @@ from urllib.parse import urlparse
 from git.exec import Exec
 from git.raw_commit import RawCommit
 
-import log.util
+from log.logger import logger
 
 from stats.execution import execution_statistics, measure_execution_time
-
-from stats.execution import execution_statistics, measure_execution_time
-from util.lsh import (
-    build_lsh_index,
-    compute_minhash,
-    encode_minhash,
-    get_encoded_minhash,
-)
 
 # If we don't parse .env file, we can't use the environment variables
 # load_dotenv()
@@ -140,7 +132,7 @@ class Git:
         Identifies the default branch of the remote repository for the local git
         repo
         """
-        _logger.debug("Identifiying remote branch for %s", self.path)
+        logger.debug("Identifiying remote branch for %s", self.path)
 
         try:
             cmd = "git ls-remote -q"
@@ -190,7 +182,7 @@ class Git:
                 + self.path
             )
 
-            _logger.error(str(ex))
+            logger.error(str(ex))
             return None
 
     def clone(self, shallow=None, skip_existing=False):
@@ -202,32 +194,32 @@ class Git:
             self.shallow_clone = shallow
 
         if not self.url:
-            _logger.error("Invalid url specified.")
+            logger.error("Invalid url specified.")
             sys.exit(-1)
 
         # TODO rearrange order of checks
         if os.path.isdir(os.path.join(self.path, ".git")):
             if skip_existing:
-                _logger.debug(f"Skipping fetch of {self.url} in {self.path}")
+                logger.debug(f"Skipping fetch of {self.url} in {self.path}")
             else:
-                _logger.debug(f"\nFound repo {self.url} in {self.path}.\nFetching....")
+                logger.debug(f"\nFound repo {self.url} in {self.path}.\nFetching....")
 
                 self.execute("git fetch --progress --all --tags")
                 # , cwd=self.path, timeout=self.exec_timeout)
             return
 
         if os.path.exists(self.path):
-            _logger.debug(
+            logger.debug(
                 "Folder {} exists but it contains no git repository.".format(self.path)
             )
             return
 
         os.makedirs(self.path)
 
-        _logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
+        logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
 
-        if not self.execute("git init", silent=True):
-            _logger.error(f"Failed to initialize repository in {self.path}")
+        if not self.execute("git init", silent=False):
+            logger.error(f"Failed to initialize repository in {self.path}")
 
         try:
             self.exec.run(
@@ -236,7 +228,7 @@ class Git:
             )
             #  , cwd=self.path)
         except Exception as ex:
-            _logger.error(f"Could not update remote in {self.path}", exc_info=True)
+            logger.error(f"Could not update remote in {self.path}", exc_info=True)
             shutil.rmtree(self.path)
             raise ex
 
@@ -250,7 +242,7 @@ class Git:
                 # , cwd=self.path)
                 # self.exec.run_l(['git', 'fetch', '--tags'], cwd=self.path)
         except Exception as ex:
-            _logger.error(
+            logger.error(
                 f"Could not fetch {self.url} (shallow={str(self.shallow_clone)}) in {self.path}",
                 exc_info=True,
             )
@@ -370,7 +362,7 @@ class Git:
 
         # by filtering the dates of the tags we can reduce the commit range safely (in theory)
         if ancestors_of:
-            cmd += str(ancestors_of)
+            cmd += " " + str(ancestors_of)
 
         if exclude_ancestors_of:
             cmd += f" ^{exclude_ancestors_of}"
@@ -386,7 +378,7 @@ class Git:
             cmd += f" --grep={find_in_msg}"
 
         try:
-            _logger.debug(cmd)
+            logger.debug(cmd)
             out = self.execute(cmd)
         #     --cherry-mark
         # Like --cherry-pick (see below) but mark equivalent commits with =
@@ -460,7 +452,7 @@ class Git:
             tags = self.execute("git tag")
             return tags
         except subprocess.CalledProcessError as exc:
-            _logger.error("Git command failed." + str(exc.output), exc_info=True)
+            logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []
 
     def get_commit_id_for_tag(self, tag):
@@ -472,7 +464,7 @@ class Git:
             if len(commit_id) > 0:
                 return commit_id[0].strip()
         except subprocess.CalledProcessError as e:
-            _logger.error("Git command failed." + str(e.output), exc_info=True)
+            logger.error("Git command failed." + str(e.output), exc_info=True)
             sys.exit(1)
 
     def get_previous_tag(self, tag):
@@ -485,7 +477,7 @@ class Git:
             if len(tags) > 0:
                 return tags
         except subprocess.CalledProcessError as e:
-            _logger.error("Git command failed." + str(e.output), exc_info=True)
+            logger.error("Git command failed." + str(e.output), exc_info=True)
             return []
 
     def get_issue_or_pr_text_from_id(self, id):

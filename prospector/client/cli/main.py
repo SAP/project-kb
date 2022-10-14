@@ -17,7 +17,8 @@ if path_root not in sys.path:
 # Loading .env file before doint anything else
 load_dotenv()
 
-import log.util  # noqa: E402
+# Load logger before doing anything else
+from log.logger import get_level, logger  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.console_report import report_on_console  # noqa: E402
@@ -216,10 +217,11 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
         args = parseArguments(argv)
 
+        # THis is not working now
         if args.log_level:
             logger.setLevel(args.log_level)
 
-        logger.info(f"global log level is set to {get_level(string=True)}")
+        logger.info(f"global log level is set to {get_level(logger)}")
 
         if args.vulnerability_id is None:
             logger.error("No vulnerability id was specified. Cannot proceed.")
@@ -288,7 +290,7 @@ def main(argv):  # noqa: C901
         git_cache = configuration.get("git_cache", git_cache)
 
         logger.debug("Using the following configuration:")
-        pretty_log(logger, configuration)
+        logger.pretty_log(configuration)
 
         logger.debug("Vulnerability ID: " + vulnerability_id)
         logger.debug("time-limit before: " + str(time_limit_before))

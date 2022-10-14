@@ -1,3 +1,6 @@
+from asyncio.log import logger
+from ctypes import Union
+import inspect
 import logging
 import logging.handlers
 from pprint import pformat
@@ -5,35 +8,88 @@ from pprint import pformat
 LOGGER_NAME = "main"
 
 
-def pretty_log(logger: logging.Logger, obj, level: int = logging.DEBUG):
+def pretty_log(self: logging.Logger, obj, level: int = logging.DEBUG):
     as_text = pformat(obj)
-    logger.log(level, f"Object content: {as_text}")
+    self.log(level, "detailed content of the object\n" + as_text)
 
 
-def get_level(string: bool = False):
-    global logger
-    if string:
-        return logging.getLevelName(logger.level)
-
-    return logger.level
+def get_logger(name: str = None):
+    if name:
+        return logging.getLogger(name)
+    return logging.getLogger(LOGGER_NAME)
 
 
-def create_logger(name: str = LOGGER_NAME) -> logging.Logger:
-    logger = logging.getLogger(name)
+def get_level(logger: logging.Logger = None) -> str:
+    return logging.getLevelName(logger.level)
+
+
+def init(name: str = None) -> logging.Logger:
+    if name:
+        logger = logging.getLogger(name)
+    else:
+        logger = logging.getLogger(LOGGER_NAME)
+
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter(
-        "%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s",
-        "%m-%d %H:%M:%S",
+    detailed_formatter = logging.Formatter(
+        "%(message)s"
+        "\n\tOF %(levelname)s FROM %(name)s"
+        "\n\tIN %(funcName)s (%(filename)s:%(lineno)d)"
+        "\n\tAT %(asctime)s",
+        "%Y-%m-%d %H:%M:%S",
     )
-    log_file = logging.handlers.RotatingFileHandler(
-        "prospector.log", maxBytes=2 * (10**6), backupCount=3
+    error_file = logging.handlers.TimedRotatingFileHandler(
+        "error.log", when="h", backupCount=5
     )
-    log_file.setFormatter(formatter)
-    logger.addHandler(log_file)
+    error_file.setLevel(logging.ERROR)
+    error_file.setFormatter(detailed_formatter)
+    logger.addHandler(error_file)
 
-    setattr(logger, pretty_log.__name__, pretty_log)
+    all_file = logging.handlers.TimedRotatingFileHandler(
+        "all.log", when="h", backupCount=5
+    )
+    all_file.setLevel(logging.DEBUG)
+    all_file.setFormatter(detailed_formatter)
+    logger.addHandler(all_file)
+
+    setattr(logging.Logger, pretty_log.__name__, pretty_log)
 
     return logger
 
 
-logger = create_logger()
+logger = init()
+
+# def init_local_logger():
+#     previous_frame = inspect.currentframe().f_back
+#     logger_name = "main"
+#     try:
+#         if previous_frame:
+#             logger_name = inspect.getmodule(previous_frame).__name__
+#     except Exception:
+#         print(f"error during logger name determination, using '{logger_name}'")
+#     logger = logging.getLogger(logger_name)
+#     logger.setLevel(level)
+#     detailed_formatter = logging.Formatter(
+#         "%(message)s"
+#         "\n\tOF %(levelname)s FROM %(name)s"
+#         "\n\tIN %(funcName)s (%(filename)s:%(lineno)d)"
+#         "\n\tAT %(asctime)s",
+#         "%Y-%m-%d %H:%M:%S",
+#     )
+
+#     error_file = logging.handlers.TimedRotatingFileHandler(
+#         "error.log", when="h", backupCount=5
+#     )
+#     error_file.setLevel(logging.ERROR)
+#     error_file.setFormatter(detailed_formatter)
+#     logger.addHandler(error_file)
+
+#     all_file = logging.handlers.TimedRotatingFileHandler(
+#         "all.log", when="h", backupCount=5
+#     )
+#     all_file.setLevel(logging.DEBUG)
+#     all_file.setFormatter(detailed_formatter)
+#     logger.addHandler(all_file)
+
+#     setattr(logging.Logger, pretty_log.__name__, pretty_log)
+
+#     return logger

@@ -8,7 +8,8 @@ from urllib.parse import urlparse
 import requests
 from pydantic import BaseModel, Field
 
-from log.logger import logger, pretty_log, get_level
+from log.logger import logger
+from util.collection import union_of
 from util.http import fetch_url
 
 from .nlp import (
@@ -157,7 +158,7 @@ class AdvisoryRecord(BaseModel):
             return True
         except Exception:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
+            logger.error(
                 f"Could not retrieve {vuln_id} from the local database",
                 exc_info=log.config.level < logging.INFO,
             )
@@ -183,7 +184,7 @@ class AdvisoryRecord(BaseModel):
             self.references = [r["url"] for r in data["references"]]
         except Exception as e:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
+            logger.error(
                 f"Could not retrieve {vuln_id} from the NVD api",
                 exc_info=log.config.level < logging.INFO,
             )
@@ -213,7 +214,7 @@ def build_advisory_record(
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    pretty_log(logger, advisory_record)
+    logger.pretty_log(advisory_record)
     advisory_record.analyze(
         use_nvd=use_nvd,
         fetch_references=fetch_references,
@@ -233,7 +234,7 @@ def build_advisory_record(
         advisory_record.paths.update(modified_files)
 
     logger.debug(f"{advisory_record.keywords=}")
-    logger.debug(f"{advisory_record.files=}")
+    logger.debug(f"{advisory_record.paths=}")
 
     return advisory_record
 

@@ -9,17 +9,9 @@ import psycopg2
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
 
-import log.util
-
 from log.logger import logger
 
-DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
-    os.getenv("POSTGRES_USER", "postgres"),
-    os.getenv("POSTGRES_PASSWORD", "example"),
-    os.getenv("POSTGRES_HOST", "localhost"),
-    os.getenv("POSTGRES_PORT", "5432"),
-    os.getenv("POSTGRES_DBNAME", "postgres"),
-).lower()
+from log.logger import logger
 
 
 class PostgresCommitDB(CommitDB):
@@ -65,8 +57,6 @@ class PostgresCommitDB(CommitDB):
             cur.close()
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
-            return None
-        finally:
             cur.close()
 
         return data
@@ -141,7 +131,7 @@ class PostgresCommitDB(CommitDB):
             cur.close()
         except Exception:
             logger.error("Could not save commit vector to database", exc_info=True)
-            cur.close()
+            # raise Exception("Could not save commit vector to database")
 
     def reset(self):
         self.run_sql_script("ddl/10_commit.sql")
