@@ -4,9 +4,7 @@ import requests
 import requests_cache
 from bs4 import BeautifulSoup
 
-import log.util
-
-_logger = log.util.init_local_logger()
+from log.logger import logger
 
 
 def fetch_url(url: str, extract_text=True) -> Union[str, BeautifulSoup]:
@@ -23,7 +21,7 @@ def fetch_url(url: str, extract_text=True) -> Union[str, BeautifulSoup]:
         session = requests_cache.CachedSession("requests-cache")
         content = session.get(url).content
     except Exception:
-        _logger.debug(f"cannot retrieve url content: {url}", exc_info=True)
+        logger.debug(f"cannot retrieve url content: {url}", exc_info=True)
         return ""
 
     soup = BeautifulSoup(content, "html.parser")
@@ -42,20 +40,20 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
     """
 
     if verbose:
-        _logger.info("Contacting server " + server_url)
+        logger.info("Contacting server " + server_url)
 
     try:
         response = requests.get(server_url)
         if response.status_code != 200:
-            _logger.error(
+            logger.error(
                 f"Server replied with an unexpected status: {response.status_code}"
             )
             return False
         else:
-            _logger.info("Server ok!")
+            logger.info("Server ok!")
             return True
     except Exception:
-        _logger.error("Server did not reply", exc_info=True)
+        logger.error("Server did not reply", exc_info=True)
         return False
 
 

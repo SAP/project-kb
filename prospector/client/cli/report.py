@@ -2,13 +2,11 @@ import json
 import os
 import jinja2
 from typing import List
-import log.util
+from log.logger import logger
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 
 from stats.execution import execution_statistics
-
-_logger = log.util.init_local_logger()
 
 # Handles Set setialization
 class SetEncoder(json.JSONEncoder):
@@ -27,7 +25,7 @@ def as_json(
         "advisory_record": advisory_record.dict(),
         "commits": [r.dict() for r in results],
     }
-    _logger.info("Writing results to " + filename)
+    logger.info("Writing results to " + filename)
     with open(filename, "w", encoding="utf8") as json_file:
         json.dump(data, json_file, ensure_ascii=True, indent=4, cls=SetEncoder)
     return filename
@@ -49,7 +47,7 @@ def as_html(
         # for annotation in commit.annotations.keys():
         #     annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
 
-    _logger.info("Writing results to " + filename)
+    logger.info("Writing results to " + filename)
     environment = jinja2.Environment(
         loader=jinja2.FileSystemLoader(os.path.join("client", "cli", "templates")),
         autoescape=jinja2.select_autoescape(),

@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-
-# from advisory_processor.advisory_processor import AdvisoryProcessor
 import argparse
 import configparser
 import logging
@@ -19,7 +17,8 @@ if path_root not in sys.path:
 # Loading .env file before doint anything else
 load_dotenv()
 
-import log.util  # noqa: E402
+# Load logger before doing anything else
+from log.logger import get_level, logger  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.console_report import report_on_console  # noqa: E402
@@ -34,7 +33,6 @@ from git.git import GIT_CACHE  # noqa: E402
 from stats.execution import execution_statistics  # noqa: E402
 from util.http import ping_backend  # noqa: E402
 
-_logger = log.util.init_local_logger()
 
 DEFAULT_BACKEND = "http://localhost:8000"
 # VERSION = '0.1.0'
@@ -198,7 +196,7 @@ def getConfiguration(customConfigFile=None):
     else:
         return None
 
-    _logger.info("Loading configuration from " + configFile)
+    logger.info("Loading configuration from " + configFile)
     config.read(configFile)
     return parse_config(config)
 
@@ -219,15 +217,14 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
         args = parseArguments(argv)  # print(args)
 
+        # THis is not working now
         if args.log_level:
-            log.config.level = getattr(logging, args.log_level)
+            logger.setLevel(args.log_level)
 
-        _logger.info(
-            f"global log level is set to {logging.getLevelName(log.config.level)}"
-        )
+        logger.info(f"global log level is set to {get_level(logger)}")
 
         if args.vulnerability_id is None:
-            _logger.error("No vulnerability id was specified. Cannot proceed.")
+            logger.error("No vulnerability id was specified. Cannot proceed.")
             console.print(
                 "No vulnerability id was specified. Cannot proceed.",
                 status=MessageStatus.ERROR,
@@ -237,7 +234,7 @@ def main(argv):  # noqa: C901
         configuration = getConfiguration(args.conf)
 
         if configuration is None:
-            _logger.error("Invalid configuration, exiting.")
+            logger.error("Invalid configuration, exiting.")
             return False
 
         report = args.report or configuration.get("report")
@@ -291,12 +288,12 @@ def main(argv):  # noqa: C901
 
         git_cache = configuration.get("git_cache", git_cache)
 
-        _logger.debug("Using the following configuration:")
-        _logger.pretty_log(configuration)
+        logger.debug("Using the following configuration:")
+        logger.pretty_log(configuration)
 
-        _logger.debug("Vulnerability ID: " + vulnerability_id)
-        _logger.debug("time-limit before: " + str(time_limit_before))
-        _logger.debug("time-limit after: " + str(time_limit_after))
+        logger.debug("Vulnerability ID: " + vulnerability_id)
+        logger.debug("time-limit before: " + str(time_limit_before))
+        logger.debug("time-limit after: " + str(time_limit_after))
 
         active_rules = ["ALL"]
 
@@ -338,14 +335,14 @@ def main(argv):  # noqa: C901
                 results, advisory_record, args.report_filename + ".html"
             )
         else:
-            _logger.warning("Invalid report type specified, using 'console'")
+            logger.warning("Invalid report type specified, using 'console'")
             console.set_status(MessageStatus.WARNING)
             console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
             )
             report_on_console(results, advisory_record, log.config.level < logging.INFO)
 
-        _logger.info("\n" + execution_statistics.generate_console_tree())
+        logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
         console.print(f"Execution time: {execution_time:.4f} sec")
         if report_file:
@@ -354,7 +351,7 @@ def main(argv):  # noqa: C901
 
 
 def signal_handler(signal, frame):
-    _logger.info("Exited with keyboard interrupt")
+    logger.info("Exited with keyboard interrupt")
     sys.exit(0)
 
 

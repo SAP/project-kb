@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import requests
 from pydantic import BaseModel, Field
 
-import log.util
+from log.logger import logger
 from util.collection import union_of
 from util.http import fetch_url
 
@@ -47,7 +47,6 @@ ALLOWED_SITES = [
     "jvndb.jvn.jp",  # for testing: sometimes unreachable
 ]
 
-_logger = log.util.init_local_logger()
 
 LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
@@ -103,16 +102,16 @@ class AdvisoryRecord(BaseModel):
 
         self.keywords.update(extract_nouns_from_text(self.description))
 
-        _logger.debug("References: " + str(self.references))
+        logger.debug("References: " + str(self.references))
         self.references = [
             r for r in self.references if urlparse(r).hostname in ALLOWED_SITES
         ]
-        _logger.debug("Relevant references: " + str(self.references))
+        logger.debug("Relevant references: " + str(self.references))
         if fetch_references:
             for r in self.references:
                 ref_content = fetch_url(r)
                 if len(ref_content) > 0:
-                    _logger.debug("Fetched content of reference " + r)
+                    logger.debug("Fetched content of reference " + r)
                     self.references_content.append(ref_content)
 
     # TODO check behavior when some of the data attributes of the AdvisoryRecord
@@ -156,7 +155,7 @@ class AdvisoryRecord(BaseModel):
             return True
         except Exception as e:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
+            logger.error(
                 f"Could not retrieve {vuln_id} from the local database",
                 exc_info=log.config.level < logging.INFO,
             )
@@ -180,7 +179,7 @@ class AdvisoryRecord(BaseModel):
             self.references = [r["url"] for r in data["references"]]
         except Exception as e:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
+            logger.error(
                 f"Could not retrieve {vuln_id} from the NVD api",
                 exc_info=log.config.level < logging.INFO,
             )
@@ -210,13 +209,13 @@ def build_advisory_record(
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    _logger.pretty_log(advisory_record)
+    logger.pretty_log(advisory_record)
     advisory_record.analyze(
         use_nvd=use_nvd,
         fetch_references=fetch_references,
         relevant_extensions=filter_extensions,
     )
-    _logger.debug(f"{advisory_record.keywords=}")
+    logger.debug(f"{advisory_record.keywords=}")
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
@@ -229,8 +228,8 @@ def build_advisory_record(
     if len(modified_files) > 0:
         advisory_record.paths.update(modified_files)
 
-    _logger.debug(f"{advisory_record.keywords=}")
-    _logger.debug(f"{advisory_record.paths=}")
+    logger.debug(f"{advisory_record.keywords=}")
+    logger.debug(f"{advisory_record.paths=}")
 
     return advisory_record
 

@@ -9,11 +9,9 @@ import psycopg2
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
 
-import log.util
+from log.logger import logger
 
 from . import CommitDB
-
-_logger = log.util.init_local_logger()
 
 
 class PostgresCommitDB(CommitDB):
@@ -59,7 +57,7 @@ class PostgresCommitDB(CommitDB):
                     data.append(parse_commit_from_database(row))
             cur.close()
         except Exception:
-            _logger.error("Could not lookup commit vector in database", exc_info=True)
+            logger.error("Could not lookup commit vector in database", exc_info=True)
             cur.close()
             raise Exception("Could not lookup commit vector in database")
 
@@ -133,7 +131,7 @@ class PostgresCommitDB(CommitDB):
             )
             self.connection.commit()
         except Exception:
-            _logger.error("Could not save commit vector to database", exc_info=True)
+            logger.error("Could not save commit vector to database", exc_info=True)
             # raise Exception("Could not save commit vector to database")
 
     def reset(self):

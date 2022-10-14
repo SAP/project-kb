@@ -12,7 +12,7 @@ from datamodel.commit import Commit, apply_ranking, make_from_dict, make_from_ra
 from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.version_to_tag import get_tag_for_version
-from log.util import init_local_logger
+from log.logger import logger
 from rules import apply_rules
 
 # from util.profile import profile
@@ -22,8 +22,6 @@ from stats.execution import (
     execution_statistics,
     measure_execution_time,
 )
-
-_logger = init_local_logger()
 
 
 SECS_PER_DAY = 86400
@@ -59,7 +57,7 @@ def prospector(  # noqa: C901
     rules: List[str] = ["ALL"],
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
-    _logger.debug("begin main commit and CVE processing")
+    logger.debug("begin main commit and CVE processing")
 
     # construct an advisory record
     with ConsoleWriter("Processing advisory"):
@@ -92,13 +90,13 @@ def prospector(  # noqa: C901
             filter_extensions[0],
         )
 
-        _logger.debug(f"Collected {len(candidates)} candidates")
+        logger.debug(f"Collected {len(candidates)} candidates")
 
         if len(candidates) > limit_candidates:
-            _logger.error(
+            logger.error(
                 "Number of candidates exceeds %d, aborting." % limit_candidates
             )
-            _logger.error(
+            logger.error(
                 "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
             )
             writer.print(
@@ -124,7 +122,7 @@ def prospector(  # noqa: C901
                     )
             except requests.exceptions.ConnectionError:
                 print("Backend not reachable", end="")
-                _logger.error(
+                logger.error(
                     "Backend not reachable",
                     exc_info=log.config.level < logging.WARNING,
                 )
@@ -149,8 +147,8 @@ def prospector(  # noqa: C901
                         make_from_raw_commit(repository.get_commit(commit_id))
                     )
 
-            _logger.pretty_log(advisory_record)
-            _logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
+            logger.pretty_log(advisory_record)
+            logger.debug(f"preprocessed {len(preprocessed_commits)} commits")
             payload = [c.as_dict() for c in preprocessed_commits]
 
     # -------------------------------------------------------------------------
@@ -165,7 +163,7 @@ def prospector(  # noqa: C901
         ):
             save_preprocessed_commits(backend_address, payload)
     else:
-        _logger.warning("No preprocessed commits to send to backend.")
+        logger.warning("No preprocessed commits to send to backend.")
 
     # -------------------------------------------------------------------------
     # filter commits
@@ -205,18 +203,18 @@ def retrieve_preprocessed_commits(repository_url, backend_address, candidates):
         f"{backend_address}/commits/{repository_url}?commit_id={','.join(candidates)}"
     )
 
-    _logger.debug(f"The backend returned status {r.status_code}")
+    logger.debug(f"The backend returned status {r.status_code}")
     if r.status_code != 200:
-        _logger.info("Preprocessed commits not found in the backend")
+        logger.info("Preprocessed commits not found in the backend")
         missing = candidates
     else:
         retrieved_commits = r.json()
-        _logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
+        logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
         if len(retrieved_commits) != len(candidates):
             missing = list(
                 set(candidates).difference(rc["commit_id"] for rc in retrieved_commits)
             )
-            _logger.error(f"Missing {len(missing)} commits")
+            logger.error(f"Missing {len(missing)} commits")
 
     preprocessed_commits: "list[Commit]" = []
     for idx, commit in enumerate(retrieved_commits):
@@ -229,18 +227,18 @@ def retrieve_preprocessed_commits(repository_url, backend_address, candidates):
 
 def save_preprocessed_commits(backend_address, payload):
     with ConsoleWriter("Saving preprocessed commits to backend") as writer:
-        _logger.debug("Sending preprocessing commits to backend...")
+        logger.debug("Sending preprocessing commits to backend...")
         try:
             r = requests.post(
                 backend_address + "/commits/",
                 json=payload,
                 headers={"Content-type": "application/json"},
             )
-            _logger.debug(
+            logger.debug(
                 "Saving to backend completed (status code: %d)" % r.status_code
             )
         except requests.exceptions.ConnectionError:
-            _logger.error(
+            logger.error(
                 "Could not reach backend, is it running?"
                 "The result of commit pre-processing will not be saved."
                 "Continuing anyway.....",
@@ -265,15 +263,13 @@ def get_candidates(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
         with ConsoleWriter("Git repository cloning"):
-            _logger.info(
-                f"Downloading repository {repository.url} in {repository.path}"
-            )
+            logger.info(f"Downloading repository {repository.url} in {repository.path}")
             repository.clone()
 
             tags = repository.get_tags()
 
-            _logger.debug(f"Found tags: {tags}")
-            _logger.info(f"Done retrieving {repository.url}")
+            logger.debug(f"Found tags: {tags}")
+            logger.info(f"Done retrieving {repository.url}")
 
         with ConsoleWriter("Candidate commit retrieval"):
             prev_tag = None
@@ -301,6 +297,6 @@ def get_candidates(
             )
 
             core_statistics.record("candidates", len(candidates), unit="commits")
-            _logger.info("Found %d candidates" % len(candidates))
+            logger.info("Found %d candidates" % len(candidates))
 
     return candidates

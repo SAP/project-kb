@@ -7,7 +7,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 # from .dependencies import oauth2_scheme
 from api.routers import jobs, nvd, preprocessed, users
 
-
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},
     {
@@ -62,4 +61,9 @@ async def get_status():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=80)
+
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=80,
+    )

@@ -4,12 +4,9 @@ import hashlib
 import re
 from datetime import timezone
 from dateutil.parser import isoparse
-import log.util
+from log.logger import logger
 from git.exec import Exec
 from stats.execution import execution_statistics, measure_execution_time
-
-
-_logger = log.util.init_local_logger()
 
 
 class RawCommit:
@@ -35,7 +32,7 @@ class RawCommit:
             if len(parent) > 0:
                 return parent[0]
         except:
-            _logger.error(
+            logger.error(
                 f"Failed to obtain parent id for: {self.id}",
                 exc_info=True,
             )
@@ -55,7 +52,7 @@ class RawCommit:
             cmd = f"git log --format=%B -1 {self.id}"
             return " ".join(self.execute(cmd))
         except Exception:
-            _logger.error(
+            logger.error(
                 f"Failed to obtain commit message for commit: {self.id}",
                 exc_info=True,
             )
@@ -73,7 +70,7 @@ class RawCommit:
             return self.execute(cmd)
 
         except Exception:
-            _logger.error(
+            logger.error(
                 f"Failed to obtain patch for commit: {self.id}",
                 exc_info=True,
             )
@@ -93,7 +90,7 @@ class RawCommit:
                 )
 
         except Exception as e:
-            _logger.error(
+            logger.error(
                 f"Failed to obtain timestamp for commit: {self.id}",
                 exc_info=True,
             )
@@ -112,7 +109,7 @@ class RawCommit:
             return self.execute(cmd)  # This is a tuple
         # This exception is raised when the commit is the first commit in the repository
         except Exception:
-            _logger.error(
+            logger.error(
                 f"Failed to obtain changed files for commit {self.id}, it may be the first commit of the repository. Processing anyway...",
                 exc_info=True,
             )
@@ -300,7 +297,7 @@ class RawCommit:
 #         # passed to the Commit constructor will be used to pass the fields that need to be populated
 #         commits_count = len(commit_ids)
 #         if prefetch is True and commits_count > 50:
-#             _logger.warning(
+#             logger.warning(
 #                 f"Processing {commits_count:d} commits will take some time!"
 #             )
 #             for cid in commit_ids:
