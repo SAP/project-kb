@@ -1,11 +1,9 @@
 import logging
 import sys
-from datetime import datetime
 from typing import List, Set, Tuple
 
 import requests
 from tqdm import tqdm
-from datamodel import commit
 
 import log
 from client.cli.console import ConsoleWriter, MessageStatus
@@ -268,14 +266,14 @@ def get_candidates(
     ):
         with ConsoleWriter("Git repository cloning"):
             _logger.info(
-                f"Downloading repository {repository._url} in {repository._path}"
+                f"Downloading repository {repository.url} in {repository.path}"
             )
             repository.clone()
 
             tags = repository.get_tags()
 
             _logger.debug(f"Found tags: {tags}")
-            _logger.info(f"Done retrieving {repository._url}")
+            _logger.info(f"Done retrieving {repository.url}")
 
         with ConsoleWriter("Candidate commit retrieval"):
             prev_tag = None

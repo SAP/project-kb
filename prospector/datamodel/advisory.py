@@ -1,14 +1,12 @@
 # from typing import Tuple
 # from datamodel import BaseModel
 import logging
-from datetime import datetime
-from os import system
+from dateutil.parser import isoparse
 from typing import List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel, Field
-import spacy
 
 import log.util
 from util.collection import union_of
@@ -55,7 +53,6 @@ LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
 
 
-# TODO: refactor and clean
 class AdvisoryRecord(BaseModel):
     """
     The advisory record captures all relevant information on the vulnerability advisory
@@ -84,7 +81,10 @@ class AdvisoryRecord(BaseModel):
     #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(
-        self, use_nvd: bool = False, fetch_references: bool = False, relevant_extensions: List[str] = []
+        self,
+        use_nvd: bool = False,
+        fetch_references: bool = False,
+        relevant_extensions: List[str] = [],
     ):
         self.from_nvd = use_nvd
         if self.from_nvd:
@@ -96,7 +96,9 @@ class AdvisoryRecord(BaseModel):
         )
         # TODO: use a set where possible to speed up the rule application time
         self.paths.update(
-            extract_affected_filenames(self.description, relevant_extensions)  # TODO: this could be done on the words extracted from the description
+            extract_affected_filenames(
+                self.description, relevant_extensions
+            )  # TODO: this could be done on the words extracted from the description
         )
 
         self.keywords.update(extract_nouns_from_text(self.description))
@@ -140,13 +142,9 @@ class AdvisoryRecord(BaseModel):
             if response.status_code != 200:
                 return False
             data = response.json()
-            self.published_timestamp = int(
-                datetime.fromisoformat(data["publishedDate"][:-1] + ":00").timestamp()
-            )
+            self.published_timestamp = int(isoparse(data["publishedDate"]).timestamp())
             self.last_modified_timestamp = int(
-                datetime.fromisoformat(
-                    data["lastModifiedDate"][:-1] + ":00"
-                ).timestamp()
+                isoparse(data["lastModifiedDate"]).timestamp()
             )
 
             self.description = data["cve"]["description"]["description_data"][0][
@@ -159,10 +157,9 @@ class AdvisoryRecord(BaseModel):
         except Exception as e:
             # Might fail either or json parsing error or for connection error
             _logger.error(
-                "Could not retrieve vulnerability data from NVD for " + vuln_id,
+                f"Could not retrieve {vuln_id} from the local database",
                 exc_info=log.config.level < logging.INFO,
             )
-            print(e)
             return False
 
     def get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
@@ -174,23 +171,22 @@ class AdvisoryRecord(BaseModel):
             if response.status_code != 200:
                 return False
             data = response.json()["vulnerabilities"][0]["cve"]
-            self.published_timestamp = int(
-                datetime.fromisoformat(data["published"]).timestamp()
-            )
+            self.published_timestamp = int(isoparse(data["published"]).timestamp())
 
             self.last_modified_timestamp = int(
-                datetime.fromisoformat(data["lastModified"]).timestamp()
+                isoparse(data["lastModified"]).timestamp()
             )
             self.description = data["descriptions"][0]["value"]
             self.references = [r["url"] for r in data["references"]]
         except Exception as e:
             # Might fail either or json parsing error or for connection error
             _logger.error(
-                "Could not retrieve vulnerability data from NVD for " + vuln_id,
+                f"Could not retrieve {vuln_id} from the NVD api",
                 exc_info=log.config.level < logging.INFO,
             )
-            print(e)
-            return False
+            raise Exception(
+                f"Could not retrieve {vuln_id} from the NVD api {e}",
+            )
 
 
 def build_advisory_record(
@@ -224,7 +220,7 @@ def build_advisory_record(
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
-            datetime.fromisoformat(publication_date).timestamp()
+            isoparse(publication_date).timestamp()
         )
 
     if len(advisory_keywords) > 0:

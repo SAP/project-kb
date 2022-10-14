@@ -1,6 +1,7 @@
 import os
 import subprocess
 from functools import lru_cache
+from typing import List, Optional
 
 import log.util
 
@@ -21,72 +22,43 @@ class Exec:
 
     def run(self, cmd: str, silent=False, cache: bool = False):
         if cache:
-            result = self._run_cached(cmd, silent)
-        else:
-            result = self._run_uncached(cmd, silent)
+            return self.run_cached(cmd, silent)
 
-        return result
+        return self.run_uncached(cmd, silent)
 
-    # lru_cache only works for one python process.
+    # TODO lru_cache only works for one python process.
     # If you are running multiple subprocesses,
     # or running the same script over and over, lru_cache will not work.
     @lru_cache(maxsize=10000)
-    def _run_cached(self, cmd, silent=False):
-        return self._run_uncached(cmd, silent=silent)
+    def run_cached(self, cmd, silent=False):
+        return self.run_uncached(cmd, silent=silent)
 
-    def _run_uncached(self, cmd, silent=False):
+    def run_uncached(self, cmd, silent=False):
         if isinstance(cmd, str):
             cmd = cmd.split()
 
-        if silent:
-            self._execute_no_output(cmd)
+        out = self.execute(cmd, silent=silent)
+        if out is None:
             return ()
+        else:
+            return tuple(out)
 
-        result = self._execute(cmd)
-        if result is None:
-            return ()
-
-        return tuple(result)
-
-    def _execute_no_output(self, cmd_l):
+    def execute(self, cmd, silent=False) -> Optional[List[str]]:
         try:
-            subprocess.check_call(
-                cmd_l,
+            out = subprocess.run(
+                cmd,
                 cwd=self._workdir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                text=True,
+                capture_output=not silent,
+                encoding=self.encoding,
             )
-        except subprocess.TimeoutExpired:  # pragma: no cover
-            _logger.error(
-                "Timeout exceeded (" + self.timeout + " seconds)", exc_info=True
-            )
-            raise Exception("Process did not respond for " + self.timeout + " seconds")
+            if out.returncode != 0:
+                raise Exception(f"{cmd} error: {out.stderr}")
 
-    def _execute(self, cmd_l):
-        try:
-            proc = subprocess.Popen(
-                cmd_l,
-                cwd=self._workdir,
-                stdout=subprocess.PIPE,
-                # stderr=subprocess.STDOUT,  # Needed to have properly prinded error output
-            )
-            # This is blocking, who wrote this?
-            out, _ = proc.communicate()
+            if silent:
+                return None
 
-            if proc.returncode != 0:
-                raise Exception(
-                    "Process (%s) exited with non-zero return code" % " ".join(cmd_l)
-                )
-            # if err:       # pragma: no cover
-            #     traceback.print_exc()
-            #     raise Exception('Execution failed')
-
-            raw_output_list = out.decode(self.encoding).split("\n")
-            return [r for r in raw_output_list if r.strip() != ""]
-        except subprocess.TimeoutExpired:  # pragma: no cover
+            return [r for r in out.stdout.split("\n") if r.strip() != ""]
+        except subprocess.TimeoutExpired:
             _logger.error(f"Timeout exceeded ({self.timeout} seconds)", exc_info=True)
             raise Exception(f"Process did not respond for {self.timeout} seconds")
-            # return None
-        # except Exception as ex:                 # pragma: no cover
-        #     traceback.print_exc()
-        #     raise ex
