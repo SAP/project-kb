@@ -9,18 +9,10 @@ import psycopg2
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
 
-import log.util
+from log.logger import logger
 
 from commitdb import CommitDB
 from log.logger import logger
-
-DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
-    os.getenv("POSTGRES_USER", "postgres"),
-    os.getenv("POSTGRES_PASSWORD", "example"),
-    os.getenv("POSTGRES_HOST", "localhost"),
-    os.getenv("POSTGRES_PORT", "5432"),
-    os.getenv("POSTGRES_DBNAME", "postgres"),
-).lower()
 
 
 class PostgresCommitDB(CommitDB):
@@ -65,8 +57,6 @@ class PostgresCommitDB(CommitDB):
             cur.close()
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
-            return []
-        finally:
             cur.close()
 
     # TODO: use dict to eliminate dependencies from commit and avoid loading spacy in the backend
@@ -139,7 +129,7 @@ class PostgresCommitDB(CommitDB):
             cur.close()
         except Exception:
             logger.error("Could not save commit vector to database", exc_info=True)
-            cur.close()
+            # raise Exception("Could not save commit vector to database")
 
     def reset(self):
         self.run_sql_script("ddl/10_commit.sql")

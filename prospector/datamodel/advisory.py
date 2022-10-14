@@ -6,7 +6,8 @@ from urllib.parse import urlparse
 import requests
 from pydantic import BaseModel, Field
 
-from log.logger import get_level, logger, pretty_log
+from log.logger import logger
+from util.collection import union_of
 from util.http import fetch_url
 
 from .nlp import (
@@ -99,18 +100,31 @@ class AdvisoryRecord(BaseModel):
 
         self.keywords.update(extract_nouns_from_text(self.description))
 
-        _logger.debug("References: " + str(self.references))
+        logger.debug("References: " + str(self.references))
         self.references = [
             r
             for r in self.references
             if ".".join(urlparse(r).hostname.split(".")[-2:]) in ALLOWED_SITES
         ]
         logger.debug("Relevant references: " + str(self.references))
-
         if fetch_references:
-            self.references_content = [
-                " ".join(str(fetch_url(r)).split()) for r in self.references
-            ]
+            for r in self.references:
+                ref_content = fetch_url(r)
+                if len(ref_content) > 0:
+                    logger.debug("Fetched content of reference " + r)
+                    self.references_content.append(ref_content)
+
+    # TODO check behavior when some of the data attributes of the AdvisoryRecord
+    # class contain data (e.g. passed explicitly as input by the useer);
+    # In that case, shall the data from NVD be appended to the exiting data,
+    # replace it, be ignored? (note: right now, it just replaces it)
+    def get_advisory(
+        self, vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
+    ):
+        """
+        populate object field using NVD data
+        returns: description, published_timestamp, last_modified timestamp, list of references
+        """
 
     def get_advisory(self):
         data = get_from_local(self.cve_id) or get_from_nvd(self.cve_id)
@@ -141,7 +155,7 @@ class AdvisoryRecord(BaseModel):
             return True
         except Exception as e:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
+            logger.error(
                 f"Could not retrieve {vuln_id} from the local database",
                 exc_info=log.config.level < logging.INFO,
             )
@@ -165,7 +179,7 @@ class AdvisoryRecord(BaseModel):
             self.references = [r["url"] for r in data["references"]]
         except Exception as e:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
+            logger.error(
                 f"Could not retrieve {vuln_id} from the NVD api",
                 exc_info=log.config.level < logging.INFO,
             )
@@ -192,11 +206,7 @@ def build_advisory_record(
         description=description,
     )
 
-    if use_nvd:
-        advisory_record.get_advisory()
-
-    pretty_log(logger, advisory_record)
-
+    logger.pretty_log(advisory_record)
     advisory_record.analyze(
         fetch_references=fetch_references,
     )
@@ -214,7 +224,7 @@ def build_advisory_record(
         advisory_record.paths.update(modified_files)
 
     logger.debug(f"{advisory_record.keywords=}")
-    logger.debug(f"{advisory_record.files=}")
+    logger.debug(f"{advisory_record.paths=}")
 
     return advisory_record
 
