@@ -27,6 +27,9 @@ from stats.execution import execution_statistics, measure_execution_time
 
 GIT_CACHE = os.getenv("GIT_CACHE")
 
+FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h"]
+
+
 if not os.path.isdir(GIT_CACHE):
     raise ValueError(
         f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
@@ -74,7 +77,7 @@ class Git:
     def __init__(
         self,
         url,
-        cache_path=os.path.abspath("/tmp/git-cache"),
+        cache_path=os.path.abspath("/tmp/gitcache"),
         shallow=False,
     ):
         self.repository_type = "GIT"
@@ -224,7 +227,6 @@ class Git:
         exclude_ancestors_of=None,
         since=None,
         until=None,
-        filter_files="",
         find_in_code="",
         find_in_msg="",
     ):
@@ -245,8 +247,8 @@ class Git:
         if exclude_ancestors_of:
             cmd += f" ^{exclude_ancestors_of}"
 
-        if filter_files:
-            cmd += f" *.{filter_files}"
+        for extension in FILTERING_EXTENSIONS:
+            cmd += f" *.{extension}"
 
         # What is this??
         if find_in_code:
