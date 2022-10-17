@@ -35,18 +35,18 @@ def extract_special_terms(description: str) -> Set[str]:
     return tuple(result)
 
 
-def extract_nouns_from_text(text: str) -> List[str]:
-    """Use spacy to extract nouns from text"""
+def extract_words_from_text(text: str) -> List[str]:
+    """Use spacy to extract "relevant words" from text"""
     return [
         token.text
         for token in nlp(text)
-        if token.pos_ == "NOUN" and len(token.text) > 3
+        if token.pos_ in ("NOUN", "VERB") and len(token.text) > 3
     ]
 
 
 def extract_similar_words(adv_words: Set[str], commit_msg: str) -> List[str]:
     """Extract nouns from commit message that appears in the advisory text"""
-    return [word for word in extract_nouns_from_text(commit_msg) if word in adv_words]
+    return [word for word in extract_words_from_text(commit_msg) if word in adv_words]
 
 
 def extract_versions(text: str) -> List[str]:

@@ -8,7 +8,7 @@ from .nlp import (
 def test_extract_similar_words():
     commit_msg = "This is a commit message"
     adv_text = "This is an advisory text"
-    similarities = extract_similar_words(adv_text, commit_msg, set())
+    similarities = extract_similar_words(adv_text, commit_msg)
     assert similarities.sort() == ["This"].sort()
 
 
