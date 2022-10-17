@@ -11,6 +11,44 @@ from .version_to_tag import get_tag_for_version
 
 
 REPO_URL = "https://github.com/slackhq/nebula"
+COMMIT_ID = "b38bd36766994715ac5226bfa361cd2f8f29e31e"
+
+
+@pytest.fixture
+def repository() -> Git:
+    repo = Git(REPO_URL)
+    repo.clone()
+    return repo
+
+
+def test_extract_timestamp(repository: Git):
+    commit = repository.get_commit(COMMIT_ID)
+    commit.extract_timestamp(format_date=True)
+    assert commit.get_timestamp() == "2022-04-04 17:38:36"
+    commit.extract_timestamp(format_date=False)
+    assert commit.get_timestamp() == 1649093916
+
+
+def test_get_diff(repository: Git):
+    commit = repository.get_commit(COMMIT_ID)
+    diff = commit.get_diff()
+    res = [s for s in diff if "connection_manager.go" in s]
+    assert len(diff) == 16
+    assert len(res) > 0
+
+
+def test_get_changed_files(repository: Git):
+    commit = repository.get_commit(COMMIT_ID)
+
+    changed_files = commit.get_changed_files()
+    assert len(changed_files) == 1
+    assert "connection_manager.go" == changed_files[0]
+
+
+# --------------------------------------------------------- #
+# --------------------------------------------------------- #
+# --------------------------------------------------------- #
+# --------------------------------------------------------- #
 
 
 def test_get_commits_in_time_interval():
@@ -18,22 +56,6 @@ def test_get_commits_in_time_interval():
     repo.clone()
 
     results = repo.get_commits(since="1615441712", until="1617441712")
-
-    print("Found %d commits" % len(results))
-    assert len(results) == 45
-
-
-def test_get_commits_in_time_interval_filter_extension():
-    repo = Git(REPO_URL)
-    repo.clone()
-
-    results = repo.get_commits(
-        since="1615441712", until="1617441712", filter_files="go"
-    )
-
-    print("Found %d commits" % len(results))
-    for c in results:
-        print("{}/commit/{}".format(repo.get_url(), c))
     assert len(results) == 42
 
 
@@ -79,32 +101,11 @@ def test_get_tag_for_version():
 def test_get_commit_parent():
     repo = Git(REPO_URL)
     repo.clone()
-    # https://github.com/apache/struts/commit/bef7211c41e7b0df9ff2740c0d4843f5b7a43266
     id = repo.get_commit_id_for_tag("v1.6.1")
     commit = repo.get_commit(id)
 
-    parent_id = commit.get_parent_id()
-    assert len(parent_id) == 1
-    assert parent_id[0] == "4c0ae3df5ef79482134b1c08570ff51e52fdfe06"
-    # print(parent_id)
-
-    # print(repo.get_commit("2ba1a3eaf5cb53aa8701e652293988b781c54f37"))
-
-    # commits = repo.get_commits_between_two_commit(
-    #     "2ba1a3eaf5cb53aa8701e652293988b781c54f37",
-    #     "04bc4bd97c41bd181dd45580ce12236218177aca",
-    # )
-
-    # print(commits[2])
-
-    # # Works well on merge commit too
-    # # https://github.com/apache/struts/commit/cb318cdc749f40a06eaaeed789a047f385a55480
-    # commit = repo.get_commit("cb318cdc749f40a06eaaeed789a047f385a55480")
-    # parent_id = commit.get_parent_id()
-    # assert len(parent_id) == 2
-    # assert parent_id[0] == "05528157f0725707a512aa4dc2b9054fb4a4467c"
-    # assert parent_id[1] == "fe656eae21a7a287b2143fad638234314f858178"
-    # print(parent_id)
+    commit.get_parent_id()
+    assert commit.parent_id == "4c0ae3df5ef79482134b1c08570ff51e52fdfe06"
 
 
 def test_run_cache():
