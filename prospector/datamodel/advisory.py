@@ -14,7 +14,7 @@ from util.http import fetch_url
 
 from .nlp import (
     extract_affected_filenames,
-    extract_nouns_from_text,
+    extract_words_from_text,
     extract_products,
     extract_special_terms,
     extract_versions,
@@ -95,12 +95,11 @@ class AdvisoryRecord(BaseModel):
         )
         # TODO: use a set where possible to speed up the rule application time
         self.paths.update(
-            extract_affected_filenames(
-                self.description, relevant_extensions
-            )  # TODO: this could be done on the words extracted from the description
+            extract_affected_filenames(self.description)
+            # TODO: this could be done on the words extracted from the description
         )
 
-        self.keywords.update(extract_nouns_from_text(self.description))
+        self.keywords.update(extract_words_from_text(self.description))
 
         logger.debug("References: " + str(self.references))
         self.references = [
@@ -157,7 +156,7 @@ class AdvisoryRecord(BaseModel):
             # Might fail either or json parsing error or for connection error
             logger.error(
                 f"Could not retrieve {vuln_id} from the local database",
-                exc_info=log.config.level < logging.INFO,
+                exc_info=logger.level < logging.INFO,
             )
             return False
 
@@ -181,7 +180,7 @@ class AdvisoryRecord(BaseModel):
             # Might fail either or json parsing error or for connection error
             logger.error(
                 f"Could not retrieve {vuln_id} from the NVD api",
-                exc_info=log.config.level < logging.INFO,
+                exc_info=logger.level < logging.INFO,
             )
             raise Exception(
                 f"Could not retrieve {vuln_id} from the NVD api {e}",

@@ -1,6 +1,5 @@
 import pytest
 
-from api import DB_CONNECT_STRING
 from client.cli.prospector_client import build_advisory_record
 from commitdb.postgres import PostgresCommitDB
 from stats.execution import execution_statistics
@@ -22,14 +21,14 @@ from .main import main
 @pytest.fixture
 def setupdb():
     db = PostgresCommitDB()
-    db.connect(DB_CONNECT_STRING)
+    db.connect()
     db.reset()
     return db
 
 
 def test_main_runonce(setupdb):
     db = setupdb
-    db.connect(DB_CONNECT_STRING)
+    db.connect()
     args = [
         "PROGRAM_NAME",
         "CVE-2019-11278",
