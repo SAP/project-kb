@@ -38,14 +38,17 @@ class CLogger:
         all_file.setFormatter(detailed_formatter)
         self._logger.addHandler(all_file)
 
-        # setattr(logging.Logger, pretty_log.__name__, pretty_log)
+        setattr(self._logger, self.pretty_log.__name__, self.pretty_log)
 
     def pretty_log(self, obj, level: int = logging.DEBUG):
         as_text = pformat(obj)
         self._logger.log(level, "detailed content of the object\n" + as_text)
 
-    def get_level(self):
-        return logging.getLevelName(self._logger.level)
+    def get_level(self, string: bool = False) -> Union[str, int]:
+        if string:
+            return logging.getLevelName(self._logger.level)
+
+        return self._logger.level
 
     def set_level(self, level):
         self._logger.setLevel(level)
