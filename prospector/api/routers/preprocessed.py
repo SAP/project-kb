@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from api import DB_CONNECT_STRING
 from commitdb.postgres import PostgresCommitDB
 
 router = APIRouter(
@@ -20,7 +19,7 @@ async def get_commits(
     commit_id: Optional[str] = None,
 ):
     db = PostgresCommitDB()
-    db.connect(DB_CONNECT_STRING)
+    db.connect()
     data = db.lookup(repository_url, commit_id)
 
     if not len(data):
@@ -34,7 +33,7 @@ async def get_commits(
 async def upload_preprocessed_commit(payload: List[Dict[str, Any]]):
 
     db = PostgresCommitDB()
-    db.connect(DB_CONNECT_STRING)
+    db.connect()
 
     for commit in payload:
         db.save(commit)

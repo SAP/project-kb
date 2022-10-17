@@ -13,7 +13,7 @@ test:
 
 setup: requirements.txt
 	@echo "$(PROGRESS) Installing requirements"
-	pip install -r requirements.txt
+	@pip install -r requirements.txt
 	@echo "$(DONE) Installed requirements"
 	@echo "$(PROGRESS) Installing pre-commit and other modules"
 	@pre-commit install
@@ -26,7 +26,7 @@ dev-setup: setup requirements-dev.txt
 	@mkdir -p $(CVE_DATA_PATH)
 	@echo "$(DONE) Created directory $(CVE_DATA_PATH)"
 	@echo "$(PROGRESS) Installing development requirements"
-	pip install -r requirements-dev.txt
+	@pip install -r requirements-dev.txt
 	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
@@ -56,7 +56,7 @@ select-run:
 	python client/cli/main.py $(cve) --repository $(repository) --use-nvd
 
 clean:
-	rm prospector-report.html
-	rm -f all.log* error.log*
+	rm -f all.log* error.log* prospector-report.html
 	rm -rf $(GIT_CACHE)/*
 	rm -rf __pycache__
+	rm -rf ./*/*/__pycache__

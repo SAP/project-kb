@@ -12,7 +12,7 @@ def string_encoder(string: str) -> List[bytes]:
 
 
 def encode_minhash(mhash: LeanMinHash) -> str:
-    """Encode a MinHash object into a bytearray"""
+    """Encode a LeanMinHash object into a string"""
     return base64.b64encode(pickle.dumps(mhash)).decode("utf-8")
     buf = bytearray(mhash.bytesize())
     mhash.serialize(buf)
@@ -20,7 +20,7 @@ def encode_minhash(mhash: LeanMinHash) -> str:
 
 
 def decode_minhash(buf: str) -> LeanMinHash:
-    """Decode a LeanMinHash object from a bytearray"""
+    """Decode a LeanMinHash object from a string"""
     return pickle.loads(base64.b64decode(buf.encode("utf-8")))
 
 

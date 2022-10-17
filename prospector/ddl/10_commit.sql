@@ -9,7 +9,6 @@ CREATE TABLE public.commits (
 	timestamp int,
 	-- preprocessed data
 	hunks varchar[] NULL,
-	hunk_count int,
 	message varchar NULL,
 	diff varchar[] NULL,
 	changed_files varchar[] NULL,
