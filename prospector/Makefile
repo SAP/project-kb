@@ -40,13 +40,7 @@ docker-clean:
 
 
 clean:
-	@rm -f prospector.log
-	@rm -rf __pycache__
-	@rm -rf */__pycache__
-	@rm -rf */*/__pycache__
-	@rm -rf *.log
-	@rm -rf .pytest_cache
-	@rm -rf *.html
-	@rm -rf *.json
-	@rm -rf *.sqlite
-#@rm -rf $(GIT_CACHE)/*
+	rm -f all.log* error.log* prospector-report.html
+	rm -rf $(GIT_CACHE)/*
+	rm -rf __pycache__
+	rm -rf ./*/*/__pycache__

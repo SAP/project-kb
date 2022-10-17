@@ -8,7 +8,7 @@ CREATE TABLE public.commits (
 	repository varchar NOT NULL,
 	timestamp int,
 	-- preprocessed data
-	hunks int,
+	hunks varchar[] NULL,
 	message varchar NULL,
 	diff varchar[] NULL,
 	changed_files varchar[] NULL,
