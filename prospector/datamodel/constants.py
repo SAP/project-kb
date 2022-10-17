@@ -1,3 +1,5 @@
+REL_EXT_SMALL = ["java", "c", "cpp", "py", "js", "go", "php", "h"]
+
 RELEVANT_EXTENSIONS = [
     "java",
     "c",
