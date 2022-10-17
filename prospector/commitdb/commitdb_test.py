@@ -1,7 +1,12 @@
+"""
+Unit tests for database-related functionality
+
+"""
+from tkinter import E
 import pytest
 
-from commitdb.postgres import DB_CONNECT_STRING, PostgresCommitDB, parse_connect_string
-from datamodel.commit import Commit
+from commitdb.postgres import PostgresCommitDB, parse_connect_string, DB_CONNECT_STRING
+from datamodel.commit import Commit, make_from_dict
 
 
 @pytest.fixture
@@ -12,7 +17,8 @@ def setupdb():
     return db
 
 
-def test_save_lookup(setupdb: PostgresCommitDB):
+def test_save_lookup(setupdb):
+    setupdb.connect(DB_CONNECT_STRING)
     commit = Commit(
         commit_id="42423b2423",
         repository="https://fasfasdfasfasd.com/rewrwe/rwer",
@@ -27,22 +33,25 @@ def test_save_lookup(setupdb: PostgresCommitDB):
         cve_refs=["simola3"],
         tags=["tag1"],
     )
-    setupdb.save(commit.to_dict())
+    setupdb.save(commit.as_dict())
     result = setupdb.lookup(
         "https://fasfasdfasfasd.com/rewrwe/rwer",
         "42423b2423",
     )
 
-    retrieved_commit = Commit.parse_obj(result[0])
+    retrieved_commit = make_from_dict(result[0])
+    # setupdb.reset()
     assert commit.commit_id == retrieved_commit.commit_id
 
 
-def test_lookup_nonexisting(setupdb: PostgresCommitDB):
+def test_lookup_nonexisting(setupdb):
+    setupdb.connect(DB_CONNECT_STRING)
     result = setupdb.lookup(
         "https://fasfasdfasfasd.com/rewrwe/rwer",
         "42423b242342423b2423",
     )
-    assert result == []
+    setupdb.reset()
+    assert len(result) == 0
 
 
 def test_parse_connect_string():

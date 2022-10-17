@@ -19,7 +19,7 @@ async def get_commits(
     commit_id: Optional[str] = None,
 ):
     db = PostgresCommitDB()
-    db.connect(DB_CONNECT_STRING)
+    db.connect()
     data = db.lookup(repository_url, commit_id)
 
     if len(data) == 0:
