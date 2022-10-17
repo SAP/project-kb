@@ -2,6 +2,7 @@ import subprocess
 
 import pytest
 
+from client.cli.prospector_client import build_advisory_record
 from commitdb.postgres import PostgresCommitDB
 
 # from .prospector_client import prospector
@@ -24,8 +25,9 @@ def setupdb():
     return db
 
 
-@pytest.mark.skip(reason="not implemented yet")
-def test_main_runonce(setupdb: PostgresCommitDB):
+def test_main_runonce(setupdb):
+    db = setupdb
+    db.connect()
     args = [
         "python",
         "main.py",
