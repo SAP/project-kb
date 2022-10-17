@@ -18,7 +18,7 @@ if path_root not in sys.path:
 load_dotenv()
 
 # Load logger before doing anything else
-from log.logger import get_level, logger  # noqa: E402
+from log.logger import logger  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.console_report import report_on_console  # noqa: E402
@@ -100,7 +100,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--filter-extensions",
-        default="java",
+        default="",
         type=str,
         help="Filter out commits that do not modify at least one file with this extension",
     )
@@ -209,7 +209,7 @@ def main(argv):  # noqa: C901
         if args.log_level:
             logger.setLevel(args.log_level)
 
-        logger.info(f"global log level is set to {get_level(logger)}")
+        logger.info(f"global log level is set to {logger.get_level(string=True)}")
 
         if args.vulnerability_id is None:
             logger.error("No vulnerability id was specified. Cannot proceed.")
@@ -235,7 +235,7 @@ def main(argv):  # noqa: C901
         use_backend = args.use_backend
 
         if args.ping:
-            return ping_backend(backend, log.config.level < logging.INFO)
+            return ping_backend(backend, logger.get_level() < logging.INFO)
 
         vulnerability_id = args.vulnerability_id
         repository_url = args.repository
@@ -291,7 +291,9 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Generating report") as console:
         report_file = None
         if report == "console":
-            report_on_console(results, advisory_record, log.config.level < logging.INFO)
+            report_on_console(
+                results, advisory_record, logger.get_level() < logging.INFO
+            )
         elif report == "json":
             report_file = as_json(
                 results, advisory_record, args.report_filename + ".json"
@@ -306,7 +308,9 @@ def main(argv):  # noqa: C901
             console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
             )
-            report_on_console(results, advisory_record, log.config.level < logging.INFO)
+            report_on_console(
+                results, advisory_record, logger.get_level() < logging.INFO
+            )
 
         logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
