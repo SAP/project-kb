@@ -2,19 +2,26 @@
 This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
+import os
+
 from typing import Dict, List, Any
 import psycopg2
 
-# import psycopg2.sql
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
 
 from log.logger import logger
 
-from log.logger import logger
+DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
+    os.getenv("POSTGRES_USER", "postgres"),
+    os.getenv("POSTGRES_PASSWORD", "example"),
+    os.getenv("POSTGRES_HOST", "localhost"),
+    os.getenv("POSTGRES_PORT", "5432"),
+    os.getenv("POSTGRES_DBNAME", "postgres"),
+).lower()
 
 
-class PostgresCommitDB(CommitDB):
+class PostgresCommitDB:
     """
     This class implements the database abstraction layer
     for PostgreSQL
@@ -27,106 +34,48 @@ class PostgresCommitDB(CommitDB):
     def connect(self, connect_string=DB_CONNECT_STRING):
         self.connection = psycopg2.connect(connect_string)
 
+    def query(self, query: str):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        self.connection.cursor().execute(query)
+
     def lookup(self, repository: str, commit_id: str = None) -> List[Dict[str, Any]]:
-        # Returns the results of the query as list of dicts
         if not self.connection:
             raise Exception("Invalid connection")
 
-        results = list()
         try:
             cur = self.connection.cursor(cursor_factory=DictCursor)
-            if commit_id:
+
+            if commit_id is None:
+                cur.execute(
+                    "SELECT * FROM commits WHERE repository = %s", (repository,)
+                )
+            else:
                 for id in commit_id.split(","):
                     cur.execute(
                         "SELECT * FROM commits WHERE repository = %s AND commit_id = %s",
-                        (
-                            repository,
-                            id,
-                        ),
+                        (repository, id),
                     )
                     results.append(cur.fetchone())
 
-                    result = cur.fetchall()
-                    if len(result):
-                        data.append(parse_commit_from_database(result[0]))
-            else:
-                cur.execute("SELECT * FROM commits WHERE repository = %s", repository)
-                result = cur.fetchall()
-                for row in result:
-                    data.append(parse_commit_from_database(row))
+            result = cur.fetchall()
+
             cur.close()
+            return [parse_commit_from_db(row) for row in result]
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
             cur.close()
 
-        return data
-
-    # TODO: use dict to eliminate dependencies from commit and avoid loading spacy in the backend
     def save(self, commit: Dict[str, Any]):
         if not self.connection:
             raise Exception("Invalid connection")
 
         try:
             cur = self.connection.cursor()
-            cur.execute(
-                """INSERT INTO commits(
-                    commit_id,
-                    repository,
-                    timestamp,
-                    hunks,
-                    hunk_count,
-                    message,
-                    diff,
-                    changed_files,
-                    message_reference_content,
-                    jira_refs,
-                    ghissue_refs,
-                    cve_refs,
-                    tags,
-                    minhash)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET (
-                        timestamp,
-                        hunks,
-                        hunk_count,
-                        message,
-                        diff,
-                        changed_files,
-                        message_reference_content,
-                        jira_refs,
-                        ghissue_refs,
-                        cve_refs,
-                        tags,
-                        minhash) = (
-                            EXCLUDED.timestamp,
-                            EXCLUDED.hunks,
-                            EXCLUDED.hunk_count,
-                            EXCLUDED.message,
-                            EXCLUDED.diff,
-                            EXCLUDED.changed_files,
-                            EXCLUDED.message_reference_content,
-                            EXCLUDED.jira_refs,
-                            EXCLUDED.ghissue_refs,
-                            EXCLUDED.cve_refs,
-                            EXCLUDED.tags,
-                            EXCLUDED.minhash)""",
-                (
-                    commit.get("commit_id"),
-                    commit.get("repository"),
-                    commit.get("timestamp"),
-                    commit.get("hunks"),
-                    commit.get("hunk_count"),
-                    commit.get("message"),
-                    commit.get("diff"),
-                    commit.get("changed_files"),
-                    commit.get("message_reference_content"),
-                    Json(commit.get("jira_refs")),
-                    Json(commit.get("ghissue_refs")),
-                    commit.get("cve_refs"),
-                    commit.get("tags"),
-                    commit.get("minhash"),
-                ),
-            )
+
+            statement = build_statement(commit)
+            args = get_args(commit)
+            cur.execute(statement, args)
             self.connection.commit()
             cur.close()
         except Exception:
@@ -163,25 +112,12 @@ def build_statement(data: Dict[str, Any]):
     on_conflict = ",".join([f"EXCLUDED.{key}" for key in data.keys()])
     return f"INSERT INTO commits ({columns}) VALUES ({','.join(['%s'] * len(data))}) ON CONFLICT ON CONSTRAINT commits_pkey DO UPDATE SET ({columns}) = ({on_conflict})"
 
-def parse_commit_from_database(raw_data: DictRow) -> Dict[str, Any]:
-    """
-    This function is responsible of parsing a preprocessed commit from the database
-    """
-    return {
-        "commit_id": raw_data["commit_id"],
-        "repository": raw_data["repository"],
-        "timestamp": raw_data["timestamp"],
-        "hunks": [
-            (int(x[0]), int(x[1])) for x in raw_data["hunks"]
-        ],  # Converts to tuples of ints
-        "hunk_count": raw_data["hunk_count"],
-        "message": raw_data["message"],
-        "diff": raw_data["diff"],
-        "changed_files": raw_data["changed_files"],
-        "message_reference_content": raw_data["message_reference_content"],
-        "jira_refs": raw_data["jira_refs"],
-        "ghissue_refs": raw_data["ghissue_refs"],
-        "cve_refs": raw_data["cve_refs"],
-        "tags": raw_data["tags"],
-        "minhash": raw_data["minhash"],
-    }
+
+def get_args(data: Dict[str, Any]):
+    return tuple([Json(val) if isinstance(val, dict) else val for val in data.values()])
+
+
+def parse_commit_from_db(raw_data: DictRow) -> Dict[str, Any]:
+    out = dict(raw_data)
+    out["hunks"] = [(int(x[1]), int(x[3])) for x in raw_data["hunks"]]
+    return out

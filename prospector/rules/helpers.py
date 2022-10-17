@@ -27,6 +27,7 @@ SEC_KEYWORDS = [
     "secur",
     "xxe",
     "xss",
+    "cross-site",
     "dos",
     "insecur",
     "inject",
