@@ -6,7 +6,6 @@ from typing import List, Set, Tuple
 import requests
 from tqdm import tqdm
 
-import log
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
 from datamodel.commit import Commit, apply_ranking, make_from_dict, make_from_raw_commit
@@ -90,7 +89,7 @@ def prospector(  # noqa: C901
             version_interval,
             time_limit_before,
             time_limit_after,
-            filter_extensions[0],
+            # filter_extensions[0],
         )
 
         logger.debug(f"Collected {len(candidates)} candidates")
@@ -126,16 +125,17 @@ def prospector(  # noqa: C901
                 print("Backend not reachable", end="")
                 logger.error(
                     "Backend not reachable",
-                    exc_info=get_level() < logging.WARNING,
+                    exc_info=logger.level < logging.WARNING,
                 )
                 if use_backend == "always":
                     print("Backend not reachable: aborting")
                     sys.exit(0)
-                print("Backend not reachable: continuing")
-
-            if "missing" not in locals():
-                missing = list(candidates.values())
-                preprocessed_commits: List[Commit] = list()
+                print(": continuing without backend")
+            finally:
+                # If missing is not initialized and we are here, we initialize it
+                if "missing" not in locals():
+                    missing = candidates
+                    preprocessed_commits: List[Commit] = list()
 
             pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
             with Counter(
@@ -183,6 +183,9 @@ def filter(commits: List[Commit]) -> List[Commit]:
             console.print(f"Dropped {rejected} candidates")
         return commits
 
+        preprocessed_commits, rejected = filter_commits(preprocessed_commits)
+        if len(rejected) > 0:
+            console.print(f"Dropped {len(rejected)} candidates")
 
 def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]):
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
@@ -226,7 +229,7 @@ def retrieve_preprocessed_commits(
             )
             logger.error(f"Missing {len(missing)} commits")
 
-    preprocessed_commits: "list[Commit]" = []
+    preprocessed_commits: List[Commit] = []
     for idx, commit in enumerate(retrieved_commits):
         if len(retrieved_commits) + len(missing) == len(candidates):
             preprocessed_commits.append(make_from_dict(commit))
@@ -252,7 +255,7 @@ def save_preprocessed_commits(backend_address, payload):
                 "Could not reach backend, is it running?"
                 "The result of commit pre-processing will not be saved."
                 "Continuing anyway.....",
-                exc_info=log.config.level < logging.WARNING,
+                exc_info=logger.level < logging.WARNING,
             )
             writer.print(
                 "Could not save preprocessed commits to backend",
@@ -267,8 +270,7 @@ def get_candidates(
     version_interval: str,
     time_limit_before: int,
     time_limit_after: int,
-    limit_candidates: int,
-):
+) -> List[str]:
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
