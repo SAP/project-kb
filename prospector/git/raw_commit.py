@@ -10,14 +10,12 @@ from stats.execution import execution_statistics, measure_execution_time
 
 
 class RawCommit:
-    def __init__(
-        self, repository_url: str, commit_id: str, exec_link: Exec, init_data=None
-    ):
+    def __init__(self, repository_url: str, commit_id: str, exec_link: Exec):
         self.repository_url = repository_url
         self.id = commit_id
         self.exec = exec_link
-        self.timestamp = self.extract_timestamp()
-        self.parent_id = self.extract_parent_id()
+        self.extract_timestamp()
+        self.extract_parent_id()
 
     def execute(self, cmd):
         return self.exec.run(cmd, cache=True)
@@ -30,13 +28,15 @@ class RawCommit:
             cmd = f"git log --format=%P -1 {self.id}"
             parent = self.execute(cmd)
             if len(parent) > 0:
-                return parent[0]
+                self.parent_id = parent[0]
+            else:
+                self.parent_id = ""
         except:
             logger.error(
                 f"Failed to obtain parent id for: {self.id}",
                 exc_info=True,
             )
-        return ""
+            self.parent_id = ""
 
     def get_timestamp(self):
         return self.timestamp
@@ -80,10 +80,10 @@ class RawCommit:
         try:
             if not format_date:
                 cmd = f"git log --format=%at -1 {self.id}"
-                return int(self.execute(cmd)[0])
+                self.timestamp = int(self.execute(cmd)[0])
             else:
                 cmd = f"git log --format=%aI -1 {self.id}"
-                return (
+                self.timestamp = (
                     isoparse(self.execute(cmd)[0])
                     .astimezone(timezone.utc)
                     .strftime("%Y-%m-%d %H:%M:%S")
@@ -259,27 +259,27 @@ class RawCommit:
             data.get("time_to_tag"),
         )
 
-    def __str__(self):
-        data = (
-            self.id,
-            self.get_timestamp(date_format="%Y-%m-%d %H:%M:%S"),
-            self.get_timestamp(),
-            self.repository_url,
-            self.get_msg(),
-            len(self.get_hunks()),
-            len(self.get_changed_paths()),
-            self.get_next_tag()[0],
-            "\n".join(self.get_changed_paths()),
-        )
-        return """
-        Commit id:         {}
-        Date (timestamp):  {} ({})
-        Repository:        {}
-        Message:           {}
-        hunks: {},  changed files: {},  (oldest) tag: {}
-        {}""".format(
-            *data
-        )
+    # def __str__(self):
+    #     data = (
+    #         self.id,
+    #         self.get_timestamp(date_format="%Y-%m-%d %H:%M:%S"),
+    #         self.get_timestamp(),
+    #         self.repository_url,
+    #         self.get_msg(),
+    #         len(self.get_hunks()),
+    #         len(self.get_changed_paths()),
+    #         self.get_next_tag()[0],
+    #         "\n".join(self.get_changed_paths()),
+    #     )
+    #     return """
+    #     Commit id:         {}
+    #     Date (timestamp):  {} ({})
+    #     Repository:        {}
+    #     Message:           {}
+    #     hunks: {},  changed files: {},  (oldest) tag: {}
+    #     {}""".format(
+    #         *data
+    #     )
 
 
 # class RawCommitSet:
