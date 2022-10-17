@@ -44,7 +44,7 @@ class CLogger:
         as_text = pformat(obj)
         self._logger.log(level, "detailed content of the object\n" + as_text)
 
-    def get_level(self, string: bool = False) -> Union[str, int]:
+    def get_level(self, string: bool = False):
         if string:
             return logging.getLevelName(self._logger.level)
 
