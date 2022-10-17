@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
 from datasketch.lean_minhash import LeanMinHash
@@ -36,7 +36,7 @@ class Commit(BaseModel):
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     relevance: Optional[int] = 0
-    matched_rules: List[Dict[str, Any]] = list()
+    matched_rules: List[Dict[str, Union[str, int]]] = Field(default_factory=list)
     minhash: LeanMinHash = None
 
     def to_dict(self):
