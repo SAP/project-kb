@@ -10,9 +10,9 @@ class Exec:
     def __init__(self, workdir=None, encoding="latin-1", timeout=None):
         self.encoding = encoding
         self.timeout = timeout
-        self.setDir(workdir)
+        self.set_dir(workdir)
 
-    def setDir(self, path):
+    def set_dir(self, path):
         if os.path.isabs(path):
             self._workdir = path
         else:
@@ -37,9 +37,9 @@ class Exec:
 
         out = self.execute(cmd, silent=silent)
         if out is None:
-            return ()
+            return []
         else:
-            return tuple(out)
+            return out
 
     def execute(self, cmd, silent=False) -> Optional[List[str]]:
         try:
