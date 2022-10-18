@@ -33,12 +33,19 @@ def test_extract_timestamp(repository: Git):
     assert commit.get_timestamp() == 1593616852
 
 
-def test_show_tags(repository: Git):
-    tags = repository.execute(
-        "git branch -a --contains b38bd36766994715ac5226bfa361cd2f8f29e31e"
-    )
-    print(tags)
-    pass
+def test_get_diff(repository: Git):
+    commit = repository.get_commit(COMMIT_ID_1)
+    diff = commit.get_diff()
+    for i in diff:
+        print(i)
+    hunks = commit.get_hunks()
+
+    print(hunks)
+
+    raise NotImplementedError
+    res = [s for s in diff if "connection_manager.go" in s]
+    assert len(diff) == 16
+    assert len(res) > 0
 
 
 def test_create_commits(repository: Git):

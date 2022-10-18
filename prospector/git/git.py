@@ -59,7 +59,7 @@ RELEVANT_EXTENSIONS = [
     "jar",
 ]
 
-FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h"]
+FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
 
 
 if not os.path.isdir(GIT_CACHE):
@@ -400,7 +400,7 @@ class Git:
         try:
             cmd = f"git rev-list --ancestry-path {commit_from}..{commit_to}"
 
-            path = list(self.execute(cmd))  # ???
+            path = self.execute(cmd)  # ???
             if len(path) > 0:
                 path.pop(0)
                 path.reverse()

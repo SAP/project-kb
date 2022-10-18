@@ -3,7 +3,9 @@ import sys
 import hashlib
 import re
 from datetime import timezone
+from typing import List
 from dateutil.parser import isoparse
+from scipy.fftpack import diff
 from log.logger import logger
 from git.exec import Exec
 from stats.execution import execution_statistics, measure_execution_time
@@ -31,7 +33,7 @@ class RawCommit:
                 self.parent_id = parent[0]
             else:
                 self.parent_id = ""
-        except:
+        except Exception:
             logger.error(
                 f"Failed to obtain parent id for: {self.id}",
                 exc_info=True,
@@ -58,14 +60,11 @@ class RawCommit:
             )
             return ""
 
-    def get_diff(self, context_size: int = 1, filter_files: str = ""):
+    def get_diff(self):
         if self.parent_id == "":
             return ""
         try:
-            cmd = f"git diff --unified={context_size} {self.id}^!"
-
-            if filter_files:
-                cmd += f" *.{filter_files}"
+            cmd = f"git diff --unified=1 {self.id}^!"
 
             return self.execute(cmd)
 
@@ -89,12 +88,12 @@ class RawCommit:
                     .strftime("%Y-%m-%d %H:%M:%S")
                 )
 
-        except Exception as e:
+        except Exception:
             logger.error(
                 f"Failed to obtain timestamp for commit: {self.id}",
                 exc_info=True,
             )
-            raise Exception("Failed to obtain timestamp for commit: " + self.id)
+            raise Exception(f"Failed to obtain timestamp for commit: {self.id}")
 
     @measure_execution_time(
         execution_statistics.sub_collection("core"),
@@ -106,7 +105,7 @@ class RawCommit:
 
         try:
             cmd = f"git diff --name-only {self.id}^!"
-            return self.execute(cmd)  # This is a tuple
+            return self.execute(cmd)
         # This exception is raised when the commit is the first commit in the repository
         except Exception:
             logger.error(
@@ -135,13 +134,45 @@ class RawCommit:
             return ""
 
         if match:
-            out = [l.strip() for l in out if re.match(match, l)]
+            out = [path.strip() for path in out if re.match(match, path)]
         else:
-            out = [l.strip() for l in out]
+            out = [path.strip() for path in out]
 
         return out
 
-    def get_hunks(self, grouped=False):
+    def get_hunks_old(self, grouped=False):
+        def get_hunk(line: str, hunks: List):
+            if line.startswith("@@"):
+                hunk = re.findall(r"\d+", line.split("@@")[1])
+                start = int(hunk[2])
+                end = start + int(hunk[3]) - int(hunk[1])
+                hunks.append((start, end))
+
+            return hunks
+
+        hunks = []
+        group = []
+        diff_lines = self.get_diff()
+
+        for line in diff_lines:
+            if grouped:
+                # This is a new file or the end of the diff
+                # TODO: fix some edge cases
+                if line.startswith("diff --git") or line == diff_lines[-1]:
+                    if len(group) > 0:
+                        hunks.append(group)
+                        group.clear()
+                    continue
+
+                group = get_hunk(line, group)
+
+            else:
+                hunks = get_hunk(line, hunks)
+
+        return hunks
+
+    # TODO: simplify this method
+    def get_hunks(self, grouped=False):  # noqa: C901
         def is_hunk_line(line):
             return line[0] in "-+" and (len(line) < 2 or (line[1] != line[0]))
 
@@ -152,11 +183,11 @@ class RawCommit:
                     hunks.append(h)
             return hunks
 
-        def is_new_file(l):
-            return l[0:11] == "diff --git "
+        def is_new_file(cmd):
+            return cmd[0:11] == "diff --git "
 
         hunks = []
-
+        group = []
         diff_lines = self.get_diff()
 
         first_line_of_current_hunk = -1
@@ -237,7 +268,7 @@ class RawCommit:
             time_delta = int(tag_timestamp) - int(commit_timestamp)
             if time_delta < 0:
                 time_delta = -1
-        except:
+        except Exception:
             commit_timestamp = "0"
             time_delta = 0
 
