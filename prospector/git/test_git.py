@@ -11,7 +11,9 @@ from .version_to_tag import get_tag_for_version
 
 
 REPO_URL = "https://github.com/slackhq/nebula"
-COMMIT_ID = "b38bd36766994715ac5226bfa361cd2f8f29e31e"
+COMMIT_ID = "4645e6034b9c88311856ee91d19b7328bd5878c1"
+COMMIT_ID_1 = "d85e24f49f9efdeed5549a7d0874e68155e25301"
+COMMIT_ID_2 = "b38bd36766994715ac5226bfa361cd2f8f29e31e"
 
 
 @pytest.fixture
@@ -30,8 +32,15 @@ def test_extract_timestamp(repository: Git):
 
 
 def test_get_diff(repository: Git):
-    commit = repository.get_commit(COMMIT_ID)
+    commit = repository.get_commit(COMMIT_ID_1)
     diff = commit.get_diff()
+    for i in diff:
+        print(i)
+    hunks = commit.get_hunks()
+
+    print(hunks)
+
+    raise NotImplementedError
     res = [s for s in diff if "connection_manager.go" in s]
     assert len(diff) == 16
     assert len(res) > 0
