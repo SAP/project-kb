@@ -6,7 +6,8 @@ from tkinter import E
 import pytest
 
 from commitdb.postgres import PostgresCommitDB, parse_connect_string, DB_CONNECT_STRING
-from datamodel.commit import Commit, make_from_dict
+from datamodel.commit import Commit, make_from_dict, make_from_raw_commit
+from git.git import Git
 
 
 @pytest.fixture
@@ -15,6 +16,16 @@ def setupdb():
     db.connect()
     db.reset()
     return db
+
+
+def test_save_lookup_real(setupdb):
+    repo = Git("https://github.com/slackhq/nebula")
+    repo.clone()
+    raw_commit = repo.get_commit("e434ba6523c4d6d22625755f9890039728e6676a")
+    commit = make_from_raw_commit(raw_commit)
+    print(commit.hunks)
+    print([(7, 8), (15, 18), (23, 30), (35, 37), (40, 42)])
+    setupdb.save(commit.as_dict())
 
 
 def test_save_lookup(setupdb):
