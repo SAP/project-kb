@@ -22,14 +22,16 @@ DAY_IN_SECONDS = 86400
 
 SEC_KEYWORDS = [
     "vuln",
+    "vulnerability",
     "exploit",
     "attack",
-    "secur",
+    "security",
+    "secure",
     "xxe",
     "xss",
     "cross-site",
     "dos",
-    "insecur",
+    "insecure",
     "inject",
     "unsafe",
     "remote execution",
@@ -41,11 +43,14 @@ SEC_KEYWORDS = [
 KEYWORDS_REGEX = r"(?:^|[.,:\s]|\b)({})(?:$|[.,:\s]|\b)".format("|".join(SEC_KEYWORDS))
 
 
+# TODO: this stuff could be made better considering lemmatization, etc
 def extract_security_keywords(text: str) -> Set[str]:
     """
     Return the list of the security keywords found in the text
     """
-    return set([r.group(1) for r in re.finditer(KEYWORDS_REGEX, text, flags=re.I)])
+    return set([word for word in SEC_KEYWORDS if word in text.split()])
+
+    # set([r.group(1) for r in re.finditer(KEYWORDS_REGEX, text, flags=re.I)])
 
 
 # Unused
