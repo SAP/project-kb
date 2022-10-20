@@ -1,44 +1,61 @@
 import sys
-
 import hashlib
 import re
 from datetime import timezone
 from typing import List
 from dateutil.parser import isoparse
-from scipy.fftpack import diff
 from log.logger import logger
-from git.exec import Exec
 from stats.execution import execution_statistics, measure_execution_time
+from util.lsh import compute_minhash
 
 
+# Removed type hints for repository to avoid circular import
 class RawCommit:
-    def __init__(self, repository_url: str, commit_id: str, exec_link: Exec):
-        self.repository_url = repository_url
+    def __init__(
+        self,
+        repository,
+        commit_id: str,
+        timestamp: int = 0,
+        parent_id: str = "",
+        changed_files: List[str] = [],
+    ):
+        self.repository = repository
         self.id = commit_id
-        self.exec = exec_link
-        self.extract_timestamp()
-        self.extract_parent_id()
+        self.timestamp = timestamp
+        self.parent_id = parent_id
+        self.changed_files = changed_files
+        # TODO: REMOVE, now just for compatibility
+        # if self.parent_id == "":
+        #     self.extract_parent_id()
+        # if self.timestamp == 0:
+        #     self.extract_timestamp()
+
+    def __str__(self) -> str:
+        return f"ID:  {self.id}\nURL: {self.get_repository_url()}\nTS:  {self.timestamp}\nPID: {self.parent_id}\nCF:  {self.changed_files}"
 
     def execute(self, cmd):
-        return self.exec.run(cmd, cache=True)
+        return self.repository.execute(cmd)
+
+    def get_repository_url(self):
+        return self.repository.url
 
     def get_id(self) -> str:
         return self.id
 
-    def extract_parent_id(self):
-        try:
-            cmd = f"git log --format=%P -1 {self.id}"
-            parent = self.execute(cmd)
-            if len(parent) > 0:
-                self.parent_id = parent[0]
-            else:
-                self.parent_id = ""
-        except Exception:
-            logger.error(
-                f"Failed to obtain parent id for: {self.id}",
-                exc_info=True,
-            )
-            self.parent_id = ""
+    # def extract_parent_id(self):
+    #     try:
+    #         cmd = f"git log --format=%P -1 {self.id}"
+    #         parent = self.execute(cmd)
+    #         if len(parent) > 0:
+    #             self.parent_id = parent[0]
+    #         else:
+    #             self.parent_id = ""
+    #     except Exception:
+    #         logger.error(
+    #             f"Failed to obtain parent id for: {self.id}",
+    #             exc_info=True,
+    #         )
+    #         self.parent_id = ""
 
     def get_timestamp(self):
         return self.timestamp
@@ -46,13 +63,13 @@ class RawCommit:
     def get_parent_id(self):
         return self.parent_id
 
-    def get_repository_url(self):
-        return self.repository_url
-
     def get_msg(self):
         try:
             cmd = f"git log --format=%B -1 {self.id}"
-            return " ".join(self.execute(cmd))
+            msg = self.execute(cmd)
+            # When we retrieve the commit message we compute the minhash and we add it to the repository index
+            # self.repository.add_to_lsh(compute_minhash(msg[0]))
+            return " ".join(msg)
         except Exception:
             logger.error(
                 f"Failed to obtain commit message for commit: {self.id}",
@@ -95,81 +112,78 @@ class RawCommit:
             )
             raise Exception(f"Failed to obtain timestamp for commit: {self.id}")
 
-    @measure_execution_time(
-        execution_statistics.sub_collection("core"),
-        name="retrieve changed file from git",
-    )
+    # @measure_execution_time(
+    #     execution_statistics.sub_collection("core"),
+    #     name="retrieve changed file from git",
+    # )
+    # def get_changed_files_(self):
+    #     if self.parent_id == "":
+    #         return []
+    #     # TODO: if only contains test classes remove from list
+    #     try:
+    #         cmd = f"git diff --name-only {self.id}^!"
+    #         files = self.execute(cmd)
+    #         for file in files:
+    #             if "test" not in file:
+    #                 return files
+    #         return []
+    #     # This exception is raised when the commit is the first commit in the repository
+    #     except Exception:
+    #         logger.error(
+    #             f"Failed to obtain changed files for commit {self.id}, it may be the first commit of the repository. Processing anyway...",
+    #             exc_info=True,
+    #         )
+    #         return []
+
     def get_changed_files(self):
-        if self.parent_id == "":
-            return []
+        return self.changed_files
 
-        try:
-            cmd = f"git diff --name-only {self.id}^!"
-            return self.execute(cmd)
-        # This exception is raised when the commit is the first commit in the repository
-        except Exception:
-            logger.error(
-                f"Failed to obtain changed files for commit {self.id}, it may be the first commit of the repository. Processing anyway...",
-                exc_info=True,
-            )
-            return []
+    def validate_changed_files(self) -> bool:
+        """If the changed files are only test classes, return False"""
+        return any("test" not in file for file in self.changed_files)
 
-    def get_changed_paths(self, other: "RawCommit" = None, match=None):
-        # TODO refactor, this overlaps with changed_files
-        # Maybe useless
-        if other is None:
-            other_id = self.id + "^"
-        else:
-            other_id = other.id
+    # def get_changed_paths(self, other: "RawCommit" = None, match=None):
+    #     # TODO refactor, this overlaps with changed_files
+    #     # Maybe useless
+    #     if other is None:
+    #         other_id = self.id + "^"
+    #     else:
+    #         other_id = other.id
 
-        try:
-            cmd = f"git log --name-only --format=%n --full-index {other_id}..{self.id}"
+    #     try:
+    #         cmd = f"git log --name-only --format=%n --full-index {other_id}..{self.id}"
 
-            out = self.execute(cmd)
-        except Exception as e:
-            sys.stderr.write(str(e))
-            sys.stderr.write(
-                f"Problem retriving the list of commits in the interval {other.id}..{self.id}\n"
-            )
-            return ""
+    #         out = self.execute(cmd)
+    #     except Exception as e:
+    #         sys.stderr.write(str(e))
+    #         sys.stderr.write(
+    #             f"Problem retriving the list of commits in the interval {other.id}..{self.id}\n"
+    #         )
+    #         return ""
 
-        if match:
-            out = [path.strip() for path in out if re.match(match, path)]
-        else:
-            out = [path.strip() for path in out]
+    #     if match:
+    #         out = [path.strip() for path in out if re.match(match, path)]
+    #     else:
+    #         out = [path.strip() for path in out]
 
-        return out
+    #     return out
 
-    def get_hunks_old(self, grouped=False):
-        def get_hunk(line: str, hunks: List):
-            if line.startswith("@@"):
-                hunk = re.findall(r"\d+", line.split("@@")[1])
-                start = int(hunk[2])
-                end = start + int(hunk[3]) - int(hunk[1])
-                hunks.append((start, end))
+    def get_hunks_new(self):
+        diffs = self.get_diff()
+        hunks_count = 0
+        flag = False
+        for line in diffs:
+            if line[:3] in ("+++", "---"):
+                continue
+            if line[:1] in "-+" and not flag:
+                hunks_count += 1
+                flag = True
+            elif line[:1] in "-+" and flag:
+                continue
 
-            return hunks
-
-        hunks = []
-        group = []
-        diff_lines = self.get_diff()
-
-        for line in diff_lines:
-            if grouped:
-                # This is a new file or the end of the diff
-                # TODO: fix some edge cases
-                if line.startswith("diff --git") or line == diff_lines[-1]:
-                    if len(group) > 0:
-                        hunks.append(group)
-                        group.clear()
-                    continue
-
-                group = get_hunk(line, group)
-
-            else:
-                hunks = get_hunk(line, hunks)
-
-        return hunks
+            if line[:1] not in "-+":
+                flag = False
+        return hunks_count
 
     # TODO: simplify this method
     def get_hunks(self, grouped=False):  # noqa: C901
@@ -187,7 +201,6 @@ class RawCommit:
             return cmd[0:11] == "diff --git "
 
         hunks = []
-        group = []
         diff_lines = self.get_diff()
 
         first_line_of_current_hunk = -1

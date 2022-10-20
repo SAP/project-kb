@@ -69,8 +69,8 @@ class Commit(BaseModel):
     def deserialize_minhash(self, binary_minhash):
         self.minhash = decode_minhash(binary_minhash)
 
-    def as_dict(self):
-        return {
+    def as_dict(self, no_hash: bool = False, no_rules: bool = True):
+        out = {
             "commit_id": self.commit_id,
             "repository": self.repository,
             "timestamp": self.timestamp,
@@ -83,8 +83,12 @@ class Commit(BaseModel):
             "ghissue_refs": self.ghissue_refs,
             "cve_refs": self.cve_refs,
             "tags": self.tags,
-            "minhash": encode_minhash(self.minhash),
         }
+        if not no_hash:
+            out["minhash"] = encode_minhash(self.minhash)
+        if not no_rules:
+            out["matched_rules"] = self.matched_rules
+        return out
 
     def find_twin(self, commit_list: List["Commit"]):
         index = build_lsh_index()
@@ -126,14 +130,20 @@ def apply_ranking(candidates: List[Commit]) -> List[Commit]:
     return sorted(candidates, reverse=True)
 
 
-def make_from_raw_commit(raw_commit: RawCommit) -> Commit:
+def make_from_raw_commit(raw: RawCommit) -> Commit:
     """
     This function is responsible of translating a RawCommit (git)
     into a preprocessed Commit, that can be saved to the DB
     and later used by the ranking/ML module.
     """
+    # if not raw.validate_changed_files():
+    #     return None
+
     commit = Commit(
-        commit_id=raw_commit.get_id(), repository=raw_commit.get_repository_url()
+        commit_id=raw.get_id(),
+        repository=raw.get_repository_url(),
+        timestamp=raw.get_timestamp(),
+        changed_files=raw.get_changed_files(),
     )
 
     # This is where all the attributes of the preprocessed commit
@@ -143,16 +153,16 @@ def make_from_raw_commit(raw_commit: RawCommit) -> Commit:
     # (e.g. do not depend on a particular Advisory Record)
     # should be computed here so that they can be stored in the db.
     # Space-efficiency is important.
-    commit.diff = raw_commit.get_diff()
 
-    commit.hunks = raw_commit.get_hunks()
-    commit.message = raw_commit.get_msg()
-    commit.timestamp = int(raw_commit.get_timestamp())
+    commit.diff = raw.get_diff()
 
-    commit.changed_files = raw_commit.get_changed_files()
+    commit.hunks = raw.get_hunks()
+    commit.message = raw.get_msg()
+    # commit.timestamp = raw.get_timestamp()
 
-    commit.tags = raw_commit.get_tags()
+    commit.tags = raw.get_tags()
     commit.jira_refs = extract_jira_references(commit.message)
+
     commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
     commit.cve_refs = extract_cve_references(commit.message)
     commit.minhash = compute_minhash(

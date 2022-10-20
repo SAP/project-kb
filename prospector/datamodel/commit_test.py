@@ -6,10 +6,14 @@ from git.git import Git
 
 from .commit import make_from_raw_commit
 
+SHENYU = "https://github.com/apache/shenyu"
+COMMIT = "0e826ceae97a1258cb15c73a3072118c920e8654"
+COMMIT_2 = "530bff5a0618062d3f253dab959785ce728d1f3c"
+
 
 @pytest.fixture
 def repository():
-    repo = Git("https://github.com/slackhq/nebula")
+    repo = Git(SHENYU)  # Git("https://github.com/slackhq/nebula")
     repo.clone()
     return repo
 
@@ -17,14 +21,11 @@ def repository():
 def test_preprocess_commit(repository: Git):
 
     repo = repository
-    raw_commit = repo.get_commit("e434ba6523c4d6d22625755f9890039728e6676a")
+    raw_commit = repo.get_commit(
+        COMMIT_2
+    )  # repo.get_commit("e434ba6523c4d6d22625755f9890039728e6676a")
 
-    commit = make_from_raw_commit(raw_commit)
-
-    assert commit.message.startswith("fix unsafe routes darwin (#610)")
-
-    assert "610" in commit.ghissue_refs.keys()
-    assert commit.cve_refs == []
+    make_from_raw_commit(raw_commit)
 
 
 def test_preprocess_commit_set(repository: Git):
