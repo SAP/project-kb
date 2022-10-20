@@ -65,7 +65,7 @@ def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str
 
     return " ".join(
         [
-            re.sub(r"\s+", " ", block.get_text())
+            block.get_text()  # re.sub(r"\s+", " ", block.get_text())
             for block in content.find_all(attrs={attr_name: attr_value})
         ]
     ).strip()
