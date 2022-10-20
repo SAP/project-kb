@@ -1,6 +1,7 @@
 # from typing import Tuple
 # from datamodel import BaseModel
 import logging
+import os
 from dateutil.parser import isoparse
 from typing import List, Optional, Set, Tuple
 from urllib.parse import urlparse
@@ -8,7 +9,7 @@ from urllib.parse import urlparse
 import requests
 from pydantic import BaseModel, Field
 
-from log.logger import logger
+from log.logger import logger, pretty_log, get_level
 from util.collection import union_of
 from util.http import fetch_url
 
@@ -95,7 +96,7 @@ class AdvisoryRecord(BaseModel):
             self.affected_products, extract_products(self.description)
         )
         # TODO: use a set where possible to speed up the rule application time
-        self.paths.update(
+        self.files.update(
             extract_affected_filenames(self.description)
             # TODO: this could be done on the words extracted from the description
         )
@@ -159,7 +160,7 @@ class AdvisoryRecord(BaseModel):
             # Might fail either or json parsing error or for connection error
             logger.error(
                 f"Could not retrieve {vuln_id} from the local database",
-                exc_info=logger.level < logging.INFO,
+                exc_info=get_level() < logging.INFO,
             )
             return False
 
@@ -185,7 +186,7 @@ class AdvisoryRecord(BaseModel):
             # Might fail either or json parsing error or for connection error
             logger.error(
                 f"Could not retrieve {vuln_id} from the NVD api",
-                exc_info=logger.level < logging.INFO,
+                exc_info=get_level() < logging.INFO,
             )
             raise Exception(
                 f"Could not retrieve {vuln_id} from the NVD api {e}",
@@ -213,7 +214,7 @@ def build_advisory_record(
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    logger.pretty_log(advisory_record)
+    pretty_log(logger, advisory_record)
     advisory_record.analyze(
         use_nvd=use_nvd,
         fetch_references=fetch_references,
@@ -230,10 +231,10 @@ def build_advisory_record(
         advisory_record.keywords.update(advisory_keywords)
 
     if len(modified_files) > 0:
-        advisory_record.paths.update(modified_files)
+        advisory_record.files.update(modified_files)
 
     logger.debug(f"{advisory_record.keywords=}")
-    logger.debug(f"{advisory_record.paths=}")
+    logger.debug(f"{advisory_record.files=}")
 
     return advisory_record
 
