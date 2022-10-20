@@ -8,6 +8,7 @@ from datamodel.commit import Commit
 
 from stats.execution import execution_statistics
 
+
 # Handles Set setialization
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -23,7 +24,7 @@ def as_json(
 ):
     data = {
         "advisory_record": advisory_record.dict(),
-        "commits": [r.dict() for r in results],
+        "commits": [r.as_dict(no_hash=True, no_rules=False) for r in results],
     }
     logger.info("Writing results to " + filename)
     with open(filename, "w", encoding="utf8") as json_file:
