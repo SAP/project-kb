@@ -5,7 +5,7 @@ from typing import List, Set, Tuple
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from datamodel.nlp import extract_similar_words
+from datamodel.nlp import find_similar_words
 from rules.helpers import (
     extract_commit_mentioned_in_linked_pages,
     extract_security_keywords,
@@ -123,9 +123,9 @@ class ChangesRelevantFiles(Rule):
             [
                 file
                 for file in candidate.changed_files
-                for adv_path in advisory_record.paths
-                if adv_path.casefold() in file.casefold()
-                and len(adv_path)
+                for adv_file in advisory_record.files
+                if adv_file.casefold() in file.casefold()
+                and len(adv_file)
                 > 3  # TODO: when fixed extraction the >3 should be useless
             ]
         )
@@ -139,9 +139,10 @@ class AdvKeywordsInMsg(Rule):
     """Matches commits whose message contain any of the keywords extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        matching_keywords = set(
-            extract_similar_words(advisory_record.keywords, candidate.message)
+        matching_keywords = find_similar_words(
+            advisory_record.keywords, candidate.message
         )
+
         if len(matching_keywords) > 0:
             self.message = f"The commit message and the advisory share the following keywords: {', '.join(matching_keywords)}"
             return True
@@ -154,9 +155,8 @@ class AdvKeywordsInDiffs(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         return False
-        matching_keywords = set(
-            extract_similar_words(advisory_record.keywords, candidate.diff)
-        )
+        matching_keywords = find_similar_words(advisory_record.keywords, candidate.diff)
+
         return len(matching_keywords) > 0
 
 
@@ -286,7 +286,7 @@ class SmallCommit(Rule):
     """Matches small commits (i.e., they modify a small number of contiguous lines of code)."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if candidate.hunk_count < 10:
+        if candidate.hunk_count < 10:  # 10
             self.message = f"This commit modifies only {candidate.hunk_count} contiguous lines of code"
             return True
         return False
@@ -309,8 +309,8 @@ class CommitMentionedInReference(Rule):
 RULES = [
     CveIdInMessage("CVE_ID_IN_MESSAGE", 10),
     CommitMentionedInAdv("COMMIT_IN_ADVISORY", 10),
-    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 9),
-    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 9),
+    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 10),
+    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 10),
     CommitMentionedInReference("COMMIT_IN_REFERENCE", 9),
     CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 9),
     ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 9),
