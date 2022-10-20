@@ -1,4 +1,5 @@
 import logging
+import os
 from dateutil.parser import isoparse
 from typing import List, Optional, Set, Tuple
 from urllib.parse import urlparse
@@ -6,7 +7,7 @@ from urllib.parse import urlparse
 import requests
 from pydantic import BaseModel, Field
 
-from log.logger import logger
+from log.logger import logger, pretty_log, get_level
 from util.collection import union_of
 from util.http import fetch_url
 
@@ -46,6 +47,7 @@ ALLOWED_SITES = [
 
 LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
+NVD_API_KEY = os.getenv("NVD_API_KEY", "")
 
 
 class AdvisoryRecord(BaseModel):
@@ -66,7 +68,7 @@ class AdvisoryRecord(BaseModel):
     versions: List[str] = Field(default_factory=list)
     from_nvd: bool = False
     nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
-    paths: Set[str] = Field(default_factory=set)
+    files: Set[str] = Field(default_factory=set)
     keywords: Set[str] = Field(default_factory=set)
 
     # def __init__(self, vulnerability_id, repository_url, from_nvd, nvd_rest_endpoint):
@@ -92,7 +94,7 @@ class AdvisoryRecord(BaseModel):
             self.affected_products, extract_products(self.description)
         )
         # TODO: use a set where possible to speed up the rule application time
-        self.paths.update(
+        self.files.update(
             extract_affected_filenames(self.description)
             # TODO: this could be done on the words extracted from the description
         )
@@ -125,8 +127,8 @@ class AdvisoryRecord(BaseModel):
         returns: description, published_timestamp, last_modified timestamp, list of references
         """
 
-    def get_advisory(self):
-        data = get_from_local(self.cve_id) or get_from_nvd(self.cve_id)
+        # if not self.get_from_local_db(vuln_id, nvd_rest_endpoint):
+        self.get_from_nvd(vuln_id)
 
     # TODO: refactor this stuff
     def get_from_local_db(
@@ -152,11 +154,11 @@ class AdvisoryRecord(BaseModel):
                 r["url"] for r in data["cve"]["references"]["reference_data"]
             ]
             return True
-        except Exception as e:
+        except Exception:
             # Might fail either or json parsing error or for connection error
             logger.error(
                 f"Could not retrieve {vuln_id} from the local database",
-                exc_info=logger.level < logging.INFO,
+                exc_info=get_level() < logging.INFO,
             )
             return False
 
@@ -165,7 +167,9 @@ class AdvisoryRecord(BaseModel):
         Get an advisory from the NVD dtabase
         """
         try:
-            response = requests.get(nvd_rest_endpoint + vuln_id)
+            headers = {"apiKey": NVD_API_KEY}
+            response = requests.get(nvd_rest_endpoint + vuln_id, headers=headers)
+
             if response.status_code != 200:
                 return False
             data = response.json()["vulnerabilities"][0]["cve"]
@@ -180,7 +184,7 @@ class AdvisoryRecord(BaseModel):
             # Might fail either or json parsing error or for connection error
             logger.error(
                 f"Could not retrieve {vuln_id} from the NVD api",
-                exc_info=logger.level < logging.INFO,
+                exc_info=get_level() < logging.INFO,
             )
             raise Exception(
                 f"Could not retrieve {vuln_id} from the NVD api {e}",
@@ -205,7 +209,7 @@ def build_advisory_record(
         description=description,
     )
 
-    logger.pretty_log(advisory_record)
+    pretty_log(logger, advisory_record)
     advisory_record.analyze(
         fetch_references=fetch_references,
     )
@@ -220,10 +224,10 @@ def build_advisory_record(
         advisory_record.keywords.update(advisory_keywords)
 
     if len(modified_files) > 0:
-        advisory_record.paths.update(modified_files)
+        advisory_record.files.update(modified_files)
 
     logger.debug(f"{advisory_record.keywords=}")
-    logger.debug(f"{advisory_record.paths=}")
+    logger.debug(f"{advisory_record.files=}")
 
     return advisory_record
 
