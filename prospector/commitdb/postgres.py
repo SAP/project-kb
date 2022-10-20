@@ -72,7 +72,6 @@ class PostgresCommitDB:
 
         try:
             cur = self.connection.cursor()
-
             statement = build_statement(commit)
             args = get_args(commit)
             cur.execute(statement, args)
@@ -80,6 +79,7 @@ class PostgresCommitDB:
             cur.close()
         except Exception:
             logger.error("Could not save commit vector to database", exc_info=True)
+            cur.close()
             # raise Exception("Could not save commit vector to database")
 
     def reset(self):
