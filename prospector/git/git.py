@@ -19,14 +19,42 @@ from git.raw_commit import RawCommit
 from log.logger import logger
 
 from stats.execution import execution_statistics, measure_execution_time
+from util.lsh import build_lsh_index
 
-# If we don't parse .env file, we can't use the environment variables
-# load_dotenv()
 
 GIT_CACHE = os.getenv("GIT_CACHE")
 
 FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
-
+RELEVANT_EXTENSIONS = [
+    "java",
+    "c",
+    "cpp",
+    "h",
+    "py",
+    "js",
+    "xml",
+    "go",
+    "rb",
+    "php",
+    "sh",
+    "scale",
+    "lua",
+    "m",
+    "pl",
+    "ts",
+    "swift",
+    "sql",
+    "groovy",
+    "erl",
+    "swf",
+    "vue",
+    "bat",
+    "s",
+    "ejs",
+    "yaml",
+    "yml",
+    "jar",
+]
 
 if not os.path.isdir(GIT_CACHE):
     raise ValueError(
@@ -67,16 +95,12 @@ def path_from_url(url: str, base_path):
     )
 
 
-def create_exec(workdir: str):
-    return Exec(workdir=workdir)
-
-
 class Git:
     def __init__(
         self,
-        url,
+        url: str,
         cache_path=os.path.abspath("/tmp/gitcache"),
-        shallow=False,
+        shallow: bool = False,
     ):
         self.repository_type = "GIT"
         self.url = url
@@ -84,11 +108,9 @@ class Git:
         self.fingerprints = dict()
         self.exec_timeout = None
         self.shallow_clone = shallow
-        self.exec = create_exec(self.path)
+        self.exec = Exec(workdir=self.path)
         self.storage = None
-
-    def set_exec(self, exec_obj=None):
-        return Exec(workdir=self.path)
+        self.lsh_index = build_lsh_index()
 
     def execute(self, cmd: str, silent: bool = False):
         return self.exec.run(cmd, silent=silent, cache=True)
@@ -159,28 +181,24 @@ class Git:
         Clones the specified repository checking out the default branch in a subdir of output_folder.
         Shallow=true speeds up considerably the operation, but gets no history.
         """
-        if shallow:
+        if shallow is not None:
             self.shallow_clone = shallow
 
         if not self.url:
-            logger.error("Invalid url specified.")
-            sys.exit(-1)
+            raise Exception("Invalid or missing url.")
 
         # TODO rearrange order of checks
         if os.path.isdir(os.path.join(self.path, ".git")):
             if skip_existing:
                 logger.debug(f"Skipping fetch of {self.url} in {self.path}")
             else:
-                logger.debug(f"\nFound repo {self.url} in {self.path}.\nFetching....")
+                logger.debug(f"Found repo {self.url} in {self.path}.\nFetching....")
 
                 self.execute("git fetch --progress --all --tags")
-                # , cwd=self.path, timeout=self.exec_timeout)
             return
 
         if os.path.exists(self.path):
-            logger.debug(
-                "Folder {} exists but it contains no git repository.".format(self.path)
-            )
+            logger.debug(f"Folder {self.path} is not a git repository.")
             return
 
         os.makedirs(self.path)
@@ -195,28 +213,23 @@ class Git:
                 f"git remote add origin {self.url}",
                 silent=True,
             )
-            #  , cwd=self.path)
-        except Exception as ex:
+        except Exception as e:
             logger.error(f"Could not update remote in {self.path}", exc_info=True)
             shutil.rmtree(self.path)
-            raise ex
+            raise e
 
         try:
             if self.shallow_clone:
-                self.execute("git fetch --depth 1")  # , cwd=self.path)
-                # sh.git.fetch('--depth', '1', 'origin', _cwd=self.path)
+                self.execute("git fetch --depth 1")
             else:
-                # sh.git.fetch('--all', '--tags', _cwd=self.path)
                 self.execute("git fetch --progress --all --tags")
-                # , cwd=self.path)
-                # self.exec.run_l(['git', 'fetch', '--tags'], cwd=self.path)
-        except Exception as ex:
+        except Exception as e:
             logger.error(
-                f"Could not fetch {self.url} (shallow={str(self.shallow_clone)}) in {self.path}",
+                f"Could not fetch {self.url} (shallow={self.shallow_clone}) in {self.path}",
                 exc_info=True,
             )
             shutil.rmtree(self.path)
-            raise ex
+            raise e
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def create_commits(
@@ -227,11 +240,20 @@ class Git:
         until=None,
         find_in_code="",
         find_in_msg="",
-    ):
-        cmd = "git rev-list"
-
+    ) -> Dict[str, RawCommit]:
+        # id:timestamp:parent
+        cmd = "git log --name-only --full-index --format=commit:%H:%at:%P"
         if ancestors_of is None:
             cmd += " --all"
+
+        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
+        if ancestors_of:
+            cmd += f" {ancestors_of}"
+            until = self.extract_tag_timestamp(ancestors_of)
+
+        if exclude_ancestors_of:
+            cmd += f" ^{exclude_ancestors_of}"
+            since = self.extract_tag_timestamp(exclude_ancestors_of)
 
         if since:
             cmd += f" --since={since}"
@@ -239,10 +261,37 @@ class Git:
         if until:
             cmd += f" --until={until}"
 
-            params["page"] += 1
-            if params["page"] > 10:
-                break
-            r = requests.get(query_url, params=params, headers=headers)
+        for ext in FILTERING_EXTENSIONS:
+            cmd += f" *.{ext}"
+
+        try:
+            logger.debug(cmd)
+            out = self.execute(cmd)
+
+            return self.parse_git_output(out)
+
+        except Exception:
+            logger.error("Git command failed, cannot get commits", exc_info=True)
+            return dict()
+
+    def parse_git_output(self, raw: List[str]):
+        commits = dict()
+        for i, commit in enumerate(raw):
+            changed_files = list()
+            if commit.startswith("commit:"):
+                for file in raw[i + 1 :]:
+                    if file.startswith("commit:"):
+                        if not any("test" not in file for file in changed_files):
+                            break
+
+                        _, id, ts, parent = commit.split(":")
+                        commits[id] = RawCommit(
+                            self, id, int(ts), parent, changed_files
+                        )
+                        break
+
+                    changed_files.append(file)
+        return commits
 
     # @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commits(
@@ -261,13 +310,21 @@ class Git:
 
         # by filtering the dates of the tags we can reduce the commit range safely (in theory)
         if ancestors_of:
-            cmd += " " + str(ancestors_of)
+            cmd += f" {ancestors_of}"
+            until = self.extract_tag_timestamp(ancestors_of)
 
         if exclude_ancestors_of:
             cmd += f" ^{exclude_ancestors_of}"
+            since = self.extract_tag_timestamp(exclude_ancestors_of)
 
-        for extension in FILTERING_EXTENSIONS:
-            cmd += f" *.{extension}"
+        if since:
+            cmd += f" --since={since}"
+
+        if until:
+            cmd += f" --until={until}"
+
+        for ext in FILTERING_EXTENSIONS:
+            cmd += f" *.{ext}"
 
         # What is this??
         if find_in_code:
@@ -279,15 +336,12 @@ class Git:
         try:
             logger.debug(cmd)
             out = self.execute(cmd)
-        #     --cherry-mark
-        # Like --cherry-pick (see below) but mark equivalent commits with =
-        # rather than omitting them, and inequivalent ones with +.
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             out = []
 
-        return [l.strip() for l in out]
+        return out
 
     def get_commits_between_two_commit(self, commit_from: str, commit_to: str):
         """
@@ -307,7 +361,7 @@ class Git:
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, id):
-        return RawCommit(self.url, id, self.exec)
+        return RawCommit(self, id)
 
     def get_random_commits(self, count):
         """
@@ -348,8 +402,7 @@ class Git:
 
     def get_tags(self):
         try:
-            tags = self.execute("git tag")
-            return tags
+            return self.execute("git tag")
         except subprocess.CalledProcessError as exc:
             logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []
@@ -358,7 +411,6 @@ class Git:
         cmd = f"git rev-list -1 {tag}"
         commit_id = ""
         try:
-            # TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
             commit_id = self.execute(cmd)
             if len(commit_id) > 0:
                 return commit_id[0].strip()
@@ -378,12 +430,6 @@ class Git:
         except subprocess.CalledProcessError as e:
             logger.error("Git command failed." + str(e.output), exc_info=True)
             return []
-
-    def get_issue_or_pr_text_from_id(self, id):
-        """
-        Return the text of the issue or PR with the given id
-        """
-        cmd = f"git fetch origin pull/{id}/head"
 
 
 # Donald Knuth's "reservoir sampling"
