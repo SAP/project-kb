@@ -18,7 +18,7 @@ if path_root not in sys.path:
 load_dotenv()
 
 # Load logger before doing anything else
-from log.logger import logger  # noqa: E402
+from log.logger import logger, get_level, pretty_log  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.console_report import report_on_console  # noqa: E402
@@ -31,7 +31,7 @@ from client.cli.prospector_client import (  # noqa: E402
     prospector,  # noqa: E402
 )
 from git.git import GIT_CACHE  # noqa: E402
-from stats.execution import execution_statistics  # noqa: E402
+from stats.execution import execution_statistics, set_new  # noqa: E402
 from util.http import ping_backend  # noqa: E402
 
 
@@ -221,7 +221,7 @@ def main(argv):  # noqa: C901
         if args.log_level:
             logger.setLevel(args.log_level)
 
-        logger.info(f"global log level is set to {logger.get_level(string=True)}")
+        logger.info(f"global log level is set to {get_level(string=True)}")
 
         if args.vulnerability_id is None:
             logger.error("No vulnerability id was specified. Cannot proceed.")
@@ -247,7 +247,7 @@ def main(argv):  # noqa: C901
         use_backend = args.use_backend
 
         if args.ping:
-            return ping_backend(backend, logger.get_level() < logging.INFO)
+            return ping_backend(backend, get_level() < logging.INFO)
 
         vulnerability_id = args.vulnerability_id
         repository_url = args.repository
@@ -290,7 +290,7 @@ def main(argv):  # noqa: C901
         git_cache = configuration.get("git_cache", git_cache)
 
         logger.debug("Using the following configuration:")
-        logger.pretty_log(configuration)
+        pretty_log(logger, configuration)
 
         logger.debug("Vulnerability ID: " + vulnerability_id)
         logger.debug("time-limit before: " + str(time_limit_before))
@@ -326,9 +326,7 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Generating report") as console:
         report_file = None
         if report == "console":
-            report_on_console(
-                results, advisory_record, logger.get_level() < logging.INFO
-            )
+            report_on_console(results, advisory_record, get_level() < logging.INFO)
         elif report == "json":
             report_file = as_json(
                 results, advisory_record, args.report_filename + ".json"
@@ -343,9 +341,7 @@ def main(argv):  # noqa: C901
             console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
             )
-            report_on_console(
-                results, advisory_record, logger.get_level() < logging.INFO
-            )
+            report_on_console(results, advisory_record, get_level() < logging.INFO)
 
         logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
