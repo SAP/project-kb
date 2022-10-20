@@ -4,16 +4,16 @@ from .nlp import (
     extract_cve_references,
     extract_jira_references,
     extract_affected_filenames,
-    extract_similar_words,
+    find_similar_words,
     extract_special_terms,
 )
 
 
 def test_extract_similar_words():
-    commit_msg = "This is a commit message"
-    adv_text = "This is an advisory text"
-    similarities = extract_similar_words(adv_text, commit_msg)
-    assert similarities.sort() == ["This"].sort()
+    commit_msg = "Is this an advisory message?"
+    adv_text = "This is an advisory description message"
+    similarities = find_similar_words(set(adv_text.casefold().split()), commit_msg)
+    assert similarities.pop() == "message"
 
 
 @pytest.mark.skip(reason="Outdated")

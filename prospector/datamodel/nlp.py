@@ -29,17 +29,22 @@ def extract_special_terms(description: str) -> Set[str]:
     return tuple(result)
 
 
-def extract_words_from_text(text: str) -> List[str]:
+def extract_words_from_text(text: str) -> Set[str]:
     """Use spacy to extract "relevant words" from text"""
-    return [
-        token.text
-        for token in nlp(text)
-        if token.pos_ in ("NOUN", "VERB") and len(token.text) > 3
-    ]
+    # Lemmatization
+    return set(
+        [
+            token.lemma_.casefold()
+            for token in nlp(text)
+            if token.pos_ in ("NOUN", "VERB", "PROPN") and len(token.lemma_) > 3
+        ]
+    )
 
 
-def extract_similar_words(adv_words: Set[str], commit_msg: str) -> List[str]:
+def find_similar_words(adv_words: Set[str], commit_msg: str) -> Set[str]:
     """Extract nouns from commit message that appears in the advisory text"""
+    commit_words = extract_words_from_text(commit_msg)
+    return commit_words.intersection(adv_words)
     return [word for word in extract_words_from_text(commit_msg) if word in adv_words]
 
 
@@ -78,10 +83,6 @@ def extract_affected_filenames(
 # Now we just try a split by / and then we pass everything to the other checker, it might be done better
 def extract_filename_from_path(text: str) -> str:
     return text.split("/")[-1]
-    # Pattern //path//to//file or \\path\\to\\file, extract file
-    # res = re.search(r"^(?:(?:\/{,2}|\\{,2})([\w\-\.]+))+$", text)
-    # if res:
-    #     return res.group(1)
 
 
 def check_file_class_method_names(text: str, relevant_extensions: List[str]) -> str:
@@ -113,15 +114,19 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     for result in re.finditer(r"(?:#|gh-)(\d+)", text):
         id = result.group(1)
         url = f"{repository}/issues/{id}"
-        refs[id] = extract_from_webpage(
+        _text = extract_from_webpage(
             url=url,
             attr_name="class",
             attr_value=["comment-body", "markdown-title"],  # js-issue-title
         )
+        refs[id] = " ".join(
+            set(re.findall(r"\w{3,}", _text))
+        )  # list(extract_words_from_text(text))
 
     return refs
 
 
+# TODO: clean jira page content
 def extract_jira_references(text: str) -> Dict[str, str]:
     """
     Extract identifiers that point to Jira tickets, then extract their content
@@ -129,11 +134,12 @@ def extract_jira_references(text: str) -> Dict[str, str]:
     refs = dict()
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
-        refs[id] = extract_from_webpage(
+        _text = extract_from_webpage(
             url=JIRA_ISSUE_URL + id,
             attr_name="id",
-            attr_value=["details-module", "descriptionmodule"],
+            attr_value=["descriptionmodule"],  # "details-module",
         )
+        refs[id] = " ".join(set(re.findall(r"\w{3,}", _text)))
 
     return refs
 
