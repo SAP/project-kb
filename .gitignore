@@ -46,7 +46,8 @@ prospector/client/cli/cov_html/*
 prospector/client/web/node-app/node_modules
 prospector/.coverage.*
 prospector/.coverage
-**/cov_html/*
+**/cov_html
+prospector/cov_html
 .coverage
 prospector/prospector.code-workspace
 prospector/requests-cache.sqlite
