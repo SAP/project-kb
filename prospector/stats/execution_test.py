@@ -8,7 +8,6 @@ from stats.execution import Counter, ExecutionTimer, measure_execution_time
 
 class TestMeasureTime:
     @staticmethod
-    @pytest.mark.skip(reason="Not implemented yet")
     def test_decorator():
         stats = StatisticCollection()
 
@@ -81,7 +80,6 @@ class TestMeasureTime:
             assert i / 10 < stats["execution time"][i] < i / 10 + 0.1
 
     @staticmethod
-    @pytest.mark.skip(reason="Not implemented yet")
     def test_with():
         stats = StatisticCollection()
         for i in range(10):
