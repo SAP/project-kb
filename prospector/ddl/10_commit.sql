@@ -8,7 +8,7 @@ CREATE TABLE public.commits (
 	repository varchar NOT NULL,
 	timestamp int,
 	-- preprocessed data
-	hunks varchar[] NULL,
+	hunks int,
 	message varchar NULL,
 	diff varchar[] NULL,
 	changed_files varchar[] NULL,
@@ -17,7 +17,8 @@ CREATE TABLE public.commits (
 	ghissue_refs jsonb NULL,
 	cve_refs varchar[] NULL,
 	tags varchar[] NULL,
-	minhash varchar NULL, 
+	minhash varchar NULL,
+	twins varchar[] NULL,
 	CONSTRAINT commits_pkey PRIMARY KEY (commit_id, repository)
 );
 CREATE INDEX IF NOT EXISTS commit_index ON public.commits USING btree (commit_id);
