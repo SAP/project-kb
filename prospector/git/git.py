@@ -18,10 +18,17 @@ from git.raw_commit import RawCommit
 from log.logger import logger
 
 from stats.execution import execution_statistics, measure_execution_time
-from util.lsh import build_lsh_index
+from util.lsh import (
+    build_lsh_index,
+    compute_minhash,
+    encode_minhash,
+    get_encoded_minhash,
+)
 
 
 GIT_CACHE = os.getenv("GIT_CACHE")
+
+GIT_SEPARATOR = "-@-@-@-@-"
 
 FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
 RELEVANT_EXTENSIONS = [
@@ -109,7 +116,7 @@ class Git:
         self.shallow_clone = shallow
         self.exec = Exec(workdir=self.path)
         self.storage = None
-        self.lsh_index = build_lsh_index()
+        # self.lsh_index = build_lsh_index()
 
     def execute(self, cmd: str, silent: bool = False):
         return self.exec.run(cmd, silent=silent, cache=True)
@@ -239,19 +246,22 @@ class Git:
         until=None,
         find_in_code="",
         find_in_msg="",
+        find_twins=True,
     ) -> Dict[str, RawCommit]:
-        # id:timestamp:parent
-        cmd = "git log --name-only --full-index --format=commit:%H:%at:%P"
-        if ancestors_of is None:
+
+        cmd = f"git log --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+        if ancestors_of is None or find_twins:
             cmd += " --all"
 
         # by filtering the dates of the tags we can reduce the commit range safely (in theory)
         if ancestors_of:
-            cmd += f" {ancestors_of}"
+            if not find_twins:
+                cmd += f" {ancestors_of}"
             until = self.extract_tag_timestamp(ancestors_of)
-
+        # TODO: if find twins is true, we dont need the ancestors, only the timestamps
         if exclude_ancestors_of:
-            cmd += f" ^{exclude_ancestors_of}"
+            if not find_twins:
+                cmd += f" ^{exclude_ancestors_of}"
             since = self.extract_tag_timestamp(exclude_ancestors_of)
 
         if since:
@@ -266,30 +276,57 @@ class Git:
         try:
             logger.debug(cmd)
             out = self.execute(cmd)
+            # if --all is used, we are traversing all branches and therefore we can check for twins
 
-            return self.parse_git_output(out)
+            # TODO: problem -> twins can be merge commits, same commits for different branches, not only security related fixes
+
+            return self.parse_git_output(out, find_twins)
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             return dict()
 
-    def parse_git_output(self, raw: List[str]):
-        commits = dict()
-        for i, commit in enumerate(raw):
-            changed_files = list()
-            if commit.startswith("commit:"):
-                for file in raw[i + 1 :]:
-                    if file.startswith("commit:"):
-                        if not any("test" not in file for file in changed_files):
-                            break
+    # def populate_lsh_index(self, msg: str, id: str):
+    #     mh = compute_minhash(msg[:64])
+    #     possible_twins = self.lsh_index.query(mh)
 
-                        _, id, ts, parent = commit.split(":")
-                        commits[id] = RawCommit(
-                            self, id, int(ts), parent, changed_files
-                        )
-                        break
+    #     self.lsh_index.insert(id, mh)
+    #     return encode_minhash(mh), possible_twins
 
-                    changed_files.append(file)
+    def parse_git_output(self, raw: List[str], find_twins: bool = False):
+
+        commits: Dict[str, RawCommit] = dict()
+        commit = None
+        sector = 0
+        for line in raw:
+            if line == GIT_SEPARATOR:
+                if sector == 3:
+                    sector = 1
+                    if len(commit.changed_files) > 0:
+                        commit.msg = commit.msg.strip()
+                        if find_twins:
+                            # minhash, twins = self.populate_lsh_index(
+                            #     commit.msg, commit.id
+                            # )
+                            commit.minhash = get_encoded_minhash(commit.msg[:64])
+                            # commit.twins = twins
+                            # for twin in twins:
+                            #     commits[twin].twins.append(commit.id)
+
+                        commits[commit.id] = commit
+
+                else:
+                    sector += 1
+            else:
+                if sector == 1:
+                    id, timestamp, parent = line.split(":")
+                    parent = parent.split(" ")[0]
+                    commit = RawCommit(self, id, int(timestamp), parent)
+                elif sector == 2:
+                    commit.msg += line + " "
+                elif sector == 3 and "test" not in line:
+                    commit.add_changed_file(line)
+
         return commits
 
     # @measure_execution_time(execution_statistics.sub_collection("core"))
@@ -442,3 +479,12 @@ def reservoir_sampling(input_list, N):
             replace = random.randint(0, len(sample) - 1)
             sample[replace] = line
     return sample
+
+
+def make_raw_commit(
+    repository: Git,
+    id: str,
+    timestamp: int,
+    parent_id: str = "",
+) -> RawCommit:
+    return RawCommit(repository, id, parent_id)
