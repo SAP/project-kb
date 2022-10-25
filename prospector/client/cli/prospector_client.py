@@ -1,21 +1,20 @@
+from csv import list_dialects
 import logging
 import sys
-from tkinter.messagebox import NO
-from typing import List, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 import requests
 from tqdm import tqdm
-from SetSimilaritySearch import all_pairs
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
-from datamodel.commit import Commit, apply_ranking, make_from_dict, make_from_raw_commit
+from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
+from git.raw_commit import RawCommit
 from git.version_to_tag import get_tag_for_version
 from log.logger import logger, pretty_log, get_level
 from rules import apply_rules
 
-# from util.profile import profile
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -28,7 +27,7 @@ SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
 TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 
-MAX_CANDIDATES = 1000
+MAX_CANDIDATES = 1500
 DEFAULT_BACKEND = "http://localhost:8000"
 
 
@@ -89,18 +88,13 @@ def prospector(  # noqa: C901
             version_interval,
             time_limit_before,
             time_limit_after,
-            # filter_extensions[0],
         )
 
         logger.debug(f"Collected {len(candidates)} candidates")
 
         if len(candidates) > limit_candidates:
-            logger.error(
-                "Number of candidates exceeds %d, aborting." % limit_candidates
-            )
-            logger.error(
-                "Possible cause: the backend might be unreachable or otherwise unable to provide details about the advisory."
-            )
+            logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
+
             writer.print(
                 f"Found {len(candidates)} candidates, too many to proceed.",
                 status=MessageStatus.ERROR,
@@ -108,13 +102,8 @@ def prospector(  # noqa: C901
             writer.print("Please try running the tool again.")
             sys.exit(-1)
 
-        # writer.print(f"Found {len(candidates)} candidates")
-
-    # -------------------------------------------------------------------------
-    # commit preprocessing
-    # -------------------------------------------------------------------------
     with ExecutionTimer(
-        core_statistics.sub_collection(name="commit preprocessing")
+        core_statistics.sub_collection("commit preprocessing")
     ) as timer:
         with ConsoleWriter("Preprocessing commits") as writer:
             try:
@@ -122,150 +111,129 @@ def prospector(  # noqa: C901
                     missing, preprocessed_commits = retrieve_preprocessed_commits(
                         repository_url,
                         backend_address,
-                        candidates.keys(),
+                        candidates,
                     )
-                    missing = [candidates[c] for c in candidates if c in missing]
             except requests.exceptions.ConnectionError:
-                print("Backend not reachable", end="")
                 logger.error(
                     "Backend not reachable",
                     exc_info=get_level() < logging.WARNING,
                 )
                 if use_backend == "always":
-                    print(": aborting")
+                    print("Backend not reachable: aborting")
                     sys.exit(0)
-                print(": continuing without backend")
-            finally:
-                # If missing is not initialized and we are here, we initialize it
-                if "missing" not in locals():
-                    missing = candidates.values()
-                    preprocessed_commits: List[Commit] = list()
+                print("Backend not reachable: continuing")
+
+            if "missing" not in locals():
+                missing = list(candidates.values())
+                preprocessed_commits: List[Commit] = list()
 
             pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
             with Counter(
-                timer.collection.sub_collection(name="commit preprocessing")
+                timer.collection.sub_collection("commit preprocessing")
             ) as counter:
                 counter.initialize("preprocessed commits", unit="commit")
                 # Now pbar has Raw commits inside so we can skip the "get_commit" call
-                for commit_id in pbar:
+                for raw_commit in pbar:
                     counter.increment("preprocessed commits")
-                    commit = make_from_raw_commit(
-                        commit_id
-                    )  # repository.get_commit(commit_id))
-                    if commit is not None:
-                        preprocessed_commits.append(commit)
+                    # TODO: here we need to check twins with the commit not already in the backend and update everything
+                    preprocessed_commits.append(make_from_raw_commit(raw_commit))
 
             # Cleanup candidates to save memory
             del candidates
-
-            # apply rules
-            # TODO: look for twins
-            # find_similar_commits(preprocessed_commits)
 
             pretty_log(logger, advisory_record)
             logger.debug(
                 f"preprocessed {len(preprocessed_commits)} commits are only composed of test files"
             )
-            payload = [c.as_dict() for c in preprocessed_commits]
+            payload = [c.to_dict() for c in preprocessed_commits]
 
-    # -------------------------------------------------------------------------
-    # save preprocessed commits to backend
-    # -------------------------------------------------------------------------
-
-    if (
-        len(payload) > 0 and use_backend != "never"
-    ):  # and len(missing) > 0:  # len(missing) is useless
-        with ExecutionTimer(
-            core_statistics.sub_collection(name="save preprocessed commits to backend")
-        ):
-            save_preprocessed_commits(backend_address, payload)
+    if len(payload) > 0 and use_backend != "never":
+        save_preprocessed_commits(backend_address, payload)
     else:
-        logger.warning("No preprocessed commits to send to backend.")
+        logger.warning("Preprocessed commits are not being sent to backend")
 
-    # -------------------------------------------------------------------------
     # filter commits
-    # -------------------------------------------------------------------------
+    preprocessed_commits = filter(preprocessed_commits)
+
+    # apply rules and rank candidates
+    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
+
+    return ranked_candidates, advisory_record
+
+
+def filter(commits: List[Commit]) -> List[Commit]:
     with ConsoleWriter("Candidate filtering") as console:
-        candidate_count = len(preprocessed_commits)
-        console.print(f"Filtering {candidate_count} candidates")
-
-        preprocessed_commits, rejected = filter_commits(preprocessed_commits)
-
+        commits, rejected = filter_commits(commits)
         if rejected > 0:
             console.print(f"Dropped {rejected} candidates")
+        return commits
 
-    # -------------------------------------------------------------------------
-    # analyze candidates by applying rules and rank them
-    # -------------------------------------------------------------------------
-    with ExecutionTimer(
-        core_statistics.sub_collection(name="analyze candidates")
-    ) as timer:
+
+def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]):
+    with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Applying rules"):
-            annotated_candidates = apply_rules(
-                preprocessed_commits, advisory_record, rules=rules
+            ranked_commits = apply_ranking(apply_rules(commits, advisory, rules=rules))
+
+    return ranked_commits
+
+
+def retrieve_preprocessed_commits(
+    repository_url: str, backend_address: str, candidates: Dict[str, RawCommit]
+) -> Tuple[List[RawCommit], List[Commit]]:
+    retrieved_commits: List[dict] = list()
+    missing: List[RawCommit] = list()
+
+    responses: List[requests.Response] = []
+    for i in range(0, len(candidates), 500):
+        args = list(candidates.keys())[i : i + 500]
+        responses.append(
+            requests.get(
+                f"{backend_address}/commits/{repository_url}?commit_id={','.join(args)}"
             )
+        )
+        if responses[-1].status_code != 200:
+            logger.info("Preprocessed commits not found in the backend")
+            return list(candidates.values()), list()
 
-            annotated_candidates = apply_ranking(annotated_candidates)
-
-    return annotated_candidates, advisory_record
-
-
-def retrieve_preprocessed_commits(repository_url, backend_address, candidates):
-    retrieved_commits = dict()
-    missing = set()
-
-    # This will raise exception if backend is not reachable
-
-    r = requests.get(
-        f"{backend_address}/commits/{repository_url}?commit_id={','.join(candidates)}"
-    )
-
-    logger.debug(f"The backend returned status {r.status_code}")
-    if r.status_code != 200:
-        logger.info("Preprocessed commits not found in the backend")
-        missing = set(candidates)
-    else:
-        retrieved_commits = r.json()
-        logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
-        if len(retrieved_commits) != len(candidates):
-            missing = set(candidates).difference(
+    retrieved_commits = [r for response in responses for r in response.json()]
+    logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
+    if len(retrieved_commits) != len(candidates):
+        missing = [
+            candidates[c]
+            for c in set(candidates.keys()).difference(
                 rc["commit_id"] for rc in retrieved_commits
             )
+        ]
 
-            logger.error(f"Missing {len(missing)} commits")
+        logger.error(f"Missing {len(missing)} commits")
 
-    preprocessed_commits: List[Commit] = []
-    for idx, commit in enumerate(retrieved_commits):
-        if len(retrieved_commits) + len(missing) == len(candidates):
-            preprocessed_commits.append(make_from_dict(commit))
-        else:
-            missing.add(candidates[idx])
-    return missing, preprocessed_commits
+    return missing, [Commit.parse_obj(rc) for rc in retrieved_commits]
 
 
 def save_preprocessed_commits(backend_address, payload):
-    with ConsoleWriter("Saving preprocessed commits to backend") as writer:
-        logger.debug("Sending preprocessing commits to backend...")
-        try:
-            r = requests.post(
-                backend_address + "/commits/",
-                json=payload,
-                headers={"Content-type": "application/json"},
-            )
-            logger.debug(
-                "Saving to backend completed (status code: %d)" % r.status_code
-            )
-        except requests.exceptions.ConnectionError:
-            logger.error(
-                "Could not reach backend, is it running?"
-                "The result of commit pre-processing will not be saved."
-                "Continuing anyway.....",
-                exc_info=get_level() < logging.WARNING,
-            )
-            writer.print(
-                "Could not save preprocessed commits to backend",
-                status=MessageStatus.WARNING,
-            )
+    with ExecutionTimer(core_statistics.sub_collection(name="save commits to backend")):
+        with ConsoleWriter("Saving preprocessed commits to backend") as writer:
+            logger.debug("Sending preprocessing commits to backend...")
+            try:
+                r = requests.post(
+                    backend_address + "/commits/",
+                    json=payload,
+                    headers={"Content-type": "application/json"},
+                )
+                logger.debug(
+                    f"Saving to backend completed (status code: {r.status_code})"
+                )
+            except requests.exceptions.ConnectionError:
+                logger.error(
+                    "Could not reach backend, is it running?"
+                    "The result of commit pre-processing will not be saved."
+                    "Continuing anyway.....",
+                    exc_info=get_level() < logging.WARNING,
+                )
+                writer.print(
+                    "Could not save preprocessed commits to backend",
+                    status=MessageStatus.WARNING,
+                )
 
 
 def get_candidates(
@@ -319,14 +287,3 @@ def get_candidates(
         writer.print(f"Found {len(candidates)} candidates")
 
     return candidates
-
-
-def find_similar_commits(commits: List[Commit]) -> None:
-    """Find similar commits in the list of commits.
-
-    :param commits: list of commits
-    """
-    # ids = [c.commit_id for c in commits]
-    # msgs = [c.message[:64].split() for c in commits]
-    # pairs = all_pairs(msgs, similarity_func_name="jaccard", similarity_threshold=0.5)
-    pass
