@@ -295,9 +295,11 @@ class CrossReferencedGhLink(Rule):
 class SmallCommit(Rule):
     """Matches small commits (i.e., they modify a small number of contiguous lines of code)."""
 
-    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if candidate.hunk_count < 10:  # 10
-            self.message = f"This commit modifies only {candidate.hunk_count} contiguous lines of code"
+    def apply(self, candidate: Commit, _: AdvisoryRecord):
+        if candidate.get_hunks() < 10:  # 10
+            self.message = (
+                f"This commit modifies only {candidate.hunks} contiguous lines of code"
+            )
             return True
         return False
 
@@ -316,16 +318,29 @@ class CommitMentionedInReference(Rule):
         return False
 
 
+class CommitHasTwins(Rule):
+    lsh_index = build_lsh_index()
+
+    def apply(self, candidate: Commit, _: AdvisoryRecord) -> bool:
+        if not self.lsh_index.is_empty():
+            candidate.twins = self.lsh_index.query(decode_minhash(candidate.minhash))
+        self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
+        if len(candidate.twins) > 0:
+            self.message = f"This commit has twins: {', '.join(candidate.twins)}"
+            return True
+        return False
+
+
 RULES = [
-    CveIdInMessage("CVE_ID_IN_MESSAGE", 10),
-    CommitMentionedInAdv("COMMIT_IN_ADVISORY", 10),
-    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 10),
-    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 10),
+    CveIdInMessage("CVE_ID_IN_MESSAGE", 20),
+    CommitMentionedInAdv("COMMIT_IN_ADVISORY", 20),
+    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 20),
+    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 20),
     CommitMentionedInReference("COMMIT_IN_REFERENCE", 9),
     CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 9),
     ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 9),
-    AdvKeywordsInDiffs("ADV_KEYWORDS_IN_DIFFS", 8),
-    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 8),
+    AdvKeywordsInDiffs("ADV_KEYWORDS_IN_DIFFS", 5),
+    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 5),
     AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 5),
     SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 5),
     SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 5),
@@ -333,4 +348,5 @@ RULES = [
     ReferencesGhIssue("GITHUB_ISSUE_IN_MESSAGE", 2),
     ReferencesJiraIssue("JIRA_ISSUE_IN_MESSAGE", 2),
     SmallCommit("SMALL_COMMIT", 0),
+    CommitHasTwins("COMMIT_HAS_TWINS", 5),
 ]
