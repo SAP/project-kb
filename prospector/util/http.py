@@ -73,18 +73,19 @@ def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str
 
 
 def get_from_xml(id: str):
-    try:
-        params = {"field": {"description", "summary"}}
+    params = {"field": {"description", "summary"}}
+    response = requests.get(
+        f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
+        params=params,
+    )
+    xml_data = ElementTree.fromstring(response.content)
+    item = xml_data.find("channel/item/")
 
-        response = requests.get(
-            f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
-            params=params,
-        )
-        xml_data = BeautifulSoup(response.text, features="html.parser")
-        item = xml_data.find("item")
-        description = re.sub(r"<\/?p>", "", item.find("description").text)
-        summary = item.find("summary").text
-    except Exception:
-        logger.debug(f"cannot retrieve jira issue content: {id}", exc_info=True)
-        return ""
-    return f"{summary} {description}"
+    if item is not None and len(item) == 3:
+        description = item[0].text
+        key = item[1].text
+        summary = item[2].text
+    else:
+        description, key, summary = "", "", ""
+
+    return description, key, summary
