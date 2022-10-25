@@ -18,14 +18,30 @@ def setupdb():
     return db
 
 
-def test_save_lookup_real(setupdb):
+def test_save_lookup_real(setupdb: PostgresCommitDB):
     repo = Git("https://github.com/slackhq/nebula")
     repo.clone()
-    raw_commit = repo.get_commit("e434ba6523c4d6d22625755f9890039728e6676a")
-    commit = make_from_raw_commit(raw_commit)
-    print(commit.hunks)
-    print([(7, 8), (15, 18), (23, 30), (35, 37), (40, 42)])
-    setupdb.save(commit.as_dict())
+    raw_commit = repo.create_commits()
+    commit = make_from_raw_commit(list(raw_commit.values())[0])
+    commit_2 = make_from_raw_commit(list(raw_commit.values())[1])
+
+    setupdb.save(commit.to_dict())
+    setupdb.save(commit_2.to_dict())
+    commits = setupdb.lookup(
+        "https://github.com/slackhq/nebula",
+        "edc283d27a54193d74168a72f054fbf5b5bf21c6,017981a65386d426d8926a5b55d302f3b7c2fb41",
+    )
+
+    print(commits)
+    raise Exception("test")
+
+
+def test_lookup(setupdb: PostgresCommitDB):
+    commit = setupdb.lookup(
+        "https://github.com/slackhq/nebula", "edc283d27a54193d74168a72f054fbf5b5bf21c6"
+    )
+    print(commit[0])
+    raise Exception("test")
 
 
 def test_save_lookup(setupdb):
