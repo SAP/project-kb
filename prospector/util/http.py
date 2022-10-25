@@ -1,5 +1,6 @@
 import re
 from typing import List, Union
+from xml.etree import ElementTree
 import requests
 import requests_cache
 from bs4 import BeautifulSoup
@@ -69,3 +70,22 @@ def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str
             for block in content.find_all(attrs={attr_name: attr_value})
         ]
     ).strip()
+
+
+def get_from_xml(id: str):
+    params = {"field": {"description", "summary"}}
+    response = requests.get(
+        f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
+        params=params,
+    )
+    xml_data = ElementTree.fromstring(response.content)
+    item = xml_data.find("channel/item/")
+
+    if item is not None and len(item) == 3:
+        description = item[0].text
+        key = item[1].text
+        summary = item[2].text
+    else:
+        description, key, summary = "", "", ""
+
+    return description, key, summary
