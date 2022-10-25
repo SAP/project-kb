@@ -37,7 +37,8 @@ class Commit(BaseModel):
     tags: List[str] = Field(default_factory=list)
     relevance: Optional[int] = 0
     matched_rules: List[Dict[str, Union[str, int]]] = Field(default_factory=list)
-    minhash: LeanMinHash = None
+    minhash: Optional[str] = ""
+    twins: List[str] = Field(default_factory=list)
 
     def to_dict(self):
         d = dict(self.__dict__)
@@ -74,7 +75,7 @@ class Commit(BaseModel):
     def deserialize_minhash(self, binary_minhash):
         self.minhash = decode_minhash(binary_minhash)
 
-    def as_dict(self, no_hash: bool = False, no_rules: bool = True):
+    def as_dict(self, no_hash: bool = True, no_rules: bool = True):
         out = {
             "commit_id": self.commit_id,
             "repository": self.repository,
@@ -123,7 +124,7 @@ def make_from_dict(dict: Dict[str, Any]) -> Commit:
         ghissue_refs=dict["ghissue_refs"],
         cve_refs=dict["cve_refs"],
         tags=dict["tags"],
-        minhash=decode_minhash(dict["minhash"]),
+        # decode_minhash(dict["minhash"]),
     )
 
 
@@ -141,14 +142,15 @@ def make_from_raw_commit(raw: RawCommit) -> Commit:
     into a preprocessed Commit, that can be saved to the DB
     and later used by the ranking/ML module.
     """
-    # if not raw.validate_changed_files():
-    #     return None
 
     commit = Commit(
         commit_id=raw.get_id(),
         repository=raw.get_repository_url(),
         timestamp=raw.get_timestamp(),
         changed_files=raw.get_changed_files(),
+        message=raw.get_msg(),
+        twins=raw.get_twins(),
+        minhash=raw.get_minhash(),
     )
 
     # This is where all the attributes of the preprocessed commit
@@ -159,27 +161,9 @@ def make_from_raw_commit(raw: RawCommit) -> Commit:
     # should be computed here so that they can be stored in the db.
     # Space-efficiency is important.
 
-    commit.diff = raw.get_diff()
-
-    commit.hunks = raw.get_hunks()
-    commit.message = raw.get_msg()
-    # commit.timestamp = raw.get_timestamp()
-
+    commit.diff, commit.hunks = raw.get_diff()
     commit.tags = raw.get_tags()
-    commit.jira_refs = extract_jira_references(commit.message)
-
+    commit.jira_refs = extract_jira_references(commit.repository, commit.message)
     commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
     commit.cve_refs = extract_cve_references(commit.message)
-    commit.minhash = compute_minhash(
-        commit.message[:64]
-    )  # TODO: Only if is the first time
-
-    commit.diff, commit.hunks = raw.get_diff()
-    if commit.hunks < 200:
-        commit.tags = raw.get_tags()
-        commit.jira_refs = extract_jira_references(commit.repository, commit.message)
-        commit.ghissue_refs = extract_ghissue_references(
-            commit.repository, commit.message
-        )
-        commit.cve_refs = extract_cve_references(commit.message)
     return commit
