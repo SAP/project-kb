@@ -2,7 +2,7 @@ import sys
 import hashlib
 import re
 from datetime import timezone
-from typing import List
+from typing import List, Tuple
 from dateutil.parser import isoparse
 from log.logger import logger
 from stats.execution import execution_statistics, measure_execution_time
@@ -14,16 +14,23 @@ class RawCommit:
     def __init__(
         self,
         repository,
-        commit_id: str,
+        commit_id: str = "",
         timestamp: int = 0,
         parent_id: str = "",
-        changed_files: List[str] = [],
+        msg: str = "",
+        minhash: str = "",
+        changed_files: List[str] = None,
+        twins: List[str] = None,
     ):
         self.repository = repository
         self.id = commit_id
         self.timestamp = timestamp
         self.parent_id = parent_id
-        self.changed_files = changed_files
+        self.msg = msg
+        self.minhash = minhash
+        self.twins = []
+        self.changed_files = []
+
         # TODO: REMOVE, now just for compatibility
         # if self.parent_id == "":
         #     self.extract_parent_id()
@@ -31,16 +38,28 @@ class RawCommit:
         #     self.extract_timestamp()
 
     def __str__(self) -> str:
-        return f"ID:  {self.id}\nURL: {self.get_repository_url()}\nTS:  {self.timestamp}\nPID: {self.parent_id}\nCF:  {self.changed_files}"
+        return f"ID:  {self.id}\nURL: {self.get_repository_url()}\nTS:  {self.timestamp}\nPID: {self.parent_id}\nCF:  {self.changed_files}\nMSG: {self.msg}"
 
     def execute(self, cmd):
         return self.repository.execute(cmd)
 
-    def get_repository_url(self):
+    def get_repository_url(self) -> str:
         return self.repository.url
 
     def get_id(self) -> str:
         return self.id
+
+    def get_minhash(self) -> str:
+        return self.minhash
+
+    def set_changed_files(self, changed_files: List[str]):
+        self.changed_files = changed_files
+
+    def add_changed_file(self, changed_file: str):
+        self.changed_files.append(changed_file)
+
+    def get_twins(self):
+        return self.twins
 
     # def extract_parent_id(self):
     #     try:
@@ -64,6 +83,9 @@ class RawCommit:
         return self.parent_id
 
     def get_msg(self):
+        return self.msg.strip()
+
+    def get_msg_(self):
         try:
             cmd = f"git log --format=%B -1 {self.id}"
             msg = self.execute(cmd)
@@ -77,20 +99,36 @@ class RawCommit:
             )
             return ""
 
-    def get_diff(self):
+    def get_hunks_count(self, diffs: List[str]):
+        hunks_count = 0
+        flag = False
+        for line in diffs:
+            if line[:3] in ("+++", "---"):
+                continue
+            if line[:1] in "-+" and not flag:
+                hunks_count += 1
+                flag = True
+            elif line[:1] in "-+" and flag:
+                continue
+
+            if line[:1] not in "-+":
+                flag = False
+        return hunks_count
+
+    def get_diff(self) -> Tuple[List[str], int]:
         if self.parent_id == "":
-            return ""
+            return "", 0
         try:
             cmd = f"git diff --unified=1 {self.id}^!"
-
-            return self.execute(cmd)
+            diffs = self.execute(cmd)
+            return diffs, self.get_hunks_count(diffs)
 
         except Exception:
             logger.error(
                 f"Failed to obtain patch for commit: {self.id}",
                 exc_info=True,
             )
-            return ""
+            return "", 0
 
     def extract_timestamp(self, format_date=False):
         try:
@@ -142,51 +180,8 @@ class RawCommit:
         """If the changed files are only test classes, return False"""
         return any("test" not in file for file in self.changed_files)
 
-    # def get_changed_paths(self, other: "RawCommit" = None, match=None):
-    #     # TODO refactor, this overlaps with changed_files
-    #     # Maybe useless
-    #     if other is None:
-    #         other_id = self.id + "^"
-    #     else:
-    #         other_id = other.id
-
-    #     try:
-    #         cmd = f"git log --name-only --format=%n --full-index {other_id}..{self.id}"
-
-    #         out = self.execute(cmd)
-    #     except Exception as e:
-    #         sys.stderr.write(str(e))
-    #         sys.stderr.write(
-    #             f"Problem retriving the list of commits in the interval {other.id}..{self.id}\n"
-    #         )
-    #         return ""
-
-    #     if match:
-    #         out = [path.strip() for path in out if re.match(match, path)]
-    #     else:
-    #         out = [path.strip() for path in out]
-
-    #     return out
-
-    def get_hunks_new(self):
-        diffs = self.get_diff()
-        hunks_count = 0
-        flag = False
-        for line in diffs:
-            if line[:3] in ("+++", "---"):
-                continue
-            if line[:1] in "-+" and not flag:
-                hunks_count += 1
-                flag = True
-            elif line[:1] in "-+" and flag:
-                continue
-
-            if line[:1] not in "-+":
-                flag = False
-        return hunks_count
-
     # TODO: simplify this method
-    def get_hunks(self, grouped=False):  # noqa: C901
+    def get_hunks_old(self, grouped=False):  # noqa: C901
         def is_hunk_line(line):
             return line[0] in "-+" and (len(line) < 2 or (line[1] != line[0]))
 
@@ -245,6 +240,7 @@ class RawCommit:
         return self.get_fingerprint() == other.get_fingerprint()
 
     def get_fingerprint(self):
+
         cmd = f"git show --format=%t --numstat {self.id}"
         out = self.execute(cmd)
         return hashlib.md5("\n".join(out).encode()).hexdigest()
