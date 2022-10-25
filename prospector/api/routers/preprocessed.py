@@ -22,7 +22,7 @@ async def get_commits(
     db.connect()
     data = db.lookup(repository_url, commit_id)
 
-    if not len(data):
+    if len(data) == 0:
         return JSONResponse(status_code=404, content={"message": "Not found"})
 
     return JSONResponse(data)
