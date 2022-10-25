@@ -41,6 +41,11 @@ class Exec:
         else:
             return out
 
+    def run_live_output(self, cmd: str):
+        if isinstance(cmd, str):
+            cmd = cmd.split()
+        pass
+
     def execute(self, cmd, silent=False) -> Optional[List[str]]:
         try:
             out = subprocess.run(
