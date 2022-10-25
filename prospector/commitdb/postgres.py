@@ -9,6 +9,7 @@ import psycopg2
 
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
+from commitdb import CommitDB
 
 from log.logger import logger
 
@@ -21,7 +22,7 @@ DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
 ).lower()
 
 
-class PostgresCommitDB:
+class PostgresCommitDB(CommitDB):
     """
     This class implements the database abstraction layer
     for PostgreSQL
@@ -59,12 +60,13 @@ class PostgresCommitDB:
                     results.append(cur.fetchone())
 
             result = cur.fetchall()
-
             cur.close()
-            return [parse_commit_from_db(row) for row in result]
+            return [dict(row) for row in result]  # parse_commit_from_db
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
             cur.close()
+            return None
+            raise Exception("Could not lookup commit vector in database")
 
     def save(self, commit: Dict[str, Any]):
         if not self.connection:
