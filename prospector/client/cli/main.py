@@ -21,8 +21,7 @@ load_dotenv()
 from log.logger import logger, get_level, pretty_log  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from client.cli.console_report import report_on_console  # noqa: E402
-from client.cli.report import as_json, as_html  # noqa: E402
+from client.cli.report import as_json, as_html, report_on_console  # noqa: E402
 from client.cli.prospector_client import (  # noqa: E402
     MAX_CANDIDATES,  # noqa: E402
     TIME_LIMIT_AFTER,  # noqa: E402
@@ -143,7 +142,7 @@ def parseArguments(args):
     parser.add_argument(
         "--report",
         default="html",
-        choices=["html", "json", "console"],
+        choices=["html", "json", "console", "allfiles"],
         type=str,
         help="Format of the report (options: console, json, html)",
     )
@@ -169,7 +168,7 @@ def parseArguments(args):
         help="Set the logging level",
     )
 
-    return parser.parse_args(args[1:])
+    return parser.parse_args()
 
 
 def getConfiguration(customConfigFile=None):
@@ -215,9 +214,8 @@ def parse_config(configuration: configparser.ConfigParser) -> Dict[str, Any]:
 
 def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
-        args = parseArguments(argv)  # print(args)
+        args = parseArguments(argv)
 
-        # THis is not working now
         if args.log_level:
             logger.setLevel(args.log_level)
 
@@ -238,6 +236,7 @@ def main(argv):  # noqa: C901
             return False
 
         report = args.report or configuration.get("report")
+        report_filename = args.report_filename or configuration.get("report_filename")
 
         nvd_rest_endpoint = configuration.get("nvd_rest_endpoint", "")  # default ???
 
@@ -327,13 +326,12 @@ def main(argv):  # noqa: C901
         if report == "console":
             report_on_console(results, advisory_record, get_level() < logging.INFO)
         elif report == "json":
-            report_file = as_json(
-                results, advisory_record, args.report_filename + ".json"
-            )
+            report_file = as_json(results, advisory_record, report_filename)
         elif report == "html":
-            report_file = as_html(
-                results, advisory_record, args.report_filename + ".html"
-            )
+            report_file = as_html(results, advisory_record, report_filename)
+        elif report == "allfiles":
+            as_json(results, advisory_record, report_filename)
+            as_html(results, advisory_record, report_filename)
         else:
             logger.warning("Invalid report type specified, using 'console'")
             console.set_status(MessageStatus.WARNING)
