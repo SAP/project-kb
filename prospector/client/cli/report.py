@@ -5,7 +5,7 @@ from typing import List
 from log.logger import logger
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-
+from pathlib import Path
 from stats.execution import execution_statistics
 
 
@@ -22,14 +22,18 @@ def as_json(
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.json",
 ):
+    fn = filename if filename.endswith(".json") else f"{filename}.json"
+
     data = {
         "advisory_record": advisory_record.dict(),
         "commits": [r.as_dict(no_hash=True, no_rules=False) for r in results],
     }
-    logger.info("Writing results to " + filename)
-    with open(filename, "w", encoding="utf8") as json_file:
+    logger.info(f"Writing results to {fn}")
+    file = Path(fn)
+    file.parent.mkdir(parents=True, exist_ok=True)
+    with open(fn, "w", encoding="utf8") as json_file:
         json.dump(data, json_file, ensure_ascii=True, indent=4, cls=SetEncoder)
-    return filename
+    return fn
 
 
 def as_html(
@@ -38,6 +42,8 @@ def as_html(
     filename: str = "prospector-report.html",
     statistics=None,
 ):
+    fn = filename if filename.endswith(".html") else f"{filename}.html"
+
     annotations_count = {}
     # annotation: Commit
     # Match number per rules
@@ -48,13 +54,15 @@ def as_html(
         # for annotation in commit.annotations.keys():
         #     annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
 
-    logger.info("Writing results to " + filename)
+    logger.info(f"Writing results to {fn}")
     environment = jinja2.Environment(
         loader=jinja2.FileSystemLoader(os.path.join("client", "cli", "templates")),
         autoescape=jinja2.select_autoescape(),
     )
     template = environment.get_template("results.html")
-    with open(filename, "w", encoding="utf8") as html_file:
+    file = Path(fn)
+    file.parent.mkdir(parents=True, exist_ok=True)
+    with open(fn, "w", encoding="utf8") as html_file:
         for content in template.generate(
             candidates=results,
             present_annotations=annotations_count,
@@ -64,4 +72,32 @@ def as_html(
             ).as_html_ul(),
         ):
             html_file.write(content)
-    return filename
+    return fn
+
+
+def report_on_console(
+    results: "list[Commit]", advisory_record: AdvisoryRecord, verbose=False
+):
+    def format_annotations(commit: Commit) -> str:
+        out = ""
+        if verbose:
+            for tag in commit.annotations:
+                out += " - [{}] {}".format(tag, commit.annotations[tag])
+        else:
+            out = ",".join(commit.annotations.keys())
+
+        return out
+
+    print("-" * 80)
+    print("Rule filtered results")
+    print("-" * 80)
+    count = 0
+    for commit in results:
+        count += 1
+        print(
+            f"\n----------\n{commit.repository}/commit/{commit.commit_id}\n"
+            + "\n".join(commit.changed_files)
+            + f"{commit.message}\n{format_annotations(commit)}"
+        )
+
+    print(f"Found {count} candidates\nAdvisory record\n{advisory_record}")
