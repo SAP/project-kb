@@ -10,7 +10,6 @@ import requests
 from pydantic import BaseModel, Field
 
 from log.logger import logger, pretty_log, get_level
-from util.collection import union_of
 from util.http import fetch_url
 
 from .nlp import (
@@ -91,10 +90,16 @@ class AdvisoryRecord(BaseModel):
         if self.from_nvd:
             self.get_advisory(self.vulnerability_id, self.nvd_rest_endpoint)
 
-        self.versions = union_of(self.versions, extract_versions(self.description))
-        self.affected_products = union_of(
-            self.affected_products, extract_products(self.description)
-        )
+        # Union of also removed duplicates...
+        self.versions.extend(extract_versions(self.description))
+        self.versions = list(set(self.versions))
+        # = union_of(self.versions, extract_versions(self.description))
+        self.affected_products.extend(extract_products(self.description))
+        self.affected_products = list(set(self.affected_products))
+
+        #  = union_of(
+        #     self.affected_products, extract_products(self.description)
+        # )
         # TODO: use a set where possible to speed up the rule application time
         self.files.update(
             extract_affected_filenames(self.description)
