@@ -1,6 +1,6 @@
 import re
 from typing import Dict, List, Set, Tuple
-from util.http import extract_from_webpage, fetch_url
+from util.http import extract_from_webpage, fetch_url, get_from_xml
 from spacy import Language, load
 from datamodel.constants import RELEVANT_EXTENSIONS
 
@@ -62,7 +62,7 @@ def extract_products(text: str) -> List[str]:
     """
     # TODO implement this properly
     regex = r"([A-Z]+[a-z\b]+)"
-    result = list(set(re.findall(regex, text)))
+    result = set(re.findall(regex, text))
     return [p for p in result if len(p) > 2]
 
 
@@ -100,7 +100,7 @@ def check_file_class_method_names(text: str, relevant_extensions: List[str]) -> 
 
     # Covers cases like: className or class_name (normal string with underscore), this may have false positive but often related to some code
     # TODO: FIX presence of @ in the text
-    if bool(re.search(r"[a-z]{2}[A-Z]+[a-z]{2}", text)) or "_" in text:
+    if bool(re.search(r"[a-z]{2,}[A-Z]+[a-z]*", text)) or "_" in text:
         return text
 
     return None
@@ -127,13 +127,21 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
 
 
 # TODO: clean jira page content
-def extract_jira_references(text: str) -> Dict[str, str]:
+def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     """
     Extract identifiers that point to Jira tickets, then extract their content
     """
     refs = dict()
+    if "apache" not in repository:
+        return refs
+
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
+        # descr, key, summary = get_from_xml(id)
+        # if len(descr) > 0:
+        #     refs[id] = " ".join(set(re.findall(r"\w{3,}", descr)))
+        # else:
+        #     refs[id] = ""
         _text = extract_from_webpage(
             url=JIRA_ISSUE_URL + id,
             attr_name="id",
