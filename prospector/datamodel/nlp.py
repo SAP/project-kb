@@ -1,7 +1,7 @@
 import os
 import re
 from typing import Dict, List, Set, Tuple
-from util.http import extract_from_webpage, fetch_url
+from util.http import extract_from_webpage, fetch_url, get_from_xml
 from spacy import Language, load
 from datamodel.constants import RELEVANT_EXTENSIONS
 from util.http import extract_from_webpage, get_from_xml
@@ -105,9 +105,8 @@ def extract_filename(text: str, relevant_extensions: List[str]) -> str:
     if res and not bool(re.match(r"^\d+$", res.group(1))):
         return res.group(1)
 
-    # className or class_name (normal string with underscore)
-    # TODO: ShenYu and words
-    # like this should be excluded...
+    # Covers cases like: className or class_name (normal string with underscore), this may have false positive but often related to some code
+    # TODO: FIX presence of @ in the text
     if bool(re.search(r"[a-z]{2,}[A-Z]+[a-z]*", text)) or "_" in text:
         return text
 
@@ -141,7 +140,7 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
 
 
 # TODO: clean jira page content
-def extract_jira_references(text: str) -> Dict[str, str]:
+def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     """
     Extract identifiers that point to Jira tickets, then extract their content
     """
@@ -151,6 +150,11 @@ def extract_jira_references(text: str) -> Dict[str, str]:
 
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
+        # descr, key, summary = get_from_xml(id)
+        # if len(descr) > 0:
+        #     refs[id] = " ".join(set(re.findall(r"\w{3,}", descr)))
+        # else:
+        #     refs[id] = ""
         _text = extract_from_webpage(
             url=JIRA_ISSUE_URL + id,
             attr_name="id",
