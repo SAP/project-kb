@@ -56,8 +56,11 @@ select-run:
 	python client/cli/main.py $(cve) --repository $(repository) --use-nvd
 
 clean:
-	@rm -f all.log* error.log* prospector-report.html
+	@rm -f prospector.log
 	@rm -rf $(GIT_CACHE)/*
 	@rm -rf __pycache__
 	@rm -rf */__pycache__
 	@rm -rf */*/__pycache__
+	@rm -rf *report.html
+	@rm -rf *.json
+	@rm -rf requests-cache.sqlite
