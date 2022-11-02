@@ -35,15 +35,11 @@ class PostgresCommitDB(CommitDB):
     def connect(self, connect_string=DB_CONNECT_STRING):
         self.connection = psycopg2.connect(connect_string)
 
-    def query(self, query: str):
-        if not self.connection:
-            raise Exception("Invalid connection")
-        self.connection.cursor().execute(query)
-
     def lookup(self, repository: str, commit_id: str = None) -> List[Dict[str, Any]]:
         if not self.connection:
             raise Exception("Invalid connection")
 
+        results = list()
         try:
             cur = self.connection.cursor(cursor_factory=DictCursor)
 
@@ -51,6 +47,7 @@ class PostgresCommitDB(CommitDB):
                 cur.execute(
                     "SELECT * FROM commits WHERE repository = %s", (repository,)
                 )
+                results = cur.fetchall()
             else:
                 for id in commit_id.split(","):
                     cur.execute(
@@ -59,14 +56,12 @@ class PostgresCommitDB(CommitDB):
                     )
                     results.append(cur.fetchone())
 
-            result = cur.fetchall()
-            cur.close()
-            return [dict(row) for row in result]  # parse_commit_from_db
+            return [dict(row) for row in results]  # parse_commit_from_db
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
-            cur.close()
             return None
-            raise Exception("Could not lookup commit vector in database")
+        finally:
+            cur.close()
 
     def save(self, commit: Dict[str, Any]):
         if not self.connection:
@@ -82,7 +77,6 @@ class PostgresCommitDB(CommitDB):
         except Exception:
             logger.error("Could not save commit vector to database", exc_info=True)
             cur.close()
-            # raise Exception("Could not save commit vector to database")
 
     def reset(self):
         self.run_sql_script("ddl/10_commit.sql")
