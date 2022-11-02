@@ -3,7 +3,7 @@
 import logging
 import os
 from dateutil.parser import isoparse
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set
 from urllib.parse import urlparse
 
 import requests
@@ -105,6 +105,7 @@ class AdvisoryRecord(BaseModel):
             extract_affected_filenames(self.description)
             # TODO: this could be done on the words extracted from the description
         )
+        # print(self.files)
 
         self.keywords.update(extract_words_from_text(self.description))
 
