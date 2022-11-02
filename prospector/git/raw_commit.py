@@ -1,12 +1,9 @@
-import sys
 import hashlib
-import re
 from datetime import timezone
+import re
 from typing import List, Tuple
 from dateutil.parser import isoparse
 from log.logger import logger
-from stats.execution import execution_statistics, measure_execution_time
-from util.lsh import compute_minhash
 
 
 # Removed type hints for repository to avoid circular import
@@ -31,12 +28,6 @@ class RawCommit:
         self.twins = []
         self.changed_files = []
 
-        # TODO: REMOVE, now just for compatibility
-        # if self.parent_id == "":
-        #     self.extract_parent_id()
-        # if self.timestamp == 0:
-        #     self.extract_timestamp()
-
     def __str__(self) -> str:
         return f"ID:  {self.id}\nURL: {self.get_repository_url()}\nTS:  {self.timestamp}\nPID: {self.parent_id}\nCF:  {self.changed_files}\nMSG: {self.msg}"
 
@@ -60,6 +51,9 @@ class RawCommit:
 
     def get_twins(self):
         return self.twins
+
+    def set_tags(self, tags: List[str]):
+        self.tags = tags
 
     # def extract_parent_id(self):
     #     try:
@@ -98,6 +92,17 @@ class RawCommit:
                 exc_info=True,
             )
             return ""
+
+    # def extract_gh_references(self):
+    #     """
+    #     Extract the GitHub references from the commit message
+    #     """
+    #     gh_references = dict()
+    #     for result in re.finditer(r"(?:#|gh-)(\d+)", self.msg):
+    #         id = result.group(1)
+    #         if id in self.repository.issues:
+    #             gh_references[id] = self.repository.issues[id]
+    #     return gh_references
 
     def get_hunks_count(self, diffs: List[str]):
         hunks_count = 0
@@ -286,6 +291,7 @@ class RawCommit:
 
     def get_tags(self):
         cmd = f"git tag --contains {self.id}"
+        # cmd = f"git log --format=oneline"  # --date=unix --decorate=short"
         tags = self.execute(cmd)
         if not tags:
             return []
@@ -298,79 +304,3 @@ class RawCommit:
             data.get("next_tag_timestamp"),
             data.get("time_to_tag"),
         )
-
-    # def __str__(self):
-    #     data = (
-    #         self.id,
-    #         self.get_timestamp(date_format="%Y-%m-%d %H:%M:%S"),
-    #         self.get_timestamp(),
-    #         self.repository_url,
-    #         self.get_msg(),
-    #         len(self.get_hunks()),
-    #         len(self.get_changed_paths()),
-    #         self.get_next_tag()[0],
-    #         "\n".join(self.get_changed_paths()),
-    #     )
-    #     return """
-    #     Commit id:         {}
-    #     Date (timestamp):  {} ({})
-    #     Repository:        {}
-    #     Message:           {}
-    #     hunks: {},  changed files: {},  (oldest) tag: {}
-    #     {}""".format(
-    #         *data
-    #     )
-
-
-# class RawCommitSet:
-#     def __init__(self, repo=None, commit_ids=[], prefetch=False):
-
-#         if repo is not None:
-#             self.repository = repo
-#         else:
-#             raise ValueError  # pragma: no cover
-
-#         self._commits = []
-
-#         # TODO when the flag 'prefetch' is True, fetch all data in one shot (one single
-#         # call to the git binary) and populate all commit objects. A dictionary paramenter
-#         # passed to the Commit constructor will be used to pass the fields that need to be populated
-#         commits_count = len(commit_ids)
-#         if prefetch is True and commits_count > 50:
-#             logger.warning(
-#                 f"Processing {commits_count:d} commits will take some time!"
-#             )
-#             for cid in commit_ids:
-#                 commit_data = {"id": "", "msg": "", "patch": "", "timestamp": ""}
-#                 current_field = None
-#                 commit_raw_data = self.repository._exec.run(
-#                     "git show --format=@@@@@SHA1@@@@@%n%H%n@@@@@LOGMSG@@@@@%n%s%n%b%n@@@@@TIMESTAMP@@@@@@%n%at%n@@@@@PATCH@@@@@ "
-#                     + cid,
-#                     cache=True,
-#                 )
-
-#                 for line in commit_raw_data:
-#                     if line == "@@@@@SHA1@@@@@":
-#                         current_field = "id"
-#                     elif line == "@@@@@LOGMSG@@@@@":
-#                         current_field = "msg"
-#                     elif line == "@@@@@TIMESTAMP@@@@@":
-#                         current_field = "timestamp"
-#                     else:
-#                         commit_data[current_field] += "\n" + line
-
-#                 self._commits.append(
-#                     RawCommit(self.repository, cid, init_data=commit_data)
-#                 )
-#         else:
-#             self._commits = [RawCommit(self.repository, c) for c in commit_ids]
-
-#     def get_all(self):
-#         return self._commits
-
-#     def add(self, commit_id):
-#         self._commits.append(RawCommit(self.repository, commit_id))
-#         return self
-
-#     def filter_by_msg(self, word):
-#         return [c for c in self.get_all() if word in c.get_msg()]
