@@ -24,7 +24,7 @@ def filter_commits(candidates: List[Commit]) -> Tuple[List[Commit], int]:
     filtered_candidates = [
         c
         for c in candidates
-        if MIN_HUNKS < c.get_hunks() < MAX_HUNKS and len(c.changed_files) <= MAX_FILES
+        if MIN_HUNKS <= c.get_hunks() <= MAX_HUNKS and len(c.changed_files) <= MAX_FILES
     ]
 
     rejected = len(candidates) - len(filtered_candidates)
