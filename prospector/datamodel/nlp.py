@@ -1,8 +1,10 @@
 import os
 import re
-from typing import Dict, List, Set, Tuple
-from util.http import extract_from_webpage, fetch_url, get_from_xml
-from spacy import Language, load
+from typing import Dict, List, Set
+import requests
+
+# from util.http import extract_from_webpage, fetch_url, get_from_xml
+from spacy import load
 from datamodel.constants import RELEVANT_EXTENSIONS
 from util.http import extract_from_webpage, get_from_xml
 
@@ -45,11 +47,13 @@ def extract_words_from_text(text: str) -> Set[str]:
     )
 
 
-def find_similar_words(adv_words: Set[str], commit_msg: str) -> Set[str]:
+def find_similar_words(adv_words: Set[str], commit_msg: str, exclude: str) -> Set[str]:
     """Extract nouns from commit message that appears in the advisory text"""
-    commit_words = extract_words_from_text(commit_msg)
+    commit_words = {
+        word for word in extract_words_from_text(commit_msg) if word not in exclude
+    }
     return commit_words.intersection(adv_words)
-    return [word for word in extract_words_from_text(commit_msg) if word in adv_words]
+    # return [word for word in extract_words_from_text(commit_msg) if word in adv_words]
 
 
 def extract_versions(text: str) -> List[str]:
@@ -105,8 +109,9 @@ def extract_filename(text: str, relevant_extensions: List[str]) -> str:
     if res and not bool(re.match(r"^\d+$", res.group(1))):
         return res.group(1)
 
-    # Covers cases like: className or class_name (normal string with underscore), this may have false positive but often related to some code
-    # TODO: FIX presence of @ in the text
+    # className or class_name (normal string with underscore)
+    # TODO: ShenYu and words
+    # like this should be excluded...
     if bool(re.search(r"[a-z]{2,}[A-Z]+[a-z]*", text)) or "_" in text:
         return text
 
@@ -126,15 +131,12 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     }
     for result in re.finditer(r"(?:#|gh-)(\d+)", text):
         id = result.group(1)
-        url = f"{repository}/issues/{id}"
-        _text = extract_from_webpage(
-            url=url,
-            attr_name="class",
-            attr_value=["comment-body", "markdown-title"],  # js-issue-title
-        )
-        refs[id] = " ".join(
-            set(re.findall(r"\w{3,}", _text))
-        )  # list(extract_words_from_text(text))
+        owner, repo = repository.split("/")[-2:]
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues/{id}"
+        r = requests.get(url, headers=headers)
+        if r.status_code == 200:
+            data = r.json()
+            refs[id] = f"{data['title']} {data['body']}"
 
     return refs
 
@@ -150,17 +152,12 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
 
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
-        # descr, key, summary = get_from_xml(id)
-        # if len(descr) > 0:
-        #     refs[id] = " ".join(set(re.findall(r"\w{3,}", descr)))
-        # else:
-        #     refs[id] = ""
-        _text = extract_from_webpage(
-            url=JIRA_ISSUE_URL + id,
-            attr_name="id",
-            attr_value=["descriptionmodule"],  # "details-module",
+        issue_content = get_from_xml(id)
+        refs[id] = (
+            " ".join(re.findall(r"\w{3,}", issue_content))
+            if len(issue_content) > 0
+            else ""
         )
-        refs[id] = " ".join(set(re.findall(r"\w{3,}", _text)))
 
     return refs
 
