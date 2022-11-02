@@ -1,7 +1,7 @@
 import logging
 import os
 from dateutil.parser import isoparse
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set
 from urllib.parse import urlparse
 
 import requests
@@ -14,13 +14,12 @@ from .nlp import (
     extract_affected_filenames,
     extract_words_from_text,
     extract_products,
-    extract_special_terms,
     extract_versions,
 )
 
 ALLOWED_SITES = [
     "github.com",
-    "github.io",
+    # "github.io",
     "apache.org",
     "issues.apache.org",
     "gitlab.org",
@@ -104,6 +103,7 @@ class AdvisoryRecord(BaseModel):
             extract_affected_filenames(self.description)
             # TODO: this could be done on the words extracted from the description
         )
+        # print(self.files)
 
         self.keywords.update(extract_words_from_text(self.description))
 
@@ -116,6 +116,8 @@ class AdvisoryRecord(BaseModel):
         logger.debug("Relevant references: " + str(self.references))
         if fetch_references:
             for r in self.references:
+                if "github.com" in r:
+                    continue
                 ref_content = fetch_url(r)
                 if len(ref_content) > 0:
                     logger.debug("Fetched content of reference " + r)
