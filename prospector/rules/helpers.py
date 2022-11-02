@@ -1,4 +1,3 @@
-import re
 from typing import Dict, Set
 
 import pandas
@@ -33,9 +32,11 @@ SEC_KEYWORDS = [
     "dos",
     "insecure",
     "inject",
+    "injection",
     "unsafe",
     "remote execution",
     "malicious",
+    "sanitize",
     "cwe-",
     "rce",
 ]
@@ -48,7 +49,8 @@ def extract_security_keywords(text: str) -> Set[str]:
     """
     Return the list of the security keywords found in the text
     """
-    return set([word for word in SEC_KEYWORDS if word in text.split()])
+    # TODO: use a regex to catch all possible words consider spaces, commas, dots, etc
+    return set([word for word in SEC_KEYWORDS if word in text.casefold().split()])
 
     # set([r.group(1) for r in re.finditer(KEYWORDS_REGEX, text, flags=re.I)])
 
