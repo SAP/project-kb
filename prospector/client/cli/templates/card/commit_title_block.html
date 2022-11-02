@@ -2,10 +2,11 @@
     <i class="fas fa-code-branch"></i> {{ annotated_commit.commit_id }}
 </h5>
 <h6 id="repository_url" class="card-subtitle mb-2 text-muted">
-    <i class="fab fa-git-alt"></i> {{ annotated_commit.repository }}
+    <i class="fab fa-git-alt"></i>
     {% if 'github' in annotated_commit.repository %}
-    <a href="{{ annotated_commit.repository }}/commit/{{ annotated_commit.commit_id }}" target="_blank"
-        class="btn btn-primary btn-sm">Open Commit (assume GitHub-like API)</a>
+    <a class="link-dark" style="text-decoration: none;"
+        href="{{ annotated_commit.repository }}/commit/{{ annotated_commit.commit_id }}" target="_blank">{{
+        annotated_commit.repository }}/commit/{{ annotated_commit.commit_id }}</a>
     {% else %}
     <a href="{{ annotated_commit.repository }}" target="_blank" class="btn btn-primary btn-sm">Open Repository (unknown
         API)</a>

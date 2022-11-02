@@ -43,12 +43,11 @@
                                 aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
                                 <div class="card-body">
                                     {% include "card/commit_title_block.html" %}
-                                    {% include "card/annotations_block.html" %}
+                                    {% include "card/matched_rules_block.html" %}
                                     {% include "card/message_block.html" %}
-                                    {% include "card/relevant_paths_block.html" %}
                                     {% include "card/changed_paths_block.html" %}
                                     {% include "card/mentioned_cves_block.html" %}
-                                    {% include "card/pages_linked_from_advisories_block.html" %}
+                                    <!-- {% include "card/pages_linked_from_advisories_block.html" %} -->
                                 </div>
                             </div>
                         </div>
