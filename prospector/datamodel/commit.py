@@ -1,8 +1,7 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
-from datasketch.lean_minhash import LeanMinHash
-from util.lsh import build_lsh_index, compute_minhash, decode_minhash, encode_minhash
+from util.lsh import build_lsh_index, decode_minhash, encode_minhash
 
 from datamodel.nlp import (
     extract_cve_references,
@@ -18,11 +17,6 @@ class Commit(BaseModel):
     to the save() and lookup() functions of the database module.
     """
 
-    # TODO: a more elegant fix
-    # Why are we using BaseModel
-    class Config:
-        arbitrary_types_allowed = True
-
     commit_id: str = ""
     repository: str = ""
     timestamp: Optional[int] = 0
@@ -36,7 +30,7 @@ class Commit(BaseModel):
     cve_refs: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     relevance: Optional[int] = 0
-    matched_rules: List[Dict[str, Union[str, int]]] = Field(default_factory=list)
+    matched_rules: List[Dict[str, str | int]] = Field(default_factory=list)
     minhash: Optional[str] = ""
     twins: List[str] = Field(default_factory=list)
 
@@ -57,6 +51,11 @@ class Commit(BaseModel):
         return self.relevance == other.relevance
 
     def add_match(self, rule: Dict[str, Any]):
+        for i, r in enumerate(self.matched_rules):
+            if rule["relevance"] == r["relevance"]:
+                self.matched_rules.insert(i, rule)
+                return
+
         self.matched_rules.append(rule)
 
     def compute_relevance(self):
@@ -162,8 +161,11 @@ def make_from_raw_commit(raw: RawCommit) -> Commit:
     # Space-efficiency is important.
 
     commit.diff, commit.hunks = raw.get_diff()
-    commit.tags = raw.get_tags()
-    commit.jira_refs = extract_jira_references(commit.repository, commit.message)
-    commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
-    commit.cve_refs = extract_cve_references(commit.message)
+    if commit.hunks < 200:
+        commit.tags = raw.get_tags()
+        commit.jira_refs = extract_jira_references(commit.repository, commit.message)
+        commit.ghissue_refs = extract_ghissue_references(
+            commit.repository, commit.message
+        )
+        commit.cve_refs = extract_cve_references(commit.message)
     return commit
