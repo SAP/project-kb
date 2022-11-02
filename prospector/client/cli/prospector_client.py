@@ -1,4 +1,4 @@
-from csv import list_dialects
+from datetime import datetime
 import logging
 import sys
 from typing import Dict, List, Set, Tuple
@@ -13,7 +13,7 @@ from git.git import GIT_CACHE, Git
 from git.raw_commit import RawCommit
 from git.version_to_tag import get_tag_for_version
 from log.logger import logger, pretty_log, get_level
-from rules import apply_rules
+from rules.rules import apply_rules
 
 from stats.execution import (
     Counter,
@@ -27,7 +27,7 @@ SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
 TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
 
-MAX_CANDIDATES = 1500
+MAX_CANDIDATES = 2000
 DEFAULT_BACKEND = "http://localhost:8000"
 
 
@@ -74,32 +74,19 @@ def prospector(  # noqa: C901
             filter_extensions,
         )
 
-    with ConsoleWriter("Obtaining initial set of candidates\n") as writer:
+    # obtain a repository object
+    repository = Git(repository_url, git_cache)
 
-        # obtain a repository object
-        repository = Git(repository_url, git_cache)
-
-        # retrieve of commit candidates
-        candidates = get_candidates(
-            advisory_record,
-            repository,
-            tag_interval,
-            version_interval,
-            time_limit_before,
-            time_limit_after,
-        )
-
-        logger.debug(f"Collected {len(candidates)} candidates")
-
-        if len(candidates) > limit_candidates:
-            logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
-
-            writer.print(
-                f"Found {len(candidates)} candidates, too many to proceed.",
-                status=MessageStatus.ERROR,
-            )
-            writer.print("Please try running the tool again.")
-            sys.exit(-1)
+    # retrieve of commit candidates
+    candidates = get_candidates(
+        advisory_record,
+        repository,
+        tag_interval,
+        version_interval,
+        time_limit_before,
+        time_limit_after,
+        limit_candidates,
+    )
 
     with ExecutionTimer(
         core_statistics.sub_collection("commit preprocessing")
@@ -182,20 +169,21 @@ def retrieve_preprocessed_commits(
     retrieved_commits: List[dict] = list()
     missing: List[RawCommit] = list()
 
-    responses: List[requests.Response] = []
+    responses = list()
     for i in range(0, len(candidates), 500):
         args = list(candidates.keys())[i : i + 500]
-        responses.append(
-            requests.get(
-                f"{backend_address}/commits/{repository_url}?commit_id={','.join(args)}"
-            )
+        r = requests.get(
+            f"{backend_address}/commits/{repository_url}?commit_id={','.join(args)}"
         )
-        if responses[-1].status_code != 200:
-            logger.info("Preprocessed commits not found in the backend")
-            return list(candidates.values()), list()
+        if r.status_code != 200:
+            logger.info("One or more commits are not in the backend")
+            break  # return list(candidates.values()), list()
+        responses.append(r.json())
 
-    retrieved_commits = [r for response in responses for r in response.json()]
+    retrieved_commits = [commit for response in responses for commit in response]
+
     logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
+
     if len(retrieved_commits) != len(candidates):
         missing = [
             candidates[c]
@@ -242,11 +230,12 @@ def get_candidates(
     version_interval: str,
     time_limit_before: int,
     time_limit_after: int,
+    limit_candidates: int,
 ):
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
-        with ConsoleWriter("Git repository cloning"):
+        with ConsoleWriter("Git repository cloning") as _:
             logger.info(f"Downloading repository {repository.url} in {repository.path}")
             repository.clone()
 
@@ -284,5 +273,15 @@ def get_candidates(
             core_statistics.record("candidates", len(candidates), unit="commits")
             logger.info("Found %d candidates" % len(candidates))
         writer.print(f"Found {len(candidates)} candidates")
+
+        if len(candidates) > limit_candidates:
+            logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
+
+            writer.print(
+                f"Found {len(candidates)} candidates, too many to proceed.",
+                status=MessageStatus.ERROR,
+            )
+            writer.print("Please try running the tool again.")
+            sys.exit(-1)
 
     return candidates
