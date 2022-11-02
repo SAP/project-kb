@@ -1,6 +1,5 @@
 from abc import abstractmethod
-import re
-from typing import List, Set, Tuple
+from typing import Dict, List, Tuple
 
 
 from datamodel.advisory import AdvisoryRecord
@@ -18,6 +17,8 @@ rule_statistics = execution_statistics.sub_collection("rules")
 
 
 class Rule:
+    lsh_index = build_lsh_index()
+
     def __init__(self, id: str, relevance: int):
         self.id = id
         self.message = ""
@@ -92,7 +93,7 @@ class CveIdInMessage(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         if advisory_record.vulnerability_id in candidate.cve_refs:
-            self.message = f"The commit message mentions the vulnerability identifier {advisory_record.vulnerability_id}"
+            self.message = "The commit message mentions the CVE ID"
             return True
         return False
 
@@ -102,7 +103,7 @@ class ReferencesGhIssue(Rule):
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
         if len(candidate.ghissue_refs) > 0:
-            self.message = f"The commit message references the following GitHub issue/pr: {', '.join(candidate.ghissue_refs)}"
+            self.message = f"The commit message references some github issue: {', '.join(candidate.ghissue_refs)}"
             return True
         return False
 
@@ -114,7 +115,7 @@ class ReferencesJiraIssue(Rule):
         self, candidate: Commit, _: AdvisoryRecord = None
     ):  # test to see if I can remove the advisory record from here
         if len(candidate.jira_refs) > 0:
-            self.message = f"The commit message references the following Jira issue: {', '.join(candidate.jira_refs)}"
+            self.message = f"The commit message references some jira issue: {', '.join(candidate.jira_refs)}"
             return True
         return False
 
@@ -129,12 +130,15 @@ class ChangesRelevantFiles(Rule):
                 for file in candidate.changed_files
                 for adv_file in advisory_record.files
                 if adv_file.casefold() in file.casefold()
+                and adv_file.casefold() not in candidate.repository
                 and len(adv_file)
                 > 3  # TODO: when fixed extraction the >3 should be useless
             ]
         )
         if len(relevant_files) > 0:
-            self.message = f"The commit changes the following relevant files: {', '.join(relevant_files)}"
+            self.message = (
+                f"The commit changes some relevant files: {', '.join(relevant_files)}"
+            )
             return True
         return False
 
@@ -144,11 +148,11 @@ class AdvKeywordsInMsg(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         matching_keywords = find_similar_words(
-            advisory_record.keywords, candidate.message
+            advisory_record.keywords, candidate.message, candidate.repository
         )
 
         if len(matching_keywords) > 0:
-            self.message = f"The commit message and the advisory share the following keywords: {', '.join(matching_keywords)}"
+            self.message = f"The commit and the advisory both contain the following keywords: {', '.join(matching_keywords)}"
             return True
         return False
 
@@ -173,11 +177,11 @@ class AdvKeywordsInFiles(Rule):
                 (p, token)
                 for p in candidate.changed_files
                 for token in advisory_record.keywords
-                if token in p
+                if token in p and token not in candidate.repository
             ]
         )
         if len(matching_keywords) > 0:
-            self.message = f"The commit changes files whose name contains a keyword from the advisory: {','.join([f'{m[0]} ({m[1]})' for m in matching_keywords])}"
+            self.message = f"An advisory keyword is contained in the changed files: {', '.join([p for p, _ in matching_keywords])}"
             return True
         return False
 
@@ -188,7 +192,7 @@ class SecurityKeywordsInMsg(Rule):
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
         matching_keywords = extract_security_keywords(candidate.message)
         if len(matching_keywords) > 0:
-            self.message = f"The commit message contains the following security-related keywords: {', '.join(matching_keywords)}"
+            self.message = f"The commit message contains some security-related keywords: {', '.join(matching_keywords)}"
             return True
         return False
 
@@ -205,9 +209,7 @@ class CommitMentionedInAdv(Rule):
             ]
         )
         if len(matching_references) > 0:
-            self.message = (
-                f"Commit mentioned in the advisory: {', '.join(matching_references)}"
-            )
+            self.message = "The advisory mentions the commit directly"  #: {', '.join(matching_references)}"
             return True
         return False
 
@@ -219,7 +221,7 @@ class CveIdInLinkedIssue(Rule):
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for id, content in candidate.ghissue_refs.items():
             if advisory_record.vulnerability_id in content:
-                self.message = f"The issue (or pull request) {id} mentions the vulnerability id {advisory_record.vulnerability_id}"
+                self.message = f"The issue {id} mentions the CVE ID"
                 return True
 
         return False
@@ -240,7 +242,7 @@ class SecurityKeywordInLinkedGhIssue(Rule):
             matching_keywords = extract_security_keywords(issue_content)
 
             if len(matching_keywords) > 0:
-                self.message = f"The linked issue/PR {id} contains the following security-related terms: {', '.join(matching_keywords)}"
+                self.message = f"The github issue {id} contains some security-related terms: {', '.join(matching_keywords)}"
                 return True
         return False
 
@@ -254,7 +256,7 @@ class SecurityKeywordInLinkedJiraIssue(Rule):
             matching_keywords = extract_security_keywords(issue_content)
 
             if len(matching_keywords) > 0:
-                self.message = f"The jira issue {id} contains the following security-related terms: {', '.join(matching_keywords)}"
+                self.message = f"The jira issue {id} contains some security-related terms: {', '.join(matching_keywords)}"
                 return True
 
         return False
@@ -271,7 +273,7 @@ class CrossReferencedJiraLink(Rule):
             if id in url and "jira" in url
         ]
         if len(matches) > 0:
-            self.message = f"The commit message and the advisory mention the same jira issue(s): {', '.join(matches)}"
+            self.message = f"The commit and the advisory mention the same jira issue(s): {', '.join(matches)}"
             return True
         return False
 
@@ -287,7 +289,7 @@ class CrossReferencedGhLink(Rule):
             if id in url and "github.com" in url
         ]
         if len(matches) > 0:
-            self.message = f"The commit message and the advisory mention the same github issue/PR: {', '.join(matches)}"
+            self.message = f"The commit and the advisory mention the same github issue(s): {', '.join(matches)}"
             return True
         return False
 
@@ -296,6 +298,7 @@ class SmallCommit(Rule):
     """Matches small commits (i.e., they modify a small number of contiguous lines of code)."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord):
+        return False
         if candidate.get_hunks() < 10:  # 10
             self.message = (
                 f"This commit modifies only {candidate.hunks} contiguous lines of code"
@@ -310,23 +313,24 @@ class CommitMentionedInReference(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         if extract_commit_mentioned_in_linked_pages(candidate, advisory_record):
-            self.message = (
-                "This commit is mentioned in one or more pages linked by the advisory"
-            )
+            self.message = "A page linked in the advisory mentions this commit"
 
             return True
         return False
 
 
 class CommitHasTwins(Rule):
-    lsh_index = build_lsh_index()
-
     def apply(self, candidate: Commit, _: AdvisoryRecord) -> bool:
-        if not self.lsh_index.is_empty():
-            candidate.twins = self.lsh_index.query(decode_minhash(candidate.minhash))
-        self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
+        if not Rule.lsh_index.is_empty():
+            # TODO: the twin search must be done at the beginning, in the raw commits
+
+            candidate.twins = Rule.lsh_index.query(decode_minhash(candidate.minhash))
+            candidate.twins.remove(candidate.commit_id)
+        # self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
         if len(candidate.twins) > 0:
-            self.message = f"This commit has twins: {', '.join(candidate.twins)}"
+            self.message = (
+                f"This commit has one or more twins: {', '.join(candidate.twins)}"
+            )
             return True
         return False
 
