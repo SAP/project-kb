@@ -1,47 +1,25 @@
-"""
-Unit tests for database-related functionality
-
-"""
 import pytest
 
-from api import DB_CONNECT_STRING
-from commitdb.postgres import PostgresCommitDB, parse_connect_string
-from datamodel.commit import Commit
+from commitdb.postgres import PostgresCommitDB, parse_connect_string, DB_CONNECT_STRING
+from datamodel.commit import Commit, make_from_dict, make_from_raw_commit
+from git.git import Git
 
 
 @pytest.fixture
 def setupdb():
     db = PostgresCommitDB()
-    db.connect(DB_CONNECT_STRING)
+    db.connect()
     db.reset()
     return db
 
 
-def test_simple_write(setupdb):
-    db = setupdb
-    db.connect(DB_CONNECT_STRING)
-    commit_obj = Commit(
-        commit_id="1234",
-        repository="https://blabla.com/zxyufd/fdafa",
-        timestamp=123456789,
-        hunks=[(3, 5)],
-        hunk_count=1,
-        message="Some random garbage",
-        diff=["fasdfasfa", "asf90hfasdfads", "fasd0fasdfas"],
-        changed_files=["fadsfasd/fsdafasd/fdsafafdsa.ifd"],
-        message_reference_content=[],
-        jira_refs={},
-        ghissue_refs={},
-        cve_refs=["simola", "simola2"],
-        tags=["tag1"],
-    )
-    db.save(commit_obj)
-    commit_obj = Commit(
+def test_save_lookup(setupdb: PostgresCommitDB):
+    #    setupdb.connect(DB_CONNECT_STRING)
+    commit = Commit(
         commit_id="42423b2423",
         repository="https://fasfasdfasfasd.com/rewrwe/rwer",
         timestamp=121422430,
-        hunks=[(3, 5)],
-        hunk_count=1,
+        hunks=1,
         message="Some random garbage",
         diff=["fasdfasfa", "asf90hfasdfads", "fasd0fasdfas"],
         changed_files=["fadsfasd/fsdafasd/fdsafafdsa.ifd"],
@@ -51,41 +29,23 @@ def test_simple_write(setupdb):
         cve_refs=["simola3"],
         tags=["tag1"],
     )
-    db.save(commit_obj)
-
-
-def test_lookup(setupdb):
-    db = setupdb
-    db.connect(DB_CONNECT_STRING)
-    result = db.lookup(
-        "https://github.com/apache/maven-shared-utils",
-        "f751e614c09df8de1a080dc1153931f3f68991c9",
+    setupdb.save(commit.to_dict())
+    result = setupdb.lookup(
+        "https://fasfasdfasfasd.com/rewrwe/rwer",
+        "42423b2423",
     )
-    assert result is not None
+
+    retrieved_commit = Commit.parse_obj(result[0])
+    assert commit.commit_id == retrieved_commit.commit_id
 
 
-def test_upsert(setupdb):
-    db = setupdb
-    db.connect(DB_CONNECT_STRING)
-    commit_obj = Commit(
-        commit_id="42423b2423",
-        repository="https://fasfasdfasfasd.com/rewrwe/rwer",
-        timestamp=1214212430,
-        hunks=[(3, 3)],
-        hunk_count=3,
-        message="Some random garbage upserted",
-        diff=["fasdfasfa", "asf90hfasdfads", "fasd0fasdfas"],
-        changed_files=["fadsfasd/fsdafasd/fdsafafdsa.ifd"],
-        message_reference_content=[],
-        jira_refs={},
-        ghissue_refs={"hggdhd": ""},
-        cve_refs=["simola124"],
-        tags=["tag1"],
+def test_lookup_nonexisting(setupdb: PostgresCommitDB):
+    result = setupdb.lookup(
+        "https://fasfasdfasfasd.com/rewrwe/rwer",
+        "42423b242342423b2423",
     )
-    db.save(commit_obj)
-    result = db.lookup(commit_obj.repository, commit_obj.commit_id)
-    assert result is not None
-    db.reset()  # remove garbage added by tests from DB
+    setupdb.reset()
+    assert result is None
 
 
 def test_parse_connect_string():

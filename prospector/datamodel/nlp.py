@@ -1,10 +1,16 @@
+import os
 import re
-from typing import Dict, List, Set, Tuple
-from util.http import extract_from_webpage, fetch_url
-from spacy import Language, load
+from typing import Dict, List, Set
+import requests
+
+# from util.http import extract_from_webpage, fetch_url, get_from_xml
+from spacy import load
 from datamodel.constants import RELEVANT_EXTENSIONS
+from util.http import extract_from_webpage, get_from_xml
 
 JIRA_ISSUE_URL = "https://issues.apache.org/jira/browse/"
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
 
 nlp = load("en_core_web_sm")
 
@@ -29,20 +35,25 @@ def extract_special_terms(description: str) -> Set[str]:
     return tuple(result)
 
 
-def extract_nouns_from_text(text: str) -> List[str]:
-    """Use spacy to extract nouns from text"""
-    return [
-        token.text
-        for token in nlp(text)
-        if token.pos_ == "NOUN" and len(token.text) > 3
-    ]
+def extract_words_from_text(text: str) -> Set[str]:
+    """Use spacy to extract "relevant words" from text"""
+    # Lemmatization
+    return set(
+        [
+            token.lemma_.casefold()
+            for token in nlp(text)
+            if token.pos_ in ("NOUN", "VERB", "PROPN") and len(token.lemma_) > 3
+        ]
+    )
 
 
-def extract_similar_words(
-    adv_words: Set[str], commit_msg: str, blocklist: Set[str]
-) -> List[str]:
+def find_similar_words(adv_words: Set[str], commit_msg: str, exclude: str) -> Set[str]:
     """Extract nouns from commit message that appears in the advisory text"""
-    return [word for word in extract_nouns_from_text(commit_msg) if word in adv_words]
+    commit_words = {
+        word for word in extract_words_from_text(commit_msg) if word not in exclude
+    }
+    return commit_words.intersection(adv_words)
+    # return [word for word in extract_words_from_text(commit_msg) if word in adv_words]
 
 
 def extract_versions(text: str) -> List[str]:
@@ -57,38 +68,37 @@ def extract_products(text: str) -> List[str]:
     """
     Extract product names from advisory text
     """
-    # TODO implement this properly, impossible
+    # TODO implement this properly
     regex = r"([A-Z]+[a-z\b]+)"
-    result = list(set(re.findall(regex, text)))
+    result = set(re.findall(regex, text))
     return [p for p in result if len(p) > 2]
 
 
 def extract_affected_filenames(
     text: str, extensions: List[str] = RELEVANT_EXTENSIONS
 ) -> Set[str]:
-    paths = set()
+    files = set()
     for word in text.split():
-        res = word.strip("_,.:;-+!?()]}'\"")
+        res = word.strip("_,.:;-+!?()[]'\"")
         res = extract_filename_from_path(res)
-        res = check_file_class_method_names(res, extensions)
+        res = extract_filename(res, extensions)
         if res:
-            paths.add(res)
-    return paths
+            files.add(res)
+    return files
 
 
 # TODO: enhanche this
 # Now we just try a split by / and then we pass everything to the other checker, it might be done better
 def extract_filename_from_path(text: str) -> str:
     return text.split("/")[-1]
-    # Pattern //path//to//file or \\path\\to\\file, extract file
-    # res = re.search(r"^(?:(?:\/{,2}|\\{,2})([\w\-\.]+))+$", text)
-    # if res:
-    #     return res.group(1)
 
 
-def check_file_class_method_names(text: str, relevant_extensions: List[str]) -> str:
+def extract_filename(text: str, relevant_extensions: List[str]) -> str:
     # Covers cases file.extension if extension is relevant, extensions come from CLI parameter
-    extensions_regex = r"^([\w\-]+)\.({})?$".format("|".join(relevant_extensions))
+    extensions_regex = r"^(?:^|\s?)([\w\-]{2,}\.(?:%s))(?:$|\s|\.|,|:)" % "|".join(
+        relevant_extensions
+    )
+
     res = re.search(extensions_regex, text)
     if res:
         return res.group(1)
@@ -99,43 +109,54 @@ def check_file_class_method_names(text: str, relevant_extensions: List[str]) -> 
     if res and not bool(re.match(r"^\d+$", res.group(1))):
         return res.group(1)
 
-    # Covers cases like: className or class_name (normal string with underscore), this may have false positive but often related to some code
-    # TODO: FIX presence of @ in the text
-    if bool(re.search(r"[a-z]{2}[A-Z]+[a-z]{2}", text)) or "_" in text:
+    # className or class_name (normal string with underscore)
+    # TODO: ShenYu and words
+    # like this should be excluded...
+    if bool(re.search(r"[a-z]{2,}[A-Z]+[a-z]*", text)) or "_" in text:
         return text
 
     return None
 
 
-# TODO: refactoring to use w/o repository
 def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     """
     Extract identifiers that look like references to GH issues, then extract their content
     """
     refs = dict()
+
+    # /repos/{owner}/{repo}/issues/{issue_number}
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+    }
     for result in re.finditer(r"(?:#|gh-)(\d+)", text):
         id = result.group(1)
-        url = f"{repository}/issues/{id}"
-        refs[id] = extract_from_webpage(
-            url=url,
-            attr_name="class",
-            attr_value=["comment-body", "markdown-title"],  # js-issue-title
-        )
+        owner, repo = repository.split("/")[-2:]
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues/{id}"
+        r = requests.get(url, headers=headers)
+        if r.status_code == 200:
+            data = r.json()
+            refs[id] = f"{data['title']} {data['body']}"
 
     return refs
 
 
-def extract_jira_references(text: str) -> Dict[str, str]:
+# TODO: clean jira page content
+def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     """
     Extract identifiers that point to Jira tickets, then extract their content
     """
     refs = dict()
+    if "apache" not in repository:
+        return refs
+
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
-        refs[id] = extract_from_webpage(
-            url=JIRA_ISSUE_URL + id,
-            attr_name="id",
-            attr_value=["details-module", "descriptionmodule"],
+        issue_content = get_from_xml(id)
+        refs[id] = (
+            " ".join(re.findall(r"\w{3,}", issue_content))
+            if len(issue_content) > 0
+            else ""
         )
 
     return refs

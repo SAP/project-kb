@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-import pytest
 
 from api.main import app
 from datamodel.commit import Commit
@@ -22,13 +21,13 @@ def test_status():
 def test_post_preprocessed_commits():
     commit_1 = Commit(
         repository="https://github.com/apache/dubbo", commit_id="yyy"
-    ).__dict__
+    ).as_dict()
     commit_2 = Commit(
         repository="https://github.com/apache/dubbo", commit_id="zzz"
-    ).__dict__
+    ).as_dict()
     commit_3 = Commit(
         repository="https://github.com/apache/struts", commit_id="bbb"
-    ).__dict__
+    ).as_dict()
     commits = [commit_1, commit_2, commit_3]
     response = client.post("/commits/", json=commits)
     assert response.status_code == 200
@@ -43,7 +42,7 @@ def test_get_specific_commit():
     assert response.json()[0]["commit_id"] == commit_id
 
 
-@pytest.mark.skip(reason="will raise exception")
+# @pytest.mark.skip(reason="will raise exception")
 def test_get_commits_by_repository():
     repository = "https://github.com/apache/dubbo"
     response = client.get("/commits/" + repository)

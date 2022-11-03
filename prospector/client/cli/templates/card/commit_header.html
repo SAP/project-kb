@@ -12,8 +12,8 @@
             </h6>
             <p style="margin: 5pt 0 0;">
                 <i class="fas fa-bullhorn"></i>
-                {% for annotation, comment in annotated_commit.annotations.items() | sort %}
-                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ annotation }}</span>
+                {% for rule in annotated_commit.matched_rules %}
+                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ rule.id }}</span>
                 {% endfor %}
             </p>
         </div>

@@ -119,6 +119,7 @@ def test_transparent_wrapper():
     assert wrapper[("lemon", "apple")] == 42
 
 
+@pytest.mark.skip(reason="Not implemented yet")
 def test_sub_collection():
     stats = StatisticCollection()
 

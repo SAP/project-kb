@@ -1,15 +1,11 @@
 # from dataclasses import asdict
-import time
-from unittest import result
 
-from pytest import skip
 import pytest
 from datamodel.advisory import (
     LOCAL_NVD_REST_ENDPOINT,
     AdvisoryRecord,
     build_advisory_record,
 )
-from .nlp import RELEVANT_EXTENSIONS
 
 # import pytest
 
@@ -89,7 +85,7 @@ def test_build():
 
 
 @pytest.mark.skip(
-    reason="Easily fails due to NVD API rate limiting or something similar"
+    reason="Easily fails due to NVD API rate limiting or connection issues"
 )
 def test_filenames_extraction():
     result1 = build_advisory_record(
@@ -107,10 +103,10 @@ def test_filenames_extraction():
     result5 = build_advisory_record(
         "CVE-2021-30468", "", "", LOCAL_NVD_REST_ENDPOINT, "", True, "", "", "", ""
     )
-    assert result1.paths == set(["MultipartStream", "FileUpload"])  # Content-Type
-    assert result2.paths == set(["JwtRequestCodeFilter", "request_uri"])
-    assert result3.paths == set(
+    assert result1.files == set(["MultipartStream", "FileUpload"])  # Content-Type
+    assert result2.files == set(["JwtRequestCodeFilter", "request_uri"])
+    assert result3.files == set(
         ["OAuthConfirmationController", "@ModelAttribute", "authorizationRequest"]
     )
-    assert result4.paths == set(["FileNameUtils"])
-    assert result5.paths == set(["JsonMapObjectReaderWriter"])
+    assert result4.files == set(["FileNameUtils"])
+    assert result5.files == set(["JsonMapObjectReaderWriter"])

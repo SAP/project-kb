@@ -8,6 +8,11 @@ from stats.collection import StatisticCollection, SubCollectionWrapper
 execution_statistics = StatisticCollection()
 
 
+def set_new():
+    global execution_statistics
+    execution_statistics = StatisticCollection()
+
+
 class TimerError(Exception):
     ...
 
