@@ -159,5 +159,5 @@ def main(force, quiet):
     do_update(quiet=quiet)
 
 
-if __name__ == "__main__":
-    plac.call(main)
+# if __name__ == "__main__":
+#     plac.call(main)
