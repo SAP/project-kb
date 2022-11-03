@@ -7,34 +7,6 @@
         } else {
             selector.classList.replace("btn-outline-primary", "btn-primary");
         }
-
-        // let commit_cards = document.getElementsByClassName('commit');
-        // for (let card of commit_cards) {
-        //     card.classList.remove('d-none');
-        // }
-        // let selectors = document.getElementsByClassName("selector");
-        // for (const selector of selectors) {
-        // if (selector.classList.contains('btn-primary') && !selector.id == "relevancefilter") {
-        //     for (let card of commit_cards) {
-        //         let annotations = JSON.parse(card.dataset.annotations);
-        //         let relevant = annotations.hasOwnProperty(selector.dataset.annotation);
-        //         if (relevant) {
-        //             card.classList.replace('d-none', 'd-flex')
-        //         }
-        //     }
-        // }
-        //     if (selector.id == "relevancefilter") {
-        //         for (let card of commit_cards) {
-        //             let relevance = JSON.parse(card.dataset.relevance);
-        //             if (relevance > 10) {
-        //                 card.classList.add('d-flex')
-        //             } else {
-        //                 card.classList.add('d-none')
-        //             }
-        //         }
-        //     }
-        // }
-        // console.log("toggle: " + selector.dataset.annotation)
     }
 
     function showFromRelevance(relevance) {
