@@ -5,7 +5,7 @@ import pytest
 from commitdb.postgres import PostgresCommitDB
 from stats.execution import execution_statistics
 
-from .main import main
+from .main import main, load_configuration
 
 # from .prospector_client import prospector
 
@@ -41,6 +41,12 @@ def test_main_runonce(setupdb: PostgresCommitDB):
     subprocess.run(args)
 
     setupdb.reset()
+
+
+def test_load_conf():
+    conf = load_configuration("SIMOLA.yaml")
+    print(conf.get("cve_id"))
+    raise NotImplementedError
 
 
 # def test_main_runtwice(setupdb):
