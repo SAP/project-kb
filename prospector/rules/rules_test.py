@@ -6,7 +6,6 @@ from datamodel.commit import Commit
 from rules.rules import apply_rules
 
 # from datamodel.commit_features import CommitWithFeatures
-from .rules import apply_rules, RULES, NEW_RULES
 
 
 @pytest.fixture

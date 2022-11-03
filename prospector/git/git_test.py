@@ -20,7 +20,7 @@ COMMIT_ID_2 = "b38bd36766994715ac5226bfa361cd2f8f29e31e"
 
 @pytest.fixture
 def repository() -> Git:
-    repo = Git("https://github.com/apache/beam")  # apache/beam
+    repo = Git(REPO_URL)  # apache/beam
     repo.clone()
     return repo
 
@@ -33,38 +33,26 @@ def test_extract_timestamp(repository: Git):
     assert commit.get_timestamp() == 1593616852
 
 
-# @pytest.mark.skip(reason="To update")
-def test_get_commits(repository: Git):
-    start_ = repository.extract_tag_timestamp("v2.16.0")
-    end_ = repository.extract_tag_timestamp("v2.17.0")
-    # commits = repository.execute(
-    #     f"git log --all --pretty=format:%H --after={start} --before={end}"
-    # )
-    # print("a7dd23d95d2d214b4110781b5a28802bd43b834b" in commits)
-    # print(len(commits))
-    start = time.time()
-    commits = repository.create_commits(since=start_, until=end_)
-
-    end = time.time()
-    print(len(commits))
-    c = make_from_raw_commit(list(commits.values())[0])
-    print(c.__dict__)
-
-    print(f"Time to create commits: {end - start}s")
-    raise Exception()
-    # print(commits.get("c4c334fedbe6eb367c88b45de0357318178adf16"))
-    assert len(commits.values()) == 260
+def test_show_tags(repository: Git):
+    tags = repository.execute(
+        "git branch -a --contains b38bd36766994715ac5226bfa361cd2f8f29e31e"
+    )
+    print(tags)
+    pass
 
 
-# @pytest.mark.skip(reason="To update")
+def test_create_commits(repository: Git):
+    commits = repository.create_commits()
+    commit = commits.get(COMMIT_ID)
+    assert len(commits) == 357
+    assert commit.get_id() == COMMIT_ID
+
+
 def test_get_hunks_count(repository: Git):
-    commits = repository.get_commits()
-
-    for c in commits:
-        commit = repository.get_commit(c)
-        h1 = commit.get_hunks()
-        h2 = len(commit.get_hunks_old())
-        assert h1 == h2
+    commits = repository.create_commits()
+    commit = commits.get(COMMIT_ID)
+    _, hunks = commit.get_diff()
+    assert hunks == 2
 
 
 def test_get_changed_files(repository: Git):
@@ -74,7 +62,7 @@ def test_get_changed_files(repository: Git):
     assert len(changed_files) == 0
 
 
-@pytest.mark.skip(reason="Not working properly")
+@pytest.mark.skip(reason="Skipping this test")
 def test_extract_timestamp_from_version():
     repo = Git(REPO_URL)
     repo.clone()

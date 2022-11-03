@@ -6,22 +6,16 @@ from .nlp import (
     extract_jira_references,
     extract_affected_filenames,
     find_similar_words,
-    extract_special_terms,
 )
 
 
 def test_extract_similar_words():
     commit_msg = "Is this an advisory message?"
     adv_text = "This is an advisory description message"
-    similarities = find_similar_words(set(adv_text.casefold().split()), commit_msg)
+    similarities = find_similar_words(
+        set(adv_text.casefold().split()), commit_msg, "simola"
+    )
     assert similarities.pop() == "message"
-
-
-@pytest.mark.skip(reason="Outdated")
-def test_adv_record_path_extraction_no_real_paths():
-    result = extract_affected_filenames(ADVISORY_TEXT_1)
-
-    assert result == []
 
 
 ADVISORY_TEXT_1 = """CXF supports (via JwtRequestCodeFilter) passing OAuth 2 parameters via a JWT token as opposed to query parameters (see: The OAuth 2.0 Authorization Framework: JWT Secured Authorization Request (JAR)). Instead of sending a JWT token as a "request" parameter, the spec also supports specifying a URI from which to retrieve a JWT token from via the "request_uri" parameter. CXF was not validating the "request_uri" parameter (apart from ensuring it uses "https) and was making a REST request to the parameter in the request to retrieve a token. This means that CXF was vulnerable to DDos attacks on the authorization server, as specified in section 10.4.1 of the spec. This issue affects Apache CXF versions prior to 3.4.3; Apache CXF versions prior to 3.3.10."""
