@@ -21,6 +21,7 @@ DAY_IN_SECONDS = 86400
 
 SEC_KEYWORDS = [
     "vuln",
+    "vulnerable",
     "vulnerability",
     "exploit",
     "attack",
