@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-import pytest
 
 from api.main import app
 from datamodel.commit import Commit

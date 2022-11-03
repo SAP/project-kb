@@ -1,5 +1,4 @@
 # from dataclasses import asdict
-from telnetlib import COM_PORT_OPTION
 import pytest
 
 from git.git import Git

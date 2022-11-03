@@ -2,7 +2,7 @@ import os
 import os.path
 from random import randint
 
-from client.cli.report import as_html, as_json, report_on_console
+from client.cli.report import as_html, as_json
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from util.sample_data_generation import (  # random_list_of_url,
@@ -11,7 +11,6 @@ from util.sample_data_generation import (  # random_list_of_url,
     random_dict_of_strs,
     random_list_of_cve,
     random_dict_of_github_issue_ids,
-    random_list_of_hunks,
     random_dict_of_jira_refs,
     random_list_of_path,
     random_list_of_strs,
@@ -29,7 +28,7 @@ def test_report_generation():
             repository=random_url(4),
             message=" ".join(random_list_of_strs(100)),
             timestamp=randint(0, 100000),
-            hunks=random_list_of_hunks(1000, 42),
+            hunks=randint(1, 50),
             diff=random_list_of_strs(200),
             changed_files=random_list_of_path(4, 42),
             message_reference_content=random_list_of_strs(42),
@@ -59,10 +58,14 @@ def test_report_generation():
         keywords=tuple(random_list_of_strs(42)),
     )
 
-    filename = "test_report.html"
-    if os.path.isfile(filename):
-        os.remove(filename)
-    generated_report = as_html(
-        candidates, advisory, filename, statistics=sample_statistics()
+    if os.path.isfile("test_report.html"):
+        os.remove("test_report.html")
+    if os.path.isfile("test_report.json"):
+        os.remove("test_report.json")
+    html = as_html(
+        candidates, advisory, "test_report.html", statistics=sample_statistics()
     )
-    assert os.path.isfile(generated_report)
+    json = as_json(candidates, advisory, "test_report.json")
+
+    assert os.path.isfile(html)
+    assert os.path.isfile(json)
