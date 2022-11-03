@@ -121,6 +121,7 @@ class RawCommit:
         return hunks_count
 
     def get_diff(self) -> Tuple[List[str], int]:
+        """Return an array containing the diff lines, and the hunks count"""
         if self.parent_id == "":
             return "", 0
         try:
