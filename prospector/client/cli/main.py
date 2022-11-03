@@ -30,7 +30,7 @@ from client.cli.prospector_client import (  # noqa: E402
     prospector,  # noqa: E402
 )
 from git.git import GIT_CACHE  # noqa: E402
-from stats.execution import execution_statistics, set_new  # noqa: E402
+from stats.execution import execution_statistics  # noqa: E402
 from util.http import ping_backend  # noqa: E402
 
 

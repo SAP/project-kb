@@ -12,6 +12,8 @@ import sys
 from typing import Dict, List
 from urllib.parse import urlparse
 
+import requests
+
 from git.exec import Exec
 from git.raw_commit import RawCommit
 
@@ -28,40 +30,6 @@ from util.lsh import (
 
 GIT_CACHE = os.getenv("GIT_CACHE")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-
-GIT_SEPARATOR = "-@-@-@-@-"
-
-FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
-RELEVANT_EXTENSIONS = [
-    "java",
-    "c",
-    "cpp",
-    "h",
-    "py",
-    "js",
-    "xml",
-    "go",
-    "rb",
-    "php",
-    "sh",
-    "scale",
-    "lua",
-    "m",
-    "pl",
-    "ts",
-    "swift",
-    "sql",
-    "groovy",
-    "erl",
-    "swf",
-    "vue",
-    "bat",
-    "s",
-    "ejs",
-    "yaml",
-    "yml",
-    "jar",
-]
 
 GIT_SEPARATOR = "-@-@-@-@-"
 
@@ -272,6 +240,10 @@ class Git:
             shutil.rmtree(self.path)
             raise e
 
+    def get_tags():
+        cmd = "git log --tags --format=%H - %D"
+        pass
+
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def create_commits(
         self,
@@ -283,8 +255,8 @@ class Git:
         find_in_msg="",
         find_twins=True,
     ) -> Dict[str, RawCommit]:
-
         cmd = f"git log --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+
         if ancestors_of is None or find_twins:
             cmd += " --all"
 
@@ -305,8 +277,8 @@ class Git:
         if until:
             cmd += f" --until={until}"
 
-        for ext in FILTERING_EXTENSIONS:
-            cmd += f" *.{ext}"
+        # for ext in FILTERING_EXTENSIONS:
+        #     cmd += f" *.{ext}"
 
         try:
             logger.debug(cmd)
@@ -337,7 +309,7 @@ class Git:
             if line == GIT_SEPARATOR:
                 if sector == 3:
                     sector = 1
-                    if len(commit.changed_files) > 0:
+                    if 0 < len(commit.changed_files) < 100:
                         commit.msg = commit.msg.strip()
                         if find_twins:
                             # minhash, twins = self.populate_lsh_index(
@@ -363,6 +335,34 @@ class Git:
                     commit.add_changed_file(line)
 
         return commits
+
+    def get_issues(self, since=None) -> Dict[str, str]:
+        owner, repo = self.url.split("/")[-2:]
+        query_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+        # /repos/{owner}/{repo}/issues/{issue_number}
+        params = {
+            "state": "closed",
+            "per_page": 100,
+            "since": since,
+            "page": 1,
+        }
+        headers = {
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github+json",
+        }
+        r = requests.get(query_url, params=params, headers=headers)
+
+        while len(r.json()) > 0:
+            for elem in r.json():
+                body = elem["body"] or ""
+                self.issues[str(elem["number"])] = (
+                    elem["title"] + " " + " ".join(body.split())
+                )
+
+            params["page"] += 1
+            if params["page"] > 10:
+                break
+            r = requests.get(query_url, params=params, headers=headers)
 
     # @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commits(
