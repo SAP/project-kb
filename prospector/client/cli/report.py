@@ -76,7 +76,7 @@ def as_html(
 
 
 def report_on_console(
-    results: "list[Commit]", advisory_record: AdvisoryRecord, verbose=False
+    results: List[Commit], advisory_record: AdvisoryRecord, verbose=False
 ):
     def format_annotations(commit: Commit) -> str:
         out = ""

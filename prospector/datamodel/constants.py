@@ -29,4 +29,5 @@ RELEVANT_EXTENSIONS = [
     "yaml",
     "yml",
     "jar",
+    "jsp",
 ]
