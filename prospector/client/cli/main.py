@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-
-# from advisory_processor.advisory_processor import AdvisoryProcessor
 import argparse
 import configparser
 import logging
@@ -9,30 +7,33 @@ import signal
 import sys
 from pathlib import Path
 from typing import Any, Dict
+from dotenv import load_dotenv
+
 
 path_root = os.getcwd()
 if path_root not in sys.path:
     sys.path.append(path_root)
 
-import log  # noqa: E402
+# Loading .env file before doint anything else
+load_dotenv()
+
+# Load logger before doing anything else
+from log.logger import logger, get_level, pretty_log  # noqa: E402
 
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from client.cli.console_report import report_on_console  # noqa: E402
-from client.cli.html_report import report_as_html  # noqa: E402
-from client.cli.json_report import report_as_json  # noqa: E402
+from client.cli.report import as_json, as_html, report_on_console  # noqa: E402
 from client.cli.prospector_client import (  # noqa: E402
     MAX_CANDIDATES,  # noqa: E402
     TIME_LIMIT_AFTER,  # noqa: E402
     TIME_LIMIT_BEFORE,  # noqa: E402
+    DEFAULT_BACKEND,  # noqa: E402
     prospector,  # noqa: E402
 )
 from git.git import GIT_CACHE  # noqa: E402
 from stats.execution import execution_statistics  # noqa: E402
 from util.http import ping_backend  # noqa: E402
 
-_logger = log.util.init_local_logger()
 
-DEFAULT_BACKEND = "http://localhost:8000"
 # VERSION = '0.1.0'
 # SCRIPT_PATH=os.path.dirname(os.path.realpath(__file__))
 # print(SCRIPT_PATH)
@@ -48,6 +49,19 @@ def parseArguments(args):
     )
 
     parser.add_argument("--repository", default="", type=str, help="Git repository")
+
+    parser.add_argument(
+        "--find-twin",
+        default="",
+        type=str,
+        help="Lookup for a twin of the specified commit",
+    )
+
+    parser.add_argument(
+        "--preprocess-only",
+        action="store_true",
+        help="Only preprocess the commits for the specified repository",
+    )
 
     parser.add_argument(
         "--pub-date", default="", help="Publication date of the advisory"
@@ -85,7 +99,7 @@ def parseArguments(args):
 
     parser.add_argument(
         "--filter-extensions",
-        default="java",
+        default="",
         type=str,
         help="Filter out commits that do not modify at least one file with this extension",
     )
@@ -128,7 +142,7 @@ def parseArguments(args):
     parser.add_argument(
         "--report",
         default="html",
-        choices=["html", "json", "console"],
+        choices=["html", "json", "console", "allfiles"],
         type=str,
         help="Format of the report (options: console, json, html)",
     )
@@ -154,7 +168,7 @@ def parseArguments(args):
         help="Set the logging level",
     )
 
-    return parser.parse_args(args[1:])
+    return parser.parse_args()
 
 
 def getConfiguration(customConfigFile=None):
@@ -181,7 +195,7 @@ def getConfiguration(customConfigFile=None):
     else:
         return None
 
-    _logger.info("Loading configuration from " + configFile)
+    logger.info("Loading configuration from " + configFile)
     config.read(configFile)
     return parse_config(config)
 
@@ -200,17 +214,15 @@ def parse_config(configuration: configparser.ConfigParser) -> Dict[str, Any]:
 
 def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
-        args = parseArguments(argv)  # print(args)
+        args = parseArguments(argv)
 
         if args.log_level:
-            log.config.level = getattr(logging, args.log_level)
+            logger.setLevel(args.log_level)
 
-        _logger.info(
-            f"global log level is set to {logging.getLevelName(log.config.level)}"
-        )
+        logger.info(f"global log level is set to {get_level(string=True)}")
 
         if args.vulnerability_id is None:
-            _logger.error("No vulnerability id was specified. Cannot proceed.")
+            logger.error("No vulnerability id was specified. Cannot proceed.")
             console.print(
                 "No vulnerability id was specified. Cannot proceed.",
                 status=MessageStatus.ERROR,
@@ -220,10 +232,11 @@ def main(argv):  # noqa: C901
         configuration = getConfiguration(args.conf)
 
         if configuration is None:
-            _logger.error("Invalid configuration, exiting.")
+            logger.error("Invalid configuration, exiting.")
             return False
 
         report = args.report or configuration.get("report")
+        report_filename = args.report_filename or configuration.get("report_filename")
 
         nvd_rest_endpoint = configuration.get("nvd_rest_endpoint", "")  # default ???
 
@@ -232,7 +245,7 @@ def main(argv):  # noqa: C901
         use_backend = args.use_backend
 
         if args.ping:
-            return ping_backend(backend, log.config.level < logging.INFO)
+            return ping_backend(backend, get_level() < logging.INFO)
 
         vulnerability_id = args.vulnerability_id
         repository_url = args.repository
@@ -274,12 +287,12 @@ def main(argv):  # noqa: C901
 
         git_cache = configuration.get("git_cache", git_cache)
 
-        _logger.debug("Using the following configuration:")
-        _logger.pretty_log(configuration)
+        logger.debug("Using the following configuration:")
+        pretty_log(logger, configuration)
 
-        _logger.debug("Vulnerability ID: " + vulnerability_id)
-        _logger.debug("time-limit before: " + str(time_limit_before))
-        _logger.debug("time-limit after: " + str(time_limit_after))
+        logger.debug("Vulnerability ID: " + vulnerability_id)
+        logger.debug("time-limit before: " + str(time_limit_before))
+        logger.debug("time-limit after: " + str(time_limit_after))
 
         active_rules = ["ALL"]
 
@@ -305,27 +318,29 @@ def main(argv):  # noqa: C901
         rules=active_rules,
     )
 
+    if args.preprocess_only:
+        return True
+
     with ConsoleWriter("Generating report") as console:
         report_file = None
         if report == "console":
-            report_on_console(results, advisory_record, log.config.level < logging.INFO)
+            report_on_console(results, advisory_record, get_level() < logging.INFO)
         elif report == "json":
-            report_file = report_as_json(
-                results, advisory_record, args.report_filename + ".json"
-            )
+            report_file = as_json(results, advisory_record, report_filename)
         elif report == "html":
-            report_file = report_as_html(
-                results, advisory_record, args.report_filename + ".html"
-            )
+            report_file = as_html(results, advisory_record, report_filename)
+        elif report == "allfiles":
+            as_json(results, advisory_record, report_filename)
+            as_html(results, advisory_record, report_filename)
         else:
-            _logger.warning("Invalid report type specified, using 'console'")
+            logger.warning("Invalid report type specified, using 'console'")
             console.set_status(MessageStatus.WARNING)
             console.print(
                 f"{report} is not a valid report type, 'console' will be used instead",
             )
-            report_on_console(results, advisory_record, log.config.level < logging.INFO)
+            report_on_console(results, advisory_record, get_level() < logging.INFO)
 
-        _logger.info("\n" + execution_statistics.generate_console_tree())
+        logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
         console.print(f"Execution time: {execution_time:.4f} sec")
         if report_file:
@@ -334,7 +349,7 @@ def main(argv):  # noqa: C901
 
 
 def signal_handler(signal, frame):
-    _logger.info("Exited with keyboard interrupt")
+    logger.info("Exited with keyboard interrupt")
     sys.exit(0)
 
 

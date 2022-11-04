@@ -1,6 +1,6 @@
 import pytest
 
-from .test_fixtures import tags
+from .fixtures_test import tags
 from .version_to_tag import get_tag_for_version, recursively_split_version_string
 
 # flake8: noqa

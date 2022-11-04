@@ -1,12 +1,9 @@
-import stat
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from api import DB_CONNECT_STRING
 from commitdb.postgres import PostgresCommitDB
-from datamodel.commit import Commit
 
 router = APIRouter(
     prefix="/commits",
@@ -22,22 +19,21 @@ async def get_commits(
     commit_id: Optional[str] = None,
 ):
     db = PostgresCommitDB()
-    db.connect(DB_CONNECT_STRING)
-    # use case: if a particular commit is queried, details should be returned
+    db.connect()
     data = db.lookup(repository_url, commit_id)
 
-    if not len(data):
+    if len(data) == 0:
         return JSONResponse(status_code=404, content={"message": "Not found"})
 
-    return JSONResponse([d.dict() for d in data])
+    return JSONResponse(data)
 
 
 # -----------------------------------------------------------------------------
 @router.post("/")
-async def upload_preprocessed_commit(payload: List[Commit]):
+async def upload_preprocessed_commit(payload: List[Dict[str, Any]]):
 
     db = PostgresCommitDB()
-    db.connect(DB_CONNECT_STRING)
+    db.connect()
 
     for commit in payload:
         db.save(commit)

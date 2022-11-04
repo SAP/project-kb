@@ -2,7 +2,6 @@
 # flake8: noqa
 
 import difflib
-import hashlib
 import multiprocessing
 import os
 import random
@@ -10,23 +9,61 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime
-from functools import lru_cache
+from typing import Dict, List
 from urllib.parse import urlparse
-from dotenv import load_dotenv
 
-import log.util
+import requests
 
-# from pprint import pprint
-# import pickledb
+from git.exec import Exec
+from git.raw_commit import RawCommit
+
+from log.logger import logger
+
 from stats.execution import execution_statistics, measure_execution_time
+from util.lsh import (
+    build_lsh_index,
+    compute_minhash,
+    encode_minhash,
+    get_encoded_minhash,
+)
 
-_logger = log.util.init_local_logger()
-
-# If we don't parse .env file, we can't use the environment variables
-load_dotenv()
 
 GIT_CACHE = os.getenv("GIT_CACHE")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
+GIT_SEPARATOR = "-@-@-@-@-"
+
+FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
+RELEVANT_EXTENSIONS = [
+    "java",
+    "c",
+    "cpp",
+    "h",
+    "py",
+    "js",
+    "xml",
+    "go",
+    "rb",
+    "php",
+    "sh",
+    "scale",
+    "lua",
+    "m",
+    "pl",
+    "ts",
+    "swift",
+    "sql",
+    "groovy",
+    "erl",
+    "swf",
+    "vue",
+    "bat",
+    "s",
+    "ejs",
+    "yaml",
+    "yml",
+    "jar",
+]
 
 if not os.path.isdir(GIT_CACHE):
     raise ValueError(
@@ -51,7 +88,7 @@ def clone_repo_multiple(
     """
     This is the parallelized version of clone_repo (works with a list of repositories).
     """
-    _logger.debug(f"Using {concurrent} parallel workers")
+    logger.debug(f"Using {concurrent} parallel workers")
     with multiprocessing.Pool(concurrent) as pool:
         args = ((url, output_folder, proxy, shallow, skip_existing) for url in url_list)
         results = pool.starmap(do_clone, args)
@@ -59,7 +96,7 @@ def clone_repo_multiple(
     return results
 
 
-def path_from_url(url, base_path):
+def path_from_url(url: str, base_path):
     url = url.rstrip("/")
     parsed_url = urlparse(url)
     return os.path.join(
@@ -70,41 +107,39 @@ def path_from_url(url, base_path):
 class Git:
     def __init__(
         self,
-        url,
-        cache_path=os.path.abspath("/tmp/git-cache"),
-        shallow=False,
+        url: str,
+        cache_path=os.path.abspath("/tmp/gitcache"),
+        shallow: bool = False,
     ):
         self.repository_type = "GIT"
-        self._url = url
-        self._path = path_from_url(url, cache_path)
-        self._fingerprints = dict()
-        self._exec_timeout = None
-        self._shallow_clone = shallow
-        self.set_exec()
-        self._storage = None
+        self.url = url
+        self.path = path_from_url(url, cache_path)
+        self.fingerprints = dict()
+        self.exec_timeout = None
+        self.shallow_clone = shallow
+        self.exec = Exec(workdir=self.path)
+        self.storage = None
+        # self.lsh_index = build_lsh_index()
 
-    def set_exec(self, exec_obj=None):
-        if not exec_obj:
-            self._exec = Exec(workdir=self._path)
-        else:
-            self._exec = exec_obj
+    def execute(self, cmd: str, silent: bool = False):
+        return self.exec.run(cmd, silent=silent, cache=True)
 
     def get_url(self):
-        return self._url
+        return self.url
 
     def get_default_branch(self):
         """
         Identifies the default branch of the remote repository for the local git
         repo
         """
-        _logger.debug("Identifiying remote branch for %s", self._path)
+        logger.debug("Identifiying remote branch for %s", self.path)
 
         try:
             cmd = "git ls-remote -q"
-            # self._exec._encoding = 'utf-8'
-            l_raw_output = self._exec.run(cmd, cache=True)
+            # self.exec._encoding = 'utf-8'
+            l_raw_output = self.execute(cmd)
 
-            _logger.debug(
+            logger.debug(
                 "Identifiying sha1 of default remote ref among %d entries.",
                 len(l_raw_output),
             )
@@ -116,24 +151,24 @@ class Git:
 
                 if ref_name == "HEAD":
                     head_sha1 = sha1
-                    _logger.debug("Remote head: " + sha1)
+                    logger.debug("Remote head: " + sha1)
                     break
 
         except subprocess.CalledProcessError as ex:
-            _logger.error(
+            logger.error(
                 "Exception happened while obtaining default remote branch for repository in "
-                + self._path
+                + self.path
             )
-            _logger.error(str(ex))
+            logger.error(str(ex))
             return None
 
         # ...then search the corresponding treeish among the local references
         try:
             cmd = "git show-ref"
-            # self._exec._encoding = 'utf-8'
-            l_raw_output = self._exec.run(cmd, cache=True)
+            # self.exec._encoding = 'utf-8'
+            l_raw_output = self.execute(cmd)
 
-            _logger.debug("Processing {} references".format(len(l_raw_output)))
+            logger.debug("Processing {} references".format(len(l_raw_output)))
 
             for raw_line in l_raw_output:
                 (sha1, ref_name) = raw_line.split()
@@ -142,11 +177,12 @@ class Git:
             return None
 
         except Exception as ex:
-            _logger.error(
+            logger.error(
                 "Exception happened while obtaining default remote branch for repository in "
-                + self._path
+                + self.path
             )
-            _logger.error(str(ex))
+
+            logger.error(str(ex))
             return None
 
     def clone(self, shallow=None, skip_existing=False):
@@ -154,164 +190,249 @@ class Git:
         Clones the specified repository checking out the default branch in a subdir of output_folder.
         Shallow=true speeds up considerably the operation, but gets no history.
         """
-        if shallow:
-            self._shallow_clone = shallow
+        if shallow is not None:
+            self.shallow_clone = shallow
 
-        if not self._url:
-            _logger.error("Invalid url specified.")
-            sys.exit(-1)
+        if not self.url:
+            raise Exception("Invalid or missing url.")
 
         # TODO rearrange order of checks
-        if os.path.isdir(os.path.join(self._path, ".git")):
+        if os.path.isdir(os.path.join(self.path, ".git")):
             if skip_existing:
-                _logger.debug(f"Skipping fetch of {self._url} in {self._path}")
+                logger.debug(f"Skipping fetch of {self.url} in {self.path}")
             else:
-                _logger.debug(
-                    f"\nFound repo {self._url} in {self._path}.\nFetching...."
-                )
+                logger.debug(f"Found repo {self.url} in {self.path}.\nFetching....")
 
-                self._exec.run(
-                    ["git", "fetch", "--progress", "--all", "--tags"], cache=True
-                )
-                # , cwd=self._path, timeout=self._exec_timeout)
+                self.execute("git fetch --progress --all --tags")
             return
 
-        if os.path.exists(self._path):
-            _logger.debug(
-                "Folder {} exists but it contains no git repository.".format(self._path)
-            )
+        if os.path.exists(self.path):
+            logger.debug(f"Folder {self.path} is not a git repository.")
             return
 
-        os.makedirs(self._path)
+        os.makedirs(self.path)
 
-        _logger.debug(f"Cloning {self._url} (shallow={self._shallow_clone})")
+        logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
 
-        if not self._exec.run(["git", "init"], ignore_output=True, cache=True):
-            _logger.error(f"Failed to initialize repository in {self._path}")
+        if not self.execute("git init", silent=False):
+            logger.error(f"Failed to initialize repository in {self.path}")
 
         try:
-            self._exec.run(
-                ["git", "remote", "add", "origin", self._url],
-                ignore_output=True,
-                cache=True,
+            self.exec.run(
+                f"git remote add origin {self.url}",
+                silent=True,
             )
-            #  , cwd=self._path)
-        except Exception as ex:
-            _logger.error(f"Could not update remote in {self._path}", exc_info=True)
-            shutil.rmtree(self._path)
-            raise ex
+        except Exception as e:
+            logger.error(f"Could not update remote in {self.path}", exc_info=True)
+            shutil.rmtree(self.path)
+            raise e
 
         try:
-            if self._shallow_clone:
-                self._exec.run(
-                    ["git", "fetch", "--depth", "1"], cache=True
-                )  # , cwd=self._path)
-                # sh.git.fetch('--depth', '1', 'origin', _cwd=self._path)
+            if self.shallow_clone:
+                self.execute("git fetch --depth 1")
             else:
-                # sh.git.fetch('--all', '--tags', _cwd=self._path)
-                self._exec.run(
-                    ["git", "fetch", "--progress", "--all", "--tags"], cache=True
-                )  # , cwd=self._path)
-                # self._exec.run_l(['git', 'fetch', '--tags'], cwd=self._path)
-        except Exception as ex:
-            _logger.error(
-                f"Could not fetch {self._url} (shallow={str(self._shallow_clone)}) in {self._path}",
+                self.execute("git fetch --progress --all --tags")
+        except Exception as e:
+            logger.error(
+                f"Could not fetch {self.url} (shallow={self.shallow_clone}) in {self.path}",
                 exc_info=True,
             )
-            shutil.rmtree(self._path)
-            raise ex
+            shutil.rmtree(self.path)
+            raise e
+
+    def get_tags():
+        cmd = "git log --tags --format=%H - %D"
+        pass
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
+    def create_commits(
+        self,
+        ancestors_of=None,
+        exclude_ancestors_of=None,
+        since=None,
+        until=None,
+        find_in_code="",
+        find_in_msg="",
+        find_twins=True,
+    ) -> Dict[str, RawCommit]:
+        cmd = f"git log --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+
+        if ancestors_of is None or find_twins:
+            cmd += " --all"
+
+        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
+        if ancestors_of:
+            if not find_twins:
+                cmd += f" {ancestors_of}"
+            until = self.extract_tag_timestamp(ancestors_of)
+        # TODO: if find twins is true, we dont need the ancestors, only the timestamps
+        if exclude_ancestors_of:
+            if not find_twins:
+                cmd += f" ^{exclude_ancestors_of}"
+            since = self.extract_tag_timestamp(exclude_ancestors_of)
+
+        if since:
+            cmd += f" --since={since}"
+
+        if until:
+            cmd += f" --until={until}"
+
+        # for ext in FILTERING_EXTENSIONS:
+        #     cmd += f" *.{ext}"
+
+        try:
+            logger.debug(cmd)
+            out = self.execute(cmd)
+            # if --all is used, we are traversing all branches and therefore we can check for twins
+
+            # TODO: problem -> twins can be merge commits, same commits for different branches, not only security related fixes
+
+            return self.parse_git_output(out, find_twins)
+
+        except Exception:
+            logger.error("Git command failed, cannot get commits", exc_info=True)
+            return dict()
+
+    # def populate_lsh_index(self, msg: str, id: str):
+    #     mh = compute_minhash(msg[:64])
+    #     possible_twins = self.lsh_index.query(mh)
+
+    #     self.lsh_index.insert(id, mh)
+    #     return encode_minhash(mh), possible_twins
+
+    def parse_git_output(self, raw: List[str], find_twins: bool = False):
+
+        commits: Dict[str, RawCommit] = dict()
+        commit = None
+        sector = 0
+        for line in raw:
+            if line == GIT_SEPARATOR:
+                if sector == 3:
+                    sector = 1
+                    if 0 < len(commit.changed_files) < 100:
+                        commit.msg = commit.msg.strip()
+                        if find_twins:
+                            # minhash, twins = self.populate_lsh_index(
+                            #     commit.msg, commit.id
+                            # )
+                            commit.minhash = get_encoded_minhash(commit.msg[:64])
+                            # commit.twins = twins
+                            # for twin in twins:
+                            #     commits[twin].twins.append(commit.id)
+
+                        commits[commit.id] = commit
+
+                else:
+                    sector += 1
+            else:
+                if sector == 1:
+                    id, timestamp, parent = line.split(":")
+                    parent = parent.split(" ")[0]
+                    commit = RawCommit(self, id, int(timestamp), parent)
+                elif sector == 2:
+                    commit.msg += line + " "
+                elif sector == 3 and "test" not in line:
+                    commit.add_changed_file(line)
+
+        return commits
+
+    def get_issues(self, since=None) -> Dict[str, str]:
+        owner, repo = self.url.split("/")[-2:]
+        query_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+        # /repos/{owner}/{repo}/issues/{issue_number}
+        params = {
+            "state": "closed",
+            "per_page": 100,
+            "since": since,
+            "page": 1,
+        }
+        headers = {
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github+json",
+        }
+        r = requests.get(query_url, params=params, headers=headers)
+
+        while len(r.json()) > 0:
+            for elem in r.json():
+                body = elem["body"] or ""
+                self.issues[str(elem["number"])] = (
+                    elem["title"] + " " + " ".join(body.split())
+                )
+
+            params["page"] += 1
+            if params["page"] > 10:
+                break
+            r = requests.get(query_url, params=params, headers=headers)
+
+    # @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commits(
         self,
         ancestors_of=None,
         exclude_ancestors_of=None,
         since=None,
         until=None,
-        filter_files="",
         find_in_code="",
         find_in_msg="",
     ):
+        cmd = "git log --format=%H"
+
         if ancestors_of is None:
-            cmd = ["git", "rev-list", "--all"]
-        else:
-            cmd = ["git", "rev-list"]
+            cmd += " --all"
 
-        if since:
-            cmd.append("--since=" + str(since))
-
-        if until:
-            cmd.append("--until=" + str(until))
-
+        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
         if ancestors_of:
-            cmd.append(ancestors_of)
+            cmd += f" {ancestors_of}"
+            until = self.extract_tag_timestamp(ancestors_of)
 
         if exclude_ancestors_of:
-            cmd.append("^" + exclude_ancestors_of)
+            cmd += f" ^{exclude_ancestors_of}"
+            since = self.extract_tag_timestamp(exclude_ancestors_of)
 
-        if filter_files:
-            cmd.append("*." + filter_files)
+        if since:
+            cmd += f" --since={since}"
 
+        if until:
+            cmd += f" --until={until}"
+
+        for ext in FILTERING_EXTENSIONS:
+            cmd += f" *.{ext}"
+
+        # What is this??
         if find_in_code:
-            cmd.append('-S"%s"' % find_in_code)
+            cmd += f" -S{find_in_code}"
 
         if find_in_msg:
-            cmd.append('--grep="%s"' % find_in_msg)
+            cmd += f" --grep={find_in_msg}"
 
         try:
-            _logger.debug(" ".join(cmd))
-            out = self._exec.run(cmd, cache=True)
-            #  cmd_test = ["git", "diff", "--name-only", self._id + "^.." + self._id]
-            # out = self._exec.run(cmd, cache=True)
-        except Exception:
-            _logger.error("Git command failed, cannot get commits", exc_info=True)
-            out = []
+            logger.debug(cmd)
+            out = self.execute(cmd)
 
-        out = [l.strip() for l in out]
-        # res = []
-        # try:
-        #     for id in out:
-        #         cmd = ["git", "diff", "--name-only", id + "^.." + id]
-        #         o = self._exec.run(cmd, cache=True)
-        #         for f in o:
-        #             if "mod_auth_digest" in f:
-        #                 res.append(id)
-        # except Exception:
-        #     _logger.error("Changed files retrieval failed", exc_info=True)
-        #     res = out
+        except Exception:
+            logger.error("Git command failed, cannot get commits", exc_info=True)
+            out = []
 
         return out
 
-    def get_commits_between_two_commit(self, commit_id_from: str, commit_id_to: str):
+    def get_commits_between_two_commit(self, commit_from: str, commit_to: str):
         """
         Return the commits between the start commit and the end commmit if there are path between them or empty list
         """
         try:
-            cmd = [
-                "git",
-                "rev-list",
-                "--ancestry-path",
-                commit_id_from + ".." + commit_id_to,
-            ]
-            path = list(list(self._exec.run(cmd, cache=True)))  # ???
+            cmd = f"git rev-list --ancestry-path {commit_from}..{commit_to}"
+
+            path = self.execute(cmd)  # ???
             if len(path) > 0:
                 path.pop(0)
                 path.reverse()
             return path
         except:
-            _logger.error("Failed to obtain commits, details below:", exc_info=True)
+            logger.error("Failed to obtain commits, details below:", exc_info=True)
             return []
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
-    def get_commit(self, key, by="id"):
-        if by == "id":
-            return RawCommit(self, key)
-        if by == "fingerprint":
-            # TODO implement computing fingerprints
-            c_id = self._fingerprints[key]
-            return RawCommit(self, c_id)
-
-        return None
+    def get_commit(self, id):
+        return RawCommit(self, id)
 
     def get_random_commits(self, count):
         """
@@ -326,7 +447,6 @@ class Git:
         """
         # return Levenshtein.ratio('hello world', 'hello')
         version = re.sub("[^0-9]", "", version)
-        print(version)
         tags = self.get_tags()
         best_match = ("", 0.0)
         for tag in tags:
@@ -338,6 +458,10 @@ class Git:
 
         return best_match
 
+    def extract_tag_timestamp(self, tag: str) -> int:
+        out = self.execute(f"git log -1 --format=%at {tag}")
+        return int(out[0])
+
     # Return the timestamp for given a version if version exist or None
     def extract_timestamp_from_version(self, version: str) -> int:
         tag = self.get_tag_for_version(version)
@@ -345,526 +469,38 @@ class Git:
             return None
 
         commit_id = self.get_commit_id_for_tag(tag[0])
-        commit = self.get_commit(commit_id)
-        return commit.get_timestamp()
-
-    # def pretty_print_tag_ref(self, ref):
-    #     return ref.split('/')[-1]
+        return self.get_commit(commit_id).get_timestamp()
 
     def get_tags(self):
         try:
-            tags = self._exec.run("git tag", cache=True)
+            return self.execute("git tag")
         except subprocess.CalledProcessError as exc:
-            _logger.error("Git command failed." + str(exc.output), exc_info=True)
-            tags = []
-
-        if not tags:
-            tags = []
-
-        return tags
+            logger.error("Git command failed." + str(exc.output), exc_info=True)
+            return []
 
     def get_commit_id_for_tag(self, tag):
-        cmd = "git rev-list -n1 " + tag
-        cmd = cmd.split()
-
+        cmd = f"git rev-list -1 {tag}"
+        commit_id = ""
         try:
-            # @TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
-            commit_id = subprocess.check_output(cmd, cwd=self._path).decode()
-        except subprocess.CalledProcessError as exc:
-            _logger.error("Git command failed." + str(exc.output), exc_info=True)
+            commit_id = self.execute(cmd)
+            if len(commit_id) > 0:
+                return commit_id[0].strip()
+        except subprocess.CalledProcessError as e:
+            logger.error("Git command failed." + str(e.output), exc_info=True)
             sys.exit(1)
-        # else:
-        #     return commit_id.strip()
-        if not commit_id:
-            return None
-        return commit_id.strip()
 
     def get_previous_tag(self, tag):
         # https://git-scm.com/docs/git-describe
-        commit_for_tag = self.get_commit_id_for_tag(tag)
-        cmd = "git describe --abbrev=0 --all --tags --always " + commit_for_tag + "^"
-        cmd = cmd.split()
+        commit = self.get_commit_id_for_tag(tag)
+        cmd = f"git describe --abbrev=0 --all --tags --always {commit}^"
 
         try:
-            # @TODO: https://stackoverflow.com/questions/16198546/get-exit-code-and-stderr-from-subprocess-call
-            tags = self._exec.run(cmd, cache=True)
-        except subprocess.CalledProcessError as exc:
-            _logger.error("Git command failed." + str(exc.output), exc_info=True)
+            tags = self.execute(cmd)
+            if len(tags) > 0:
+                return tags
+        except subprocess.CalledProcessError as e:
+            logger.error("Git command failed." + str(e.output), exc_info=True)
             return []
-
-        if not tags:
-            return []
-
-        return tags
-
-    def get_issue_or_pr_text_from_id(self, id):
-        """
-        Return the text of the issue or PR with the given id
-        """
-        cmd = f"git fetch origin pull/{id}/head"
-
-
-class RawCommit:
-    def __init__(self, repository: Git, commit_id: str, init_data=None):
-        self._attributes = {}
-
-        self._repository = repository
-        self._id = commit_id
-        self._exec = repository._exec
-
-        # the following attributes will be initialized lazily and memoized, unless init_data is not None
-        if init_data:
-            for k in init_data:
-                self._attributes[k] = init_data[k]
-
-    def get_id(self) -> str:
-        if "full_id" not in self._attributes:
-            try:
-                cmd = ["git", "log", "--format=%H", "-n1", self._id]
-                self._attributes["full_id"] = self._exec.run(cmd, cache=True)[0]
-            except Exception:
-                _logger.error(
-                    f"Failed to obtain full commit id for: {self._id} in dir: {self._exec._workdir}",
-                    exc_info=True,
-                )
-        return self._attributes["full_id"]
-
-    def get_parent_id(self):
-        """
-        Returns the list of parents commits
-        """
-        if "parent_id" not in self._attributes:
-            try:
-                cmd = ["git", "log", "--format=%P", "-n1", self._id]
-                parent = self._exec.run(cmd, cache=True)[0]
-                parents = parent.split(" ")
-                self._attributes["parent_id"] = parents
-            except:
-                _logger.error(
-                    f"Failed to obtain parent id for: {self._id} in dir: {self._exec._workdir}",
-                    exc_info=True,
-                )
-        return self._attributes["parent_id"]
-
-    def get_repository(self):
-        return self._repository._url
-
-    def get_msg(self):
-        if "msg" not in self._attributes:
-            self._attributes["msg"] = ""
-            try:
-                cmd = ["git", "log", "--format=%B", "-n1", self._id]
-                self._attributes["msg"] = " ".join(self._exec.run(cmd, cache=True))
-            except Exception:
-                _logger.error(
-                    f"Failed to obtain commit message for commit: {self._id} in dir: {self._exec._workdir}",
-                    exc_info=True,
-                )
-        return self._attributes["msg"]
-
-    def get_diff(self, context_size: int = 1, filter_files: str = ""):
-        if "diff" not in self._attributes:
-            self._attributes["diff"] = ""
-            try:
-                cmd = [
-                    "git",
-                    "diff",
-                    "--unified=" + str(context_size),
-                    self._id + "^.." + self._id,
-                ]
-                if filter_files:
-                    cmd.append("*." + filter_files)
-                self._attributes["diff"] = self._exec.run(cmd, cache=True)
-            except Exception:
-                _logger.error(
-                    f"Failed to obtain patch for commit: {self._id} in dir: {self._exec._workdir}",
-                    exc_info=True,
-                )
-        return self._attributes["diff"]
-
-    def get_timestamp(self, date_format=None):
-        if "timestamp" not in self._attributes:
-            self._attributes["timestamp"] = None
-            self.get_timing_data()
-            # self._timestamp = self.timing_data()[2]
-        if date_format:
-            return datetime.utcfromtimestamp(
-                int(self._attributes["timestamp"])
-            ).strftime(date_format)
-        return int(self._attributes["timestamp"])
-
-    @measure_execution_time(
-        execution_statistics.sub_collection("core"),
-        name="retrieve changed file from git",
-    )
-    def get_changed_files(self):
-        if "changed_files" not in self._attributes:
-            cmd = ["git", "diff", "--name-only", self._id + "^.." + self._id]
-            try:
-                out = self._exec.run(cmd, cache=True)
-                self._attributes["changed_files"] = out  # This is a tuple
-            # This exception is raised when the commit is the first commit in the repository
-            except Exception as e:
-                _logger.error(
-                    f"Failed to obtain changed files for commit {self._id}, it may be the first commit of the repository. Processing anyway...",
-                    exc_info=True,
-                )
-                self._attributes["changed_files"] = []
-
-        return self._attributes["changed_files"]
-
-    def get_changed_paths(self, other_commit=None, match=None):
-        # TODO refactor, this overlaps with changed_files
-        if other_commit is None:
-            other_commit_id = self._id + "^"
-        else:
-            other_commit_id = other_commit._id
-
-        cmd = [
-            "git",
-            "log",
-            "--name-only",
-            "--format=%n",
-            "--full-index",
-            other_commit_id + ".." + self._id,
-        ]
-        try:
-            out = self._exec.run(cmd, cache=True)
-        except Exception as e:
-            out = str()
-            sys.stderr.write(str(e))
-            sys.stderr.write(
-                "There was a problem when getting the list of commits in the interval %s..%s\n"
-                % (other_commit.id()[0], self._id)
-            )
-            return out
-
-        if match:
-            out = [l.strip() for l in out if re.match(match, l)]
-        else:
-            out = [l.strip() for l in out]
-
-        return out
-
-    def get_hunks(self, grouped=False):
-        def is_hunk_line(line):
-            return line[0] in "-+" and (len(line) < 2 or (line[1] != line[0]))
-
-        def flatten_groups(hunk_groups):
-            hunks = []
-            for group in hunk_groups:
-                for h in group:
-                    hunks.append(h)
-            return hunks
-
-        def is_new_file(l):
-            return l[0:11] == "diff --git "
-
-        if "hunks" not in self._attributes:
-            self._attributes["hunks"] = []
-
-            diff_lines = self.get_diff()
-            # pprint(diff_lines)
-
-            first_line_of_current_hunk = -1
-            current_group = []
-            line_no = 0
-            for line_no, line in enumerate(diff_lines):
-                # print(line_no, line)
-                if is_new_file(line):
-                    if len(current_group) > 0:
-                        self._attributes["hunks"].append(current_group)
-                        current_group = []
-                        first_line_of_current_hunk = -1
-
-                elif is_hunk_line(line):
-                    if first_line_of_current_hunk == -1:
-                        # print('first_line_of_current_hunk', line_no)
-                        first_line_of_current_hunk = line_no
-                else:
-                    if first_line_of_current_hunk != -1:
-                        current_group.append((first_line_of_current_hunk, line_no))
-                        first_line_of_current_hunk = -1
-
-            if first_line_of_current_hunk != -1:
-                # wrap up hunk that ends at the end of the patch
-                # print('line_no:', line_no)
-                current_group.append((first_line_of_current_hunk, line_no + 1))
-
-            self._attributes["hunks"].append(current_group)
-
-        if grouped:
-            return self._attributes["hunks"]
-        else:
-            return flatten_groups(self._attributes["hunks"])
-
-    def equals(self, other_commit):
-        """
-        Return true if the two commits contain the same changes (despite different commit messages)
-        """
-        return self.get_fingerprint() == other_commit.get_fingerprint()
-
-    def get_fingerprint(self):
-        if "fingerprint" not in self._attributes:
-            # try:
-            cmd = ["git", "show", '--format="%t"', "--numstat", self._id]
-            out = self._exec.run(cmd, cache=True)
-            self._attributes["fingerprint"] = hashlib.md5(
-                "\n".join(out).encode()
-            ).hexdigest()
-
-        return self._attributes["fingerprint"]
-
-    def get_timing_data(self):
-        data = self._get_timing_data()
-        self._attributes["next_tag"] = data[0]
-        # self._next_tag = data[0]
-
-        self._attributes["next_tag_timestamp"] = data[1]
-        # self._next_tag_timestamp = data[1]
-
-        self._attributes["timestamp"] = data[2]
-        # self._timestamp = data[2]
-
-        self._attributes["time_to_tag"] = data[3]
-        # self._time_to_tag = data[3]
-
-    # TODO refactor
-    # this method should become private and should be invoked to initialize (lazily)
-    # # the relevant attributes.
-    def _get_timing_data(self):
-        # print("WARNING: deprecated method Commit::timing_data(), use Commit::get_next_tag() instead.")
-        # if not os.path.exists(self._path):
-        #     print('Folder ' + self._path + ' must exist!')
-        #     return None
-
-        # get tag info
-        raw_out = self._exec.run(
-            "git tag --sort=taggerdate --contains " + self._id, cache=True
-        )  # ,  cwd=self._path)
-        if raw_out:
-            tag = raw_out[0]
-            tag_timestamp = self._exec.run(
-                'git show -s --format="%at" ' + tag + "^{commit}", cache=True
-            )[0][1:-1]
-        else:
-            tag = ""
-            tag_timestamp = "0"
-
-        try:
-            commit_timestamp = self._exec.run(
-                'git show -s --format="%at" ' + self._id, cache=True
-            )[0][1:-1]
-            time_delta = int(tag_timestamp) - int(commit_timestamp)
-            if time_delta < 0:
-                time_delta = -1
-        except:
-            commit_timestamp = "0"
-            time_delta = 0
-
-        # tag_date = datetime.utcfromtimestamp(int(tag_timestamp)).strftime(
-        #     "%Y-%m-%d %H:%M:%S"
-        # )
-        # commit_date = datetime.utcfromtimestamp(int(commit_timestamp)).strftime(
-        #     "%Y-%m-%d %H:%M:%S"
-        # )
-
-        # if self._verbose:
-        #     print("repository:                 " + self._repository._url)
-        #     print("commit:                     " + self._id)
-        #     print("commit_date:                " + commit_timestamp)
-        #     print("                            " + commit_date)
-        #     print("tag:                        " + tag)
-        #     print("tag_timestamp:              " + tag_timestamp)
-        #     print("                            " + tag_date)
-        #     print(
-        #         "Commit-to-release interval: {0:.2f} days".format(
-        #             time_delta / (3600 * 24)
-        #         )
-        #     )
-
-        self._timestamp = commit_timestamp
-        return (tag, tag_timestamp, commit_timestamp, time_delta)
-
-    def get_tags(self):
-        if "tags" not in self._attributes:
-            cmd = "git tag --contains " + self._id
-            tags = self._exec.run(cmd, cache=True)
-            if not tags:
-                self._attributes["tags"] = []
-            else:
-                self._attributes["tags"] = tags
-
-        return self._attributes["tags"]
-
-    def get_next_tag(self):
-        if "next_tag" not in self._attributes:
-            self.get_timing_data()
-        return (
-            self._attributes["next_tag"],
-            self._attributes["next_tag_timestamp"],
-            self._attributes["time_to_tag"],
-        )
-
-    def __str__(self):
-        data = (
-            self._id,
-            self.get_timestamp(date_format="%Y-%m-%d %H:%M:%S"),
-            self.get_timestamp(),
-            self._repository.get_url(),
-            self.get_msg(),
-            len(self.get_hunks()),
-            len(self.get_changed_paths()),
-            self.get_next_tag()[0],
-            "\n".join(self.get_changed_paths()),
-        )
-        return """
-        Commit id:         {}
-        Date (timestamp):  {} ({})
-        Repository:        {}
-        Message:           {}
-        hunks: {},  changed files: {},  (oldest) tag: {}
-        {}""".format(
-            *data
-        )
-
-
-class RawCommitSet:
-    def __init__(self, repo=None, commit_ids=[], prefetch=False):
-
-        if repo is not None:
-            self._repository = repo
-        else:
-            raise ValueError  # pragma: no cover
-
-        self._commits = []
-
-        # TODO when the flag 'prefetch' is True, fetch all data in one shot (one single
-        # call to the git binary) and populate all commit objects. A dictionary paramenter
-        # passed to the Commit constructor will be used to pass the fields that need to be populated
-        commits_count = len(commit_ids)
-        if prefetch is True and commits_count > 50:
-            _logger.warning(
-                f"Processing {commits_count:d} commits will take some time!"
-            )
-            for cid in commit_ids:
-                commit_data = {"id": "", "msg": "", "patch": "", "timestamp": ""}
-                current_field = None
-                commit_raw_data = self._repository._exec.run(
-                    "git show --format=@@@@@SHA1@@@@@%n%H%n@@@@@LOGMSG@@@@@%n%s%n%b%n@@@@@TIMESTAMP@@@@@@%n%at%n@@@@@PATCH@@@@@ "
-                    + cid,
-                    cache=True,
-                )
-
-                for line in commit_raw_data:
-                    if line == "@@@@@SHA1@@@@@":
-                        current_field = "id"
-                    elif line == "@@@@@LOGMSG@@@@@":
-                        current_field = "msg"
-                    elif line == "@@@@@TIMESTAMP@@@@@":
-                        current_field = "timestamp"
-                    else:
-                        commit_data[current_field] += "\n" + line
-
-                self._commits.append(
-                    RawCommit(self._repository, cid, init_data=commit_data)
-                )
-        else:
-            self._commits = [RawCommit(self._repository, c) for c in commit_ids]
-
-    def get_all(self):
-        return self._commits
-
-    def add(self, commit_id):
-        self._commits.append(RawCommit(self._repository, commit_id))
-        return self
-
-    def filter_by_msg(self, word):
-        return [c for c in self.get_all() if word in c.get_msg()]
-
-
-class Exec:
-    def __init__(self, workdir=None, encoding="latin-1", timeout=None):
-        self._encoding = encoding
-        self._timeout = timeout
-        self.setDir(workdir)
-
-    def setDir(self, path):
-        if os.path.isabs(path):
-            self._workdir = path
-        else:
-            raise ValueError("Path must be absolute for Exec to work: " + path)
-
-    def run(self, cmd, ignore_output=False, cache: bool = False):
-        if cache:
-            result = self._run_cached(
-                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
-            )
-        else:
-            result = self._run_uncached(
-                tuple(cmd) if isinstance(cmd, list) else cmd, ignore_output
-            )
-        return result
-
-    @lru_cache(maxsize=10000)
-    def _run_cached(self, cmd, ignore_output=False):
-        return self._run_uncached(cmd, ignore_output=ignore_output)
-
-    def _run_uncached(self, cmd, ignore_output=False):
-        if isinstance(cmd, str):
-            cmd = cmd.split()
-
-        if ignore_output:
-            self._execute_no_output(cmd)
-            return ()
-
-        result = self._execute(cmd)
-        if result is None:
-            return ()
-
-        return tuple(result)
-
-    def _execute_no_output(self, cmd_l):
-        try:
-            subprocess.check_call(
-                cmd_l,
-                cwd=self._workdir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except subprocess.TimeoutExpired:  # pragma: no cover
-            _logger.error(
-                "Timeout exceeded (" + self._timeout + " seconds)", exc_info=True
-            )
-            raise Exception("Process did not respond for " + self._timeout + " seconds")
-
-    def _execute(self, cmd_l):
-        try:
-            proc = subprocess.Popen(
-                cmd_l,
-                cwd=self._workdir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,  # Needed to have properly prinded error output
-            )
-            out, _ = proc.communicate()
-
-            if proc.returncode != 0:
-                raise Exception(
-                    "Process (%s) exited with non-zero return code" % " ".join(cmd_l)
-                )
-            # if err:       # pragma: no cover
-            #     traceback.print_exc()
-            #     raise Exception('Execution failed')
-
-            raw_output_list = out.decode(self._encoding).split("\n")
-            return [r for r in raw_output_list if r.strip() != ""]
-        except subprocess.TimeoutExpired:  # pragma: no cover
-            _logger.error(f"Timeout exceeded ({self._timeout} seconds)", exc_info=True)
-            raise Exception(f"Process did not respond for {self._timeout} seconds")
-            # return None
-        # except Exception as ex:                 # pragma: no cover
-        #     traceback.print_exc()
-        #     raise ex
 
 
 # Donald Knuth's "reservoir sampling"
@@ -878,3 +514,12 @@ def reservoir_sampling(input_list, N):
             replace = random.randint(0, len(sample) - 1)
             sample[replace] = line
     return sample
+
+
+def make_raw_commit(
+    repository: Git,
+    id: str,
+    timestamp: int,
+    parent_id: str = "",
+) -> RawCommit:
+    return RawCommit(repository, id, parent_id)

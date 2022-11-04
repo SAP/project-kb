@@ -5,11 +5,10 @@ from fastapi import APIRouter
 from rq import Connection, Queue
 from rq.job import Job
 
-import log.util
+from log.logger import logger
 from api.routers.nvd_feed_update import main
 from git.git import do_clone
 
-_logger = log.util.init_local_logger()
 
 redis_url = os.environ["REDIS_URL"]
 
@@ -57,7 +56,7 @@ async def get_job(job_id):
         queue = Queue()
         job = queue.fetch_job(job_id)
     if job:
-        _logger.info("job {} result: {}".format(job.get_id(), job.result))
+        logger.info("job {} result: {}".format(job.get_id(), job.result))
         response_object = {
             "job_data": {
                 "job_id": job.get_id(),

@@ -1,30 +1,27 @@
 # from typing import Tuple
 # from datamodel import BaseModel
 import logging
-from datetime import datetime
-from os import system
-from typing import List, Optional, Set, Tuple
+import os
+from dateutil.parser import isoparse
+from typing import List, Optional, Set
 from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel, Field
-import spacy
 
-import log.util
-from util.collection import union_of
+from log.logger import logger, pretty_log, get_level
 from util.http import fetch_url
 
 from .nlp import (
     extract_affected_filenames,
-    extract_nouns_from_text,
+    extract_words_from_text,
     extract_products,
-    extract_special_terms,
     extract_versions,
 )
 
 ALLOWED_SITES = [
     "github.com",
-    "github.io",
+    # "github.io",
     "apache.org",
     "issues.apache.org",
     "gitlab.org",
@@ -49,13 +46,12 @@ ALLOWED_SITES = [
     "jvndb.jvn.jp",  # for testing: sometimes unreachable
 ]
 
-_logger = log.util.init_local_logger()
 
 LOCAL_NVD_REST_ENDPOINT = "http://localhost:8000/nvd/vulnerabilities/"
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
+NVD_API_KEY = os.getenv("NVD_API_KEY", "")
 
 
-# TODO: refactor and clean
 class AdvisoryRecord(BaseModel):
     """
     The advisory record captures all relevant information on the vulnerability advisory
@@ -65,6 +61,7 @@ class AdvisoryRecord(BaseModel):
     repository_url: str = ""
     published_timestamp: int = 0
     last_modified_timestamp: int = 0
+    # TODO: use a dict for the references
     references: List[str] = Field(default_factory=list)
     references_content: List[str] = Field(default_factory=list)
     affected_products: List[str] = Field(default_factory=list)
@@ -74,7 +71,7 @@ class AdvisoryRecord(BaseModel):
     versions: List[str] = Field(default_factory=list)
     from_nvd: bool = False
     nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOINT
-    paths: Set[str] = Field(default_factory=set)
+    files: Set[str] = Field(default_factory=set)
     keywords: Set[str] = Field(default_factory=set)
 
     # def __init__(self, vulnerability_id, repository_url, from_nvd, nvd_rest_endpoint):
@@ -84,33 +81,46 @@ class AdvisoryRecord(BaseModel):
     #     self.nvd_rest_endpoint = nvd_rest_endpoint
 
     def analyze(
-        self, use_nvd: bool = False, fetch_references: bool = False, relevant_extensions: List[str] = []
+        self,
+        use_nvd: bool = False,
+        fetch_references: bool = False,
+        relevant_extensions: List[str] = [],
     ):
         self.from_nvd = use_nvd
         if self.from_nvd:
             self.get_advisory(self.vulnerability_id, self.nvd_rest_endpoint)
 
-        self.versions = union_of(self.versions, extract_versions(self.description))
-        self.affected_products = union_of(
-            self.affected_products, extract_products(self.description)
-        )
+        # Union of also removed duplicates...
+        self.versions.extend(extract_versions(self.description))
+        self.versions = list(set(self.versions))
+        # = union_of(self.versions, extract_versions(self.description))
+        self.affected_products.extend(extract_products(self.description))
+        self.affected_products = list(set(self.affected_products))
+
+        #  = union_of(
+        #     self.affected_products, extract_products(self.description)
+        # )
         # TODO: use a set where possible to speed up the rule application time
-        self.paths.update(
-            extract_affected_filenames(self.description, relevant_extensions)  # TODO: this could be done on the words extracted from the description
+        self.files.update(
+            extract_affected_filenames(self.description)
+            # TODO: this could be done on the words extracted from the description
         )
+        # print(self.files)
 
-        self.keywords.update(extract_nouns_from_text(self.description))
+        self.keywords.update(extract_words_from_text(self.description))
 
-        _logger.debug("References: " + str(self.references))
+        logger.debug("References: " + str(self.references))
         self.references = [
             r for r in self.references if urlparse(r).hostname in ALLOWED_SITES
         ]
-        _logger.debug("Relevant references: " + str(self.references))
+        logger.debug("Relevant references: " + str(self.references))
         if fetch_references:
             for r in self.references:
+                if "github.com" in r:
+                    continue
                 ref_content = fetch_url(r)
                 if len(ref_content) > 0:
-                    _logger.debug("Fetched content of reference " + r)
+                    logger.debug("Fetched content of reference " + r)
                     self.references_content.append(ref_content)
 
     # TODO check behavior when some of the data attributes of the AdvisoryRecord
@@ -125,8 +135,8 @@ class AdvisoryRecord(BaseModel):
         returns: description, published_timestamp, last_modified timestamp, list of references
         """
 
-        if not self.get_from_local_db(vuln_id, nvd_rest_endpoint):
-            self.get_from_nvd(vuln_id)
+        # if not self.get_from_local_db(vuln_id, nvd_rest_endpoint):
+        self.get_from_nvd(vuln_id)
 
     # TODO: refactor this stuff
     def get_from_local_db(
@@ -140,13 +150,9 @@ class AdvisoryRecord(BaseModel):
             if response.status_code != 200:
                 return False
             data = response.json()
-            self.published_timestamp = int(
-                datetime.fromisoformat(data["publishedDate"][:-1] + ":00").timestamp()
-            )
+            self.published_timestamp = int(isoparse(data["publishedDate"]).timestamp())
             self.last_modified_timestamp = int(
-                datetime.fromisoformat(
-                    data["lastModifiedDate"][:-1] + ":00"
-                ).timestamp()
+                isoparse(data["lastModifiedDate"]).timestamp()
             )
 
             self.description = data["cve"]["description"]["description_data"][0][
@@ -156,13 +162,12 @@ class AdvisoryRecord(BaseModel):
                 r["url"] for r in data["cve"]["references"]["reference_data"]
             ]
             return True
-        except Exception as e:
+        except Exception:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
-                "Could not retrieve vulnerability data from NVD for " + vuln_id,
-                exc_info=log.config.level < logging.INFO,
+            logger.error(
+                f"Could not retrieve {vuln_id} from the local database",
+                exc_info=get_level() < logging.INFO,
             )
-            print(e)
             return False
 
     def get_from_nvd(self, vuln_id: str, nvd_rest_endpoint: str = NVD_REST_ENDPOINT):
@@ -170,27 +175,28 @@ class AdvisoryRecord(BaseModel):
         Get an advisory from the NVD dtabase
         """
         try:
-            response = requests.get(nvd_rest_endpoint + vuln_id)
+            headers = {"apiKey": NVD_API_KEY}
+            response = requests.get(nvd_rest_endpoint + vuln_id, headers=headers)
+
             if response.status_code != 200:
                 return False
             data = response.json()["vulnerabilities"][0]["cve"]
-            self.published_timestamp = int(
-                datetime.fromisoformat(data["published"]).timestamp()
-            )
+            self.published_timestamp = int(isoparse(data["published"]).timestamp())
 
             self.last_modified_timestamp = int(
-                datetime.fromisoformat(data["lastModified"]).timestamp()
+                isoparse(data["lastModified"]).timestamp()
             )
             self.description = data["descriptions"][0]["value"]
             self.references = [r["url"] for r in data["references"]]
         except Exception as e:
             # Might fail either or json parsing error or for connection error
-            _logger.error(
-                "Could not retrieve vulnerability data from NVD for " + vuln_id,
-                exc_info=log.config.level < logging.INFO,
+            logger.error(
+                f"Could not retrieve {vuln_id} from the NVD api",
+                exc_info=get_level() < logging.INFO,
             )
-            print(e)
-            return False
+            raise Exception(
+                f"Could not retrieve {vuln_id} from the NVD api {e}",
+            )
 
 
 def build_advisory_record(
@@ -214,27 +220,27 @@ def build_advisory_record(
         nvd_rest_endpoint=nvd_rest_endpoint,
     )
 
-    _logger.pretty_log(advisory_record)
+    pretty_log(logger, advisory_record)
     advisory_record.analyze(
         use_nvd=use_nvd,
         fetch_references=fetch_references,
         relevant_extensions=filter_extensions,
     )
-    _logger.debug(f"{advisory_record.keywords=}")
+    logger.debug(f"{advisory_record.keywords=}")
 
     if publication_date != "":
         advisory_record.published_timestamp = int(
-            datetime.fromisoformat(publication_date).timestamp()
+            isoparse(publication_date).timestamp()
         )
 
     if len(advisory_keywords) > 0:
         advisory_record.keywords.update(advisory_keywords)
 
     if len(modified_files) > 0:
-        advisory_record.paths.update(modified_files)
+        advisory_record.files.update(modified_files)
 
-    _logger.debug(f"{advisory_record.keywords=}")
-    _logger.debug(f"{advisory_record.paths=}")
+    logger.debug(f"{advisory_record.keywords=}")
+    logger.debug(f"{advisory_record.files=}")
 
     return advisory_record
 

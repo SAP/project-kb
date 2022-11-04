@@ -1,8 +1,6 @@
 from typing import Dict, Set
 
 import pandas
-from spacy import load
-import spacy
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -21,17 +19,50 @@ DAYS_AFTER = 365
 DAY_IN_SECONDS = 86400
 
 
-# AttributeError: 'tuple' object has no attribute 'cve_refs'
-def extract_references_vuln_id(commit: Commit, advisory_record: AdvisoryRecord) -> bool:
-    return advisory_record.vulnerability_id in commit.cve_refs
+SEC_KEYWORDS = [
+    "vuln",
+    "vulnerability",
+    "exploit",
+    "attack",
+    "security",
+    "secure",
+    "xxe",
+    "xss",
+    "cross-site",
+    "dos",
+    "insecure",
+    "inject",
+    "injection",
+    "unsafe",
+    "remote execution",
+    "malicious",
+    "sanitize",
+    "cwe-",
+    "rce",
+]
+
+KEYWORDS_REGEX = r"(?:^|[.,:\s]|\b)({})(?:$|[.,:\s]|\b)".format("|".join(SEC_KEYWORDS))
 
 
+# TODO: this stuff could be made better considering lemmatization, etc
+def extract_security_keywords(text: str) -> Set[str]:
+    """
+    Return the list of the security keywords found in the text
+    """
+    # TODO: use a regex to catch all possible words consider spaces, commas, dots, etc
+    return set([word for word in SEC_KEYWORDS if word in text.casefold().split()])
+
+    # set([r.group(1) for r in re.finditer(KEYWORDS_REGEX, text, flags=re.I)])
+
+
+# Unused
 def extract_time_between_commit_and_advisory_record(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> int:
     return commit.timestamp - advisory_record.published_timestamp
 
 
+# Unused
 def extract_changed_relevant_paths(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> Set[str]:
@@ -48,12 +79,14 @@ def extract_changed_relevant_paths(
     return set(relevant_paths)
 
 
+# Unused
 def extract_other_CVE_in_message(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> Dict[str, str]:
     return dict.fromkeys(set(commit.cve_refs) - {advisory_record.vulnerability_id}, "")
 
 
+# Unused
 def is_commit_in_given_interval(
     version_timestamp: int, commit_timestamp: int, day_interval: int
 ) -> bool:
@@ -88,6 +121,7 @@ def extract_referred_to_by_nvd(
     )
 
 
+# Unused
 def is_commit_reachable_from_given_tag(
     commit: Commit, advisory_record: AdvisoryRecord, version_tag: str
 ) -> bool:
@@ -108,24 +142,7 @@ def is_commit_reachable_from_given_tag(
     return True
 
 
-# def extract_referred_to_by_pages_linked_from_advisories(
-#     commit: Commit, advisory_record: AdvisoryRecord
-# ) -> Set[str]:
-#     allowed_references = filter(
-#         lambda reference: urlparse(reference).hostname in ALLOWED_SITES,
-#         advisory_record.references,
-#     )
-#     session = requests_cache.CachedSession("requests-cache")
-
-#     def is_commit_cited_in(reference: str):
-#         try:
-#             return commit.commit_id[:8] in session.get(reference).text
-#         except Exception:
-#             _logger.debug(f"can not retrieve site: {reference}", exc_info=True)
-#             return False
-#     return set(filter(is_commit_cited_in, allowed_references))
-
-# TODO: implement ????
+# TODO: implement this properly
 def extract_commit_mentioned_in_linked_pages(
     commit: Commit, advisory_record: AdvisoryRecord
 ) -> int:
@@ -142,6 +159,7 @@ def extract_commit_mentioned_in_linked_pages(
     return matching_references_count
 
 
+# Unused
 def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
     similarities = pandas.DataFrame(
         columns=[
