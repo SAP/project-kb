@@ -75,12 +75,31 @@ def prospector(  # noqa: C901
     # obtain a repository object
     repository = Git(repository_url, git_cache)
 
+    with ConsoleWriter("Git repository cloning") as _:
+        logger.info(f"Downloading repository {repository.url} in {repository.path}")
+        repository.clone()
+
+        tags = repository.get_tags()
+
+        logger.debug(f"Found tags: {tags}")
+        logger.info(f"Done retrieving {repository.url}")
+
+    prev_tag = None
+    next_tag = None
+
+    if tag_interval != "":
+        prev_tag, next_tag = tag_interval.split(":")
+    elif version_interval != "":
+        vuln_version, fixed_version = version_interval.split(":")
+        prev_tag = get_tag_for_version(tags, vuln_version)[0]
+        next_tag = get_tag_for_version(tags, fixed_version)[0]
+
     # retrieve of commit candidates
     candidates = get_candidates(
         advisory_record,
         repository,
-        tag_interval,
-        version_interval,
+        prev_tag,
+        next_tag,
         time_limit_before,
         time_limit_after,
         limit_candidates,
@@ -142,10 +161,22 @@ def prospector(  # noqa: C901
     # apply rules and rank candidates
     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
 
+    twin_branches = {commit.commit_id: commit.get_tag() for commit in ranked_candidates}
+
     # TODO: aggregate twins and check tags
     # ranked_candidates = aggregate_twins(ranked_candidates)
+    tagged_candidates = [
+        commit
+        for commit in ranked_candidates
+        if commit.has_tag()
+        and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
+    ]
+    # This is horrible and slow
+    for commit in tagged_candidates:
+        for twin in commit.twins:
+            twin[0] = twin_branches[twin[1]]
 
-    return ranked_candidates, advisory_record
+    return tagged_candidates, advisory_record
 
 
 def filter(commits: List[Commit]) -> List[Commit]:
@@ -162,6 +193,17 @@ def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: Lis
             ranked_commits = apply_ranking(apply_rules(commits, advisory, rules=rules))
 
     return ranked_commits
+
+
+def aggregate_twins(commits: List[Commit], tag_interval: str) -> List[Commit]:
+    aggregated_commits = list()
+    for commit in commits:
+        if commit.has_twin() and commit.has_tag():
+            aggregated_commits.append(commit)
+        elif not commit.has_twin():
+            aggregated_commits.append(commit)
+
+    return aggregated_commits
 
 
 def retrieve_preprocessed_commits(
@@ -227,8 +269,8 @@ def save_preprocessed_commits(backend_address, payload):
 def get_candidates(
     advisory_record: AdvisoryRecord,
     repository: Git,
-    tag_interval: str,
-    version_interval: str,
+    prev_tag: str,
+    next_tag: str,
     time_limit_before: int,
     time_limit_after: int,
     limit_candidates: int,
@@ -236,25 +278,8 @@ def get_candidates(
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
     ):
-        with ConsoleWriter("Git repository cloning") as _:
-            logger.info(f"Downloading repository {repository.url} in {repository.path}")
-            repository.clone()
-
-            tags = repository.get_tags()
-
-            logger.debug(f"Found tags: {tags}")
-            logger.info(f"Done retrieving {repository.url}")
 
         with ConsoleWriter("Candidate commit retrieval") as writer:
-            prev_tag = None
-            next_tag = None
-
-            if tag_interval != "":
-                prev_tag, next_tag = tag_interval.split(":")
-            elif version_interval != "":
-                vuln_version, fixed_version = version_interval.split(":")
-                prev_tag = get_tag_for_version(tags, vuln_version)[0]
-                next_tag = get_tag_for_version(tags, fixed_version)[0]
 
             since = None
             until = None

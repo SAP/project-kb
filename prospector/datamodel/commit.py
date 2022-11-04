@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
@@ -32,12 +32,13 @@ class Commit(BaseModel):
     relevance: Optional[int] = 0
     matched_rules: List[Dict[str, str | int]] = Field(default_factory=list)
     minhash: Optional[str] = ""
-    twins: List[str] = Field(default_factory=list)
+    twins: List[List[str]] = Field(default_factory=list)
 
     def to_dict(self):
         d = dict(self.__dict__)
         del d["matched_rules"]
         del d["relevance"]
+        del d["twins"]
         return d
 
     def get_hunks(self):
@@ -57,6 +58,15 @@ class Commit(BaseModel):
                 return
 
         self.matched_rules.append(rule)
+
+    def has_twin(self):
+        return len(self.twins) > 0
+
+    def has_tag(self):
+        return self.tags[0] != ""
+
+    def get_tag(self):
+        return self.tags[0]
 
     def compute_relevance(self):
         self.relevance = sum([rule.get("relevance") for rule in self.matched_rules])
