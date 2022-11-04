@@ -301,11 +301,11 @@ class RawCommit:
         return tags
 
     def get_tag(self):
-        cmd = f"git describe --contains {self.id}"
+        # cmd = f"git describe --abbrev=0 --contains {self.id}"
+        cmd = f"git name-rev --tags --name-only {self.id}"
         tag = self.execute(cmd)
-        if len(tag) > 0:
-            return re.sub(r"~\w*", "", tag[0])
-
+        if tag[0] != "undefined":
+            return re.sub(r"[~^]\w*", "", tag[0])
         return ""
 
     def get_next_tag(self):

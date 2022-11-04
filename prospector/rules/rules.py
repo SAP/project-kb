@@ -316,13 +316,14 @@ class CommitHasTwins(Rule):
         if not Rule.lsh_index.is_empty():
             # TODO: the twin search must be done at the beginning, in the raw commits
 
-            candidate.twins = Rule.lsh_index.query(decode_minhash(candidate.minhash))
-            candidate.twins.remove(candidate.commit_id)
+            twin_list = Rule.lsh_index.query(decode_minhash(candidate.minhash))
+            # twin_list.remove(candidate.commit_id)
+            candidate.twins = [
+                ["", twin] for twin in twin_list if twin != candidate.commit_id
+            ]
         # self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
-        if len(candidate.twins) > 0:
-            self.message = (
-                f"This commit has one or more twins: {', '.join(candidate.twins)}"
-            )
+        if len(twin_list) > 0:
+            self.message = f"This commit has one or more twins: {', '.join(twin_list)}"
             return True
         return False
 

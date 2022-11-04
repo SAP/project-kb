@@ -8,14 +8,18 @@
                 {% endif %}
             </h5>
             <h6 style="margin: 5pt 0 0;" class="mb-0">
-                Relevance: {{ annotated_commit.relevance }}
-            </h6>
-            <p style="margin: 5pt 0 0;">
-                <i class="fas fa-bullhorn"></i>
-                {% for rule in annotated_commit.matched_rules %}
-                <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ rule.id }}</span>
-                {% endfor %}
-            </p>
+                <p style="margin: 5pt 0 0;">
+                    <i class="fa fa-star"></i>
+                    Relevance: {{ annotated_commit.relevance }} &nbsp;&nbsp;
+                    <i class="fa fa-tag ml-2"></i>
+                    Tag: {{ annotated_commit.tags[0] }}
+                </p>
+                <p style="margin: 5pt 0 0;">
+                    <i class="fas fa-bullhorn"></i>
+                    {% for rule in annotated_commit.matched_rules %}
+                    <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ rule.id }}</span>
+                    {% endfor %}
+                </p>
         </div>
         <div class="col col-auto">
             <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
