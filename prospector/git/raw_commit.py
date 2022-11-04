@@ -1,8 +1,10 @@
 import hashlib
-from datetime import timezone
 import re
+from datetime import timezone
 from typing import List, Tuple
+
 from dateutil.parser import isoparse
+
 from log.logger import logger
 
 
@@ -25,8 +27,8 @@ class RawCommit:
         self.parent_id = parent_id
         self.msg = msg
         self.minhash = minhash
-        self.twins = []
-        self.changed_files = []
+        self.twins = twins or []
+        self.changed_files = changed_files or []
 
     def __str__(self) -> str:
         return f"ID:  {self.id}\nURL: {self.get_repository_url()}\nTS:  {self.timestamp}\nPID: {self.parent_id}\nCF:  {self.changed_files}\nMSG: {self.msg}"
@@ -297,6 +299,14 @@ class RawCommit:
         if not tags:
             return []
         return tags
+
+    def get_tag(self):
+        cmd = f"git describe --contains {self.id}"
+        tag = self.execute(cmd)
+        if len(tag) > 0:
+            return re.sub(r"~\w*", "", tag[0])
+
+        return ""
 
     def get_next_tag(self):
         data = self.get_timing_data()

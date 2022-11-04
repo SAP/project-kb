@@ -16,13 +16,12 @@ repos:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+    rev: 5.0.4
     hooks:
       - id: flake8
         args: # arguments to configure flake8
-          # making isort line length compatible with black
           - --max-line-length=100
-          - --ignore=E203,E501,W503
+          - --ignore=E203,E501,W503,F401
           - --max-complexity=12
           # - --per-file-exclude="__init__.py:F401 __init__.py:F403"
           # - "--select=B,C,E,F,W,T4,B9"
@@ -30,3 +29,7 @@ repos:
           # check out their meaning here
           # https://flake8.pycqa.org/en/latest/user/error-codes.html
           # - "--ignore=E203,E266,E501,W503,F403,F401,E402"
+  - repo: https://github.com/fsfe/reuse-tool
+    rev: v1.0.0
+    hooks:
+      - id: reuse

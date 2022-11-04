@@ -1,6 +1,7 @@
 # from dataclasses import asdict
 
 import pytest
+
 from datamodel.advisory import (
     LOCAL_NVD_REST_ENDPOINT,
     AdvisoryRecord,

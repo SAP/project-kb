@@ -2,21 +2,21 @@
 # from datamodel import BaseModel
 import logging
 import os
-from dateutil.parser import isoparse
 from typing import List, Optional, Set
 from urllib.parse import urlparse
 
 import requests
+from dateutil.parser import isoparse
 from pydantic import BaseModel, Field
 
-from log.logger import logger, pretty_log, get_level
+from log.logger import get_level, logger, pretty_log
 from util.http import fetch_url
 
 from .nlp import (
     extract_affected_filenames,
-    extract_words_from_text,
     extract_products,
     extract_versions,
+    extract_words_from_text,
 )
 
 ALLOWED_SITES = [

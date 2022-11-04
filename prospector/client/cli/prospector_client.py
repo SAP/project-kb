@@ -1,10 +1,10 @@
-from datetime import datetime
 import logging
 import sys
 from typing import Dict, List, Set, Tuple
 
 import requests
 from tqdm import tqdm
+
 from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
 from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
@@ -12,16 +12,14 @@ from filtering.filter import filter_commits
 from git.git import GIT_CACHE, Git
 from git.raw_commit import RawCommit
 from git.version_to_tag import get_tag_for_version
-from log.logger import logger, pretty_log, get_level
+from log.logger import get_level, logger, pretty_log
 from rules.rules import apply_rules
-
 from stats.execution import (
     Counter,
     ExecutionTimer,
     execution_statistics,
     measure_execution_time,
 )
-
 
 SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
@@ -144,6 +142,9 @@ def prospector(  # noqa: C901
 
     # apply rules and rank candidates
     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
+
+    # TODO: aggregate twins and check tags
+    # ranked_candidates = aggregate_twins(ranked_candidates)
 
     return ranked_candidates, advisory_record
 

@@ -1,11 +1,13 @@
 import json
 import os
-import jinja2
+from pathlib import Path
 from typing import List
-from log.logger import logger
+
+import jinja2
+
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from pathlib import Path
+from log.logger import logger
 from stats.execution import execution_statistics
 
 

@@ -16,9 +16,7 @@ import requests
 
 from git.exec import Exec
 from git.raw_commit import RawCommit
-
 from log.logger import logger
-
 from stats.execution import execution_statistics, measure_execution_time
 from util.lsh import (
     build_lsh_index,
@@ -26,7 +24,6 @@ from util.lsh import (
     encode_minhash,
     get_encoded_minhash,
 )
-
 
 GIT_CACHE = os.getenv("GIT_CACHE")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")

@@ -1,10 +1,11 @@
 from signal import raise_signal
+
 import pytest
+
 from .nlp import (
-    extract_cve_references,
+    extract_affected_filenames,
     extract_ghissue_references,
     extract_jira_references,
-    extract_affected_filenames,
     find_similar_words,
 )
 

@@ -1,6 +1,7 @@
 import re
 from typing import List, Union
 from xml.etree import ElementTree
+
 import requests
 import requests_cache
 from bs4 import BeautifulSoup

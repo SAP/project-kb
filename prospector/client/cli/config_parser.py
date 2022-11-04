@@ -1,11 +1,11 @@
 import argparse
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from typing import Dict
 
 from omegaconf import OmegaConf
+
 from log.logger import logger
-from client.cli.prospector_client import DEFAULT_BACKEND, MAX_CANDIDATES
 
 
 def parse_cli_args(args) -> Dict[str, any]:

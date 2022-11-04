@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 
 from log.logger import logger
 
-
 router = APIRouter(
     prefix="/nvd",
     tags=["nvd"],
