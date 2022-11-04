@@ -32,9 +32,11 @@ def test_extract_timestamp(repository: Git):
 
 def test_show_tags(repository: Git):
     tags = repository.execute(
-        "git branch -a --contains b38bd36766994715ac5226bfa361cd2f8f29e31e"
+        "git describe --contains b38bd36766994715ac5226bfa361cd2f8f29e31e"
     )
+
     print(tags)
+    raise Exception("test")
     pass
 
 
