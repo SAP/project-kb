@@ -6,3 +6,4 @@ pytest-cov
 pycodestyle
 flake8
 requests-mock
+pre-commit

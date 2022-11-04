@@ -142,6 +142,9 @@ def prospector(  # noqa: C901
     # apply rules and rank candidates
     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
 
+    # TODO: aggregate twins and check tags
+    # ranked_candidates = aggregate_twins(ranked_candidates)
+
     return ranked_candidates, advisory_record
 
 
