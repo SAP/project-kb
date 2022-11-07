@@ -165,18 +165,21 @@ def prospector(  # noqa: C901
 
     # TODO: aggregate twins and check tags
     # ranked_candidates = aggregate_twins(ranked_candidates)
-    tagged_candidates = [
-        commit
-        for commit in ranked_candidates
-        if commit.has_tag()
-        and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
-    ]
-    # This is horrible and slow
-    for commit in tagged_candidates:
-        for twin in commit.twins:
-            twin[0] = twin_branches[twin[1]]
+    if next_tag is not None:
+        tagged_candidates = [
+            commit
+            for commit in ranked_candidates
+            if commit.has_tag()
+            and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
+        ]
+        # This is horrible and slow
+        for commit in tagged_candidates:
+            for twin in commit.twins:
+                twin[0] = twin_branches[twin[1]]
 
-    return tagged_candidates, advisory_record
+        return tagged_candidates, advisory_record
+
+    return ranked_candidates, advisory_record
 
 
 def filter(commits: List[Commit]) -> List[Commit]:
