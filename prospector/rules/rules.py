@@ -90,7 +90,7 @@ class CveIdInMessage(Rule):
     """Matches commits that refer to the CVE-ID in the commit message."""  # Check if works for the title or comments
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if advisory_record.vulnerability_id in candidate.cve_refs:
+        if advisory_record.cve_id in candidate.cve_refs:
             self.message = "The commit message mentions the CVE ID"
             return True
         return False
@@ -218,7 +218,7 @@ class CveIdInLinkedIssue(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for id, content in candidate.ghissue_refs.items():
-            if advisory_record.vulnerability_id in content:
+            if advisory_record.cve_id in content:
                 self.message = f"The issue {id} mentions the CVE ID"
                 return True
 
