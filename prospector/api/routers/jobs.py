@@ -5,10 +5,9 @@ from fastapi import APIRouter
 from rq import Connection, Queue
 from rq.job import Job
 
-from log.logger import logger
 from api.routers.nvd_feed_update import main
 from git.git import do_clone
-
+from log.logger import logger
 
 redis_url = os.environ["REDIS_URL"]
 
