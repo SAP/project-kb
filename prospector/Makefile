@@ -7,20 +7,15 @@ END='\033[0m]'	# No Color
 DONE="$(GREEN)DONE$(END)"
 PROGRESS="$(YELLOW)....$(END)"
 
-test:
-	@echo "$(PROGRESS) TEST"
-	@echo "$(DONE) TEST"
 
 setup: requirements.txt
 	@echo "$(PROGRESS) Installing requirements"
 	@pip install -r requirements.txt
 	@echo "$(DONE) Installed requirements"
-	@echo "$(PROGRESS) Installing pre-commit and other modules"
+	@echo "$(PROGRESS) Installing pre-commit and spacy model"
 	@pre-commit install
 	@python -m spacy download en_core_web_sm
-	@echo "$(DONE) Installed pre-commit and other modules"
-	@mkdir -p $(GIT_CACHE)
-	@echo "$(DONE) Created directory $(GIT_CACHE)"
+	@echo "$(DONE) Installed pre-commit and spacy model"
 
 dev-setup: setup requirements-dev.txt
 	@mkdir -p $(CVE_DATA_PATH)
@@ -30,7 +25,6 @@ dev-setup: setup requirements-dev.txt
 	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
-	mkdir -p $(GIT_CACHE)
 	mkdir -p $(CVE_DATA_PATH)
 	docker-compose up -d --build
 
@@ -47,20 +41,15 @@ docker-clean:
 	@docker system prune -a -f
 	@echo "$(DONE) Cleaned residue"
 
-run: client/cli/main.py
-#python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd --tag-interval FILEUPLOAD_1_3_RC1:FILEUPLOAD_1_3_2_RC1
-	python client/cli/main.py CVE-2022-29599 --repository https://github.com/apache/maven-shared-utils --use-nvd
-#--tag-interval maven-shared-utils-0.1:maven-shared-utils-3.3.4
-
-select-run:
-	python client/cli/main.py $(cve) --repository $(repository) --use-nvd
 
 clean:
 	@rm -f prospector.log
-	@rm -rf $(GIT_CACHE)/*
 	@rm -rf __pycache__
 	@rm -rf */__pycache__
 	@rm -rf */*/__pycache__
-	@rm -rf *report.html
+	@rm -rf *.log
+	@rm -rf .pytest_cache
+	@rm -rf *.html
 	@rm -rf *.json
-	@rm -rf requests-cache.sqlite
+	@rm -rf *.sqlite
+#@rm -rf $(GIT_CACHE)/*
