@@ -21,7 +21,6 @@ from client.cli.prospector_client import TIME_LIMIT_AFTER  # noqa: E402
 from client.cli.prospector_client import TIME_LIMIT_BEFORE  # noqa: E402
 from client.cli.prospector_client import prospector  # noqa: E402; noqa: E402
 from client.cli.report import as_html, as_json, report_on_console  # noqa: E402
-from git.git import GIT_CACHE  # noqa: E402
 
 # Load logger before doing anything else
 from log.logger import get_level, logger, pretty_log  # noqa: E402
