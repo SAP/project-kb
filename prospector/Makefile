@@ -18,14 +18,11 @@ setup: requirements.txt
 	@echo "$(DONE) Installed pre-commit and spacy model"
 
 dev-setup: setup requirements-dev.txt
-	@mkdir -p $(CVE_DATA_PATH)
-	@echo "$(DONE) Created directory $(CVE_DATA_PATH)"
 	@echo "$(PROGRESS) Installing development requirements"
 	@pip install -r requirements-dev.txt
 	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
-	mkdir -p $(CVE_DATA_PATH)
 	docker-compose up -d --build
 
 docker-clean:
