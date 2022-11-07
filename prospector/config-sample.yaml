@@ -29,6 +29,8 @@ fetch_references: False
 # Wether to use the NVD database or not (default is obviously true)
 use_nvd: True
 
+nvd_token: Null
+
 # Wheter to use a backend or not: "always", "never", "optional"
 use_backend: optional
 
