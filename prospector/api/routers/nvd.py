@@ -60,7 +60,7 @@ async def get_vuln_data(vuln_id):
     else:
         logger.debug("Vulnerability data found locally " + vuln_id)
         with open(json_file) as f:
-            data = json.load(f.read())
+            data = json.load(f)
 
     if data is None:
         raise HTTPException(status_code=404, detail="Vulnerability not found.")
