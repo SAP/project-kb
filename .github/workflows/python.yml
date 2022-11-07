@@ -51,6 +51,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install virtualenv
           cd prospector
+          cp config-sample.yaml config.yaml
           virtualenv ../venv
           source ../venv/bin/activate
           pip install -r requirements.txt
