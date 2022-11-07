@@ -6,6 +6,7 @@
 #
 anyio==3.6.2
 appdirs==1.4.4
+argparse==1.4.0
 async-timeout==4.0.2
 attrs==22.1.0
 beautifulsoup4==4.11.1
