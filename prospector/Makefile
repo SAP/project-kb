@@ -23,6 +23,7 @@ dev-setup: setup requirements-dev.txt
 	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
+	mkdir -p $(CVE_DATA_PATH)
 	docker-compose up -d --build
 
 docker-clean:
@@ -41,10 +42,12 @@ docker-clean:
 
 clean:
 	@rm -f prospector.log
-	@rm -rf $(GIT_CACHE)/*
 	@rm -rf __pycache__
 	@rm -rf */__pycache__
 	@rm -rf */*/__pycache__
-	@rm -rf *report.html
+	@rm -rf *.log
+	@rm -rf .pytest_cache
+	@rm -rf *.html
 	@rm -rf *.json
-	@rm -rf requests-cache.sqlite
+	@rm -rf *.sqlite
+#@rm -rf $(GIT_CACHE)/*
