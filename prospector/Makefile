@@ -23,7 +23,6 @@ dev-setup: setup requirements-dev.txt
 	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
-	mkdir -p $(CVE_DATA_PATH)
 	docker-compose up -d --build
 
 docker-clean:
