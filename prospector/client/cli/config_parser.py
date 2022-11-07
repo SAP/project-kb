@@ -1,14 +1,13 @@
 import argparse
-from dataclasses import dataclass
 import os
-from typing import Dict
+from dataclasses import dataclass
 
 from omegaconf import OmegaConf
+
 from log.logger import logger
-from client.cli.prospector_client import DEFAULT_BACKEND, MAX_CANDIDATES
 
 
-def parse_cli_args(args) -> Dict[str, any]:
+def parse_cli_args(args):
     parser = argparse.ArgumentParser(description="Prospector CLI")
     parser.add_argument(
         "cve_id",
@@ -118,10 +117,10 @@ def parse_cli_args(args) -> Dict[str, any]:
         help="Set the logging level",
     )
 
-    return vars(parser.parse_args())
+    return parser.parse_args()
 
 
-def parse_config_file(filename: str):
+def parse_config_file(filename: str = "config.yaml"):
     if os.path.isfile(filename):
         logger.info(f"Loading configuration from {filename}")
         config = OmegaConf.load(filename)
@@ -179,30 +178,28 @@ class Config:
 
 def get_configuration(argv):
     args = parse_cli_args(argv)
-    conf = parse_config_file(args.get("config"))
+    conf = parse_config_file(args.config)
     if conf is None:
         return False
     return Config(
-        cve_id=args.get("cve_id") or conf.get("cve_id"),
-        repository=args.get("repository") or conf.get("repository"),
-        preprocess_only=args.get("preprocess_only") or conf.get("preprocess_only"),
-        pub_date=args.get("pub_date") or conf["advisory"].get("pub_date"),
-        description=args.get("description") or conf["advisory"].get("description"),
-        max_candidates=args.get("max_candidates") or conf.get("max_candidates"),
-        tag_interval=args.get("tag_interval") or conf.get("tag_interval"),
-        version_interval=args.get("version_interval") or conf.get("version_interval"),
-        modified_files=args.get("modified_files")
-        or conf["advisory"].get("modified_files"),
-        filter_extensions=args.get("filter_extensions")
-        or conf.get("filter_extensions"),
-        keywords=args.get("keywords") or conf["advisory"].get("keywords"),
-        use_nvd=args.get("use_nvd") or conf.get("use_nvd"),
-        fetch_references=args.get("fetch_references") or conf.get("fetch_references"),
-        backend=args.get("backend") or conf.get("backend"),
-        use_backend=args.get("use_backend") or conf.get("use_backend"),
-        report=args.get("report") or conf["report"].get("format"),
-        report_filename=args.get("report_filename") or conf["report"].get("name"),
-        ping=args.get("ping") or conf.get("ping"),
-        git_cache=args.get("git_cache") or conf.get("git_cache"),
-        log_level=args.get("log_level") or conf.get("log_level"),
+        cve_id=args.cve_id,
+        repository=args.repository,
+        preprocess_only=args.preprocess_only or conf.preprocess_only,
+        pub_date=args.pub_date or conf.advisory.pub_date,
+        description=args.description or conf.advisory.description,
+        modified_files=args.modified_files or conf.advisory.modified_files,
+        keywords=args.keywords or conf.advisory.keywords,
+        max_candidates=args.max_candidates or conf.max_candidates,
+        tag_interval=args.tag_interval or conf.tag_interval,
+        version_interval=args.version_interval or conf.version_interval,
+        filter_extensions=args.filter_extensions or conf.filter_extensions,
+        use_nvd=args.use_nvd or conf.use_nvd,
+        fetch_references=args.fetch_references or conf.fetch_references,
+        backend=args.backend or conf.backend,
+        use_backend=args.use_backend or conf.use_backend,
+        report=args.report or conf.report.format,
+        report_filename=args.report_filename or conf.report.name,
+        ping=args.ping,
+        git_cache=conf.git_cache,
+        log_level=args.log_level or conf.log_level,
     )
