@@ -1,7 +1,6 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
-from util.lsh import build_lsh_index, decode_minhash, encode_minhash
 
 from datamodel.nlp import (
     extract_cve_references,
@@ -9,6 +8,7 @@ from datamodel.nlp import (
     extract_jira_references,
 )
 from git.raw_commit import RawCommit
+from util.lsh import build_lsh_index, decode_minhash, encode_minhash
 
 
 class Commit(BaseModel):
