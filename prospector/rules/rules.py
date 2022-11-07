@@ -1,6 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, List, Tuple
-
+from typing import List, Tuple
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -11,7 +10,6 @@ from rules.helpers import (
 )
 from stats.execution import Counter, execution_statistics
 from util.lsh import build_lsh_index, decode_minhash
-
 
 rule_statistics = execution_statistics.sub_collection("rules")
 

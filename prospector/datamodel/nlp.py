@@ -1,12 +1,14 @@
 import os
 import re
 from typing import Dict, List, Set
+
 import requests
 
 # from util.http import extract_from_webpage, fetch_url, get_from_xml
 from spacy import load
+
 from datamodel.constants import RELEVANT_EXTENSIONS
-from util.http import extract_from_webpage, get_from_xml
+from util.http import get_from_xml
 
 JIRA_ISSUE_URL = "https://issues.apache.org/jira/browse/"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
