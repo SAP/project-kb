@@ -1,6 +1,7 @@
+import pytest
+
 from git.exec import Exec
 from git.raw_commit import RawCommit
-import pytest
 
 
 @pytest.mark.skip(reason="Outdated for now")

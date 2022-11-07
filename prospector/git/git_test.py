@@ -4,13 +4,10 @@ import time
 
 import pytest
 
-from datamodel.commit import make_from_raw_commit
-
 from .git import Exec, Git
 
 # from .version_to_tag import version_to_wide_interval_tags
 from .version_to_tag import get_tag_for_version
-
 
 REPO_URL = "https://github.com/slackhq/nebula"
 COMMIT_ID = "4645e6034b9c88311856ee91d19b7328bd5878c1"
