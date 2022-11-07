@@ -1,8 +1,9 @@
 import hashlib
 from datetime import timezone
-import re
 from typing import List, Tuple
+
 from dateutil.parser import isoparse
+
 from log.logger import logger
 
 
