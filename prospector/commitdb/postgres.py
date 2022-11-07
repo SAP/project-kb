@@ -3,14 +3,13 @@ This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
 import os
+from typing import Any, Dict, List
 
-from typing import Dict, List, Any
 import psycopg2
-
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
-from commitdb import CommitDB
 
+from commitdb import CommitDB
 from log.logger import logger
 
 DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(

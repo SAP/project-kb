@@ -1,8 +1,7 @@
 import pytest
 
-from commitdb.postgres import PostgresCommitDB, parse_connect_string, DB_CONNECT_STRING
-from datamodel.commit import Commit, make_from_dict, make_from_raw_commit
-from git.git import Git
+from commitdb.postgres import DB_CONNECT_STRING, PostgresCommitDB, parse_connect_string
+from datamodel.commit import Commit
 
 
 @pytest.fixture
