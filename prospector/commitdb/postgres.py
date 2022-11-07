@@ -46,19 +46,20 @@ class PostgresCommitDB(CommitDB):
                 cur.execute(
                     "SELECT * FROM commits WHERE repository = %s", (repository,)
                 )
-                results = cur.fetchall()
+                if cur.rowcount > 0:
+                    results = cur.fetchall()
             else:
                 for id in commit_id.split(","):
                     cur.execute(
                         "SELECT * FROM commits WHERE repository = %s AND commit_id = %s",
                         (repository, id),
                     )
-                    results.append(cur.fetchone())
-
+                    if cur.rowcount > 0:
+                        results.append(cur.fetchone())
             return [dict(row) for row in results]  # parse_commit_from_db
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
-            return None
+            return []
         finally:
             cur.close()
 

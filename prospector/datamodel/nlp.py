@@ -128,9 +128,11 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
 
     # /repos/{owner}/{repo}/issues/{issue_number}
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json",
     }
+    if GITHUB_TOKEN:
+        headers.update({"Authorization": f"Bearer {GITHUB_TOKEN}"})
+
     for result in re.finditer(r"(?:#|gh-)(\d+)", text):
         id = result.group(1)
         owner, repo = repository.split("/")[-2:]
