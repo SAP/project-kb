@@ -1,11 +1,13 @@
 import json
 import os
-import jinja2
+from pathlib import Path
 from typing import List
-from log.logger import logger
+
+import jinja2
+
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from pathlib import Path
+from log.logger import logger
 from stats.execution import execution_statistics
 
 
@@ -25,7 +27,7 @@ def as_json(
     fn = filename if filename.endswith(".json") else f"{filename}.json"
 
     data = {
-        "advisory_record": advisory_record.dict(),
+        "advisory_record": advisory_record.__dict__,
         "commits": [r.as_dict(no_hash=True, no_rules=False) for r in results],
     }
     logger.info(f"Writing results to {fn}")
