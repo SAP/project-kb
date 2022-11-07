@@ -43,6 +43,7 @@ prospector/data/nvd.csv
 .vscode/settings.json
 prospector/cov_html/*
 prospector/client/cli/cov_html/*
+prospector/config.yaml
 prospector/client/web/node-app/node_modules
 prospector/.coverage.*
 prospector/.coverage
