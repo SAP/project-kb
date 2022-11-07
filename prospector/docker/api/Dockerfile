@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 ADD . .
@@ -11,5 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN apt autoremove -y gcc g++ libffi-dev python3-dev && apt clean && rm -rf /var/lib/apt/lists/*
 ENV PYTHONPATH .
 RUN rm -rf /app/client /app/rules
+RUN mkdir /app/cve_data
 
 CMD ["./start.sh"]

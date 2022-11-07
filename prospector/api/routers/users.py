@@ -1,12 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-# from http import HTTPStatus
-
-
-# from http import HTTPStatus
-
-
 from ..dependencies import (
     User,
     UserInDB,
@@ -15,6 +9,9 @@ from ..dependencies import (
     get_current_active_user,
     oauth2_scheme,
 )
+
+# from http import HTTPStatus
+
 
 router = APIRouter(
     prefix="/users",
