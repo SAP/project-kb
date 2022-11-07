@@ -49,8 +49,6 @@ jobs:
           python -m pip install --upgrade pip
           cd prospector
           cp config-sample.yaml config.yaml
-          virtualenv ../venv
-          source ../venv/bin/activate
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
           python -m spacy download en_core_web_sm
