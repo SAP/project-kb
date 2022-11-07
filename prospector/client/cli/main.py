@@ -3,34 +3,27 @@ import logging
 import os
 import signal
 import sys
-from pathlib import Path
-from typing import Any, Dict
-from dotenv import load_dotenv
-from omegaconf import OmegaConf
-
 
 path_root = os.getcwd()
 if path_root not in sys.path:
     sys.path.append(path_root)
 
+
 # Loading .env file before doint anything else
-load_dotenv()
+# load_dotenv()
+
+from client.cli.config_parser import get_configuration  # noqa: E402
+from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
+from client.cli.prospector_client import TIME_LIMIT_AFTER  # noqa: E402
+from client.cli.prospector_client import TIME_LIMIT_BEFORE  # noqa: E402
+from client.cli.prospector_client import prospector  # noqa: E402; noqa: E402
+from client.cli.report import as_html, as_json, report_on_console  # noqa: E402
 
 # Load logger before doing anything else
-from log.logger import logger, get_level, pretty_log  # noqa: E402
-from client.cli.config_parser import get_configuration, parse_cli_args  # noqa: E402
-
-from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from client.cli.report import as_json, as_html, report_on_console  # noqa: E402
-from client.cli.prospector_client import (  # noqa: E402
-    TIME_LIMIT_AFTER,  # noqa: E402
-    TIME_LIMIT_BEFORE,  # noqa: E402
-    DEFAULT_BACKEND,  # noqa: E402
-    prospector,  # noqa: E402
-)
-from git.git import GIT_CACHE  # noqa: E402
+from log.logger import get_level, logger, pretty_log  # noqa: E402
 from stats.execution import execution_statistics  # noqa: E402
-from util.http import ping_backend  # noqa: E402
+
+# from util.http import ping_backend  # noqa: E402
 
 
 def main(argv):  # noqa: C901
@@ -67,14 +60,14 @@ def main(argv):  # noqa: C901
         time_limit_before = TIME_LIMIT_BEFORE
         time_limit_after = TIME_LIMIT_AFTER
 
-        git_cache = os.getenv("GIT_CACHE") or config.git_cache
+        git_cache = config.git_cache
 
         logger.debug("Using the following configuration:")
         pretty_log(logger, config.__dict__)
 
         logger.debug("Vulnerability ID: " + config.cve_id)
-        logger.debug("time-limit before: " + str(time_limit_before))
-        logger.debug("time-limit after: " + str(time_limit_after))
+        logger.debug(f"time-limit before: {time_limit_before}")
+        logger.debug(f"time-limit after: {time_limit_after}")
 
     results, advisory_record = prospector(
         vulnerability_id=config.cve_id,
