@@ -9,7 +9,7 @@ from .git import Exec, Git
 # from .version_to_tag import version_to_wide_interval_tags
 from .version_to_tag import get_tag_for_version
 
-REPO_URL = "https://github.com/slackhq/nebula"
+NEBULA = "https://github.com/slackhq/nebula"
 BEAM = "https://github.com/apache/beam"
 COMMIT_ID = "4645e6034b9c88311856ee91d19b7328bd5878c1"
 COMMIT_ID_1 = "d85e24f49f9efdeed5549a7d0874e68155e25301"
@@ -19,7 +19,7 @@ COMMIT_ID_3 = "ae3ee42469b7c48848d841386ca9c74b7d6bbcd8"
 
 @pytest.fixture
 def repository() -> Git:
-    repo = Git(BEAM)  # apache/beam
+    repo = Git(NEBULA)  # apache/beam
     repo.clone()
     return repo
 
@@ -41,8 +41,6 @@ def test_show_tags(repository: Git):
 
     except Exception:
         print("simola")
-
-    raise Exception("test")
 
 
 def test_create_commits(repository: Git):
@@ -68,21 +66,21 @@ def test_get_changed_files(repository: Git):
 
 @pytest.mark.skip(reason="Skipping this test")
 def test_extract_timestamp_from_version():
-    repo = Git(REPO_URL)
+    repo = Git(NEBULA)
     repo.clone()
     assert repo.extract_timestamp_from_version("v1.5.2") == 1639518536
     assert repo.extract_timestamp_from_version("INVALID_VERSION_1_0_0") is None
 
 
 def test_get_tag_for_version():
-    repo = Git(REPO_URL)
+    repo = Git(NEBULA)
     repo.clone()
     tags = repo.get_tags()
     assert get_tag_for_version(tags, "1.5.2") == ["v1.5.2"]
 
 
 def test_get_commit_parent():
-    repo = Git(REPO_URL)
+    repo = Git(NEBULA)
     repo.clone()
     id = repo.get_commit_id_for_tag("v1.6.1")
     commit = repo.get_commit(id)
