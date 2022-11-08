@@ -1,5 +1,4 @@
 SHELL := /bin/sh
-include .env
 
 GREEN='[\033[0;32m'
 YELLOW='[\033[1;33m'
@@ -9,6 +8,7 @@ PROGRESS="$(YELLOW)....$(END)"
 
 
 setup: requirements.txt
+	@cp config-sample.yaml config-yaml
 	@echo "$(PROGRESS) Installing requirements"
 	@pip install -r requirements.txt
 	@echo "$(DONE) Installed requirements"
