@@ -57,13 +57,11 @@ def main(argv):  # noqa: C901
         #     return ping_backend(backend, get_level() < logging.INFO)
 
         config.pub_date = (
-            config.pub_date + "T00:00:00Z" if config.pub_date != "" else ""
+            config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
         )
 
         time_limit_before = TIME_LIMIT_BEFORE
         time_limit_after = TIME_LIMIT_AFTER
-
-        git_cache = config.git_cache
 
         logger.debug("Using the following configuration:")
         pretty_log(logger, config.__dict__)
@@ -78,10 +76,9 @@ def main(argv):  # noqa: C901
         publication_date=config.pub_date,
         vuln_descr=config.description,
         tag_interval=config.tag_interval,
-        filter_extensions=config.filter_extensions.split(","),
         version_interval=config.version_interval,
-        modified_files=set(config.modified_files.split(",")),
-        advisory_keywords=set(config.keywords.split(",")),
+        modified_files=config.modified_files,
+        advisory_keywords=config.keywords,
         time_limit_before=time_limit_before,
         time_limit_after=time_limit_after,
         use_nvd=config.use_nvd,
@@ -89,7 +86,7 @@ def main(argv):  # noqa: C901
         fetch_references=config.fetch_references,
         backend_address=config.backend,
         use_backend=config.use_backend,
-        git_cache=git_cache,
+        git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
         rules=["ALL"],
     )

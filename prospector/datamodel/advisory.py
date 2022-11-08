@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -157,14 +157,13 @@ def get_from_local(vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOIN
 
 def build_advisory_record(
     cve_id: str,
-    description: str = None,
-    nvd_rest_endpoint: str = None,
+    description: Optional[str] = None,
+    nvd_rest_endpoint: Optional[str] = None,
     fetch_references: bool = False,
     use_nvd: bool = True,
-    publication_date: str = None,
-    advisory_keywords: Set[str] = None,
-    modified_files: Set[str] = None,
-    filter_extensions: List[str] = None,
+    publication_date: Optional[str] = None,
+    advisory_keywords: Optional[str] = None,
+    modified_files: Optional[str] = None,
 ) -> AdvisoryRecord:
 
     advisory_record = AdvisoryRecord(
@@ -188,10 +187,10 @@ def build_advisory_record(
         )
 
     if advisory_keywords and len(advisory_keywords) > 0:
-        advisory_record.keywords.update(advisory_keywords)
+        advisory_record.keywords.update(set(advisory_keywords.split(",")))
 
     if modified_files and len(modified_files) > 0:
-        advisory_record.files.update(modified_files)
+        advisory_record.files.update(set(modified_files.split(",")))
 
     logger.debug(f"{advisory_record.keywords=}")
     logger.debug(f"{advisory_record.files=}")
