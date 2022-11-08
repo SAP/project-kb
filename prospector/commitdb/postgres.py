@@ -3,14 +3,13 @@ This module implements an abstraction layer on top of
 the underlying database where pre-processed commits are stored
 """
 import os
+from typing import Any, Dict, List
 
-from typing import Dict, List, Any
 import psycopg2
-
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
-from commitdb import CommitDB
 
+from commitdb import CommitDB
 from log.logger import logger
 
 DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
@@ -47,19 +46,20 @@ class PostgresCommitDB(CommitDB):
                 cur.execute(
                     "SELECT * FROM commits WHERE repository = %s", (repository,)
                 )
-                results = cur.fetchall()
+                if cur.rowcount > 0:
+                    results = cur.fetchall()
             else:
                 for id in commit_id.split(","):
                     cur.execute(
                         "SELECT * FROM commits WHERE repository = %s AND commit_id = %s",
                         (repository, id),
                     )
-                    results.append(cur.fetchone())
-
+                    if cur.rowcount > 0:
+                        results.append(cur.fetchone())
             return [dict(row) for row in results]  # parse_commit_from_db
         except Exception:
             logger.error("Could not lookup commit vector in database", exc_info=True)
-            return None
+            return []
         finally:
             cur.close()
 

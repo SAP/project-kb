@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 from commitdb.postgres import PostgresCommitDB
@@ -23,7 +23,7 @@ async def get_commits(
     data = db.lookup(repository_url, commit_id)
 
     if len(data) == 0:
-        return JSONResponse(status_code=404, content={"message": "Not found"})
+        raise HTTPException(status_code=404, detail="Commit not found")
 
     return JSONResponse(data)
 

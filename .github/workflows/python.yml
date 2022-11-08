@@ -7,11 +7,9 @@ on:
   push:
     branches:
       - main
-      - test-fix-nlp
   pull_request:
     branches:
       - main
-      - text-fix-nlp
 
 jobs:
   build:
@@ -46,13 +44,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.10.6
-      - name: Setup virtual environment
+      - name: Setup python environment
         run: |
           python -m pip install --upgrade pip
-          pip install virtualenv
           cd prospector
-          virtualenv ../venv
-          source ../venv/bin/activate
+          cp config-sample.yaml config.yaml
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
           python -m spacy download en_core_web_sm
@@ -61,7 +57,7 @@ jobs:
         with:
           path: prospector
           max_line_length: 100
-          ignore: E203,E501,W503,F401,F403
+          ignore: E203,E501,W503,F401,F403,E999
       - name: Test with pytest
         env:
           GIT_CACHE: "/tmp/git-cache"
@@ -74,5 +70,4 @@ jobs:
         run: |
           cd prospector
           [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
-          source ../venv/bin/activate
           pytest

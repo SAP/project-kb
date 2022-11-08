@@ -4,6 +4,7 @@
 import difflib
 import multiprocessing
 import os
+import pathlib
 import random
 import re
 import shutil
@@ -16,9 +17,7 @@ import requests
 
 from git.exec import Exec
 from git.raw_commit import RawCommit
-
 from log.logger import logger
-
 from stats.execution import execution_statistics, measure_execution_time
 from util.lsh import (
     build_lsh_index,
@@ -27,8 +26,7 @@ from util.lsh import (
     get_encoded_minhash,
 )
 
-
-GIT_CACHE = os.getenv("GIT_CACHE")
+# GIT_CACHE = os.getenv("GIT_CACHE")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 GIT_SEPARATOR = "-@-@-@-@-"
@@ -65,10 +63,10 @@ RELEVANT_EXTENSIONS = [
     "jar",
 ]
 
-if not os.path.isdir(GIT_CACHE):
-    raise ValueError(
-        f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
-    )
+# if not os.path.isdir(GIT_CACHE):
+#     raise ValueError(
+#         f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
+#     )
 
 
 def do_clone(url, output_folder, shallow=False, skip_existing=False):
@@ -111,6 +109,7 @@ class Git:
         cache_path=os.path.abspath("/tmp/gitcache"),
         shallow: bool = False,
     ):
+        pathlib.Path(cache_path).mkdir(parents=True, exist_ok=True)
         self.repository_type = "GIT"
         self.url = url
         self.path = path_from_url(url, cache_path)

@@ -1,8 +1,7 @@
 import pytest
 
-from commitdb.postgres import PostgresCommitDB, parse_connect_string, DB_CONNECT_STRING
-from datamodel.commit import Commit, make_from_dict, make_from_raw_commit
-from git.git import Git
+from commitdb.postgres import DB_CONNECT_STRING, PostgresCommitDB, parse_connect_string
+from datamodel.commit import Commit
 
 
 @pytest.fixture
@@ -14,7 +13,6 @@ def setupdb():
 
 
 def test_save_lookup(setupdb: PostgresCommitDB):
-    #    setupdb.connect(DB_CONNECT_STRING)
     commit = Commit(
         commit_id="42423b2423",
         repository="https://fasfasdfasfasd.com/rewrwe/rwer",
@@ -44,8 +42,7 @@ def test_lookup_nonexisting(setupdb: PostgresCommitDB):
         "https://fasfasdfasfasd.com/rewrwe/rwer",
         "42423b242342423b2423",
     )
-    setupdb.reset()
-    assert result is None
+    assert result == []
 
 
 def test_parse_connect_string():
