@@ -4,7 +4,7 @@
 currently under development: the instructions below are intended for development, testing and demonstration purposes only!
 
 ## Description
-***
+
 Prospector is a tool to reduce the effort needed to find security fixes for
 *known* vulnerabilities in open source software repositories
 
@@ -17,13 +17,12 @@ but fails without it)
 
 
 ## Setup
-***
 
 :exclamation: Please note that **Windows is not supported** while WSL and WSL2 are fine.
 
 Prerequisites:
 
-* Python 3.8
+* Python 3.10
 * postgresql
 * gcc g++ libffi-dev python3-dev libpq-dev (to build python dependencies)
 
@@ -32,29 +31,29 @@ The easiest way to set up Prospector is to clone the project KB repository and t
 ```
 git clone https://github.com/sap/project-kb
 cd project-kb/prospector
-cp .env-sample .env
 ```
 
-Modify the `.env` file as you see fit (to run the client only the `GIT_CACHE` variable must be set, the rest is for setting up the backend), then continue with:
-
-```
-set -a; source .env; set +a
-mkdir -p $GIT_CACHE
-```
-
-Now you can install the dependencies by running:
+You can setup everything and install the dependencies by running:
 ```
 make setup
 ```
-or the development dependencies:
+or (for development purposes):
 ```
 make dev-setup
 ```
 
 This is necessary only the first time you set up your dev. environment.
-Afterwards, you will just have to set the environment variables using the `.env` file.
 
-If at any time you wish to use a different version of the python interpreter, beware that the `requirements.txt` file contains the exact versioning for `python 3.8.14`.
+
+Afterwards, you will just have to set the environment variables using the `.env` file and sourcing it with:
+
+```
+set -a; source .env; set +a
+```
+
+You can configure prospector from CLI or from the `config.yaml` file. The (recommended) API Keys for Github and the NVD can be configured from the `.env` file (which must then be sourced with `set -a; source .env; set +a`)
+
+If at any time you wish to use a different version of the python interpreter, beware that the `requirements.txt` file contains the exact versioning for `python 3.10.6`.
 
 If you have issues with these steps, please open a Github issue and
 explain in detail what you did and what unexpected behaviour you observed
@@ -89,11 +88,15 @@ You can then start the necessary containers with the following command:
 
 This also starts a convenient DB administration tool at http://localhost:8080
 
+If you wish to cleanup docker to run a fresh version of the backend you can run:
+
+`make docker-clean`
+
 ## Starting the RESTful server
 
 `uvicorn api.main:app --reload`
 
-Note, that it requires `POSTGRES_USER`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DBNAME` to be set in the .env file. 
+Note, that it requires `POSTGRES_USER`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DBNAME` to be set in the .env file.
 
 You can then point your browser to `http://127.0.0.1:8000` to access the API.
 You might also want to take a look at `http://127.0.0.1:8000/docs`.
