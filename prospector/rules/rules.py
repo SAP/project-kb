@@ -319,13 +319,11 @@ class CommitHasTwins(Rule):
             twin_list = Rule.lsh_index.query(decode_minhash(candidate.minhash))
             # twin_list.remove(candidate.commit_id)
             candidate.twins = [
-                ["", twin] for twin in twin_list if twin != candidate.commit_id
+                ["no-tag", twin] for twin in twin_list if twin != candidate.commit_id
             ]
         # self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
         if len(candidate.twins) > 0:
-            self.message = (
-                f"This commit has one or more twins: {', '.join(candidate.twins)}"
-            )
+            self.message = "This commit has one or more twins."
             return True
         return False
 
