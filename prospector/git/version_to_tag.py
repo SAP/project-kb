@@ -7,11 +7,14 @@ import re
 
 
 def get_possible_tags(tags: list, versions: str):
-    regex = r"[^\da-zA-Z]+"
     tags_mapping: dict[str, list[str]] = dict()
     for tag in tags:
-        stripped_tag = ".".join(
-            [n for n in re.split(regex, tag) if bool(re.search(r"\d", n))]
+        stripped_tag = re.sub(
+            r"^[a-zA-Z]+|[a-zA-Z]+$",
+            "",
+            ".".join(
+                [n for n in re.split(r"[^\da-zA-Z]+", tag) if bool(re.search(r"\d", n))]
+            ),
         )
         if stripped_tag not in tags_mapping:
             tags_mapping[stripped_tag] = [tag]
