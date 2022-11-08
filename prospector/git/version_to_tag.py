@@ -43,8 +43,12 @@ def get_possible_tags(tags: list, versions: str):
             ]
             for tag in tags
         ]
+        prev_candidates = difflib.get_close_matches(next_tag[0], prev_candidates, n=3)
+        if len(prev_candidates) == 0:
+            print("Open ended tag interval...")
+            return "", next_tag[0]
         return (
-            max(difflib.get_close_matches(next_tag[0], prev_candidates, n=3)),
+            max(prev_candidates),
             next_tag[0],
         )
     elif len(prev_tag) == 1 and len(next_tag) == 0:
@@ -59,9 +63,11 @@ def get_possible_tags(tags: list, versions: str):
             ]
             for tag in tags
         ]
-        return prev_tag[0], min(
-            difflib.get_close_matches(prev_tag[0], next_candidates, n=3)
-        )
+        next_candidates = difflib.get_close_matches(prev_tag[0], next_candidates, n=3)
+        if len(next_candidates) == 0:
+            print("Open ended tag interval...")
+            return prev_tag[0], ""
+        return prev_tag[0], min(next_candidates)
     else:
         print("No tags found for the given versions")
         return None, None
