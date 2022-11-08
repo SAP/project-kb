@@ -11,7 +11,7 @@ from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
-from git.version_to_tag import get_tag_for_version
+from git.version_to_tag import get_possible_tags, get_tag_for_version
 from log.logger import get_level, logger, pretty_log
 from rules.rules import apply_rules
 from stats.execution import (
@@ -40,7 +40,6 @@ def prospector(  # noqa: C901
     publication_date: str = "",
     vuln_descr: str = "",
     tag_interval: str = "",
-    filter_extensions: List[str] = [],
     version_interval: str = "",
     modified_files: Set[str] = set(),
     advisory_keywords: Set[str] = set(),
@@ -69,7 +68,6 @@ def prospector(  # noqa: C901
             publication_date,
             advisory_keywords,
             modified_files,
-            filter_extensions,
         )
 
     # obtain a repository object
@@ -87,12 +85,17 @@ def prospector(  # noqa: C901
     prev_tag = None
     next_tag = None
 
-    if tag_interval != "":
+    if tag_interval is not None:
         prev_tag, next_tag = tag_interval.split(":")
-    elif version_interval != "":
-        vuln_version, fixed_version = version_interval.split(":")
-        prev_tag = get_tag_for_version(tags, vuln_version)[0]
-        next_tag = get_tag_for_version(tags, fixed_version)[0]
+    elif version_interval is not None:
+        prev_tag, next_tag = get_possible_tags(tags, version_interval)
+        # vuln_version, fixed_version = version_interval.split(":")
+        # prev_tag = get_possible_tags(tags, vuln_version)
+        # next_tag = get_possible_tags(tags, fixed_version)
+        # prev_tag = get_tag_for_version(tags, vuln_version)[0]
+        # next_tag = get_tag_for_version(tags, fixed_version)[0]
+
+    print(f"Found tags: {prev_tag}, {next_tag}") if prev_tag and next_tag else None
 
     # retrieve of commit candidates
     candidates = get_candidates(
@@ -161,23 +164,27 @@ def prospector(  # noqa: C901
     # apply rules and rank candidates
     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
 
-    twin_branches = {commit.commit_id: commit.get_tag() for commit in ranked_candidates}
-
+    twin_branches_map = {
+        commit.commit_id: commit.get_tag() for commit in ranked_candidates
+    }
+    ranked_candidates = tag_and_aggregate_commits(
+        ranked_candidates, twin_branches_map, next_tag
+    )
     # TODO: aggregate twins and check tags
     # ranked_candidates = aggregate_twins(ranked_candidates)
-    if next_tag is not None:
-        tagged_candidates = [
-            commit
-            for commit in ranked_candidates
-            if commit.has_tag()
-            and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
-        ]
-        # This is horrible and slow
-        for commit in tagged_candidates:
-            for twin in commit.twins:
-                twin[0] = twin_branches[twin[1]]
+    # if next_tag is not None:
+    #     tagged_candidates = [
+    #         commit
+    #         for commit in ranked_candidates
+    #         if commit.has_tag()
+    #         and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
+    #     ]
+    #     # This is horrible and slow
+    #     for commit in tagged_candidates:
+    #         for twin in commit.twins:
+    #             twin[0] = twin_branches[twin[1]]
 
-        return tagged_candidates, advisory_record
+    #     return tagged_candidates, advisory_record
 
     return ranked_candidates, advisory_record
 
@@ -198,15 +205,38 @@ def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: Lis
     return ranked_commits
 
 
-def aggregate_twins(commits: List[Commit], tag_interval: str) -> List[Commit]:
-    aggregated_commits = list()
+def tag_and_aggregate_commits(
+    commits: List[Commit], mapping_dict: Dict[str, str], next_tag: str
+) -> List[Commit]:
+    if next_tag is None:
+        return commits
+    tagged_commits = list()
     for commit in commits:
-        if commit.has_twin() and commit.has_tag():
-            aggregated_commits.append(commit)
-        elif not commit.has_twin():
-            aggregated_commits.append(commit)
+        if commit.has_tag() and (
+            commit.get_tag() in next_tag or next_tag in commit.get_tag()
+        ):
+            for twin in commit.twins:
+                twin[0] = mapping_dict[twin[1]]
 
-    return aggregated_commits
+            tagged_commits.append(commit)
+
+    return tagged_commits
+
+    # if next_tag is not None:
+    #     tagged_candidates = [
+    #         commit
+    #         for commit in ranked_candidates
+    #         if commit.has_tag()
+    #         and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
+    #     ]
+    #     # This is horrible and slow
+    #     for commit in tagged_candidates:
+    #         for twin in commit.twins:
+    #             twin[0] = twin_branches[twin[1]]
+
+    #     return tagged_candidates, advisory_record
+
+    # return aggregated_commits
 
 
 def retrieve_preprocessed_commits(
