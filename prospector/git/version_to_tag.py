@@ -1,14 +1,67 @@
-# LEGACY CODE
-#
-# The following functions implement the heuristic to map a string version
-# such as "2.3.35" onto a tag such as "STRUTS_2_3_35"
-
 # flake8: noqa
 
 import difflib
 
 # pylint: disable=singleton-comparison,unidiomatic-typecheck, dangerous-default-value
 import re
+
+
+def get_possible_tags(tags: list, versions: str):
+    regex = r"[^\da-zA-Z]+"
+    tags_mapping: dict[str, list[str]] = dict()
+    for tag in tags:
+        stripped_tag = ".".join(
+            [n for n in re.split(regex, tag) if bool(re.search(r"\d", n))]
+        )
+        if stripped_tag not in tags_mapping:
+            tags_mapping[stripped_tag] = [tag]
+        else:
+            tags_mapping[stripped_tag].append(tag)
+
+    prev_version, next_version = versions.split(":")
+    prev_tag = tags_mapping.get(prev_version, "")
+    next_tag = tags_mapping.get(next_version, "")
+
+    if len(prev_tag) == 1 and len(next_tag) == 1:
+        return prev_tag[0], next_tag[0]
+    elif len(prev_tag) == 1 and len(next_tag) > 1:
+        return prev_tag[0], difflib.get_close_matches(prev_tag[0], next_tag, n=1)[0]
+    elif len(prev_tag) > 1 and len(next_tag) == 1:
+        return difflib.get_close_matches(next_tag[0], prev_tag, n=1)[0], next_tag[0]
+    elif len(prev_tag) == 0 and len(next_tag) == 1:
+        prev_candidates = [
+            tag
+            for tags in [
+                tags_mapping[key]
+                for key in difflib.get_close_matches(
+                    prev_version, tags_mapping.keys(), n=5
+                )
+                if key < next_version
+            ]
+            for tag in tags
+        ]
+        return (
+            max(difflib.get_close_matches(next_tag[0], prev_candidates, n=3)),
+            next_tag[0],
+        )
+    elif len(prev_tag) == 1 and len(next_tag) == 0:
+        next_candidates = [
+            tag
+            for tags in [
+                tags_mapping[key]
+                for key in difflib.get_close_matches(
+                    next_version, tags_mapping.keys(), n=5
+                )
+                if key > prev_version
+            ]
+            for tag in tags
+        ]
+        return prev_tag[0], min(
+            difflib.get_close_matches(prev_tag[0], next_candidates, n=3)
+        )
+    else:
+        print("No tags found for the given versions")
+        return None, None
 
 
 def recursively_split_version_string(input_version: str, output_version: list = []):
@@ -83,6 +136,8 @@ def get_tag_for_version(tags, version):
         else tag
         for tag in tags
     ]
+    print(stripped_tags)
+    stripped_tags = []
     stripped_version = (
         version[
             version.index(
@@ -96,6 +151,7 @@ def get_tag_for_version(tags, version):
         if any(char.isdigit() for char in version)
         else version
     )
+    print(stripped_version)
 
     if version in tags and tags.count(version) == 1:
         tag = version
