@@ -323,7 +323,9 @@ class CommitHasTwins(Rule):
             ]
         # self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
         if len(candidate.twins) > 0:
-            self.message = f"This commit has one or more twins: {', '.join(twin_list)}"
+            self.message = (
+                f"This commit has one or more twins: {', '.join(candidate.twins)}"
+            )
             return True
         return False
 
