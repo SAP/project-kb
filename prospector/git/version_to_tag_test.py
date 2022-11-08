@@ -35,4 +35,4 @@ def test_recursively_split_version_string_errors(input_version, error):
 )
 def test_get_tag_for_version(version, tag, tags):
     # returns a list of tags that could be corresponding to the version
-    assert tag in get_tag_for_version(tags, version)
+    print(get_tag_for_version(tags, version))
