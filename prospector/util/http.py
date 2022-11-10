@@ -27,6 +27,7 @@ def fetch_url(url: str, extract_text=True) -> Union[str, BeautifulSoup]:
 
     soup = BeautifulSoup(content, "html.parser")
     if extract_text:
+        print(soup.get_text())
         return soup.get_text()
 
     return soup
@@ -63,13 +64,27 @@ def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str
     content = fetch_url(url, False)
     if not content:
         return ""
+    print(content.get_text())
+    print(
+        [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", content.get_text())]
+    )
+    return [
+        link.get("href")
+        for link in content.find_all(
+            "a",
+            attrs={
+                "href": re.compile(
+                    r"^https://github.com|^https://issues.apache.org/jira"
+                )
+            },
+        )
+    ]
+    # display the actual urls
 
-    return " ".join(
-        [
-            block.get_text()  # re.sub(r"\s+", " ", block.get_text())
-            for block in content.find_all(attrs={attr_name: attr_value})
-        ]
-    ).strip()
+    # return [
+    #     block.get_text()  # re.sub(r"\s+", " ", block.get_text())
+    #     for block in content.find_all(attrs={attr_name: attr_value})
+    # ]
 
 
 def get_from_xml(id: str):
