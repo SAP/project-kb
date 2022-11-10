@@ -292,13 +292,6 @@ class Git:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             return dict()
 
-    # def populate_lsh_index(self, msg: str, id: str):
-    #     mh = compute_minhash(msg[:64])
-    #     possible_twins = self.lsh_index.query(mh)
-
-    #     self.lsh_index.insert(id, mh)
-    #     return encode_minhash(mh), possible_twins
-
     def parse_git_output(self, raw: List[str], find_twins: bool = False):
 
         commits: Dict[str, RawCommit] = dict()
@@ -311,13 +304,7 @@ class Git:
                     if 0 < len(commit.changed_files) < 100:
                         commit.msg = commit.msg.strip()
                         if find_twins:
-                            # minhash, twins = self.populate_lsh_index(
-                            #     commit.msg, commit.id
-                            # )
-                            commit.minhash = get_encoded_minhash(commit.msg[:64])
-                            # commit.twins = twins
-                            # for twin in twins:
-                            #     commits[twin].twins.append(commit.id)
+                            commit.minhash = get_encoded_minhash(commit.msg[:50])
 
                         commits[commit.id] = commit
 
@@ -327,10 +314,17 @@ class Git:
                 if sector == 1:
                     id, timestamp, parent = line.split(":")
                     parent = parent.split(" ")[0]
-                    commit = RawCommit(self, id, int(timestamp), parent)
+                    commit = RawCommit(
+                        repository=self,
+                        commit_id=id,
+                        timestamp=int(timestamp),
+                        parent_id=parent,
+                    )
                 elif sector == 2:
                     commit.msg += line + " "
-                elif sector == 3 and "test" not in line:
+                elif sector == 3 and not any(
+                    x in line for x in ("test", ".md", "/docs/")
+                ):
                     commit.add_changed_file(line)
 
         return commits
