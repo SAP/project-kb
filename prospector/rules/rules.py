@@ -134,9 +134,7 @@ class ChangesRelevantFiles(Rule):
             ]
         )
         if len(relevant_files) > 0:
-            self.message = (
-                f"The commit changes some relevant files: {', '.join(relevant_files)}"
-            )
+            self.message = "The commit changes some relevant files."  #: {', '.join(relevant_files)}"
             return True
         return False
 
@@ -179,7 +177,7 @@ class AdvKeywordsInFiles(Rule):
             ]
         )
         if len(matching_keywords) > 0:
-            self.message = f"An advisory keyword is contained in the changed files: {', '.join([p for p, _ in matching_keywords])}"
+            self.message = f"An advisory keyword is contained in the changed files: {', '.join(set([t for _, t in matching_keywords]))}"
             return True
         return False
 
@@ -219,7 +217,7 @@ class CveIdInLinkedIssue(Rule):
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for id, content in candidate.ghissue_refs.items():
             if advisory_record.cve_id in content:
-                self.message = f"The issue {id} mentions the CVE ID"
+                self.message = f"Issue {id} linked to the commit mentions the CVE ID"
                 return True
 
         return False
