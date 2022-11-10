@@ -106,10 +106,11 @@ def extract_filename(text: str, relevant_extensions: List[str]) -> str:
         return res.group(1)
 
     # Covers cases like: class::method, class.method,
+    # TODO: in nebula is getting the e from e.g.
     res = re.search(r"^(\w+)(?:\.|:{2})(\w+)$", text)  # ^(\w{2,})(?:\.|:{2})(\w{2,})$
     # Check if it is not a number
     if res and not bool(re.match(r"^\d+$", res.group(1))):
-        return res.group(1)
+        return res.group(1) if len(res.group(1)) > 3 else None
 
     # className or class_name (normal string with underscore)
     # TODO: ShenYu and words
@@ -171,3 +172,14 @@ def extract_cve_references(text: str) -> List[str]:
     Extract CVE identifiers
     """
     return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
+
+
+def extract_references_keywords(text: str) -> List[str]:
+    """
+    Extract keywords that refer to references
+    """
+    return [
+        result.group(0)
+        for result in re.finditer(r"[A-Z]{2,}-\d+|github\.com\/(?:\w+|\/)*", text)
+        if "CVE" not in result.group(0)
+    ]
