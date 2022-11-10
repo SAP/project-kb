@@ -58,44 +58,43 @@
         }
     </script>
 
-    <h2>Filters</h2>
+    <h3>Filters</h3>
     <p class="text-justify">
-        By default, only the candidates with relevance score of at least
-        10 are shown displayed (you can the buttons below to show more
-        candidates).
+        Use the slider to filter out lower relevance scores and the button to collapse or expand all the commits.
     </p>
+    <label for="customRange3" class="form-label">
+        <h6>Relevance > <output id="relevanceRangeOutput">0</output> </h6>
+    </label>
     <div class="row">
-        <div class="d-grid gap-2 col-6 mx-auto">
-            <button id="relevancefilter" class="btn btn-primary btn-sm selector btn-block">
-                Relevance
-                > 15</button>
-
-            <button id="relevancefilter2" class="btn btn-primary btn-sm selector btn-block">
-                Relevance
-                > 10</button>
-
-            <button id="relevancefilter3" class="btn btn-primary btn-sm selector btn-block">
-                Relevance
-                > 5&nbsp;</button>
-
-            <button id="relevancefilter4" class="btn btn-primary btn-sm selector btn-block"> All
-                candidates</button>
-            </button>
-
-            <button class="btn btn-primary btn-sm btn-block" id="collapse_all_toggle">Collapse
+        <div class="d-grid my-2 gap-5 col-12">
+            <input type="range" class="form-range" min="0" max="30" value="0" step="3" id="relevanceRange">
+        </div>
+        <div class="d-grid my-2 gap-5 col-12">
+            <button class="btn btn-primary btn-sm btn-block" id="collapse_all_toggle">Expand
                 All</button>
         </div>
     </div>
-    <!--<span class="badge bg-secondary"> X</span>-->
 
     <div class="advisory-record" style="margin-top: 3ex">
-        <h2>Results based on this Advisory Record</h2>
-        <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.vulnerability_id }}" target="_blank"><b
-                id="cve_id">{{ advisory_record.vulnerability_id }}</b></a><br />
+        <h3>Advisory Record</h3>
+        <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.cve_id }}" target="_blank"><b id="cve_id">{{
+                advisory_record.cve_id }}</b></a><br />
         <p class="text-justify">{{ advisory_record.description }}</p>
+
+        <h5>Possible relevant files</h5>
+        <p style="margin: 10pt">
+        <ul class="list-group">
+            {% for file in advisory_record.files | sort %}
+            <li class="list-group-item">{{file}}</li>
+            {% endfor %}
+        </ul>
+
+        </p>
+        <h5>Other relevant keywords</h5>
         <p style="margin: 10pt">
             {% for token in advisory_record.keywords | sort %}
-            <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ token }}</span>
+            <li class="list-group-item">{{token}}</li>
+
             {% endfor %}
         </p>
     </div>

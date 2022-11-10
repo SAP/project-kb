@@ -2,5 +2,9 @@
 {% set title = "Commit message" %}
 {% set icon = "fas fa-quote-left" %}
 {% block body %}
-<pre class="card-text" style="white-space: pre-wrap;">{{ annotated_commit.message }}</pre>
+<ul class="list-group list-group-flush mx-3">
+    <li class="list-group-item">
+        <div class="card-text">{{ annotated_commit.message }}</div>
+    </li>
+</ul>
 {% endblock %}

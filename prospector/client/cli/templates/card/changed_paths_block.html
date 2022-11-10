@@ -2,9 +2,11 @@
 {% set title = "Changed files in commit" %}
 {% set icon = "fas fa-file-signature" %}
 {% block body %}
-<p>
-    {% for path in annotated_commit.changed_files %}
-    <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ path }}</span>
-    {% endfor %}
-</p>
+<ul class="list-group list-group-flush mx-3">
+    <li class="list-group-item">
+        {% for path in annotated_commit.changed_files %}
+        <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ path }}</span>
+        {% endfor %}
+    </li>
+</ul>
 {% endblock %}
