@@ -4,9 +4,10 @@ import difflib
 
 # pylint: disable=singleton-comparison,unidiomatic-typecheck, dangerous-default-value
 import re
+import sys
 
 
-def clear_tag(tag: str) -> str:
+def clean_tag(tag: str) -> str:
     return re.sub(
         r"^[a-zA-Z]+|[a-zA-Z]+$",
         "",
@@ -19,14 +20,7 @@ def clear_tag(tag: str) -> str:
 def get_possible_tags(tags: list, versions: str):
     tags_mapping: dict[str, list[str]] = dict()
     for tag in tags:
-        stripped_tag = clear_tag(tag)
-        # stripped_tag = re.sub(
-        #     r"^[a-zA-Z]+|[a-zA-Z]+$",
-        #     "",
-        #     ".".join(
-        #         [n for n in re.split(r"[^\da-zA-Z]+", tag) if bool(re.search(r"\d", n))]
-        #     ),
-        # )
+        stripped_tag = clean_tag(tag)
         if stripped_tag not in tags_mapping:
             tags_mapping[stripped_tag] = [tag]
         else:
@@ -79,9 +73,12 @@ def get_possible_tags(tags: list, versions: str):
             print("Open ended tag interval...")
             return prev_tag[0], ""
         return prev_tag[0], min(next_candidates)
+    elif len(prev_tag) > 1 and len(next_tag) > 1:
+        sys.exit(
+            f"Multiple tag candidates found. Aborting.\nTry running it again with: --tag-interval \n  Prev tag: {prev_tag}\n  Next tag: {next_tag}"
+        )
     else:
-        print("No tags found for the given versions")
-        return None, None
+        raise Exception(f"Tag candidates not found: {prev_version}, {next_version}")
 
 
 def recursively_split_version_string(input_version: str, output_version: list = []):

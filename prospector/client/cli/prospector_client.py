@@ -12,7 +12,7 @@ from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
-from git.version_to_tag import clear_tag, get_possible_tags, get_tag_for_version
+from git.version_to_tag import get_possible_tags, get_tag_for_version
 from log.logger import get_level, logger, pretty_log
 from rules.rules import apply_rules
 from stats.execution import (
