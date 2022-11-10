@@ -1,15 +1,21 @@
 import logging
 import os
-from typing import List, Optional, Set, Tuple
+import re
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
 from dateutil.parser import isoparse
 
 from log.logger import get_level, logger, pretty_log
-from util.http import fetch_url
+from util.http import extract_from_webpage, fetch_url
 
-from .nlp import extract_affected_filenames, extract_products, extract_words_from_text
+from .nlp import (
+    extract_affected_filenames,
+    extract_products,
+    extract_references_keywords,
+    extract_words_from_text,
+)
 
 ALLOWED_SITES = [
     "github.com",
@@ -51,8 +57,9 @@ class AdvisoryRecord:
         description: str = "",
         published_timestamp: int = 0,
         last_modified_timestamp: int = 0,
-        references: List[str] = None,
-        references_content: List[str] = None,
+        references: Dict[str, List[str]] = None,
+        # references: List[str] = None,
+        # references_content: List[str] = None,
         affected_products: List[str] = None,
         versions: List[Tuple[str, str]] = None,
         files: Set[str] = None,
@@ -62,8 +69,8 @@ class AdvisoryRecord:
         self.description = description
         self.published_timestamp = published_timestamp
         self.last_modified_timestamp = last_modified_timestamp
-        self.references = references or list()
-        self.references_content = references_content or list()
+        self.references = references or dict()
+        # self.references_content = references_content or list()
         self.affected_products = affected_products or list()
         self.versions = versions or list()
         self.files = files or set()
@@ -90,20 +97,23 @@ class AdvisoryRecord:
         logger.debug("References: " + str(self.references))
         # TODO: misses something because of subdomains not considered e.g. lists.apache.org
 
-        self.references = [
-            r
+        self.references = {
+            r: extract_references_keywords(fetch_url(r)) if fetch_references else []
             for r in self.references
             if ".".join(urlparse(r).hostname.split(".")[-2:]) in ALLOWED_SITES
-        ]
-        logger.debug("Relevant references: " + str(self.references))
+        }
+        # TODO: I should extract interesting stuff from the references immediately ad maintain them just for a fast lookup
+        logger.debug(f"Relevant references: {len(self.references)}")
 
-        if fetch_references:
-            self.references_content = [
-                " ".join(str(fetch_url(r)).split()) for r in self.references
-            ]
+        # if fetch_references:
+        #     self.references_content = [
+        #         " ".join(str(fetch_url(r)).split()) for r in self.references
+        #     ]
 
     def get_advisory(self):
-        data = get_from_local(self.cve_id) or get_from_nvd(self.cve_id)
+        data = get_from_local(self.cve_id)
+        if data is None:
+            data = get_from_nvd(self.cve_id)
 
         if data is None:
             raise Exception("Backend error and NVD error. Missing API key?")
