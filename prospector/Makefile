@@ -8,18 +8,19 @@ PROGRESS="$(YELLOW)....$(END)"
 
 
 setup: requirements.txt
-	@cp config-sample.yaml config-yaml
+	@cp config-sample.yaml config.yaml
+	@cp .env-sample .env
 	@echo "$(PROGRESS) Installing requirements"
 	@pip install -r requirements.txt
 	@echo "$(DONE) Installed requirements"
 	@echo "$(PROGRESS) Installing pre-commit and spacy model"
-	@pre-commit install
 	@python -m spacy download en_core_web_sm
 	@echo "$(DONE) Installed pre-commit and spacy model"
 
 dev-setup: setup requirements-dev.txt
 	@echo "$(PROGRESS) Installing development requirements"
 	@pip install -r requirements-dev.txt
+	@pre-commit install
 	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
