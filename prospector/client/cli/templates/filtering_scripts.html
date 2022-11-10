@@ -9,31 +9,23 @@
         }
     }
 
+
     function showFromRelevance(relevance) {
         let commit_cards = document.getElementsByClassName('commit');
         for (let card of commit_cards) {
-            let commit_relevance = card.dataset.relevances;
-            if (commit_relevance > relevance) {
-                if (card.classList.contains('d-none')) {
-                    card.classList.replace('d-none', 'd-flex')
-                }
+            if (parseInt(card.dataset.relevances) > parseInt(relevance)) {
+                card.classList.replace('d-none', 'd-flex')
             } else {
-                if (card.classList.contains('d-flex')) {
-                    card.classList.replace('d-flex', 'd-none')
-                }
+                card.classList.replace('d-flex', 'd-none')
             }
         }
     }
-
-    for (let b of buttons) {
-        if (b.id == "relevancefilter") {
-            b.addEventListener('click', function () { showFromRelevance(20); })
-        } else if (b.id == "relevancefilter2") {
-            b.addEventListener('click', function () { showFromRelevance(15); })
-        } else if (b.id == "relevancefilter3") {
-            b.addEventListener('click', function () { showFromRelevance(10); })
-        } else if (b.id == "relevancefilter4") {
-            b.addEventListener('click', function () { showFromRelevance(0); })
-        }
+    relevanceRange = document.getElementById("relevanceRange");
+    relevanceRange.onchange = function () {
+        showFromRelevance(this.value);
+        relevanceRangeOutput = document.getElementById("relevanceRangeOutput");
+        relevanceRangeOutput.innerHTML = this.value;
     }
+    relevanceRange.value = 0;
+
 </script>
