@@ -5,6 +5,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 # from .dependencies import oauth2_scheme
 from api.routers import jobs, nvd, preprocessed, users
+from log.logger import logger
+from util.config_parser import parse_config_file
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},
@@ -39,18 +41,6 @@ app.include_router(preprocessed.router)
 async def read_items():
     response = RedirectResponse(url="/docs")
     return response
-    # return """
-    # <html>
-    #     <head>
-    #         <title>Prospector</title>
-    #     </head>
-    #     <body>
-    #         <h1>Prospector API</h1>
-    #         Click <a href="/docs">here</a> for docs and here for
-    #         <a href="/openapi.json">OpenAPI specs</a>.
-    #     </body>
-    # </html>
-    # """
 
 
 # -----------------------------------------------------------------------------
@@ -60,6 +50,8 @@ async def get_status():
 
 
 if __name__ == "__main__":
+    config = parse_config_file()
+    logger.setLevel(config.log_level)
 
     uvicorn.run(
         app,
