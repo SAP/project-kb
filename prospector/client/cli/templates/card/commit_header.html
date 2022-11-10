@@ -2,7 +2,7 @@
     <div class="row">
         <div class="col">
             <h5 class="mb-0">
-                {{ annotated_commit.message | truncate(150) }}
+                {{ annotated_commit.message | truncate(72) }}
                 {% if not annotated_commit.message %}
                 <i>(no commit message found)</i>
                 {% endif %}
@@ -20,11 +20,12 @@
                     <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ rule.id }}</span>
                     {% endfor %}
                 </p>
+            </h6>
         </div>
         <div class="col col-auto">
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+            <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
                 data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false" aria-controls="collapseExample">
-                <i class="fas fa-low-vision"></i>
+                <i class="fas fa-caret-down"></i>
             </button>
         </div>
         <div class="col col-auto">
