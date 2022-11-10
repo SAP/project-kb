@@ -6,7 +6,8 @@ from datasketch import MinHash, MinHashLSH
 from datasketch.lean_minhash import LeanMinHash
 
 PERMUTATIONS = 128
-THRESHOLD = 0.95
+# TODO: Which threshold to use?
+THRESHOLD = 0.8
 
 
 def get_encoded_minhash(string: str) -> str:
