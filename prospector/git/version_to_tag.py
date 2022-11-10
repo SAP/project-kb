@@ -6,16 +6,27 @@ import difflib
 import re
 
 
+def clear_tag(tag: str) -> str:
+    return re.sub(
+        r"^[a-zA-Z]+|[a-zA-Z]+$",
+        "",
+        ".".join(
+            [n for n in re.split(r"[^\da-zA-Z]+", tag) if bool(re.search(r"\d", n))]
+        ),
+    )
+
+
 def get_possible_tags(tags: list, versions: str):
     tags_mapping: dict[str, list[str]] = dict()
     for tag in tags:
-        stripped_tag = re.sub(
-            r"^[a-zA-Z]+|[a-zA-Z]+$",
-            "",
-            ".".join(
-                [n for n in re.split(r"[^\da-zA-Z]+", tag) if bool(re.search(r"\d", n))]
-            ),
-        )
+        stripped_tag = clear_tag(tag)
+        # stripped_tag = re.sub(
+        #     r"^[a-zA-Z]+|[a-zA-Z]+$",
+        #     "",
+        #     ".".join(
+        #         [n for n in re.split(r"[^\da-zA-Z]+", tag) if bool(re.search(r"\d", n))]
+        #     ),
+        # )
         if stripped_tag not in tags_mapping:
             tags_mapping[stripped_tag] = [tag]
         else:
