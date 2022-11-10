@@ -1,4 +1,5 @@
 import logging
+import re
 import sys
 from typing import Dict, List, Set, Tuple
 
@@ -11,7 +12,7 @@ from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
-from git.version_to_tag import get_possible_tags, get_tag_for_version
+from git.version_to_tag import clear_tag, get_possible_tags, get_tag_for_version
 from log.logger import get_level, logger, pretty_log
 from rules.rules import apply_rules
 from stats.execution import (
@@ -141,11 +142,9 @@ def prospector(  # noqa: C901
                 # Now pbar has Raw commits inside so we can skip the "get_commit" call
                 for raw_commit in pbar:
                     counter.increment("preprocessed commits")
+                    raw_commit.set_tags(next_tag)
                     # TODO: here we need to check twins with the commit not already in the backend and update everything
                     preprocessed_commits.append(make_from_raw_commit(raw_commit))
-
-            # Cleanup candidates to save memory
-            del candidates
 
             pretty_log(logger, advisory_record)
             logger.debug(
@@ -212,13 +211,20 @@ def tag_and_aggregate_commits(
         return commits
     tagged_commits = list()
     for commit in commits:
-        if commit.has_tag() and (
-            commit.get_tag() in next_tag or next_tag in commit.get_tag()
-        ):
-            for twin in commit.twins:
-                twin[0] = mapping_dict[twin[1]]
+        if commit.has_tag():
+            # if (
+            #     commit.commit_id == "ac7ed9580331b8fd65eccd732f651b14f95f71f0"
+            #     or commit.commit_id == "8eb68266167d8f8b3fa3a00ca9f6b7889e8ec101"
+            #     or commit.commit_id == "1ba43047641e1db238ee15a6fa1a1d8dcd371bc5"
+            #     or "(#7359)" in commit.message
+            # ):
+            #     print(commit.commit_id, commit.get_tag())
+            if next_tag == commit.get_tag():
+                # cleaned_tag in cleaned_next_tag or cleaned_next_tag in cleaned_tag:
+                for twin in commit.twins:
+                    twin[0] = mapping_dict[twin[1]]
 
-            tagged_commits.append(commit)
+                tagged_commits.append(commit)
 
     return tagged_commits
 
