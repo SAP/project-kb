@@ -14,7 +14,6 @@ if path_root not in sys.path:
     sys.path.append(path_root)
 
 
-from client.cli.config_parser import get_configuration, parse_cli_args  # noqa: E402
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.prospector_client import DEFAULT_BACKEND  # noqa: E402
 from client.cli.prospector_client import TIME_LIMIT_AFTER  # noqa: E402
@@ -25,6 +24,7 @@ from client.cli.report import as_html, as_json, report_on_console  # noqa: E402
 # Load logger before doing anything else
 from log.logger import get_level, logger, pretty_log  # noqa: E402
 from stats.execution import execution_statistics  # noqa: E402
+from util.config_parser import get_configuration  # noqa: E402
 
 # from util.http import ping_backend  # noqa: E402
 
@@ -60,15 +60,12 @@ def main(argv):  # noqa: C901
             config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
         )
 
-        time_limit_before = TIME_LIMIT_BEFORE
-        time_limit_after = TIME_LIMIT_AFTER
-
         logger.debug("Using the following configuration:")
         pretty_log(logger, config.__dict__)
 
         logger.debug("Vulnerability ID: " + config.cve_id)
-        logger.debug(f"time-limit before: {time_limit_before}")
-        logger.debug(f"time-limit after: {time_limit_after}")
+        logger.debug(f"time-limit before: {TIME_LIMIT_BEFORE}")
+        logger.debug(f"time-limit after: {TIME_LIMIT_AFTER}")
 
     results, advisory_record = prospector(
         vulnerability_id=config.cve_id,
@@ -79,8 +76,8 @@ def main(argv):  # noqa: C901
         version_interval=config.version_interval,
         modified_files=config.modified_files,
         advisory_keywords=config.keywords,
-        time_limit_before=time_limit_before,
-        time_limit_after=time_limit_after,
+        time_limit_before=TIME_LIMIT_BEFORE,
+        time_limit_after=TIME_LIMIT_AFTER,
         use_nvd=config.use_nvd,
         nvd_rest_endpoint="",
         fetch_references=config.fetch_references,
@@ -102,7 +99,7 @@ def main(argv):  # noqa: C901
                 as_json(results, advisory_record, config.report_filename)
             case "html":
                 as_html(results, advisory_record, config.report_filename)
-            case "allfiles":
+            case "all":
                 as_json(results, advisory_record, config.report_filename)
                 as_html(results, advisory_record, config.report_filename)
             case _:
@@ -116,7 +113,7 @@ def main(argv):  # noqa: C901
         logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
         console.print(f"Execution time: {execution_time:.4f} sec")
-        console.print(f"Report saved in {config.report_filename}.{config.report}")
+        console.print(f"Report saved in {config.report_filename}")
         return
 
 
