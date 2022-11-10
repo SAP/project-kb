@@ -88,9 +88,9 @@ def parse_cli_args(args):
 
     parser.add_argument(
         "--report",
-        choices=["html", "json", "console", "allfiles"],
+        choices=["html", "json", "console", "all"],
         type=str,
-        help="Format of the report (options: console, json, html)",
+        help="Format of the report (options: console, json, html, all)",
     )
 
     parser.add_argument(
