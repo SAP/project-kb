@@ -1,6 +1,6 @@
 import hashlib
-from datetime import timezone
 import re
+from datetime import timezone
 from typing import List, Tuple
 
 from dateutil.parser import isoparse
@@ -14,6 +14,7 @@ class RawCommit:
         self,
         repository,
         commit_id: str = "",
+        tag: str = "",
         timestamp: int = 0,
         parent_id: str = "",
         msg: str = "",
@@ -23,6 +24,7 @@ class RawCommit:
     ):
         self.repository = repository
         self.id = commit_id
+        self.tag = tag
         self.timestamp = timestamp
         self.parent_id = parent_id
         self.msg = msg
@@ -42,6 +44,9 @@ class RawCommit:
     def get_id(self) -> str:
         return self.id
 
+    def get_tag(self) -> str:
+        return self.tag
+
     def get_minhash(self) -> str:
         return self.minhash
 
@@ -54,8 +59,10 @@ class RawCommit:
     def get_twins(self):
         return self.twins
 
-    def set_tags(self, tags: List[str]):
-        self.tags = tags
+    def set_tags(self, relevant_tag):
+        self.tag = self.find_tag(relevant_tag)
+        if self.tag == "":
+            self.tag = self.find_tag()
 
     # def extract_parent_id(self):
     #     try:
@@ -72,7 +79,7 @@ class RawCommit:
     #         )
     #         self.parent_id = ""
 
-    def get_timestamp(self):
+    def get_timestamp(self) -> int:
         return self.timestamp
 
     def get_parent_id(self):
@@ -300,9 +307,12 @@ class RawCommit:
             return []
         return tags
 
-    def get_tag(self):
+    def find_tag(self, relevant_tag: str = ""):
         # cmd = f"git describe --abbrev=0 --contains {self.id}"
         cmd = f"git name-rev --tags --name-only {self.id}"
+        if len(relevant_tag) > 0:
+            cmd = f"git name-rev --tags --refs {relevant_tag} --name-only {self.id}"
+
         tag = self.execute(cmd)
         if tag[0] != "undefined":
             return re.sub(r"[~^]\w*", "", tag[0])
