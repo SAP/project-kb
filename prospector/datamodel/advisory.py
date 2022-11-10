@@ -112,11 +112,11 @@ class AdvisoryRecord:
 
     def get_advisory(self):
         data = get_from_local(self.cve_id)
-        if data is None:
+        if not data:
             data = get_from_nvd(self.cve_id)
 
-        if data is None:
-            raise Exception("Backend error and NVD error. Missing API key?")
+        if not data:
+            raise Exception("Backend error and NVD error. Wrong API key?")
 
         self.parse_advisory(data)
 
