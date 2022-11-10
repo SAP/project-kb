@@ -37,7 +37,8 @@ def test_get_advisory():
 
 
 def test_build_advisory_record():
-    advisory = build_advisory_record("CVE-2014-0050")
+    advisory = build_advisory_record("CVE-2021-29943", fetch_references=True)
     print(advisory.__dict__)
-    assert advisory.cve_id == "CVE-2014-0050"
+
+    assert advisory.cve_id == "CVE-2014-005"
     assert advisory.versions == []
