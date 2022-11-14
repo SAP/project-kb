@@ -10,7 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Dict, List
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -286,14 +286,15 @@ class Git:
 
             # TODO: problem -> twins can be merge commits, same commits for different branches, not only security related fixes
 
-            return self.parse_git_output(out, find_twins)
+            return self.parse_git_output(out, find_twins, ancestors_of)
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             return dict()
 
-    def parse_git_output(self, raw: List[str], find_twins: bool = False):
-
+    def parse_git_output(
+        self, raw: List[str], find_twins: bool = False, next_tag: Optional[str] = None
+    ):
         commits: Dict[str, RawCommit] = dict()
         commit = None
         sector = 0
@@ -303,6 +304,8 @@ class Git:
                     sector = 1
                     if 0 < len(commit.changed_files) < 100:
                         commit.msg = commit.msg.strip()
+                        # TODO: should work here
+                        # commit.set_tags(next_tag)
                         if find_twins:
                             commit.minhash = get_encoded_minhash(commit.msg[:50])
 
