@@ -17,36 +17,14 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 nlp = load("en_core_web_sm")
 
 
-def extract_special_terms(description: str) -> Set[str]:
-    """
-    Extract all words (space delimited) which presumably cannot be part of an natural language sentence.
-    These are usually code fragments and names of code entities, or paths.
-    """
-
-    return set()
-    # TODO replace this with NLP implementation
-    # see, https://github.com/SAP/project-kb/issues/256#issuecomment-927639866
-    # noinspection PyUnreachableCode
-    result = []
-    for word in description.split():
-        no_punctation_word = word.rstrip(").,;:?!\"'").lstrip("(")
-        contains_non_word_char = re.search(r"\W", no_punctation_word)
-        contains_non_initial_upper_case = re.search(r"\B[A-Z]", no_punctation_word)
-        if contains_non_initial_upper_case or contains_non_word_char:
-            result.append(word)
-    return tuple(result)
-
-
-def extract_words_from_text(text: str) -> Set[str]:
+def extract_words_from_text(text: str) -> List[str]:
     """Use spacy to extract "relevant words" from text"""
     # Lemmatization
-    return set(
-        [
-            token.lemma_.casefold()
-            for token in nlp(text)
-            if token.pos_ in ("NOUN", "VERB", "PROPN") and len(token.lemma_) > 3
-        ]
-    )
+    return [
+        token.lemma_.casefold()
+        for token in nlp(text)
+        if token.pos_ in ("NOUN", "VERB", "PROPN") and len(token.lemma_) > 3
+    ]
 
 
 def find_similar_words(adv_words: Set[str], commit_msg: str, exclude: str) -> Set[str]:
@@ -70,10 +48,17 @@ def extract_products(text: str) -> List[str]:
     """
     Extract product names from advisory text
     """
-    # TODO implement this properly
-    regex = r"([A-Z]+[a-z\b]+)"
-    result = set(re.findall(regex, text))
-    return [p for p in result if len(p) > 2]
+    return list(
+        set(
+            [
+                token.text
+                for token in nlp(text)
+                if token.pos_ in ("PROPN")
+                and token.text.isalpha()
+                and len(token.text) > 2
+            ]
+        )  # "NOUN",
+    )
 
 
 def extract_affected_filenames(
@@ -107,14 +92,18 @@ def extract_filename(text: str, relevant_extensions: List[str]) -> str:
 
     # Covers cases like: class::method, class.method,
     # TODO: in nebula is getting the e from e.g.
-    res = re.search(r"^(\w+)(?:\.|:{2})(\w+)$", text)  # ^(\w{2,})(?:\.|:{2})(\w{2,})$
+    res = re.search(
+        r"^(\w{2,})(?:\.|:{2})(\w+)$", text
+    )  # ^(\w{2,})(?:\.|:{2})(\w{2,})$
     # Check if it is not a number
     if res and not bool(re.match(r"^\d+$", res.group(1))):
-        return res.group(1) if len(res.group(1)) > 3 else None
+        return res.group(1)
 
     # className or class_name (normal string with underscore)
     # TODO: ShenYu and words
     # like this should be excluded...
+    # TODO: filter for not present in url
+    #
     if bool(re.search(r"[a-z]{2,}[A-Z]+[a-z]*", text)) or "_" in text:
         return text
 
@@ -183,3 +172,23 @@ def extract_references_keywords(text: str) -> List[str]:
         for result in re.finditer(r"[A-Z]{2,}-\d+|github\.com\/(?:\w+|\/)*", text)
         if "CVE" not in result.group(0)
     ]
+
+
+# def extract_special_terms(description: str) -> Set[str]:
+#     """
+#     Extract all words (space delimited) which presumably cannot be part of an natural language sentence.
+#     These are usually code fragments and names of code entities, or paths.
+#     """
+
+#     return set()
+#     # TODO replace this with NLP implementation
+#     # see, https://github.com/SAP/project-kb/issues/256#issuecomment-927639866
+#     # noinspection PyUnreachableCode
+#     result = []
+#     for word in description.split():
+#         no_punctation_word = word.rstrip(").,;:?!\"'").lstrip("(")
+#         contains_non_word_char = re.search(r"\W", no_punctation_word)
+#         contains_non_initial_upper_case = re.search(r"\B[A-Z]", no_punctation_word)
+#         if contains_non_initial_upper_case or contains_non_word_char:
+#             result.append(word)
+#     return tuple(result)
