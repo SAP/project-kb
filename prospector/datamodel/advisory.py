@@ -61,7 +61,7 @@ class AdvisoryRecord:
         # references: List[str] = None,
         # references_content: List[str] = None,
         affected_products: List[str] = None,
-        versions: List[Tuple[str, str]] = None,
+        versions: Dict[str, List[str]] = None,
         files: Set[str] = None,
         keywords: Set[str] = None,
     ):
@@ -72,7 +72,7 @@ class AdvisoryRecord:
         self.references = references or dict()
         # self.references_content = references_content or list()
         self.affected_products = affected_products or list()
-        self.versions = versions or list()
+        self.versions = versions or dict()
         self.files = files or set()
         self.keywords = keywords or set()
 
@@ -80,9 +80,9 @@ class AdvisoryRecord:
         self,
         fetch_references: bool = False,
     ):
-        self.versions = [
-            version for version in self.versions if version[0] != version[1]
-        ]
+        # self.versions = [
+        #     version for version in self.versions if version[0] != version[1]
+        # ]
         # self.versions.extend(extract_versions(self.description))
         # self.versions = list(set(self.versions))
 
@@ -92,7 +92,7 @@ class AdvisoryRecord:
         # TODO: this could be done on the words extracted from the description
         self.files.update(extract_affected_filenames(self.description))
 
-        self.keywords.update(extract_words_from_text(self.description))
+        self.keywords.update(set(extract_words_from_text(self.description)))
 
         logger.debug("References: " + str(self.references))
         # TODO: misses something because of subdomains not considered e.g. lists.apache.org
@@ -104,11 +104,6 @@ class AdvisoryRecord:
         }
         # TODO: I should extract interesting stuff from the references immediately ad maintain them just for a fast lookup
         logger.debug(f"Relevant references: {len(self.references)}")
-
-        # if fetch_references:
-        #     self.references_content = [
-        #         " ".join(str(fetch_url(r)).split()) for r in self.references
-        #     ]
 
     def get_advisory(self):
         data = get_from_local(self.cve_id)
@@ -125,13 +120,28 @@ class AdvisoryRecord:
         self.last_modified_timestamp = int(isoparse(data["lastModified"]).timestamp())
         self.description = data["descriptions"][0]["value"]
         self.references = [r["url"] for r in data.get("references", [])]
-        self.versions = [
-            (
-                item.get("versionStartIncluding", item.get("versionStartExcluding")),
-                item.get("versionEndExcluding", item.get("versionEndIncluding")),
-            )
-            for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
+        self.versions = {
+            "affected": [
+                item.get("versionEndIncluding", item.get("versionStartIncluding"))
+                for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
+            ],  # TODO: can return to tuples
+            "fixed": [
+                item.get("versionEndExcluding")
+                for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
+            ],
+        }
+        self.versions["affected"] = [
+            v for v in self.versions["affected"] if v is not None
         ]
+        self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
+
+        # [
+        #     (
+        #         item.get("versionEndIncluding"),  # item.get("versionStartExcluding")
+        #         item.get("versionEndExcluding"),  # , item.get("versionEndIncluding")
+        #     )
+        #     for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
+        # ]
 
 
 def get_from_nvd(cve_id: str):
