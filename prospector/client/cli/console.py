@@ -34,7 +34,15 @@ class ConsoleWriter(object):
     def set_status(self, status: MessageStatus):
         self.status = status
 
-    def print(self, note: str, status: Optional[MessageStatus] = None):
+    def print__(self, note: str, status: Optional[MessageStatus] = None):
         print(f"{ConsoleWriter.indent}{Fore.WHITE}{note}", end="\n")
         if isinstance(status, MessageStatus):
             self.set_status(status)
+
+    @staticmethod
+    def print(note: str, status: Optional[MessageStatus] = None):
+        print(f"{ConsoleWriter.indent}{Fore.WHITE}{note}", end=" ")
+
+    @staticmethod
+    def print_(status: MessageStatus):
+        print(f"[{status.value}{status.name}{Style.RESET_ALL}]", end="\n")
