@@ -19,7 +19,7 @@ class SetEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def json(
+def json_(
     results: List[Commit],
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.json",
@@ -38,7 +38,7 @@ def json(
     return fn
 
 
-def html(
+def html_(
     results: List[Commit],
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.html",
@@ -74,7 +74,7 @@ def html(
     return fn
 
 
-def console(results: List[Commit], advisory_record: AdvisoryRecord, verbose=False):
+def console_(results: List[Commit], advisory_record: AdvisoryRecord, verbose=False):
     def format_annotations(commit: Commit) -> str:
         out = ""
         if verbose:

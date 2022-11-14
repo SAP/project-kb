@@ -2,7 +2,7 @@ import os
 import os.path
 from random import randint
 
-from client.cli.report import as_html, as_json
+import client.cli.report as report
 from datamodel.advisory import build_advisory_record
 from datamodel.commit import Commit
 from util.sample_data_generation import (  # random_list_of_url,
@@ -45,10 +45,10 @@ def test_report_generation():
         os.remove("test_report.html")
     if os.path.isfile("test_report.json"):
         os.remove("test_report.json")
-    html = as_html(
+    html = report.html_(
         candidates, advisory, "test_report.html", statistics=sample_statistics()
     )
-    json = as_json(candidates, advisory, "test_report.json")
+    json = report.json_(candidates, advisory, "test_report.json")
 
     assert os.path.isfile(html)
     assert os.path.isfile(json)
