@@ -153,15 +153,20 @@ class AdvKeywordsInMsg(Rule):
         return False
 
 
-# TODO: with proper filename and msg search this could be deprecated ?
-class AdvKeywordsInDiffs(Rule):
-    """Matches commits whose diffs contain any of the keywords extracted from the advisory."""
+# TODO: Test it
+class ChangesRelevantCode(Rule):
+    """Matches commits whose diffs contain any of the relevant files/methods extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        return False
-        matching_keywords = find_similar_words(advisory_record.keywords, candidate.diff)
+        for word in advisory_record.files:
+            for diffline in candidate.diff:
+                if word in diffline and word.casefold() not in candidate.repository:
+                    self.message = (
+                        f"The commit changes some relevant code: ({word})\n {diffline}"
+                    )
+                    return True
 
-        return len(matching_keywords) > 0
+        return False
 
 
 class AdvKeywordsInFiles(Rule):
@@ -173,9 +178,11 @@ class AdvKeywordsInFiles(Rule):
                 (p, token)
                 for p in candidate.changed_files
                 for token in advisory_record.keywords
-                if token in p and token not in candidate.repository
+                if token.casefold() in p.casefold()
+                and token.casefold() not in candidate.repository
             ]
         )
+
         if len(matching_keywords) > 0:
             self.message = f"An advisory keyword is contained in the changed files: {', '.join(set([t for _, t in matching_keywords]))}"
             return True
@@ -334,7 +341,7 @@ RULES = [
     CommitMentionedInReference("COMMIT_IN_REFERENCE", 9),
     CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 9),
     ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 9),
-    AdvKeywordsInDiffs("ADV_KEYWORDS_IN_DIFFS", 5),
+    ChangesRelevantCode("CHANGES_RELEVANT_CODE", 5),
     AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 5),
     AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 5),
     SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 5),
