@@ -3,23 +3,21 @@ import logging
 import os
 import signal
 import sys
-from pathlib import Path
 from typing import Any, Dict
 
 from dotenv import load_dotenv
-from omegaconf import OmegaConf
 
 path_root = os.getcwd()
 if path_root not in sys.path:
     sys.path.append(path_root)
 
 
+import client.cli.report as report  # noqa: E402
 from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
 from client.cli.prospector_client import DEFAULT_BACKEND  # noqa: E402
 from client.cli.prospector_client import TIME_LIMIT_AFTER  # noqa: E402
 from client.cli.prospector_client import TIME_LIMIT_BEFORE  # noqa: E402
 from client.cli.prospector_client import prospector  # noqa: E402; noqa: E402
-from client.cli.report import as_html, as_json, report_on_console  # noqa: E402
 
 # Load logger before doing anything else
 from log.logger import get_level, logger, pretty_log  # noqa: E402
@@ -91,30 +89,31 @@ def main(argv):  # noqa: C901
     if config.preprocess_only:
         return
 
-    with ConsoleWriter("Generating report") as console:
+    with ConsoleWriter("Generating report\n") as console:
         match config.report:
             case "console":
-                report_on_console(results, advisory_record, get_level() < logging.INFO)
+                report.console(results, advisory_record, get_level() < logging.INFO)
             case "json":
-                as_json(results, advisory_record, config.report_filename)
+                report.json(results, advisory_record, config.report_filename)
             case "html":
-                as_html(results, advisory_record, config.report_filename)
+                report.html(results, advisory_record, config.report_filename)
             case "all":
-                as_json(results, advisory_record, config.report_filename)
-                as_html(results, advisory_record, config.report_filename)
+                report.json(results, advisory_record, config.report_filename)
+                report.html(results, advisory_record, config.report_filename)
             case _:
                 logger.warning("Invalid report type specified, using 'console'")
                 console.set_status(MessageStatus.WARNING)
                 console.print(
                     f"{config.report} is not a valid report type, 'console' will be used instead",
                 )
-                report_on_console(results, advisory_record, get_level() < logging.INFO)
+                report.console(results, advisory_record, get_level() < logging.INFO)
 
         logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
-        console.print(f"Execution time: {execution_time:.4f} sec")
         console.print(f"Report saved in {config.report_filename}")
-        return
+    ConsoleWriter.print(f"Execution time: {execution_time:.3f}s")
+
+    return
 
 
 def signal_handler(signal, frame):
