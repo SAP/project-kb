@@ -31,13 +31,13 @@ docker-clean:
 	@docker-compose down --rmi all -v 2>/dev/null
 	@echo "$(DONE) Stopped and removed all container and images"
 
-	@echo "$(PROGRESS) Cleaning volumes"
-	@docker volume prune -f
-	@echo "$(DONE) Cleaned volumes"
+# @echo "$(PROGRESS) Cleaning volumes"
+# @docker volume prune -f
+# @echo "$(DONE) Cleaned volumes"
 
-	@echo "$(PROGRESS) Cleaning residue"
-	@docker system prune -a -f
-	@echo "$(DONE) Cleaned residue"
+# @echo "$(PROGRESS) Cleaning residue"
+# @docker system prune -a -f
+# @echo "$(DONE) Cleaned residue"
 
 
 clean:

@@ -92,21 +92,21 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Generating report\n") as console:
         match config.report:
             case "console":
-                report.console(results, advisory_record, get_level() < logging.INFO)
+                report.console_(results, advisory_record, get_level() < logging.INFO)
             case "json":
-                report.json(results, advisory_record, config.report_filename)
+                report.json_(results, advisory_record, config.report_filename)
             case "html":
-                report.html(results, advisory_record, config.report_filename)
+                report.html_(results, advisory_record, config.report_filename)
             case "all":
-                report.json(results, advisory_record, config.report_filename)
-                report.html(results, advisory_record, config.report_filename)
+                report.json_(results, advisory_record, config.report_filename)
+                report.html_(results, advisory_record, config.report_filename)
             case _:
                 logger.warning("Invalid report type specified, using 'console'")
                 console.set_status(MessageStatus.WARNING)
                 console.print(
                     f"{config.report} is not a valid report type, 'console' will be used instead",
                 )
-                report.console(results, advisory_record, get_level() < logging.INFO)
+                report.console_(results, advisory_record, get_level() < logging.INFO)
 
         logger.info("\n" + execution_statistics.generate_console_tree())
         execution_time = execution_statistics["core"]["execution time"][0]
