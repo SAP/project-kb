@@ -1,37 +1,43 @@
-<div class="container">
-    <div class="row">
-        <div class="col">
-            <h5 class="mb-0">
+<div class="container d-flex flex-column">
+    <div class="row flex-grow-1">
+        <div class="col-10">
+            <h5>
                 {{ annotated_commit.message | truncate(72) }}
                 {% if not annotated_commit.message %}
                 <i>(no commit message found)</i>
                 {% endif %}
             </h5>
-            <h6 style="margin: 5pt 0 0;" class="mb-0">
-                <p style="margin: 5pt 0 0;">
-                    <i class="fa fa-star"></i>
-                    Relevance: {{ annotated_commit.relevance }} &nbsp;&nbsp;
-                    <i class="fa fa-tag ml-2"></i>
-                    Tag: {{ annotated_commit.tags[0] }}
-                </p>
-                <p style="margin: 5pt 0 0;">
-                    <i class="fas fa-bullhorn"></i>
-                    {% for rule in annotated_commit.matched_rules %}
-                    <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ rule.id }}</span>
-                    {% endfor %}
-                </p>
-            </h6>
         </div>
-        <div class="col col-auto">
-            <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
-                data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false" aria-controls="collapseExample">
-                <i class="fas fa-caret-down"></i>
+        <div class="col-1 form-check d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" onchange="selectCard()">
+        </div>
+        <div class="col-1 d-flex align-items-center ">
+            <button class="btn btn-primary btn-sm px-1 py-1" type="button" data-bs-toggle="collapse"
+                data-bs-target="#candidatebody-{{ loop.index }}" aria-expanded="false"
+                aria-controls="collapseExample"><i class="bi bi-arrows-expand"></i>
             </button>
         </div>
-        <div class="col col-auto">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" onchange="selectCard()">
-            </div>
+    </div>
+    <div class="row flex-grow-1">
+        <div class="col-2">
+            <h6>
+                <i class="fa fa-star"></i>
+                Relevance: {{ annotated_commit.relevance }}
+            </h6>
+        </div>
+        <div class="col-9">
+            <h6 id="mainCommitTag">
+                <i class="fa fa-tag"></i>
+                Tag: {{ annotated_commit.tags[0] }}
+            </h6>
+        </div>
+    </div>
+    <div class="row flex-grow-1">
+        <div class="col-10">
+            <i class="fas fa-bullhorn"></i>
+            {% for rule in annotated_commit.matched_rules %}
+            <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ rule.id }}</span>
+            {% endfor %}
         </div>
     </div>
 </div>

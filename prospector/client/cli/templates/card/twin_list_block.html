@@ -5,9 +5,9 @@
 {% block body %}
 <ul class="list-group list-group-flush mx-3">
     {% for tag, id in annotated_commit.twins %}
-    <li class="list-group-item">
-        <a>{{tag}}: </a>
-        <a class="link-dark" href="{{ annotated_commit.repository }}/commit/{{ id }}">
+    <li id="commitTwinsList" class="list-group-item">
+        <a id="twinCommitTag">{{tag}}: </a>
+        <a id="twinCommitId" class="link-dark" href="{{ annotated_commit.repository }}/commit/{{ id }}">
             {{ id }}</a>
 
     </li>

@@ -13,9 +13,9 @@
                     </div>
                     <div class="col col-auto align-self-end mb-2">
                         <span class="popuptext" id="copy-popup">Copied!</span>
-                        <a target="_blank" class="btn btn-primary btn-sm" onclick="copyToClipboard()">Copy
+                        <a target="_blank" class="btn btn-primary btn-sm" id="clipboardCopyButton">Copy
                             to clipboard</a>
-                        <a target="_blank" class="btn btn-primary btn-sm" onclick="downloadAsFile()">Download
+                        <a target="_blank" class="btn btn-primary btn-sm" id="downloadYamlButton">Download
                             as YAML statement</a>
                     </div>
 
@@ -51,6 +51,7 @@
         </div>
     </div>
 </div>
+
 {% include "filtering_scripts.html" %}
 {% include "collapse_all_scripts.html" %}
 {% endblock %}
