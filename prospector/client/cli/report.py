@@ -19,7 +19,7 @@ class SetEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def as_json(
+def json(
     results: List[Commit],
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.json",
@@ -38,7 +38,7 @@ def as_json(
     return fn
 
 
-def as_html(
+def html(
     results: List[Commit],
     advisory_record: AdvisoryRecord,
     filename: str = "prospector-report.html",
@@ -47,14 +47,11 @@ def as_html(
     fn = filename if filename.endswith(".html") else f"{filename}.html"
 
     annotations_count = {}
-    # annotation: Commit
-    # Match number per rules
+
     for commit in results:
         for rule in commit.matched_rules:
             id = rule.get("id")
             annotations_count[id] = annotations_count.get(id, 0) + 1
-        # for annotation in commit.annotations.keys():
-        #     annotations_count[annotation] = annotations_count.get(annotation, 0) + 1
 
     logger.info(f"Writing results to {fn}")
     environment = jinja2.Environment(
@@ -77,9 +74,7 @@ def as_html(
     return fn
 
 
-def report_on_console(
-    results: List[Commit], advisory_record: AdvisoryRecord, verbose=False
-):
+def console(results: List[Commit], advisory_record: AdvisoryRecord, verbose=False):
     def format_annotations(commit: Commit) -> str:
         out = ""
         if verbose:
