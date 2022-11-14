@@ -1,73 +1,14 @@
 <div class="col-3 h-100 overflow-scroll bg-light bg-gradient border border-secondary">
-    <script type="text/javascript">
-        function selectCard() {
-            let hdr = event.target.closest("div.card-header")
-            if (hdr.classList.contains('bg-success')) {
-                hdr.classList.remove('bg-success')
-            } else {
-                hdr.classList.add('bg-success')
-            }
-        }
-
-        function exportToYaml() {
-            let list = document.querySelectorAll(".card-header.bg-success")
-            if (list.length == 0) {
-                return ""
-            }
-
-            let cve_id = document.getElementById("cve_id").textContent
-            let repo_url = document.getElementById("repository_url").textContent.trim().split("\n")[0]
-            let out = `vulnerability_id: ${cve_id}\nfixes:\n- id: "DEFAULT_BRANCH"\n  commits:`
-
-            for (let i = 0; i < list.length; i++) {
-                let commit_id = list[i].closest('.card').querySelector('#commit_id').textContent.trim()
-                out += `\n  - id: ${commit_id}\n    repository: ${repo_url}\n`
-            }
-
-            return out
-        }
-
-        function copyToClipboard() {
-            let text = exportToYaml()
-            try {
-                navigator.clipboard.writeText(text)
-                document.getElementById("copy-popup").classList.toggle("show")
-                setTimeout(() => {
-                    document.getElementById("copy-popup").classList.toggle("show")
-                }, 1000)
-            } catch (err) {
-                console.log('Something went wrong', err);
-            }
-        }
-
-        function downloadAsFile() {
-            let text = exportToYaml()
-            if (text == "") {
-                return
-            }
-            var element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-            element.setAttribute('download', "statement.yaml");
-
-            element.style.display = 'none';
-            document.body.appendChild(element);
-
-            element.click();
-
-            document.body.removeChild(element);
-        }
-    </script>
-
     <h3>Filters</h3>
     <p class="text-justify">
         Use the slider to filter out lower relevance scores and the button to collapse or expand all the commits.
     </p>
     <label for="customRange3" class="form-label">
-        <h6>Relevance > <output id="relevanceRangeOutput">0</output> </h6>
+        <h6>Relevance > <output id="relevanceRangeOutput"></output> </h6>
     </label>
     <div class="row">
         <div class="d-grid my-2 gap-5 col-12">
-            <input type="range" class="form-range" min="0" max="30" value="0" step="3" id="relevanceRange">
+            <input type="range" class="form-range" min="0" max="30" value="15" step="1" id="relevanceRange">
         </div>
         <div class="d-grid my-2 gap-5 col-12">
             <button class="btn btn-primary btn-sm btn-block" id="collapse_all_toggle">Expand
@@ -81,7 +22,7 @@
                 advisory_record.cve_id }}</b></a><br />
         <p class="text-justify">{{ advisory_record.description }}</p>
 
-        <h5>Possible relevant files</h5>
+        <h5>Possible relevant files/methods</h5>
         <p style="margin: 10pt">
         <ul class="list-group">
             {% for file in advisory_record.files | sort %}

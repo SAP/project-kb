@@ -12,6 +12,8 @@
 
     function showFromRelevance(relevance) {
         let commit_cards = document.getElementsByClassName('commit');
+        relevanceRangeOutput = document.getElementById("relevanceRangeOutput");
+        relevanceRangeOutput.innerHTML = relevance;
         for (let card of commit_cards) {
             if (parseInt(card.dataset.relevances) > parseInt(relevance)) {
                 card.classList.replace('d-none', 'd-flex')
@@ -21,11 +23,83 @@
         }
     }
     relevanceRange = document.getElementById("relevanceRange");
-    relevanceRange.onchange = function () {
+    relevanceRange.oninput = function () {
         showFromRelevance(this.value);
-        relevanceRangeOutput = document.getElementById("relevanceRangeOutput");
-        relevanceRangeOutput.innerHTML = this.value;
+
     }
-    relevanceRange.value = 0;
+    max = parseInt(document.getElementsByClassName('commit')[0].dataset.relevances) - 1;
+    relevanceRange.max = max;
+    relevanceRange.value = max;
+    showFromRelevance(max);
+
+    function selectCard() {
+        let hdr = event.target.closest("div.card-header")
+        if (hdr.classList.contains('bg-success')) {
+            hdr.classList.remove('bg-success')
+        } else {
+            hdr.classList.add('bg-success')
+        }
+    }
+
+    function exportToYaml() {
+        let list = document.querySelectorAll(".card-header.bg-success")
+        if (list.length == 0) {
+            return ""
+        }
+
+        let cve_id = document.getElementById("cve_id").textContent
+        let out = `vulnerability_id: ${cve_id}\nfixes:\n`
+
+        for (let i = 0; i < list.length; i++) {
+            let [repo_url, commit_id] = list[i].closest('.card').querySelector('#repository_url').href.split('/commit/')
+            let main_tag = list[i].closest('.card').querySelector('#mainCommitTag').textContent.split(":")[1].trim()
+            out += `- id: ${main_tag}\n  commits:\n  - id: ${commit_id}\n    repository: ${repo_url}\n`
+            let twins = list[i].closest('.card').querySelectorAll('#commitTwinsList')
+            for (let twin of twins) {
+                let twin_tag = twin.querySelector('#twinCommitTag').textContent.split(":")[0].trim()
+                let [twin_url, twin_id] = twin.querySelector('#twinCommitId').href.split("/commit/")
+                out += `- id: ${twin_tag}\n  commits:\n  - id: ${twin_id}\n    repository: ${twin_url}\n`
+            }
+        }
+
+        return out
+    }
+
+    function copyToClipboard() {
+        let text = exportToYaml()
+        try {
+            navigator.clipboard.writeText(text)
+            document.getElementById("copy-popup").classList.toggle("show")
+            setTimeout(() => {
+                document.getElementById("copy-popup").classList.toggle("show")
+            }, 1000)
+        } catch (err) {
+            console.log('Something went wrong', err);
+        }
+    }
+
+    function downloadAsFile() {
+        let text = exportToYaml()
+        if (text == "") {
+            return
+        }
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', "statement.yaml");
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    }
+
+    let copyButton = document.getElementById("clipboardCopyButton")
+    copyButton.addEventListener("click", copyToClipboard)
+
+    let downloadButton = document.getElementById("downloadYamlButton")
+    downloadButton.addEventListener("click", downloadAsFile)
+
 
 </script>
