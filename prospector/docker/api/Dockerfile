@@ -3,7 +3,7 @@ FROM python:3.10-slim
 WORKDIR /app
 ADD . .
 COPY docker/api/start.sh /app/start.sh
-COPY /app/config-example.yaml /app/config.yaml
+COPY ./config-sample.yaml /app/config.yaml
 RUN chmod +x /app/start.sh
 COPY ./api /app
 RUN pip install --upgrade pip
