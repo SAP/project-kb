@@ -12,7 +12,7 @@ from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
-from git.version_to_tag import get_possible_tags, get_tag_for_version
+from git.version_to_tag import get_possible_tags
 from log.logger import get_level, logger, pretty_log
 from rules.rules import apply_rules
 from stats.execution import (
@@ -83,20 +83,16 @@ def prospector(  # noqa: C901
         logger.debug(f"Found tags: {tags}")
         logger.info(f"Done retrieving {repository.url}")
 
-    prev_tag = None
-    next_tag = None
-
     if tag_interval is not None:
         prev_tag, next_tag = tag_interval.split(":")
     elif version_interval is not None:
         prev_tag, next_tag = get_possible_tags(tags, version_interval)
-        # vuln_version, fixed_version = version_interval.split(":")
-        # prev_tag = get_possible_tags(tags, vuln_version)
-        # next_tag = get_possible_tags(tags, fixed_version)
-        # prev_tag = get_tag_for_version(tags, vuln_version)[0]
-        # next_tag = get_tag_for_version(tags, fixed_version)[0]
+    else:
+        logger.error("No version/tag interval provided")
+        sys.exit(1)
 
-    print(f"Found tags: {prev_tag}, {next_tag}") if prev_tag and next_tag else None
+    ConsoleWriter.print(f"Found tags: {prev_tag} - {next_tag}")
+    ConsoleWriter.print_(MessageStatus.OK)
 
     # retrieve of commit candidates
     candidates = get_candidates(
@@ -112,7 +108,7 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection("commit preprocessing")
     ) as timer:
-        with ConsoleWriter("Preprocessing commits") as writer:
+        with ConsoleWriter("\nPreprocessing commits") as writer:
             try:
                 if use_backend != "never":
                     missing, preprocessed_commits = retrieve_preprocessed_commits(
@@ -134,17 +130,19 @@ def prospector(  # noqa: C901
                 missing = list(candidates.values())
                 preprocessed_commits: List[Commit] = list()
 
-            pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
-            with Counter(
-                timer.collection.sub_collection("commit preprocessing")
-            ) as counter:
-                counter.initialize("preprocessed commits", unit="commit")
-                # Now pbar has Raw commits inside so we can skip the "get_commit" call
-                for raw_commit in pbar:
-                    counter.increment("preprocessed commits")
-                    raw_commit.set_tags(next_tag)
-                    # TODO: here we need to check twins with the commit not already in the backend and update everything
-                    preprocessed_commits.append(make_from_raw_commit(raw_commit))
+            if len(missing) > 0:
+                pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
+                with Counter(
+                    timer.collection.sub_collection("commit preprocessing")
+                ) as counter:
+                    counter.initialize("preprocessed commits", unit="commit")
+                    for raw_commit in pbar:
+                        counter.increment("preprocessed commits")
+                        raw_commit.set_tags(next_tag)
+                        # TODO: here we need to check twins with the commit not already in the backend and update everything
+                        preprocessed_commits.append(make_from_raw_commit(raw_commit))
+            else:
+                writer.print("\nAll commits found in the backend")
 
             pretty_log(logger, advisory_record)
             logger.debug(
@@ -166,30 +164,17 @@ def prospector(  # noqa: C901
     twin_branches_map = {
         commit.commit_id: commit.get_tag() for commit in ranked_candidates
     }
+    ConsoleWriter.print("Commit ranking and aggregation...")
     ranked_candidates = tag_and_aggregate_commits(
         ranked_candidates, twin_branches_map, next_tag
     )
-    # TODO: aggregate twins and check tags
-    # ranked_candidates = aggregate_twins(ranked_candidates)
-    # if next_tag is not None:
-    #     tagged_candidates = [
-    #         commit
-    #         for commit in ranked_candidates
-    #         if commit.has_tag()
-    #         and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
-    #     ]
-    #     # This is horrible and slow
-    #     for commit in tagged_candidates:
-    #         for twin in commit.twins:
-    #             twin[0] = twin_branches[twin[1]]
-
-    #     return tagged_candidates, advisory_record
+    ConsoleWriter.print_(MessageStatus.OK)
 
     return ranked_candidates, advisory_record
 
 
 def filter(commits: List[Commit]) -> List[Commit]:
-    with ConsoleWriter("Candidate filtering") as console:
+    with ConsoleWriter("Candidate filtering\n") as console:
         commits, rejected = filter_commits(commits)
         if rejected > 0:
             console.print(f"Dropped {rejected} candidates")
@@ -198,7 +183,7 @@ def filter(commits: List[Commit]) -> List[Commit]:
 
 def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]):
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
-        with ConsoleWriter("Applying rules"):
+        with ConsoleWriter("Candidate analysis") as _:
             ranked_commits = apply_ranking(apply_rules(commits, advisory, rules=rules))
 
     return ranked_commits
@@ -210,39 +195,15 @@ def tag_and_aggregate_commits(
     if next_tag is None:
         return commits
     tagged_commits = list()
+    # if a twin has higher relevance than the one shown, then the relevance should be inherited
     for commit in commits:
-        if commit.has_tag():
-            # if (
-            #     commit.commit_id == "ac7ed9580331b8fd65eccd732f651b14f95f71f0"
-            #     or commit.commit_id == "8eb68266167d8f8b3fa3a00ca9f6b7889e8ec101"
-            #     or commit.commit_id == "1ba43047641e1db238ee15a6fa1a1d8dcd371bc5"
-            #     or "(#7359)" in commit.message
-            # ):
-            #     print(commit.commit_id, commit.get_tag())
-            if next_tag == commit.get_tag():
-                # cleaned_tag in cleaned_next_tag or cleaned_next_tag in cleaned_tag:
-                for twin in commit.twins:
-                    twin[0] = mapping_dict[twin[1]]
+        if commit.has_tag() and next_tag == commit.get_tag():
+            for twin in commit.twins:
+                twin[0] = mapping_dict[twin[1]]
 
-                tagged_commits.append(commit)
+            tagged_commits.append(commit)
 
     return tagged_commits
-
-    # if next_tag is not None:
-    #     tagged_candidates = [
-    #         commit
-    #         for commit in ranked_candidates
-    #         if commit.has_tag()
-    #         and (commit.get_tag() in next_tag or next_tag in commit.get_tag())
-    #     ]
-    #     # This is horrible and slow
-    #     for commit in tagged_candidates:
-    #         for twin in commit.twins:
-    #             twin[0] = twin_branches[twin[1]]
-
-    #     return tagged_candidates, advisory_record
-
-    # return aggregated_commits
 
 
 def retrieve_preprocessed_commits(
