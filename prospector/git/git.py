@@ -19,12 +19,7 @@ from git.exec import Exec
 from git.raw_commit import RawCommit
 from log.logger import logger
 from stats.execution import execution_statistics, measure_execution_time
-from util.lsh import (
-    build_lsh_index,
-    compute_minhash,
-    encode_minhash,
-    get_encoded_minhash,
-)
+from util.lsh import get_encoded_minhash
 
 # GIT_CACHE = os.getenv("GIT_CACHE")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -118,7 +113,6 @@ class Git:
         self.shallow_clone = shallow
         self.exec = Exec(workdir=self.path)
         self.storage = None
-        # self.lsh_index = build_lsh_index()
 
     def execute(self, cmd: str, silent: bool = False):
         return self.exec.run(cmd, silent=silent, cache=True)
@@ -202,7 +196,7 @@ class Git:
             else:
                 logger.debug(f"Found repo {self.url} in {self.path}.\nFetching....")
 
-                self.execute("git fetch --progress --all --tags")
+                self.execute("git fetch --progress --all --tags --force")
             return
 
         if os.path.exists(self.path):
@@ -239,10 +233,6 @@ class Git:
             shutil.rmtree(self.path)
             raise e
 
-    def get_tags():
-        cmd = "git log --tags --format=%H - %D"
-        pass
-
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def create_commits(
         self,
@@ -259,33 +249,22 @@ class Git:
         if ancestors_of is None or find_twins:
             cmd += " --all"
 
-        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
         if ancestors_of:
             if not find_twins:
                 cmd += f" {ancestors_of}"
             until = self.extract_tag_timestamp(ancestors_of)
+            cmd += f" --until={until}"
         # TODO: if find twins is true, we dont need the ancestors, only the timestamps
         if exclude_ancestors_of:
             if not find_twins:
                 cmd += f" ^{exclude_ancestors_of}"
             since = self.extract_tag_timestamp(exclude_ancestors_of)
-
-        if since:
             cmd += f" --since={since}"
-
-        if until:
-            cmd += f" --until={until}"
-
-        # for ext in FILTERING_EXTENSIONS:
-        #     cmd += f" *.{ext}"
 
         try:
             logger.debug(cmd)
             out = self.execute(cmd)
             # if --all is used, we are traversing all branches and therefore we can check for twins
-
-            # TODO: problem -> twins can be merge commits, same commits for different branches, not only security related fixes
-
             return self.parse_git_output(out, find_twins, ancestors_of)
 
         except Exception:
@@ -302,8 +281,9 @@ class Git:
             if line == GIT_SEPARATOR:
                 if sector == 3:
                     sector = 1
-                    if 0 < len(commit.changed_files) < 100:
+                    if 0 < len(commit.changed_files) < 100 and len(commit.msg) < 5000:
                         commit.msg = commit.msg.strip()
+
                         # TODO: should work here
                         # commit.set_tags(next_tag)
                         if find_twins:
@@ -326,7 +306,14 @@ class Git:
                 elif sector == 2:
                     commit.msg += line + " "
                 elif sector == 3 and not any(
-                    x in line for x in ("test", ".md", "/docs/")
+                    x in line
+                    for x in (
+                        "test",
+                        ".md",
+                        "docs/",
+                        ".meta",
+                        ".utf8",
+                    )  # TODO: build a list for these. If there are no . then is not relevant
                 ):
                     commit.add_changed_file(line)
 
@@ -360,71 +347,71 @@ class Git:
                 break
             r = requests.get(query_url, params=params, headers=headers)
 
-    # @measure_execution_time(execution_statistics.sub_collection("core"))
-    def get_commits(
-        self,
-        ancestors_of=None,
-        exclude_ancestors_of=None,
-        since=None,
-        until=None,
-        find_in_code="",
-        find_in_msg="",
-    ):
-        cmd = "git log --format=%H"
+    # # @measure_execution_time(execution_statistics.sub_collection("core"))
+    # def get_commits(
+    #     self,
+    #     ancestors_of=None,
+    #     exclude_ancestors_of=None,
+    #     since=None,
+    #     until=None,
+    #     find_in_code="",
+    #     find_in_msg="",
+    # ):
+    #     cmd = "git log --format=%H"
 
-        if ancestors_of is None:
-            cmd += " --all"
+    #     if ancestors_of is None:
+    #         cmd += " --all"
 
-        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
-        if ancestors_of:
-            cmd += f" {ancestors_of}"
-            until = self.extract_tag_timestamp(ancestors_of)
+    #     # by filtering the dates of the tags we can reduce the commit range safely (in theory)
+    #     if ancestors_of:
+    #         cmd += f" {ancestors_of}"
+    #         until = self.extract_tag_timestamp(ancestors_of)
 
-        if exclude_ancestors_of:
-            cmd += f" ^{exclude_ancestors_of}"
-            since = self.extract_tag_timestamp(exclude_ancestors_of)
+    #     if exclude_ancestors_of:
+    #         cmd += f" ^{exclude_ancestors_of}"
+    #         since = self.extract_tag_timestamp(exclude_ancestors_of)
 
-        if since:
-            cmd += f" --since={since}"
+    #     if since:
+    #         cmd += f" --since={since}"
 
-        if until:
-            cmd += f" --until={until}"
+    #     if until:
+    #         cmd += f" --until={until}"
 
-        for ext in FILTERING_EXTENSIONS:
-            cmd += f" *.{ext}"
+    #     for ext in FILTERING_EXTENSIONS:
+    #         cmd += f" *.{ext}"
 
-        # What is this??
-        if find_in_code:
-            cmd += f" -S{find_in_code}"
+    #     # What is this??
+    #     if find_in_code:
+    #         cmd += f" -S{find_in_code}"
 
-        if find_in_msg:
-            cmd += f" --grep={find_in_msg}"
+    #     if find_in_msg:
+    #         cmd += f" --grep={find_in_msg}"
 
-        try:
-            logger.debug(cmd)
-            out = self.execute(cmd)
+    #     try:
+    #         logger.debug(cmd)
+    #         out = self.execute(cmd)
 
-        except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
-            out = []
+    #     except Exception:
+    #         logger.error("Git command failed, cannot get commits", exc_info=True)
+    #         out = []
 
-        return out
+    #     return out
 
-    def get_commits_between_two_commit(self, commit_from: str, commit_to: str):
-        """
-        Return the commits between the start commit and the end commmit if there are path between them or empty list
-        """
-        try:
-            cmd = f"git rev-list --ancestry-path {commit_from}..{commit_to}"
+    # def get_commits_between_two_commit(self, commit_from: str, commit_to: str):
+    #     """
+    #     Return the commits between the start commit and the end commmit if there are path between them or empty list
+    #     """
+    #     try:
+    #         cmd = f"git rev-list --ancestry-path {commit_from}..{commit_to}"
 
-            path = self.execute(cmd)  # ???
-            if len(path) > 0:
-                path.pop(0)
-                path.reverse()
-            return path
-        except:
-            logger.error("Failed to obtain commits, details below:", exc_info=True)
-            return []
+    #         path = self.execute(cmd)  # ???
+    #         if len(path) > 0:
+    #             path.pop(0)
+    #             path.reverse()
+    #         return path
+    #     except:
+    #         logger.error("Failed to obtain commits, details below:", exc_info=True)
+    #         return []
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, id):

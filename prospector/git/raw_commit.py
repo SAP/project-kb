@@ -300,6 +300,7 @@ class RawCommit:
         return (tag, tag_timestamp, commit_timestamp, time_delta)
 
     def get_tags(self):
+        return self.tag
         cmd = f"git tag --contains {self.id}"
         # cmd = f"git log --format=oneline"  # --date=unix --decorate=short"
         tags = self.execute(cmd)
@@ -316,7 +317,7 @@ class RawCommit:
         tag = self.execute(cmd)
         if tag[0] != "undefined":
             return re.sub(r"[~^]\w*", "", tag[0])
-        return ""
+        return "no-tag"
 
     def get_next_tag(self):
         data = self.get_timing_data()

@@ -15,7 +15,7 @@
         relevanceRangeOutput = document.getElementById("relevanceRangeOutput");
         relevanceRangeOutput.innerHTML = relevance;
         for (let card of commit_cards) {
-            if (parseInt(card.dataset.relevances) > parseInt(relevance)) {
+            if (parseInt(card.dataset.relevances) >= parseInt(relevance)) {
                 card.classList.replace('d-none', 'd-flex')
             } else {
                 card.classList.replace('d-flex', 'd-none')
@@ -27,7 +27,7 @@
         showFromRelevance(this.value);
 
     }
-    max = parseInt(document.getElementsByClassName('commit')[0].dataset.relevances) - 1;
+    max = parseInt(document.getElementsByClassName('commit')[0].dataset.relevances);
     relevanceRange.max = max;
     relevanceRange.value = max;
     showFromRelevance(max);
