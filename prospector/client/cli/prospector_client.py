@@ -131,6 +131,7 @@ def prospector(  # noqa: C901
                 preprocessed_commits: List[Commit] = list()
 
             if len(missing) > 0:
+
                 pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
                 with Counter(
                     timer.collection.sub_collection("commit preprocessing")
@@ -138,8 +139,8 @@ def prospector(  # noqa: C901
                     counter.initialize("preprocessed commits", unit="commit")
                     for raw_commit in pbar:
                         counter.increment("preprocessed commits")
+
                         raw_commit.set_tags(next_tag)
-                        # TODO: here we need to check twins with the commit not already in the backend and update everything
                         preprocessed_commits.append(make_from_raw_commit(raw_commit))
             else:
                 writer.print("\nAll commits found in the backend")
@@ -160,7 +161,7 @@ def prospector(  # noqa: C901
 
     # apply rules and rank candidates
     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
-
+    # TODO: if a twin has higher relevance than the one displayed, the relevance should be intherited
     twin_branches_map = {
         commit.commit_id: commit.get_tag() for commit in ranked_candidates
     }
