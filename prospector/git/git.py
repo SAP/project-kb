@@ -26,6 +26,8 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 GIT_SEPARATOR = "-@-@-@-@-"
 
+TEN_DAYS_TIME_DELTA = 14 * 24 * 60 * 60
+
 FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
 RELEVANT_EXTENSIONS = [
     "java",
@@ -200,7 +202,7 @@ class Git:
             return
 
         if os.path.exists(self.path):
-            logger.debug(f"Folder {self.path} is not a git repository.")
+            logger.info(f"Folder {self.path} is not a git repository.")
             return
 
         os.makedirs(self.path)
@@ -236,116 +238,65 @@ class Git:
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def create_commits(
         self,
-        ancestors_of=None,
-        exclude_ancestors_of=None,
+        next_tag=None,
+        prev_tag=None,
         since=None,
         until=None,
+        filter_extension=None,
         find_in_code="",
         find_in_msg="",
-        find_twins=True,
     ) -> Dict[str, RawCommit]:
-        cmd = f"git log --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+        cmd = f"git log --all --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
 
-        if ancestors_of is None or find_twins:
-            cmd += " --all"
-
-        if ancestors_of:
-            if not find_twins:
-                cmd += f" {ancestors_of}"
-            until = self.extract_tag_timestamp(ancestors_of)
+        if next_tag:
+            until = self.extract_tag_timestamp(next_tag) + TEN_DAYS_TIME_DELTA
             cmd += f" --until={until}"
+
         # TODO: if find twins is true, we dont need the ancestors, only the timestamps
-        if exclude_ancestors_of:
-            if not find_twins:
-                cmd += f" ^{exclude_ancestors_of}"
-            since = self.extract_tag_timestamp(exclude_ancestors_of)
+        if prev_tag:
+            since = self.extract_tag_timestamp(prev_tag) - TEN_DAYS_TIME_DELTA
             cmd += f" --since={since}"
+
+        if filter_extension:
+            cmd += " *." + " *.".join(filter_extension)
 
         try:
             logger.debug(cmd)
             out = self.execute(cmd)
-            # if --all is used, we are traversing all branches and therefore we can check for twins
-            return self.parse_git_output(out, find_twins, ancestors_of)
+            return self.parse_git_output(out)
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             return dict()
 
-    def parse_git_output(
-        self, raw: List[str], find_twins: bool = False, next_tag: Optional[str] = None
-    ):
+    def parse_git_output(self, raw: List[str]) -> Dict[str, RawCommit]:
         commits: Dict[str, RawCommit] = dict()
         commit = None
         sector = 0
+        raw.append(GIT_SEPARATOR)
         for line in raw:
             if line == GIT_SEPARATOR:
                 if sector == 3:
                     sector = 1
-                    if 0 < len(commit.changed_files) < 100 and len(commit.msg) < 5000:
-                        commit.msg = commit.msg.strip()
-
-                        # TODO: should work here
-                        # commit.set_tags(next_tag)
-                        if find_twins:
-                            commit.minhash = get_encoded_minhash(commit.msg[:50])
-
-                        commits[commit.id] = commit
-
+                    commit.msg = commit.msg.strip()
+                    commits[commit.id] = commit
                 else:
                     sector += 1
             else:
                 if sector == 1:
                     id, timestamp, parent = line.split(":")
-                    parent = parent.split(" ")[0]
                     commit = RawCommit(
                         repository=self,
                         commit_id=id,
                         timestamp=int(timestamp),
-                        parent_id=parent,
+                        parent_id=parent.split()[0],
                     )
                 elif sector == 2:
                     commit.msg += line + " "
-                elif sector == 3 and not any(
-                    x in line
-                    for x in (
-                        "test",
-                        ".md",
-                        "docs/",
-                        ".meta",
-                        ".utf8",
-                    )  # TODO: build a list for these. If there are no . then is not relevant
-                ):
-                    commit.add_changed_file(line)
+                elif sector == 3:
+                    commit.changed_files.append(line)
 
         return commits
-
-    def get_issues(self, since=None) -> Dict[str, str]:
-        owner, repo = self.url.split("/")[-2:]
-        query_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
-        # /repos/{owner}/{repo}/issues/{issue_number}
-        params = {
-            "state": "closed",
-            "per_page": 100,
-            "since": since,
-            "page": 1,
-        }
-        headers = {
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
-            "Accept": "application/vnd.github+json",
-        }
-        r = requests.get(query_url, params=params, headers=headers)
-
-        while len(r.json()) > 0:
-            for elem in r.json():
-                body = elem["body"] or ""
-                self.issues[str(elem["number"])] = (
-                    elem["title"] + " " + " ".join(body.split())
-                )
-
-            params["page"] += 1
-            if params["page"] > 10:
-                break
-            r = requests.get(query_url, params=params, headers=headers)
 
     # # @measure_execution_time(execution_statistics.sub_collection("core"))
     # def get_commits(
