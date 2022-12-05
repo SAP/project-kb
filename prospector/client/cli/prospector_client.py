@@ -40,7 +40,7 @@ def prospector(  # noqa: C901
     repository_url: str,
     publication_date: str = "",
     vuln_descr: str = "",
-    tag_interval: str = "",
+    # tag_interval: str = "",
     version_interval: str = "",
     modified_files: Set[str] = set(),
     advisory_keywords: Set[str] = set(),
@@ -56,6 +56,8 @@ def prospector(  # noqa: C901
     rules: List[str] = ["ALL"],
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
+    logger.debug(f"time-limit before: {TIME_LIMIT_BEFORE}")
+    logger.debug(f"time-limit after: {TIME_LIMIT_AFTER}")
     logger.debug("begin main commit and CVE processing")
 
     # construct an advisory record
@@ -67,15 +69,15 @@ def prospector(  # noqa: C901
             fetch_references,
             use_nvd,
             publication_date,
-            advisory_keywords,
-            modified_files,
+            set(advisory_keywords),
+            set(modified_files),
         )
 
     # obtain a repository object
     repository = Git(repository_url, git_cache)
 
-    with ConsoleWriter("Git repository cloning") as _:
-        logger.info(f"Downloading repository {repository.url} in {repository.path}")
+    with ConsoleWriter("Git repository cloning") as console:
+        logger.debug(f"Downloading repository {repository.url} in {repository.path}")
         repository.clone()
 
         tags = repository.get_tags()
@@ -83,16 +85,16 @@ def prospector(  # noqa: C901
         logger.debug(f"Found tags: {tags}")
         logger.info(f"Done retrieving {repository.url}")
 
-    if tag_interval is not None:
-        prev_tag, next_tag = tag_interval.split(":")
-    elif version_interval is not None:
+    # if tag_interval and len(tag_interval) > 0:
+    #     prev_tag, next_tag = tag_interval.split(":")
+    if version_interval and len(version_interval) > 0:
         prev_tag, next_tag = get_possible_tags(tags, version_interval)
+        ConsoleWriter.print(f"Found tags: {prev_tag} - {next_tag}")
+        ConsoleWriter.print_(MessageStatus.OK)
     else:
-        logger.error("No version/tag interval provided")
+        logger.info("No version/tag interval provided")
+        console.print("No interval provided", status=MessageStatus.ERROR)
         sys.exit(1)
-
-    ConsoleWriter.print(f"Found tags: {prev_tag} - {next_tag}")
-    ConsoleWriter.print_(MessageStatus.OK)
 
     # retrieve of commit candidates
     candidates = get_candidates(
@@ -104,6 +106,8 @@ def prospector(  # noqa: C901
         time_limit_after,
         limit_candidates,
     )
+
+    candidates = filter(candidates)
 
     with ExecutionTimer(
         core_statistics.sub_collection("commit preprocessing")
@@ -132,23 +136,23 @@ def prospector(  # noqa: C901
 
             if len(missing) > 0:
 
-                pbar = tqdm(missing, desc="Preprocessing commits", unit="commit")
+                pbar = tqdm(
+                    missing,
+                    desc="Preprocessing commits",
+                    unit="commit",
+                )
                 with Counter(
                     timer.collection.sub_collection("commit preprocessing")
                 ) as counter:
                     counter.initialize("preprocessed commits", unit="commit")
                     for raw_commit in pbar:
                         counter.increment("preprocessed commits")
-
-                        raw_commit.set_tags(next_tag)
                         preprocessed_commits.append(make_from_raw_commit(raw_commit))
             else:
                 writer.print("\nAll commits found in the backend")
 
             pretty_log(logger, advisory_record)
-            logger.debug(
-                f"preprocessed {len(preprocessed_commits)} commits are only composed of test files"
-            )
+
             payload = [c.to_dict() for c in preprocessed_commits]
 
     if len(payload) > 0 and use_backend != "never":
@@ -156,26 +160,17 @@ def prospector(  # noqa: C901
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
 
-    # filter commits
-    preprocessed_commits = filter(preprocessed_commits)
-
-    # apply rules and rank candidates
     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
-    # TODO: if a twin has higher relevance than the one displayed, the relevance should be intherited
-    twin_branches_map = {
-        commit.commit_id: commit.get_tag() for commit in ranked_candidates
-    }
+
     ConsoleWriter.print("Commit ranking and aggregation...")
-    ranked_candidates = tag_and_aggregate_commits(
-        ranked_candidates, twin_branches_map, next_tag
-    )
+    ranked_candidates = tag_and_aggregate_commits(ranked_candidates, next_tag)
     ConsoleWriter.print_(MessageStatus.OK)
 
     return ranked_candidates, advisory_record
 
 
-def filter(commits: List[Commit]) -> List[Commit]:
-    with ConsoleWriter("Candidate filtering\n") as console:
+def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
+    with ConsoleWriter("\nCandidate filtering\n") as console:
         commits, rejected = filter_commits(commits)
         if rejected > 0:
             console.print(f"Dropped {rejected} candidates")
@@ -190,19 +185,26 @@ def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: Lis
     return ranked_commits
 
 
-def tag_and_aggregate_commits(
-    commits: List[Commit], mapping_dict: Dict[str, str], next_tag: str
-) -> List[Commit]:
+def tag_and_aggregate_commits(commits: List[Commit], next_tag: str) -> List[Commit]:
     if next_tag is None:
         return commits
-    tagged_commits = list()
-    # if a twin has higher relevance than the one shown, then the relevance should be inherited
-    for commit in commits:
-        if commit.has_tag() and next_tag == commit.get_tag():
-            for twin in commit.twins:
-                twin[0] = mapping_dict[twin[1]]
 
+    twin_tags_map = {commit.commit_id: commit.get_tag() for commit in commits}
+    tagged_commits = list()
+    for commit in commits:
+        if commit.has_tag(next_tag):
+            commit.tags = [next_tag]
+            for twin in commit.twins:
+                twin[0] = twin_tags_map.get(twin[1], "no-tag")
             tagged_commits.append(commit)
+
+    # for commit in commits:
+    #     if commit.has_tag() and next_tag == commit.get_tag():
+    #         for twin in commit.twins:
+    #             twin[0] = mapping_dict[twin[1]]
+
+    #         tagged_commits.append(commit)
+    # See the order of the tag list in the commits listed as twin to get the correct tag
 
     return tagged_commits
 
@@ -237,8 +239,11 @@ def retrieve_preprocessed_commits(
         ]
 
         logger.error(f"Missing {len(missing)} commits")
-
-    return missing, [Commit.parse_obj(rc) for rc in retrieved_commits]
+    commits = [Commit.parse_obj(rc) for rc in retrieved_commits]
+    # Sets the tags
+    # for commit in commits:
+    #     commit.tags = candidates[commit.commit_id].tags
+    return (missing, commits)
 
 
 def save_preprocessed_commits(backend_address, payload):
@@ -287,14 +292,13 @@ def get_candidates(
             if advisory_record.published_timestamp:
                 since = advisory_record.published_timestamp - time_limit_before
                 until = advisory_record.published_timestamp + time_limit_after
-            # Here i need to strip the github tags of useless stuff
-            # This is now a list of raw commits
-            # TODO: get_commits replaced for now
+
             candidates = repository.create_commits(
                 since=since,
                 until=until,
-                ancestors_of=next_tag,
-                exclude_ancestors_of=prev_tag,
+                next_tag=next_tag,
+                prev_tag=prev_tag,
+                filter_extension=advisory_record.files_extension,
             )
 
             core_statistics.record("candidates", len(candidates), unit="commits")
