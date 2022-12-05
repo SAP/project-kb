@@ -1,13 +1,15 @@
 import json
+import logging
 import os
 from pathlib import Path
 from typing import List
 
 import jinja2
 
+from client.cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from log.logger import logger
+from log.logger import get_level, logger
 from stats.execution import execution_statistics
 
 
@@ -98,3 +100,27 @@ def console_(results: List[Commit], advisory_record: AdvisoryRecord, verbose=Fal
         )
 
     print(f"Found {count} candidates\nAdvisory record\n{advisory_record}")
+
+
+def generate_report(results, advisory_record, report_type, report_filename):
+    with ConsoleWriter("Generating report\n") as console:
+        match report_type:
+            case "console":
+                console_(results, advisory_record, get_level() < logging.INFO)
+            case "json":
+                json_(results, advisory_record, report_filename)
+            case "html":
+                html_(results, advisory_record, report_filename)
+            case "all":
+                json_(results, advisory_record, report_filename)
+                html_(results, advisory_record, report_filename)
+            case _:
+                logger.warning("Invalid report type specified, using 'console'")
+                console.set_status(MessageStatus.WARNING)
+                console.print(
+                    f"{report_type} is not a valid report type, 'console' will be used instead",
+                )
+                console_(results, advisory_record, get_level() < logging.INFO)
+
+        logger.info("\n" + execution_statistics.generate_console_tree())
+        console.print(f"Report saved in {report_filename}")
