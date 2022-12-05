@@ -64,6 +64,7 @@ class AdvisoryRecord:
         versions: Dict[str, List[str]] = None,
         files: Set[str] = None,
         keywords: Set[str] = None,
+        files_extensions: Set[str] = None,
     ):
         self.cve_id = cve_id
         self.description = description
@@ -75,6 +76,7 @@ class AdvisoryRecord:
         self.versions = versions or dict()
         self.files = files or set()
         self.keywords = keywords or set()
+        self.files_extension = files_extensions or set()
 
     def analyze(
         self,
@@ -89,8 +91,10 @@ class AdvisoryRecord:
         self.affected_products.extend(extract_products(self.description))
         self.affected_products = list(set(self.affected_products))
 
+        files, extension = extract_affected_filenames(self.description)
+        self.files_extension = extension
         # TODO: this could be done on the words extracted from the description
-        self.files.update(extract_affected_filenames(self.description))
+        self.files.update(files)
 
         self.keywords.update(set(extract_words_from_text(self.description)))
 
@@ -135,14 +139,6 @@ class AdvisoryRecord:
         ]
         self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
 
-        # [
-        #     (
-        #         item.get("versionEndIncluding"),  # item.get("versionStartExcluding")
-        #         item.get("versionEndExcluding"),  # , item.get("versionEndIncluding")
-        #     )
-        #     for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
-        # ]
-
 
 def get_from_nvd(cve_id: str):
     """Get an advisory from the NVD dtabase"""
@@ -182,7 +178,7 @@ def build_advisory_record(
     fetch_references: bool = False,
     use_nvd: bool = True,
     publication_date: Optional[str] = None,
-    advisory_keywords: Optional[str] = None,
+    advisory_keywords: Set[str] = set(),
     modified_files: Optional[str] = None,
 ) -> AdvisoryRecord:
 
@@ -206,8 +202,8 @@ def build_advisory_record(
             isoparse(publication_date).timestamp()
         )
 
-    if advisory_keywords and len(advisory_keywords) > 0:
-        advisory_record.keywords.update(set(advisory_keywords.split(",")))
+    if len(advisory_keywords) > 0:
+        advisory_record.keywords = advisory_keywords
 
     if modified_files and len(modified_files) > 0:
         advisory_record.files.update(set(modified_files.split(",")))

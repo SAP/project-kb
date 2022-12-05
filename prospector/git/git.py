@@ -10,60 +10,17 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, List
 from urllib.parse import urlparse
-
-import requests
 
 from git.exec import Exec
 from git.raw_commit import RawCommit
 from log.logger import logger
 from stats.execution import execution_statistics, measure_execution_time
-from util.lsh import get_encoded_minhash
-
-# GIT_CACHE = os.getenv("GIT_CACHE")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 GIT_SEPARATOR = "-@-@-@-@-"
 
 TEN_DAYS_TIME_DELTA = 14 * 24 * 60 * 60
-
-FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
-RELEVANT_EXTENSIONS = [
-    "java",
-    "c",
-    "cpp",
-    "h",
-    "py",
-    "js",
-    "xml",
-    "go",
-    "rb",
-    "php",
-    "sh",
-    "scale",
-    "lua",
-    "m",
-    "pl",
-    "ts",
-    "swift",
-    "sql",
-    "groovy",
-    "erl",
-    "swf",
-    "vue",
-    "bat",
-    "s",
-    "ejs",
-    "yaml",
-    "yml",
-    "jar",
-]
-
-# if not os.path.isdir(GIT_CACHE):
-#     raise ValueError(
-#         f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
-#     )
 
 
 def do_clone(url, output_folder, shallow=False, skip_existing=False):
@@ -289,7 +246,7 @@ class Git:
                         repository=self,
                         commit_id=id,
                         timestamp=int(timestamp),
-                        parent_id=parent.split()[0],
+                        parent_id=parent.split()[0] if len(parent) else "",
                     )
                 elif sector == 2:
                     commit.msg += line + " "
@@ -297,72 +254,6 @@ class Git:
                     commit.changed_files.append(line)
 
         return commits
-
-    # # @measure_execution_time(execution_statistics.sub_collection("core"))
-    # def get_commits(
-    #     self,
-    #     ancestors_of=None,
-    #     exclude_ancestors_of=None,
-    #     since=None,
-    #     until=None,
-    #     find_in_code="",
-    #     find_in_msg="",
-    # ):
-    #     cmd = "git log --format=%H"
-
-    #     if ancestors_of is None:
-    #         cmd += " --all"
-
-    #     # by filtering the dates of the tags we can reduce the commit range safely (in theory)
-    #     if ancestors_of:
-    #         cmd += f" {ancestors_of}"
-    #         until = self.extract_tag_timestamp(ancestors_of)
-
-    #     if exclude_ancestors_of:
-    #         cmd += f" ^{exclude_ancestors_of}"
-    #         since = self.extract_tag_timestamp(exclude_ancestors_of)
-
-    #     if since:
-    #         cmd += f" --since={since}"
-
-    #     if until:
-    #         cmd += f" --until={until}"
-
-    #     for ext in FILTERING_EXTENSIONS:
-    #         cmd += f" *.{ext}"
-
-    #     # What is this??
-    #     if find_in_code:
-    #         cmd += f" -S{find_in_code}"
-
-    #     if find_in_msg:
-    #         cmd += f" --grep={find_in_msg}"
-
-    #     try:
-    #         logger.debug(cmd)
-    #         out = self.execute(cmd)
-
-    #     except Exception:
-    #         logger.error("Git command failed, cannot get commits", exc_info=True)
-    #         out = []
-
-    #     return out
-
-    # def get_commits_between_two_commit(self, commit_from: str, commit_to: str):
-    #     """
-    #     Return the commits between the start commit and the end commmit if there are path between them or empty list
-    #     """
-    #     try:
-    #         cmd = f"git rev-list --ancestry-path {commit_from}..{commit_to}"
-
-    #         path = self.execute(cmd)  # ???
-    #         if len(path) > 0:
-    #             path.pop(0)
-    #             path.reverse()
-    #         return path
-    #     except:
-    #         logger.error("Failed to obtain commits, details below:", exc_info=True)
-    #         return []
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, id):
@@ -396,15 +287,6 @@ class Git:
         out = self.execute(f"git log -1 --format=%at {tag}")
         return int(out[0])
 
-    # Return the timestamp for given a version if version exist or None
-    def extract_timestamp_from_version(self, version: str) -> int:
-        tag = self.get_tag_for_version(version)
-        if tag[1] < 1:
-            return None
-
-        commit_id = self.get_commit_id_for_tag(tag[0])
-        return self.get_commit(commit_id).get_timestamp()
-
     def get_tags(self):
         try:
             return self.execute("git tag")
@@ -423,19 +305,6 @@ class Git:
             logger.error("Git command failed." + str(e.output), exc_info=True)
             sys.exit(1)
 
-    def get_previous_tag(self, tag):
-        # https://git-scm.com/docs/git-describe
-        commit = self.get_commit_id_for_tag(tag)
-        cmd = f"git describe --abbrev=0 --all --tags --always {commit}^"
-
-        try:
-            tags = self.execute(cmd)
-            if len(tags) > 0:
-                return tags
-        except subprocess.CalledProcessError as e:
-            logger.error("Git command failed." + str(e.output), exc_info=True)
-            return []
-
 
 # Donald Knuth's "reservoir sampling"
 # http://data-analytics-tools.blogspot.de/2009/09/reservoir-sampling-algorithm-in-perl.html
@@ -453,7 +322,6 @@ def reservoir_sampling(input_list, N):
 def make_raw_commit(
     repository: Git,
     id: str,
-    timestamp: int,
     parent_id: str = "",
 ) -> RawCommit:
     return RawCommit(repository, id, parent_id)

@@ -4,7 +4,7 @@ from git.exec import Exec
 from git.raw_commit import RawCommit
 
 
-@pytest.mark.skip(reason="Outdated for now")
+# @pytest.mark.skip(reason="Outdated for now")
 def test_get_timestamp():
     commit = RawCommit(
         "https://github.com/slackhq/nebula",
@@ -12,5 +12,4 @@ def test_get_timestamp():
         Exec(workdir="/tmp/gitcache/github.com_slackhq_nebula"),
     )
 
-    assert commit.get_timestamp(format_date=True) == "2022-04-04 17:38:36"
-    assert commit.get_timestamp(format_date=False) == 1649093916
+    raise NotImplementedError(commit.get_diff())
