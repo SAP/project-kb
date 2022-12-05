@@ -7,7 +7,7 @@ import pytest
 from .git import Exec, Git
 
 # from .version_to_tag import version_to_wide_interval_tags
-from .version_to_tag import get_tag_for_version
+from .version_to_tag import get_possible_tags
 
 NEBULA = "https://github.com/slackhq/nebula"
 BEAM = "https://github.com/apache/beam"
@@ -37,14 +37,9 @@ def test_extract_timestamp(repository: Git):
 
 
 def test_show_tags(repository: Git):
-    try:
-        tags = repository.execute(
-            "git tag --contains a7dd23d95d2d214b4110781b5a28802bd43b834b"
-        )
-        print(tags)
-
-    except Exception:
-        print("simola")
+    tags = repository.execute("git name-rev --tags")
+    print(tags)
+    raise Exception()
 
 
 def test_get_tags_for_commit(repository: Git):
@@ -64,8 +59,10 @@ def test_create_commits(repository: Git):
 
 def test_get_hunks_count(repository: Git):
     commits = repository.create_commits()
-    commit = commits.get(COMMIT_ID)
-    _, hunks = commit.get_diff()
+    commit = commits.get(OPENCAST_COMMIT)
+    diff, hunks = commit.get_diff()
+    print(diff)
+    raise Exception()
     assert hunks == 2
 
 
@@ -88,7 +85,7 @@ def test_get_tag_for_version():
     repo = Git(NEBULA)
     repo.clone()
     tags = repo.get_tags()
-    assert get_tag_for_version(tags, "1.5.2") == ["v1.5.2"]
+    assert get_possible_tags(tags, "1.5.2") == ["v1.5.2"]
 
 
 def test_get_commit_parent():

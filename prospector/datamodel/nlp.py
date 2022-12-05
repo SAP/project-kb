@@ -1,20 +1,40 @@
-import os
 import re
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 
-import requests
-
-# from util.http import extract_from_webpage, fetch_url, get_from_xml
 from spacy import load
 
 from datamodel.constants import RELEVANT_EXTENSIONS
-from util.http import get_from_xml
-
-JIRA_ISSUE_URL = "https://issues.apache.org/jira/browse/"
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-
+from util.http import fetch_url, get_from_xml
 
 nlp = load("en_core_web_sm")
+
+
+def get_names(text: str, exclude: str) -> List[str]:
+    """
+    Extract names from text
+    """
+    return [
+        token.text
+        for token in nlp(text)
+        if token.pos_ in ("PROPN", "NOUN")
+        and token.text.casefold() not in exclude
+        and token.is_alpha
+    ]
+
+
+def clean_string(text: str) -> str:
+    """
+    Remove all non-alphanumeric characters from a string
+    """
+    return " ".join(
+        set(
+            [
+                token.lemma_
+                for token in nlp(text)
+                if not token.is_punct and len(token.lemma_) > 2
+            ]
+        )
+    )
 
 
 def extract_words_from_text(text: str) -> List[str]:
@@ -23,7 +43,9 @@ def extract_words_from_text(text: str) -> List[str]:
     return [
         token.lemma_.casefold()
         for token in nlp(text)
-        if token.pos_ in ("NOUN", "VERB", "PROPN") and len(token.lemma_) > 3
+        if token.pos_ in ("NOUN", "VERB", "PROPN")
+        and len(token.lemma_) > 3
+        and token.lemma_.isalnum()
     ]
 
 
@@ -63,15 +85,19 @@ def extract_products(text: str) -> List[str]:
 
 def extract_affected_filenames(
     text: str, extensions: List[str] = RELEVANT_EXTENSIONS
-) -> Set[str]:
+) -> Tuple[Set[str], Set[str]]:
     files = set()
+    extension = set()
     for word in text.split():
-        res = word.strip("_,.:;-+!?()[]'\"")
-        res = extract_filename_from_path(res)
-        res = extract_filename(res, extensions)
-        if res:
-            files.add(res)
-    return files
+        res = re.sub(r"^[^a-z0-9]+|[^a-z0-9]+$", "", word, flags=re.IGNORECASE)
+        res = re.split(r"[\\\/]", res)[-1]
+        res, ext = extract_filename(res, extensions)
+        if len(res) > 0:
+            files.update(res)
+        if ext is not None:
+            extension.add(ext)
+
+    return files, extension
 
 
 # TODO: enhanche this
@@ -80,34 +106,23 @@ def extract_filename_from_path(text: str) -> str:
     return text.split("/")[-1]
 
 
-def extract_filename(text: str, relevant_extensions: List[str]) -> str:
+def extract_filename(text: str, relevant_extensions: List[str]) -> List[str]:
     # Covers cases file.extension if extension is relevant, extensions come from CLI parameter
-    extensions_regex = r"^(?:^|\s?)([\w\-]{2,}\.(?:%s))(?:$|\s|\.|,|:)" % "|".join(
-        relevant_extensions
-    )
+    res = re.search(r"(?:(\w{2,})\.)+(\w+)", text, flags=re.IGNORECASE)
+    if res is not None:
+        if res.group(2) in relevant_extensions:
+            return [res.group(1)], res.group(2)
+        elif not res.group(2).isdigit():
+            return [res.group(2), res.group(1)], None
 
-    res = re.search(extensions_regex, text)
-    if res:
-        return res.group(1)
-
-    # Covers cases like: class::method, class.method,
-    # TODO: in nebula is getting the e from e.g.
-    res = re.search(
-        r"^(\w{2,})(?:\.|:{2})(\w+)$", text
-    )  # ^(\w{2,})(?:\.|:{2})(\w{2,})$
-    # Check if it is not a number
-    if res and not bool(re.match(r"^\d+$", res.group(1))):
-        return res.group(1)
-
-    # className or class_name (normal string with underscore)
-    # TODO: ShenYu and words
-    # like this should be excluded...
-    # TODO: filter for not present in url
-    #
-    if bool(re.search(r"[a-z]{2,}[A-Z]+[a-z]*", text)) or "_" in text:
-        return text
-
-    return None
+    # This regex covers cases with various camelcase filenames and underscore, dash names
+    if bool(
+        re.search(
+            r"(?:[a-z]|[A-Z])[a-zA-Z]+[A-Z]\w*|(?:[a-zA-Z]{2,}[_-])+[a-zA-Z]{2,}", text
+        )
+    ):
+        return [text], None
+    return [], None
 
 
 def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
@@ -116,21 +131,25 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     """
     refs = dict()
 
-    # /repos/{owner}/{repo}/issues/{issue_number}
-    headers = {
-        "Accept": "application/vnd.github+json",
-    }
-    if GITHUB_TOKEN:
-        headers.update({"Authorization": f"Bearer {GITHUB_TOKEN}"})
-
     for result in re.finditer(r"(?:#|gh-)(\d+)", text):
         id = result.group(1)
-        owner, repo = repository.split("/")[-2:]
-        url = f"https://api.github.com/repos/{owner}/{repo}/issues/{id}"
-        r = requests.get(url, headers=headers)
-        if r.status_code == 200:
-            data = r.json()
-            refs[id] = f"{data['title']} {data['body']}"
+        url = f"{repository}/issues/{id}"
+        content = fetch_url(url=url, extract_text=False)
+        gh_ref_data = content.find_all(
+            attrs={
+                "class": ["comment-body", "markdown-title"],
+            }
+        )
+        gh_ref_data.extend(
+            content.find_all(
+                attrs={
+                    "id": re.compile(r"ref-issue|ref-pullrequest|ref-commit"),
+                }
+            )
+        )
+        refs[id] = " ".join(
+            [" ".join(block.get_text().split()) for block in gh_ref_data]
+        )
 
     return refs
 
@@ -146,12 +165,9 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
 
     for result in re.finditer(r"[A-Z]+-\d+", text):
         id = result.group()
-        issue_content = get_from_xml(id)
-        refs[id] = (
-            " ".join(re.findall(r"\w{3,}", issue_content))
-            if len(issue_content) > 0
-            else ""
-        )
+        if id.startswith("CVE-"):
+            continue
+        refs[id] = get_from_xml(id)
 
     return refs
 
@@ -172,23 +188,3 @@ def extract_references_keywords(text: str) -> List[str]:
         for result in re.finditer(r"[A-Z]{2,}-\d+|github\.com\/(?:\w+|\/)*", text)
         if "CVE" not in result.group(0)
     ]
-
-
-# def extract_special_terms(description: str) -> Set[str]:
-#     """
-#     Extract all words (space delimited) which presumably cannot be part of an natural language sentence.
-#     These are usually code fragments and names of code entities, or paths.
-#     """
-
-#     return set()
-#     # TODO replace this with NLP implementation
-#     # see, https://github.com/SAP/project-kb/issues/256#issuecomment-927639866
-#     # noinspection PyUnreachableCode
-#     result = []
-#     for word in description.split():
-#         no_punctation_word = word.rstrip(").,;:?!\"'").lstrip("(")
-#         contains_non_word_char = re.search(r"\W", no_punctation_word)
-#         contains_non_initial_upper_case = re.search(r"\B[A-Z]", no_punctation_word)
-#         if contains_non_initial_upper_case or contains_non_word_char:
-#             result.append(word)
-#     return tuple(result)

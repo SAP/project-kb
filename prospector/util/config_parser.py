@@ -34,16 +34,16 @@ def parse_cli_args(args):
         help="Maximum number of candidates to consider",
     )
 
-    parser.add_argument(
-        "--tag-interval",
-        type=str,
-        help="Tag interval (X,Y) to consider (the commit must be reachable from Y but not from X, and must not be older than X)",
-    )
+    # parser.add_argument(
+    #     "--tag-interval",
+    #     type=str,
+    #     help="Tag interval (X,Y) to consider (the commit must be reachable from Y but not from X, and must not be older than X)",
+    # )
 
     parser.add_argument(
         "--version-interval",
         type=str,
-        help="Version interval (X,Y) to consider (the corresponding tags will be inferred automatically, and the commit must be reachable from Y but not from X, and must not be older than X)",
+        help="Version or tag interval X:Y to consider. ",
     )
 
     parser.add_argument(
@@ -139,7 +139,7 @@ class Config:
         pub_date: str,
         description: str,
         max_candidates: int,
-        tag_interval: str,
+        # tag_interval: str,
         version_interval: str,
         modified_files: str,
         filter_extensions: str,
@@ -160,11 +160,11 @@ class Config:
         self.pub_date = pub_date
         self.description = description
         self.max_candidates = max_candidates
-        self.tag_interval = tag_interval
+        # self.tag_interval = tag_interval
         self.version_interval = version_interval
-        self.modified_files = modified_files
+        self.modified_files = modified_files.split(",") if modified_files else []
         self.filter_extensions = filter_extensions
-        self.keywords = keywords
+        self.keywords = keywords.split(",") if keywords else []
         self.use_nvd = use_nvd
         self.fetch_references = fetch_references
         self.backend = backend
@@ -190,7 +190,7 @@ def get_configuration(argv):
         modified_files=args.modified_files,
         keywords=args.keywords,
         max_candidates=args.max_candidates or conf.max_candidates,
-        tag_interval=args.tag_interval,
+        # tag_interval=args.tag_interval,
         version_interval=args.version_interval,
         filter_extensions=args.filter_extensions,
         use_nvd=args.use_nvd or conf.use_nvd,
