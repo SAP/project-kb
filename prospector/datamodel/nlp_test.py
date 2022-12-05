@@ -25,6 +25,8 @@ ADVISORY_TEXT_4 = """"MultipartStream.java in Apache Commons FileUpload before 1
 
 ADVISORY_TEXT_5 = """A vulnerability in the JsonMapObjectReaderWriter of Apache CXF allows an attacker to submit malformed JSON to a web service, which results in the thread getting stuck in an infinite loop, consuming CPU indefinitely. This issue affects Apache CXF versions prior to 3.4.4; Apache CXF versions prior to 3.3.11."""
 
+ADVISORY_TEXT_6 = """Apache HTTP Server versions 2.4.41 to 2.4.46 mod_proxy_http can be made to crash (NULL pointer dereference) with specially crafted requests using both Content-Length and Transfer-Encoding headers, leading to a Denial of Service"""
+
 
 def test_extract_affected_filenames():
     result1 = extract_affected_filenames(ADVISORY_TEXT_1)
@@ -74,6 +76,11 @@ def test_extract_jira_references():
 
 
 def test_extract_gh_issues():
-    d = extract_ghissue_references("https://github.com/slackhq/nebula", "#310")
+    d = extract_ghissue_references("https://github.com/apache/commons-text", "#341")
     print(d)
-    pass
+    raise NotImplementedError
+
+
+def test_extract_filenames_single():
+    d = extract_affected_filenames(ADVISORY_TEXT_6)
+    raise Exception(d)

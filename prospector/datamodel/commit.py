@@ -8,7 +8,7 @@ from datamodel.nlp import (
     extract_jira_references,
 )
 from git.raw_commit import RawCommit
-from util.lsh import decode_minhash, encode_minhash
+from util.lsh import decode_minhash, encode_minhash, get_encoded_minhash
 
 
 class Commit(BaseModel):
@@ -62,11 +62,11 @@ class Commit(BaseModel):
     def has_twin(self):
         return len(self.twins) > 0
 
-    def has_tag(self):
-        return self.tags[0] != ""
+    def has_tag(self, tag: str) -> bool:
+        return tag in self.tags
 
     def get_tag(self):
-        return self.tags[0]
+        return self.tags[0] if len(self.tags) else "no-tag"
 
     def compute_relevance(self):
         self.relevance = sum([rule.get("relevance") for rule in self.matched_rules])
@@ -128,18 +128,16 @@ def make_from_raw_commit(raw: RawCommit) -> Commit:
         timestamp=raw.get_timestamp(),
         changed_files=raw.get_changed_files(),
         message=raw.get_msg(),
-        twins=raw.get_twins(),
-        minhash=raw.get_minhash(),
     )
 
     # NOTE: all attributes that do not depend on a particular query
     # (e.g. do not depend on a particular Advisory Record)
     # should be computed here so that they can be stored in the db.
     # Space-efficiency is important.
+    commit.minhash = get_encoded_minhash(raw.get_msg(50))
 
     commit.diff, commit.hunks = raw.get_diff()
-    commit.tags.append(raw.get_tag())
-    # commit.tags = raw.get_tags()
+    commit.tags = raw.find_tags()
     commit.jira_refs = extract_jira_references(commit.repository, commit.message)
     commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
     commit.cve_refs = extract_cve_references(commit.message)

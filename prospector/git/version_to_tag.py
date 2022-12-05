@@ -6,15 +6,13 @@ from typing import Optional
 
 def clean_tag(tag: str) -> str:
     """Clean a tag name returning only the numeric part separated by dots."""
+    return ".".join(re.findall(r"\d+", tag))
     return re.sub(r"[^0-9a-zA-Z]+", ".", tag, flags=re.IGNORECASE)
-    # return re.sub(
-    #     r"^[a-zA-Z]+|[a-zA-Z]+$",
-    #     "",
-    #     ".".join(
-    #         [n for n in re.split(r"[^0-9a-zA-Z]+", tag) if not n.isalpha()]
-    #         # bool(re.search(r"\d", n))
-    #     ),
-    # )
+    re.sub(r"^[^0-9]+|[^0-9]+$", "", tag, flags=re.IGNORECASE)
+
+
+def is_rc_or_date(tag: str) -> bool:
+    return bool(re.search(r"[^a-z]?rc[^a-z]|\d{9,}", tag, flags=re.IGNORECASE))
 
 
 def get_possible_missing_tag(
@@ -40,109 +38,60 @@ def get_possible_tags(tags: list[str], versions: str):
     """Given a list of tags and a version interval, return the possible tag interval that matches."""
     prev_version, next_version = versions.split(":")
 
-    prev_tag = [
-        tag
-        for tag in tags
-        if prev_version in clean_tag(tag)
-        and not bool(re.search(r"rc\d+|\d{9,}", tag, flags=re.IGNORECASE))
-    ]
-    next_tag = [
-        tag
-        for tag in tags
-        if next_version in clean_tag(tag)
-        and not bool(re.search(r"rc\d+|\d{9,}", tag, flags=re.IGNORECASE))
-    ]
-    # TODO: Remove this print
-    print(prev_tag, next_tag)
-    # if len(prev_tag) == 0 or len(next_tag) == 0:
-    #     tags_mapping: dict[str, list[str]] = dict()
-    #     # Create a mapping between cleaned tags and the original tags (one stripped tag can match multiple tags)
-    #     for tag in tags:
-    #         stripped_tag = clean_tag(tag)
+    prev_tag = [prev_version] if prev_version in tags else []
+    if len(prev_tag) == 0 and len(prev_version) > 0:
+        prev_tag = [
+            tag
+            for tag in tags
+            if prev_version == clean_tag(tag) and not is_rc_or_date(tag)
+        ]
+    next_tag = [next_version] if next_version in tags else []
+    if len(next_tag) == 0 and len(next_version) > 0:
+        next_tag = [
+            tag
+            for tag in tags
+            if next_version == clean_tag(tag) and not is_rc_or_date(tag)
+        ]
 
-    #         if stripped_tag not in tags_mapping:
-    #             tags_mapping[stripped_tag] = [tag]
-    #         else:
-    #             tags_mapping[stripped_tag].append(tag)
-
-    #     tags_mapping.pop("", None)
-    #     if len(prev_tag) == 0:
-    #         prev_tag = tags_mapping.get(prev_version, [])
-    #     if len(next_tag) == 0:
-    #         next_tag = tags_mapping.get(next_version, [])
-
-    # If there are two exact matches, return them
     if len(prev_tag) == 1 and len(next_tag) == 1:
         return prev_tag[0], next_tag[0]
-    # If there is one exact match, and multiple candidates for the other tag, return the most similar
     elif len(prev_tag) == 1 and len(next_tag) > 1:
-        next_tag = [tag for tag in next_tag if tag > prev_tag[0]]
-        return prev_tag[0], difflib.get_close_matches(prev_tag[0], next_tag, n=1)[0]
+        next_tag = [
+            tag for tag in next_tag if tag != prev_tag[0] or tag not in prev_tag[0]
+        ]  # this may lead to empty list
+        print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
+        return (
+            prev_tag[0],
+            next_tag[0],  # difflib.get_close_matches(prev_tag[0], next_tag, n=1)[0],
+        )
     elif len(prev_tag) > 1 and len(next_tag) == 1:
-        prev_tag = [tag for tag in prev_tag if tag < next_tag[0]]
-        return difflib.get_close_matches(next_tag[0], prev_tag, n=1)[0], next_tag[0]
+        prev_tag = [
+            tag for tag in prev_tag if tag != next_tag[0] or next_tag[0] not in tag
+        ]
+        print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
+        return (
+            prev_tag[-1],  # difflib.get_close_matches(next_tag[0], prev_tag, n=1)[0],
+            next_tag[0],
+        )
     # If there is one exact match but no candidates for the other tag, exit and hint the user with possible candidates
     elif len(prev_tag) == 0 and len(next_tag) == 1:
-        # prev_candidates = [
-        #     tag
-        #     for tags in [
-        #         tags_mapping[key]
-        #         for key in difflib.get_close_matches(
-        #             prev_version, tags_mapping.keys(), n=5
-        #         )
-        #         if key < next_version
-        #     ]
-        #     for tag in tags
-        # ]
         prev_candidates = get_possible_missing_tag(tags, next_tag=next_tag[0])
+        if len(prev_version) == 0 and len(prev_candidates) == 0:
+            return "", next_tag[0]
         print(f"Next tag is: {next_tag[0]}")
         sys.exit(f"Previous tag can be: {','.join(prev_candidates)}\n")
-        # prev_candidates = get_tag_candidates(
-        #     prev_version, next_version, tags_mapping, True
-        # )
-        # prev_candidates = difflib.get_close_matches(next_tag[0], prev_candidates, n=3)
-        # if len(prev_candidates) == 0:
-        #     print(
-        #         f"Prev tag candidates: {get_possible_missing_tag(tags, next_tag=next_tag[0])}\n"
-        #     )
-        #     print(f"Prev tag found: {next_tag[0]}\n")
-        #     sys.exit(1)
-        # return (
-        #     max(prev_candidates),
-        #     next_tag[0],
-        # )
     elif len(prev_tag) == 1 and len(next_tag) == 0:
-        # next_candidates = get_tag_candidates(
-        #     prev_version, next_version, tags_mapping, False
-        # )
-        # next_candidates = [
-        #     tag
-        #     for tags in [
-        #         tags_mapping[key]
-        #         for key in difflib.get_close_matches(
-        #             next_version, tags_mapping.keys(), n=5
-        #         )
-        #         if key > prev_version
-        #     ]
-        #     for tag in tags
-        # ]
         next_candidates = get_possible_missing_tag(tags, prev_tag=prev_tag[0])
+        if len(next_version) == 0 and len(next_candidates) == 0:
+            return prev_tag[0], ""
         print(f"Prev tag is: {prev_tag[0]}")
         sys.exit(f"Next tag can be: {','.join(next_candidates)}\n")
-        # next_candidates = difflib.get_close_matches(prev_tag[0], next_candidates, n=3)
-        # if len(next_candidates) == 0:
-        #     print(f"Prev tag found: {prev_tag[0]}\n")
-        #     print(
-        #         f"Next tag candidates: {get_possible_missing_tag(tags, prev_tag=prev_tag[0])}\n"
-        #     )
-        #     sys.exit(1)
-
-        # return prev_tag[0], min(next_candidates)
     elif len(prev_tag) > 1 and len(next_tag) > 1:
         sys.exit(
-            f"Multiple tag candidates found. Aborting.\nTry running it again with: --tag-interval \n  Prev tag: {prev_tag}\n  Next tag: {next_tag}"
+            f"Multiple tag candidates found. Aborting.\nTry running it again with:\n  Prev tag: {prev_tag}\n  Next tag: {next_tag}"
         )
     else:
+        return None, None
         sys.exit(
             f"Tag candidates not found for versions: {prev_version}, {next_version}"
         )
