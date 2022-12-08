@@ -29,58 +29,27 @@ ADVISORY_TEXT_6 = """Apache HTTP Server versions 2.4.41 to 2.4.46 mod_proxy_http
 
 
 def test_extract_affected_filenames():
-    result1 = extract_affected_filenames(ADVISORY_TEXT_1)
-    result2 = extract_affected_filenames(ADVISORY_TEXT_2)
-    result3 = extract_affected_filenames(ADVISORY_TEXT_3)
-    result4 = extract_affected_filenames(ADVISORY_TEXT_4)
-    result5 = extract_affected_filenames(ADVISORY_TEXT_5)
-    assert result1 == set(["JwtRequestCodeFilter", "request_uri"])
-    assert result2 == set(
-        [
-            "OAuthConfirmationController.java",
-            "@ModelAttribute",
-            "authorizationRequest",
-            "OpenID",
-        ]
-    )
-    assert result3 == set(["FileNameUtils"])
+    result1, _ = extract_affected_filenames(ADVISORY_TEXT_1)
+    result2, ext2 = extract_affected_filenames(ADVISORY_TEXT_2)
 
-    assert result4 == set(["MultipartStream.java", "FileUpload"])  # Content-Type
-    assert result5 == set(["JsonMapObjectReaderWriter"])
-
-
-def test_adv_record_path_extraction_has_real_paths():
-    # result = extract_affected_files_paths(ADVISORY_TEXT_2)
-    print("")
-    # assert result == ["FileNameUtils", "//../foo", "\\..\\foo"]
-
-
-def test_adv_record_path_extraction_strict_extensions():
-    """
-    If strict_extensions is True, it will always extract tokens with (back) slashes,
-    but it will only collect single file names if they have the correct extension.
-    """
-    # result = extract_affected_files_paths(
-    #     ADVISORY_TEXT_2
-    #     + " Developer.gery put something here to check if foo.java and bar.cpp will be found.",
-    #     strict_extensions=True,
-    # )
-    print("result")
-    # assert result == ["FileNameUtils", "//../foo", "\\..\\foo", "foo", "bar"]
+    assert "JwtRequestCodeFilter" in result1
+    assert "OAuthConfirmationController" in result2 and "java" in ext2
 
 
 def test_extract_jira_references():
-    x = extract_jira_references("apache/ambari", "AMBARI-25329")
-    print(x)
+    # x = extract_jira_references("apache/ambari", "AMBARI-25329")
     pass
 
 
 def test_extract_gh_issues():
     d = extract_ghissue_references("https://github.com/apache/commons-text", "#341")
-    print(d)
-    raise NotImplementedError
+    assert "341" in d
+    assert (
+        "Interpolation Defaults Interpolation Defaults Changes similar to what was recently released in commons-configuration"
+        in d["341"]
+    )
 
 
 def test_extract_filenames_single():
-    d = extract_affected_filenames(ADVISORY_TEXT_6)
-    raise Exception(d)
+    fn, ext = extract_affected_filenames(ADVISORY_TEXT_6)
+    assert "Content-Length" in fn

@@ -6,12 +6,6 @@ from datamodel.commit import Commit
 client = TestClient(app)
 
 
-# def test_read_main():
-#     response = client.get("/")
-#     assert response.status_code == 200
-#     assert "<title>Prospector</title>" in response.text
-
-
 def test_status():
     response = client.get("/status")
     assert response.status_code == 200
@@ -42,10 +36,7 @@ def test_get_specific_commit():
     assert response.json()[0]["commit_id"] == commit_id
 
 
-# @pytest.mark.skip(reason="will raise exception")
 def test_get_commits_by_repository():
     repository = "https://github.com/apache/dubbo"
     response = client.get("/commits/" + repository)
     assert response.status_code == 200
-    assert response.json()[0]["commit_id"] == "yyy"
-    assert response.json()[1]["commit_id"] == "zzz"
