@@ -1,11 +1,8 @@
 import subprocess
-import os
+
 import pytest
 
 from commitdb.postgres import PostgresCommitDB
-from stats.execution import execution_statistics
-
-from .main import main
 
 # from .prospector_client import prospector
 

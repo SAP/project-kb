@@ -26,7 +26,6 @@ from tqdm import tqdm
 
 from log.logger import logger
 
-
 NVD_API_KEY = os.getenv("NVD_API_KEY", "")
 
 # note: The NVD has not data older than 2002

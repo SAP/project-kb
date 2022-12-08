@@ -1,6 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, List, Tuple
-
+from typing import List, Tuple
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
@@ -11,7 +10,6 @@ from rules.helpers import (
 )
 from stats.execution import Counter, execution_statistics
 from util.lsh import build_lsh_index, decode_minhash
-
 
 rule_statistics = execution_statistics.sub_collection("rules")
 
@@ -92,7 +90,7 @@ class CveIdInMessage(Rule):
     """Matches commits that refer to the CVE-ID in the commit message."""  # Check if works for the title or comments
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if advisory_record.vulnerability_id in candidate.cve_refs:
+        if advisory_record.cve_id in candidate.cve_refs:
             self.message = "The commit message mentions the CVE ID"
             return True
         return False
@@ -220,7 +218,7 @@ class CveIdInLinkedIssue(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for id, content in candidate.ghissue_refs.items():
-            if advisory_record.vulnerability_id in content:
+            if advisory_record.cve_id in content:
                 self.message = f"The issue {id} mentions the CVE ID"
                 return True
 

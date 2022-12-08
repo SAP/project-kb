@@ -20,8 +20,6 @@ services:
       POSTGRES_PASSWORD: example
       POSTGRES_DBNAME: postgres
       NVD_API_KEY: ${NVD_API_KEY}
-    volumes:
-      - ${CVE_DATA_PATH:-./cvedata}:/app/cve_data
 
   worker:
     build:

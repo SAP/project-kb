@@ -1,12 +1,14 @@
 import os
 import re
 from typing import Dict, List, Set
+
 import requests
 
 # from util.http import extract_from_webpage, fetch_url, get_from_xml
 from spacy import load
+
 from datamodel.constants import RELEVANT_EXTENSIONS
-from util.http import extract_from_webpage, get_from_xml
+from util.http import get_from_xml
 
 JIRA_ISSUE_URL = "https://issues.apache.org/jira/browse/"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -126,9 +128,11 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
 
     # /repos/{owner}/{repo}/issues/{issue_number}
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json",
     }
+    if GITHUB_TOKEN:
+        headers.update({"Authorization": f"Bearer {GITHUB_TOKEN}"})
+
     for result in re.finditer(r"(?:#|gh-)(\d+)", text):
         id = result.group(1)
         owner, repo = repository.split("/")[-2:]

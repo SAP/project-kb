@@ -1,0 +1,50 @@
+# The vulnerability identifier to look for
+cve_id: ""
+
+# The related repository URL
+repository: ""
+
+# Wheter to preprocess only the repository's commits or fully run prospector
+preprocess_only: False
+
+# Optional advisory data
+
+advisory:
+  pub_date: ""
+  description: ""
+  keywords: ""
+  modified_files: ""
+
+# Maximum number of commits to process
+max_candidates: 2000
+
+# Tag or version interval to look for
+tag_interval: ""
+version_interval: ""
+
+filter_extensions: ""
+
+fetch_references: False
+
+# Wether to use the NVD database or not (default is obviously true)
+use_nvd: True
+
+nvd_token: Null
+
+# Wheter to use a backend or not: "always", "never", "optional"
+use_backend: optional
+
+# Optional backend info to save/use already preprocessed data
+backend: http://localhost:8000
+
+# Report file details
+report:
+  format: html
+  name: prospector-report
+
+# Log level: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+log_level: INFO
+
+git_cache: /tmp/gitcache
+
+github_token: Null
