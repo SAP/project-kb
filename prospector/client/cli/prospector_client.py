@@ -33,6 +33,40 @@ DEFAULT_BACKEND = "http://localhost:8000"
 core_statistics = execution_statistics.sub_collection("core")
 
 
+def prospector_find_twins(
+    vulnerability_id: str,
+    repository_url: str,
+    commit_id: str,
+    git_cache: str = "/tmp/git_cache",
+):
+    advisory_record = build_advisory_record(
+        vulnerability_id,
+    )
+    repository = Git(repository_url, git_cache)
+    repository.clone()
+
+    # tags = repository.get_tags()
+
+    commits = repository.find_commits_for_twin_lookups(commit_id=commit_id)
+    preprocessed_commits = list()
+    pbar = tqdm(
+        list(commits.values()),
+        desc="Preprocessing commits",
+        unit="commit",
+    )
+    for raw_commit in pbar:
+        preprocessed_commits.append(make_from_raw_commit(raw_commit))
+
+    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, None)
+
+    ConsoleWriter.print("Commit ranking and aggregation...")
+    # I NEED TO GET THE FIRST REACHABLE TAG OR NO-TAG
+    ranked_candidates = tag_and_aggregate_commits(ranked_candidates, None)
+    ConsoleWriter.print_(MessageStatus.OK)
+
+    return ranked_candidates, advisory_record
+
+
 # @profile
 @measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
@@ -73,6 +107,9 @@ def prospector(  # noqa: C901
             set(modified_files),
         )
 
+    fixing_commit = advisory_record.get_fixing_commit()
+    if fixing_commit is not None:
+        pass
     # obtain a repository object
     repository = Git(repository_url, git_cache)
 
@@ -186,7 +223,7 @@ def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: Lis
 
 
 def tag_and_aggregate_commits(commits: List[Commit], next_tag: str) -> List[Commit]:
-    if next_tag is None:
+    if next_tag is None or next_tag == "":
         return commits
 
     twin_tags_map = {commit.commit_id: commit.get_tag() for commit in commits}

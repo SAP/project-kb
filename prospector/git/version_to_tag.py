@@ -52,7 +52,8 @@ def get_possible_tags(tags: list[str], versions: str):
             for tag in tags
             if next_version == clean_tag(tag) and not is_rc_or_date(tag)
         ]
-
+    # print(tags)
+    # print(prev_tag, next_tag)
     if len(prev_tag) == 1 and len(next_tag) == 1:
         return prev_tag[0], next_tag[0]
     elif len(prev_tag) == 1 and len(next_tag) > 1:
