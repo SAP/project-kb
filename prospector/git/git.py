@@ -21,6 +21,7 @@ from stats.execution import execution_statistics, measure_execution_time
 GIT_SEPARATOR = "-@-@-@-@-"
 
 TEN_DAYS_TIME_DELTA = 14 * 24 * 60 * 60
+ONE_MONTH_TIME_DELTA = 30 * 24 * 60 * 60
 
 
 def do_clone(url, output_folder, shallow=False, skip_existing=False):
@@ -207,12 +208,14 @@ class Git:
 
         if next_tag:
             until = self.extract_tag_timestamp(next_tag) + TEN_DAYS_TIME_DELTA
-            cmd += f" --until={until}"
+            if until:
+                cmd += f" --until={until}"
 
         # TODO: if find twins is true, we dont need the ancestors, only the timestamps
         if prev_tag:
             since = self.extract_tag_timestamp(prev_tag) - TEN_DAYS_TIME_DELTA
-            cmd += f" --since={since}"
+            if since:
+                cmd += f" --since={since}"
 
         if filter_extension:
             cmd += " *." + " *.".join(filter_extension)
@@ -254,6 +257,13 @@ class Git:
                     commit.changed_files.append(line)
 
         return commits
+
+    def find_commits_for_twin_lookups(self, commit_id):
+        commit_timestamp = self.extract_tag_timestamp(commit_id)
+        return self.create_commits(
+            since=commit_timestamp - ONE_MONTH_TIME_DELTA,
+            until=commit_timestamp + ONE_MONTH_TIME_DELTA,
+        )
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, id):

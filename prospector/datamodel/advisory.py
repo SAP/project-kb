@@ -139,6 +139,12 @@ class AdvisoryRecord:
         ]
         self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
 
+    def get_fixing_commit(self) -> Optional[str]:
+        for reference in self.references.keys():
+            if "github.com" in reference and "commit" in reference:
+                return reference.split("/")[-1]
+        return None
+
 
 def get_from_nvd(cve_id: str):
     """Get an advisory from the NVD dtabase"""
