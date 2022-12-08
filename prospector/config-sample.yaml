@@ -1,5 +1,4 @@
 
-
 # Wheter to preprocess only the repository's commits or fully run prospector
 preprocess_only: False
 
