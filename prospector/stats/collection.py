@@ -70,7 +70,7 @@ class StatisticCollection(dict):
         name: Union[str, Tuple[str, ...]],
         value,
         unit: Optional[str] = None,
-        overwrite=True,
+        overwrite=False,
     ):
         if isinstance(name, str):
             if not overwrite and name in self:

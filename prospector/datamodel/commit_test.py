@@ -30,7 +30,7 @@ def test_preprocess_commit(repository: Git):
 def test_preprocess_commit_set(repository: Git):
 
     repo = repository
-    commit_set = repo.get_commits(since="1615441712", until="1617441712")
+    commit_set = repo.create_commits(since="1615441712", until="1617441712")
     preprocessed_commits = []
 
     for commit_id in commit_set:

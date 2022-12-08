@@ -1,13 +1,9 @@
-# from pprint import pprint
 import os.path
 import time
 
 import pytest
 
-from .git import Exec, Git
-
-# from .version_to_tag import version_to_wide_interval_tags
-from .version_to_tag import get_possible_tags
+from git.git import Exec, Git
 
 NEBULA = "https://github.com/slackhq/nebula"
 BEAM = "https://github.com/apache/beam"
@@ -29,73 +25,46 @@ def repository() -> Git:
 
 
 def test_extract_timestamp(repository: Git):
-    commit = repository.get_commit(COMMIT_ID)
+    commit = repository.get_commit(OPENCAST_COMMIT)
     commit.extract_timestamp(format_date=True)
-    assert commit.get_timestamp() == "2020-07-01 15:20:52"
+    assert commit.get_timestamp() == "2020-01-16 22:34:35"
     commit.extract_timestamp(format_date=False)
-    assert commit.get_timestamp() == 1593616852
+    assert commit.get_timestamp() == 1579214075
 
 
 def test_show_tags(repository: Git):
     tags = repository.execute("git name-rev --tags")
-    print(tags)
-    raise Exception()
+    assert tags is not None
 
 
 def test_get_tags_for_commit(repository: Git):
     commits = repository.create_commits()
     commit = commits.get(OPENCAST_COMMIT)
     if commit is not None:
-        tags = commit.find_tag("8.1")
-        raise Exception(tags)
+        tags = commit.find_tags()
+        assert len(tags) == 62
+        assert "10.2" in tags and "11.3" in tags and "9.4" in tags
 
 
 def test_create_commits(repository: Git):
     commits = repository.create_commits()
-    commit = commits.get(COMMIT_ID)
-    assert len(commits) == 357
-    assert commit.get_id() == COMMIT_ID
+    commit = commits.get(OPENCAST_COMMIT)
+    assert len(commits) == 18178
+    assert commit.get_id() == OPENCAST_COMMIT
 
 
 def test_get_hunks_count(repository: Git):
     commits = repository.create_commits()
     commit = commits.get(OPENCAST_COMMIT)
-    diff, hunks = commit.get_diff()
-    print(diff)
-    raise Exception()
-    assert hunks == 2
+    _, hunks = commit.get_diff()
+    assert hunks == 7
 
 
 def test_get_changed_files(repository: Git):
-    commit = repository.get_commit(COMMIT_ID)
+    commit = repository.get_commit(OPENCAST_COMMIT)
 
     changed_files = commit.get_changed_files()
     assert len(changed_files) == 0
-
-
-@pytest.mark.skip(reason="Skipping this test")
-def test_extract_timestamp_from_version():
-    repo = Git(NEBULA)
-    repo.clone()
-    assert repo.extract_timestamp_from_version("v1.5.2") == 1639518536
-    assert repo.extract_timestamp_from_version("INVALID_VERSION_1_0_0") is None
-
-
-def test_get_tag_for_version():
-    repo = Git(NEBULA)
-    repo.clone()
-    tags = repo.get_tags()
-    assert get_possible_tags(tags, "1.5.2") == ["v1.5.2"]
-
-
-def test_get_commit_parent():
-    repo = Git(NEBULA)
-    repo.clone()
-    id = repo.get_commit_id_for_tag("v1.6.1")
-    commit = repo.get_commit(id)
-
-    commit.get_parent_id()
-    assert True  # commit.parent_id == "4c0ae3df5ef79482134b1c08570ff51e52fdfe06"
 
 
 def test_run_cache():

@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from dataclasses import dataclass
 
 from omegaconf import OmegaConf
@@ -180,7 +181,7 @@ def get_configuration(argv):
     args = parse_cli_args(argv)
     conf = parse_config_file(args.config)
     if conf is None:
-        return False
+        sys.exit("No configuration file found")
     return Config(
         cve_id=args.cve_id,
         repository=args.repository,
