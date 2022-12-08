@@ -338,7 +338,9 @@ def get_candidates(
                 filter_extension=advisory_record.files_extension,
             )
 
-            core_statistics.record("candidates", len(candidates), unit="commits")
+            core_statistics.record(
+                "candidates", len(candidates), unit="commits", overwrite=True
+            )
             logger.info("Found %d candidates" % len(candidates))
         writer.print(f"Found {len(candidates)} candidates")
 

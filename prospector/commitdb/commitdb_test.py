@@ -8,7 +8,7 @@ from datamodel.commit import Commit
 def setupdb():
     db = PostgresCommitDB()
     db.connect()
-    db.reset()
+    # db.reset()
     return db
 
 

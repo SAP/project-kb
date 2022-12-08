@@ -69,22 +69,12 @@ def test_advisory_basic():
 def test_get_advisory():
     advisory = AdvisoryRecord("CVE-2021-22696")
     advisory.get_advisory()
-    print(advisory.__dict__)
     assert advisory.cve_id == "CVE-2021-22696"
-    assert ("3.4.0", "3.4.3") in advisory.versions
+    assert "3.4.0" in advisory.versions["affected"]
+    assert "3.4.3" in advisory.versions["fixed"]
 
 
 def test_build_advisory_record():
     advisory = build_advisory_record("CVE-2021-29943", fetch_references=True)
-    print(advisory.__dict__)
 
-    assert advisory.cve_id == "CVE-2014-005"
-    assert advisory.versions == []
-
-
-def test_private():
-    for i in cve_list.split()[:10]:
-        advisory = build_advisory_record(i, fetch_references=False)
-        print(advisory.cve_id, advisory.affected_products)
-        time.sleep(6)
-    raise NotImplementedError
+    assert advisory.cve_id == "CVE-2021-29943"
