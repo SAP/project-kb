@@ -6,7 +6,7 @@ from datamodel.commit import Commit
 
 @pytest.fixture
 def setupdb():
-    db = PostgresCommitDB()
+    db = PostgresCommitDB("postgres", "example", "localhost", "5432", "postgres")
     db.connect()
     # db.reset()
     return db

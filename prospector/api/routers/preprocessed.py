@@ -4,6 +4,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 from commitdb.postgres import PostgresCommitDB
+from util.config_parser import parse_config_file
+
+config = parse_config_file()
+
 
 router = APIRouter(
     prefix="/commits",
@@ -18,7 +22,13 @@ async def get_commits(
     repository_url: str,
     commit_id: Optional[str] = None,
 ):
-    db = PostgresCommitDB()
+    db = PostgresCommitDB(
+        config.database.user,
+        config.database.password,
+        config.database.host,
+        config.database.port,
+        config.database.dbname,
+    )
     db.connect()
     data = db.lookup(repository_url, commit_id)
 
@@ -32,7 +42,13 @@ async def get_commits(
 @router.post("/")
 async def upload_preprocessed_commit(payload: List[Dict[str, Any]]):
 
-    db = PostgresCommitDB()
+    db = PostgresCommitDB(
+        config.database.user,
+        config.database.password,
+        config.database.host,
+        config.database.port,
+        config.database.dbname,
+    )
     db.connect()
 
     for commit in payload:

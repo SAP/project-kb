@@ -12,13 +12,13 @@ from psycopg2.extras import DictCursor, DictRow, Json
 from commitdb import CommitDB
 from log.logger import logger
 
-DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
-    os.getenv("POSTGRES_USER", "postgres"),
-    os.getenv("POSTGRES_PASSWORD", "example"),
-    os.getenv("POSTGRES_HOST", "localhost"),
-    os.getenv("POSTGRES_PORT", "5432"),
-    os.getenv("POSTGRES_DBNAME", "postgres"),
-).lower()
+# DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
+#     os.getenv("POSTGRES_USER", "postgres"),
+#     os.getenv("POSTGRES_PASSWORD", "example"),
+#     os.getenv("POSTGRES_HOST", "localhost"),
+#     os.getenv("POSTGRES_PORT", "5432"),
+#     os.getenv("POSTGRES_DBNAME", "postgres"),
+# ).lower()
 
 
 class PostgresCommitDB(CommitDB):
@@ -27,12 +27,14 @@ class PostgresCommitDB(CommitDB):
     for PostgreSQL
     """
 
-    def __init__(self):
-        self.connect_string = ""
+    def __init__(self, user, password, host, port, dbname):
+        self.connect_string = "postgresql://{}:{}@{}:{}/{}".format(
+            user, password, host, port, dbname
+        ).lower()
         self.connection = None
 
-    def connect(self, connect_string=DB_CONNECT_STRING):
-        self.connection = psycopg2.connect(connect_string)
+    def connect(self):
+        self.connection = psycopg2.connect(self.connect_string)
 
     def lookup(self, repository: str, commit_id: str = None) -> List[Dict[str, Any]]:
         if not self.connection:
