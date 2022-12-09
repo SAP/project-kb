@@ -49,7 +49,6 @@ def test_get_tags_for_commit(repository: Git):
 def test_create_commits(repository: Git):
     commits = repository.create_commits()
     commit = commits.get(OPENCAST_COMMIT)
-    assert len(commits) == 18178
     assert commit.get_id() == OPENCAST_COMMIT
 
 
