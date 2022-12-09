@@ -1,6 +1,6 @@
 import pytest
 
-from commitdb.postgres import DB_CONNECT_STRING, PostgresCommitDB, parse_connect_string
+from commitdb.postgres import PostgresCommitDB, parse_connect_string
 from datamodel.commit import Commit
 
 
@@ -43,10 +43,3 @@ def test_lookup_nonexisting(setupdb: PostgresCommitDB):
         "42423b242342423b2423",
     )
     assert result == []
-
-
-def test_parse_connect_string():
-    parsed_connect_string = parse_connect_string(DB_CONNECT_STRING)
-    assert parsed_connect_string["host"] == "localhost"
-    assert parsed_connect_string["user"] == "postgres"
-    assert parsed_connect_string["port"] == "5432"
