@@ -28,13 +28,31 @@ class PostgresCommitDB(CommitDB):
     """
 
     def __init__(self, user, password, host, port, dbname):
-        self.connect_string = "postgresql://{}:{}@{}:{}/{}".format(
-            user, password, host, port, dbname
-        ).lower()
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+        self.dbname = dbname
         self.connection = None
 
     def connect(self):
-        self.connection = psycopg2.connect(self.connect_string)
+        try:
+            self.connection = psycopg2.connect(
+                database=self.dbname,
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                port=self.port,
+            )
+        except Exception:
+            self.host = "localhost"
+            self.connection = psycopg2.connect(
+                database=self.dbname,
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                port=self.port,
+            )
 
     def lookup(self, repository: str, commit_id: str = None) -> List[Dict[str, Any]]:
         if not self.connection:

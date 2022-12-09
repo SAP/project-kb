@@ -27,6 +27,8 @@ database:
   port: 5432
   dbname: postgres
 
+redis_url: redis://localhost:6379/0
+
 # Report file format: "html", "json", "console" or "all"
 # and the file name
 report:

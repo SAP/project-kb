@@ -8,8 +8,12 @@ from rq.job import Job
 from api.routers.nvd_feed_update import main
 from git.git import do_clone
 from log.logger import logger
+from util.config_parser import parse_config_file
 
-redis_url = os.environ["REDIS_URL"]
+config = parse_config_file()
+
+
+redis_url = config.redis_url
 
 router = APIRouter(
     prefix="/jobs",
