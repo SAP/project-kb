@@ -20,6 +20,13 @@ use_backend: optional
 # Optional backend info to save/use already preprocessed data
 backend: http://localhost:8000
 
+database:
+  user: postgres
+  password: example
+  host: db
+  port: 5432
+  dbname: postgres
+
 # Report file format: "html", "json", "console" or "all"
 # and the file name
 report:

@@ -125,6 +125,7 @@ def parse_config_file(filename: str = "config.yaml"):
     if os.path.isfile(filename):
         logger.info(f"Loading configuration from {filename}")
         config = OmegaConf.load(filename)
+        print(config.database)
         return config
 
     return None

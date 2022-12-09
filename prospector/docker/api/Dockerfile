@@ -14,4 +14,4 @@ ENV PYTHONPATH .
 RUN rm -rf /app/rules
 RUN mkdir /app/cve_data
 
-CMD ["./start.sh"]
+CMD ["python","./main.py"]

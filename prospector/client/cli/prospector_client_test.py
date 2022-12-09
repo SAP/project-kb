@@ -2,8 +2,6 @@ import subprocess
 
 import pytest
 
-from commitdb.postgres import PostgresCommitDB
-
 from .prospector_client import prospector
 
 OPENCAST_CVE = "CVE-2021-21318"
