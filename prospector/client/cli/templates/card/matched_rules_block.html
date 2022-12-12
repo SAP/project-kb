@@ -2,15 +2,11 @@
 {% set title = "Matched rules" %}
 {% set icon = "fas fa-bullhorn" %}
 {% block body %}
-<p>
+<ul class="list-group list-group-flush mx-3">
     {% for rule in annotated_commit.matched_rules %}
-    <button type="button" class="btn btn-primary position-relative m-2" style="pointer-events: none;">
-        {{ rule.message }}
-        <span
-            class="position-absolute top-0 start-0 translate-middle-y badge rounded-pill bg-light border border-primary text-primary">
-            {{ rule.id }}
-        </span>
-    </button>
+    <li class="list-group-item">
+        <div class="card-text">{{ rule.message }}</div>
+    </li>
     {% endfor %}
-</p>
+</ul>
 {% endblock %}

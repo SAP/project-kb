@@ -63,18 +63,32 @@ def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str
     content = fetch_url(url, False)
     if not content:
         return ""
+    print(content.get_text())
+    print(
+        [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", content.get_text())]
+    )
+    return [
+        link.get("href")
+        for link in content.find_all(
+            "a",
+            attrs={
+                "href": re.compile(
+                    r"^https://github.com|^https://issues.apache.org/jira"
+                )
+            },
+        )
+    ]
+    # display the actual urls
 
-    return " ".join(
-        [
-            block.get_text()  # re.sub(r"\s+", " ", block.get_text())
-            for block in content.find_all(attrs={attr_name: attr_value})
-        ]
-    ).strip()
+    # return [
+    #     block.get_text()  # re.sub(r"\s+", " ", block.get_text())
+    #     for block in content.find_all(attrs={attr_name: attr_value})
+    # ]
 
 
 def get_from_xml(id: str):
     try:
-        params = {"field": {"description", "summary"}}
+        params = {"field": {"description", "summary", "comments"}}
 
         response = requests.get(
             f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
@@ -82,9 +96,14 @@ def get_from_xml(id: str):
         )
         xml_data = BeautifulSoup(response.text, features="html.parser")
         item = xml_data.find("item")
-        description = re.sub(r"<\/?p>", "", item.find("description").text)
-        summary = item.find("summary").text
+        if item is None:
+            return ""
+        relevant_data = [
+            itm.text for itm in item.findAll(["description", "summary", "comments"])
+        ]
+
+        relevant_data = BeautifulSoup("\n".join(relevant_data), features="html.parser")
+
+        return " ".join(relevant_data.stripped_strings)
     except Exception:
-        logger.debug(f"cannot retrieve jira issue content: {id}", exc_info=True)
         return ""
-    return f"{summary} {description}"

@@ -1,0 +1,17 @@
+{% if annotated_commit.twins %}
+{% extends "titled_block.html" %}
+{% set title = "Commit twins" %}
+{% set icon = "fas fa-shield-alt" %}
+{% block body %}
+<ul class="list-group list-group-flush mx-3">
+    {% for tag, id in annotated_commit.twins %}
+    <li id="commitTwinsList" class="list-group-item">
+        <a id="twinCommitTag">{{tag}}: </a>
+        <a id="twinCommitId" class="link-dark" href="{{ annotated_commit.repository }}/commit/{{ id }}">
+            {{ id }}</a>
+
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
+{% endif %}

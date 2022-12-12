@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from dataclasses import dataclass
 
 from omegaconf import OmegaConf
@@ -34,16 +35,16 @@ def parse_cli_args(args):
         help="Maximum number of candidates to consider",
     )
 
-    parser.add_argument(
-        "--tag-interval",
-        type=str,
-        help="Tag interval (X,Y) to consider (the commit must be reachable from Y but not from X, and must not be older than X)",
-    )
+    # parser.add_argument(
+    #     "--tag-interval",
+    #     type=str,
+    #     help="Tag interval (X,Y) to consider (the commit must be reachable from Y but not from X, and must not be older than X)",
+    # )
 
     parser.add_argument(
         "--version-interval",
         type=str,
-        help="Version interval (X,Y) to consider (the corresponding tags will be inferred automatically, and the commit must be reachable from Y but not from X, and must not be older than X)",
+        help="Version or tag interval X:Y to consider. ",
     )
 
     parser.add_argument(
@@ -88,9 +89,9 @@ def parse_cli_args(args):
 
     parser.add_argument(
         "--report",
-        choices=["html", "json", "console", "allfiles"],
+        choices=["html", "json", "console", "all"],
         type=str,
-        help="Format of the report (options: console, json, html)",
+        help="Format of the report (options: console, json, html, all)",
     )
 
     parser.add_argument(
@@ -124,6 +125,7 @@ def parse_config_file(filename: str = "config.yaml"):
     if os.path.isfile(filename):
         logger.info(f"Loading configuration from {filename}")
         config = OmegaConf.load(filename)
+        print(config.database)
         return config
 
     return None
@@ -139,7 +141,7 @@ class Config:
         pub_date: str,
         description: str,
         max_candidates: int,
-        tag_interval: str,
+        # tag_interval: str,
         version_interval: str,
         modified_files: str,
         filter_extensions: str,
@@ -160,11 +162,11 @@ class Config:
         self.pub_date = pub_date
         self.description = description
         self.max_candidates = max_candidates
-        self.tag_interval = tag_interval
+        # self.tag_interval = tag_interval
         self.version_interval = version_interval
-        self.modified_files = modified_files
+        self.modified_files = modified_files.split(",") if modified_files else []
         self.filter_extensions = filter_extensions
-        self.keywords = keywords
+        self.keywords = keywords.split(",") if keywords else []
         self.use_nvd = use_nvd
         self.fetch_references = fetch_references
         self.backend = backend
@@ -180,19 +182,19 @@ def get_configuration(argv):
     args = parse_cli_args(argv)
     conf = parse_config_file(args.config)
     if conf is None:
-        return False
+        sys.exit("No configuration file found")
     return Config(
         cve_id=args.cve_id,
         repository=args.repository,
         preprocess_only=args.preprocess_only or conf.preprocess_only,
-        pub_date=args.pub_date or conf.advisory.pub_date,
-        description=args.description or conf.advisory.description,
-        modified_files=args.modified_files or conf.advisory.modified_files,
-        keywords=args.keywords or conf.advisory.keywords,
+        pub_date=args.pub_date,
+        description=args.description,
+        modified_files=args.modified_files,
+        keywords=args.keywords,
         max_candidates=args.max_candidates or conf.max_candidates,
-        tag_interval=args.tag_interval or conf.tag_interval,
-        version_interval=args.version_interval or conf.version_interval,
-        filter_extensions=args.filter_extensions or conf.filter_extensions,
+        # tag_interval=args.tag_interval,
+        version_interval=args.version_interval,
+        filter_extensions=args.filter_extensions,
         use_nvd=args.use_nvd or conf.use_nvd,
         fetch_references=args.fetch_references or conf.fetch_references,
         backend=args.backend or conf.backend,

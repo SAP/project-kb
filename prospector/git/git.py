@@ -13,60 +13,15 @@ import sys
 from typing import Dict, List
 from urllib.parse import urlparse
 
-import requests
-
 from git.exec import Exec
 from git.raw_commit import RawCommit
 from log.logger import logger
 from stats.execution import execution_statistics, measure_execution_time
-from util.lsh import (
-    build_lsh_index,
-    compute_minhash,
-    encode_minhash,
-    get_encoded_minhash,
-)
-
-# GIT_CACHE = os.getenv("GIT_CACHE")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 GIT_SEPARATOR = "-@-@-@-@-"
 
-FILTERING_EXTENSIONS = ["java", "c", "cpp", "py", "js", "go", "php", "h", "jsp"]
-RELEVANT_EXTENSIONS = [
-    "java",
-    "c",
-    "cpp",
-    "h",
-    "py",
-    "js",
-    "xml",
-    "go",
-    "rb",
-    "php",
-    "sh",
-    "scale",
-    "lua",
-    "m",
-    "pl",
-    "ts",
-    "swift",
-    "sql",
-    "groovy",
-    "erl",
-    "swf",
-    "vue",
-    "bat",
-    "s",
-    "ejs",
-    "yaml",
-    "yml",
-    "jar",
-]
-
-# if not os.path.isdir(GIT_CACHE):
-#     raise ValueError(
-#         f"Environment variable GIT_CACHE is not set or it points to a directory that does not exist: {GIT_CACHE}"
-#     )
+TEN_DAYS_TIME_DELTA = 14 * 24 * 60 * 60
+ONE_MONTH_TIME_DELTA = 30 * 24 * 60 * 60
 
 
 def do_clone(url, output_folder, shallow=False, skip_existing=False):
@@ -118,7 +73,6 @@ class Git:
         self.shallow_clone = shallow
         self.exec = Exec(workdir=self.path)
         self.storage = None
-        # self.lsh_index = build_lsh_index()
 
     def execute(self, cmd: str, silent: bool = False):
         return self.exec.run(cmd, silent=silent, cache=True)
@@ -202,11 +156,11 @@ class Git:
             else:
                 logger.debug(f"Found repo {self.url} in {self.path}.\nFetching....")
 
-                self.execute("git fetch --progress --all --tags")
+                self.execute("git fetch --progress --all --tags --force")
             return
 
         if os.path.exists(self.path):
-            logger.debug(f"Folder {self.path} is not a git repository.")
+            logger.info(f"Folder {self.path} is not a git repository.")
             return
 
         os.makedirs(self.path)
@@ -239,195 +193,77 @@ class Git:
             shutil.rmtree(self.path)
             raise e
 
-    def get_tags():
-        cmd = "git log --tags --format=%H - %D"
-        pass
-
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def create_commits(
         self,
-        ancestors_of=None,
-        exclude_ancestors_of=None,
+        next_tag=None,
+        prev_tag=None,
         since=None,
         until=None,
+        filter_extension=None,
         find_in_code="",
         find_in_msg="",
-        find_twins=True,
     ) -> Dict[str, RawCommit]:
-        cmd = f"git log --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+        cmd = f"git log --all --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
 
-        if ancestors_of is None or find_twins:
-            cmd += " --all"
+        if next_tag:
+            until = self.extract_tag_timestamp(next_tag) + TEN_DAYS_TIME_DELTA
+            if until:
+                cmd += f" --until={until}"
 
-        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
-        if ancestors_of:
-            if not find_twins:
-                cmd += f" {ancestors_of}"
-            until = self.extract_tag_timestamp(ancestors_of)
         # TODO: if find twins is true, we dont need the ancestors, only the timestamps
-        if exclude_ancestors_of:
-            if not find_twins:
-                cmd += f" ^{exclude_ancestors_of}"
-            since = self.extract_tag_timestamp(exclude_ancestors_of)
+        if prev_tag:
+            since = self.extract_tag_timestamp(prev_tag) - TEN_DAYS_TIME_DELTA
+            if since:
+                cmd += f" --since={since}"
 
-        if since:
-            cmd += f" --since={since}"
-
-        if until:
-            cmd += f" --until={until}"
-
-        # for ext in FILTERING_EXTENSIONS:
-        #     cmd += f" *.{ext}"
+        if filter_extension:
+            cmd += " *." + " *.".join(filter_extension)
 
         try:
             logger.debug(cmd)
             out = self.execute(cmd)
-            # if --all is used, we are traversing all branches and therefore we can check for twins
-
-            # TODO: problem -> twins can be merge commits, same commits for different branches, not only security related fixes
-
-            return self.parse_git_output(out, find_twins)
+            return self.parse_git_output(out)
 
         except Exception:
             logger.error("Git command failed, cannot get commits", exc_info=True)
             return dict()
 
-    # def populate_lsh_index(self, msg: str, id: str):
-    #     mh = compute_minhash(msg[:64])
-    #     possible_twins = self.lsh_index.query(mh)
-
-    #     self.lsh_index.insert(id, mh)
-    #     return encode_minhash(mh), possible_twins
-
-    def parse_git_output(self, raw: List[str], find_twins: bool = False):
-
+    def parse_git_output(self, raw: List[str]) -> Dict[str, RawCommit]:
         commits: Dict[str, RawCommit] = dict()
         commit = None
         sector = 0
+        raw.append(GIT_SEPARATOR)
         for line in raw:
             if line == GIT_SEPARATOR:
                 if sector == 3:
                     sector = 1
-                    if 0 < len(commit.changed_files) < 100:
-                        commit.msg = commit.msg.strip()
-                        if find_twins:
-                            # minhash, twins = self.populate_lsh_index(
-                            #     commit.msg, commit.id
-                            # )
-                            commit.minhash = get_encoded_minhash(commit.msg[:64])
-                            # commit.twins = twins
-                            # for twin in twins:
-                            #     commits[twin].twins.append(commit.id)
-
-                        commits[commit.id] = commit
-
+                    commit.msg = commit.msg.strip()
+                    commits[commit.id] = commit
                 else:
                     sector += 1
             else:
                 if sector == 1:
                     id, timestamp, parent = line.split(":")
-                    parent = parent.split(" ")[0]
-                    commit = RawCommit(self, id, int(timestamp), parent)
+                    commit = RawCommit(
+                        repository=self,
+                        commit_id=id,
+                        timestamp=int(timestamp),
+                        parent_id=parent.split()[0] if len(parent) else "",
+                    )
                 elif sector == 2:
                     commit.msg += line + " "
-                elif sector == 3 and "test" not in line:
-                    commit.add_changed_file(line)
+                elif sector == 3:
+                    commit.changed_files.append(line)
 
         return commits
 
-    def get_issues(self, since=None) -> Dict[str, str]:
-        owner, repo = self.url.split("/")[-2:]
-        query_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
-        # /repos/{owner}/{repo}/issues/{issue_number}
-        params = {
-            "state": "closed",
-            "per_page": 100,
-            "since": since,
-            "page": 1,
-        }
-        headers = {
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
-            "Accept": "application/vnd.github+json",
-        }
-        r = requests.get(query_url, params=params, headers=headers)
-
-        while len(r.json()) > 0:
-            for elem in r.json():
-                body = elem["body"] or ""
-                self.issues[str(elem["number"])] = (
-                    elem["title"] + " " + " ".join(body.split())
-                )
-
-            params["page"] += 1
-            if params["page"] > 10:
-                break
-            r = requests.get(query_url, params=params, headers=headers)
-
-    # @measure_execution_time(execution_statistics.sub_collection("core"))
-    def get_commits(
-        self,
-        ancestors_of=None,
-        exclude_ancestors_of=None,
-        since=None,
-        until=None,
-        find_in_code="",
-        find_in_msg="",
-    ):
-        cmd = "git log --format=%H"
-
-        if ancestors_of is None:
-            cmd += " --all"
-
-        # by filtering the dates of the tags we can reduce the commit range safely (in theory)
-        if ancestors_of:
-            cmd += f" {ancestors_of}"
-            until = self.extract_tag_timestamp(ancestors_of)
-
-        if exclude_ancestors_of:
-            cmd += f" ^{exclude_ancestors_of}"
-            since = self.extract_tag_timestamp(exclude_ancestors_of)
-
-        if since:
-            cmd += f" --since={since}"
-
-        if until:
-            cmd += f" --until={until}"
-
-        for ext in FILTERING_EXTENSIONS:
-            cmd += f" *.{ext}"
-
-        # What is this??
-        if find_in_code:
-            cmd += f" -S{find_in_code}"
-
-        if find_in_msg:
-            cmd += f" --grep={find_in_msg}"
-
-        try:
-            logger.debug(cmd)
-            out = self.execute(cmd)
-
-        except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
-            out = []
-
-        return out
-
-    def get_commits_between_two_commit(self, commit_from: str, commit_to: str):
-        """
-        Return the commits between the start commit and the end commmit if there are path between them or empty list
-        """
-        try:
-            cmd = f"git rev-list --ancestry-path {commit_from}..{commit_to}"
-
-            path = self.execute(cmd)  # ???
-            if len(path) > 0:
-                path.pop(0)
-                path.reverse()
-            return path
-        except:
-            logger.error("Failed to obtain commits, details below:", exc_info=True)
-            return []
+    def find_commits_for_twin_lookups(self, commit_id):
+        commit_timestamp = self.extract_tag_timestamp(commit_id)
+        return self.create_commits(
+            since=commit_timestamp - ONE_MONTH_TIME_DELTA,
+            until=commit_timestamp + ONE_MONTH_TIME_DELTA,
+        )
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, id):
@@ -461,15 +297,6 @@ class Git:
         out = self.execute(f"git log -1 --format=%at {tag}")
         return int(out[0])
 
-    # Return the timestamp for given a version if version exist or None
-    def extract_timestamp_from_version(self, version: str) -> int:
-        tag = self.get_tag_for_version(version)
-        if tag[1] < 1:
-            return None
-
-        commit_id = self.get_commit_id_for_tag(tag[0])
-        return self.get_commit(commit_id).get_timestamp()
-
     def get_tags(self):
         try:
             return self.execute("git tag")
@@ -488,19 +315,6 @@ class Git:
             logger.error("Git command failed." + str(e.output), exc_info=True)
             sys.exit(1)
 
-    def get_previous_tag(self, tag):
-        # https://git-scm.com/docs/git-describe
-        commit = self.get_commit_id_for_tag(tag)
-        cmd = f"git describe --abbrev=0 --all --tags --always {commit}^"
-
-        try:
-            tags = self.execute(cmd)
-            if len(tags) > 0:
-                return tags
-        except subprocess.CalledProcessError as e:
-            logger.error("Git command failed." + str(e.output), exc_info=True)
-            return []
-
 
 # Donald Knuth's "reservoir sampling"
 # http://data-analytics-tools.blogspot.de/2009/09/reservoir-sampling-algorithm-in-perl.html
@@ -518,7 +332,6 @@ def reservoir_sampling(input_list, N):
 def make_raw_commit(
     repository: Git,
     id: str,
-    timestamp: int,
     parent_id: str = "",
 ) -> RawCommit:
     return RawCommit(repository, id, parent_id)

@@ -1,133 +1,249 @@
-# LEGACY CODE
-#
-# The following functions implement the heuristic to map a string version
-# such as "2.3.35" onto a tag such as "STRUTS_2_3_35"
-
-# flake8: noqa
-
 import difflib
-
-# pylint: disable=singleton-comparison,unidiomatic-typecheck, dangerous-default-value
 import re
+import sys
+from typing import Optional
 
 
-def recursively_split_version_string(input_version: str, output_version: list = []):
-    """
-    Splits a version/tag string into a list with integers and strings
-        i.e. "8.0.0.RC10" --> [8, '.', 0, '.', 0, '.RC', 10]
-    Input:
-        input_version (str): a version or tag i.e. "8.0.0.RC10"
-        output_version (list): an empty list, which will be filled iteratively
-    Returns:
-        list: the version/tag string in a list with integers and strings i.e. [8, '.', 0, '.', 0, '.RC', 10]
-    """
-    if type(input_version) != str:
-        raise TypeError(
-            "The provided version should be a str data type but is of type {}.".format(
-                type(input_version)
-            )
-        )
-
-    # when the part to split is only digits or no digits at all, the process is finished
-    if (
-        input_version.isdigit()
-        or any(char.isdigit() for char in input_version) == False
-    ):
-        version = output_version + [input_version]
-        return [int(segment) if segment.isdigit() else segment for segment in version]
-
-    # otherwise check until what position it is a digit (since we want to keep i.e. a multiple digits number as one integer)
-    pos = 0
-    while (
-        input_version[pos].isdigit() == input_version[pos + 1].isdigit()
-        and pos != len(input_version) - 2
-    ):  #
-        pos += 1
-
-    return recursively_split_version_string(
-        input_version[pos + 1 :], output_version + [input_version[: pos + 1]]
-    )
+def clean_tag(tag: str) -> str:
+    """Clean a tag name returning only the numeric part separated by dots."""
+    return ".".join(re.findall(r"\d+", tag))
+    return re.sub(r"[^0-9a-zA-Z]+", ".", tag, flags=re.IGNORECASE)
+    re.sub(r"^[^0-9]+|[^0-9]+$", "", tag, flags=re.IGNORECASE)
 
 
-def get_tag_for_version(tags, version):
-    """
-    Map a version onto an existing tag
-    Input:
-        tags (list): a list of tags to map version onto
-        version (str): the version
-    Returns:
-        list: list with tags that could be the version
-        @TODO: only return the most relevant tag i.e. for key 8 version 4.1 returns ['version-3.4.1', 'version-4.1', 'version-4.4.1']
-    """
-    if isinstance(tags, tuple):
-        tags = list(tags)
-    if type(tags) != list or len(tags) == 0:
-        raise ValueError(
-            "tags should be a list of tags to map the version onto, is a {} of length {}".format(
-                type(tags), len(tags)
-            )
-        )
+def is_rc_or_date(tag: str) -> bool:
+    return bool(re.search(r"[^a-z]?rc[^a-z]|\d{9,}", tag, flags=re.IGNORECASE))
 
-    # stripped_tags = [tag[len(tag)-len(version):] for tag in tags]
-    stripped_tags = [
-        tag[
-            tag.index(
-                [
-                    str(value)
-                    for value in recursively_split_version_string(tag)
-                    if type(value) == int
-                ][0]
-            ) :
-        ]
-        if any(char.isdigit() for char in tag)
-        else tag
-        for tag in tags
-    ]
-    stripped_version = (
-        version[
-            version.index(
-                [
-                    str(value)
-                    for value in recursively_split_version_string(version)
-                    if type(value) == int
-                ][0]
-            ) :
-        ]
-        if any(char.isdigit() for char in version)
-        else version
-    )
 
-    if version in tags and tags.count(version) == 1:
-        tag = version
-    elif version in stripped_tags and stripped_tags.count(version) == 1:
-        tag = tags[stripped_tags.index(version)]
-    elif version in stripped_tags and stripped_tags.count(version) > 1:
+def get_possible_missing_tag(
+    tags: list[str], prev_tag: Optional[str] = None, next_tag: Optional[str] = None
+):
+    """Given the tag list and a tag, return either the previous or the next tag candidates."""
+    if next_tag is None:
         return [
-            tags[index] for index, tag in enumerate(stripped_tags) if tag == version
-        ]
-    elif (
-        stripped_version in stripped_tags and stripped_tags.count(stripped_version) == 1
-    ):
-        tag = tags[stripped_tags.index(stripped_version)]
-    elif (
-        stripped_version in stripped_tags and stripped_tags.count(stripped_version) > 1
-    ):
-        return [
-            tags[index]
-            for index, tag in enumerate(stripped_tags)
-            if tag == stripped_version
-        ]
+            tag
+            for tag in tags[tags.index(prev_tag) + 1 :]
+            if difflib.SequenceMatcher(None, tag, prev_tag).ratio() > 0.8
+        ][:3]
 
+    if prev_tag is None:
+        return [
+            tag
+            for tag in tags[: tags.index(next_tag)][::-1]
+            if difflib.SequenceMatcher(None, tag, next_tag).ratio() > 0.8
+        ][:3]
+
+
+def get_possible_tags(tags: list[str], versions: str):
+    """Given a list of tags and a version interval, return the possible tag interval that matches."""
+    prev_version, next_version = versions.split(":")
+
+    prev_tag = [prev_version] if prev_version in tags else []
+    if len(prev_tag) == 0 and len(prev_version) > 0:
+        prev_tag = [
+            tag
+            for tag in tags
+            if prev_version == clean_tag(tag) and not is_rc_or_date(tag)
+        ]
+    next_tag = [next_version] if next_version in tags else []
+    if len(next_tag) == 0 and len(next_version) > 0:
+        next_tag = [
+            tag
+            for tag in tags
+            if next_version == clean_tag(tag) and not is_rc_or_date(tag)
+        ]
+    # print(tags)
+    # print(prev_tag, next_tag)
+    if len(prev_tag) == 1 and len(next_tag) == 1:
+        return prev_tag[0], next_tag[0]
+    elif len(prev_tag) == 1 and len(next_tag) > 1:
+        next_tag = [
+            tag for tag in next_tag if tag != prev_tag[0] or tag not in prev_tag[0]
+        ]  # this may lead to empty list
+        print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
+        return (
+            prev_tag[0],
+            next_tag[0],  # difflib.get_close_matches(prev_tag[0], next_tag, n=1)[0],
+        )
+    elif len(prev_tag) > 1 and len(next_tag) == 1:
+        prev_tag = [
+            tag for tag in prev_tag if tag != next_tag[0] or next_tag[0] not in tag
+        ]
+        print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
+        return (
+            prev_tag[-1],  # difflib.get_close_matches(next_tag[0], prev_tag, n=1)[0],
+            next_tag[0],
+        )
+    # If there is one exact match but no candidates for the other tag, exit and hint the user with possible candidates
+    elif len(prev_tag) == 0 and len(next_tag) == 1:
+        prev_candidates = get_possible_missing_tag(tags, next_tag=next_tag[0])
+        if len(prev_version) == 0 and len(prev_candidates) == 0:
+            return "", next_tag[0]
+        print(f"Next tag is: {next_tag[0]}")
+        sys.exit(f"Previous tag can be: {','.join(prev_candidates)}\n")
+    elif len(prev_tag) == 1 and len(next_tag) == 0:
+        next_candidates = get_possible_missing_tag(tags, prev_tag=prev_tag[0])
+        if len(next_version) == 0 and len(next_candidates) == 0:
+            return prev_tag[0], ""
+        print(f"Prev tag is: {prev_tag[0]}")
+        sys.exit(f"Next tag can be: {','.join(next_candidates)}\n")
+    elif len(prev_tag) > 1 and len(next_tag) > 1:
+        sys.exit(
+            f"Multiple tag candidates found. Aborting.\nTry running it again with:\n  Prev tag: {prev_tag}\n  Next tag: {next_tag}"
+        )
     else:
-        version = re.sub("[^0-9]", "", version)
-        best_match = ("", 0.0)
-        for tag in tags:
-            t_strip = re.sub("[^0-9]", "", tag)
-            match_score = difflib.SequenceMatcher(None, t_strip, version).ratio()
-            if match_score > best_match[1]:
-                best_match = (tag, match_score)
-        tag = best_match[0]
-    return [tag]
+        return None, None
+        sys.exit(
+            f"Tag candidates not found for versions: {prev_version}, {next_version}"
+        )
+
+
+def get_tag_candidates(
+    prev_version: str,
+    next_version: str,
+    tag_version_map: dict,
+    find_prev: bool,
+):
+    candidates = (
+        [
+            tag_version_map[key]
+            for key in difflib.get_close_matches(
+                prev_version, tag_version_map.keys(), n=5
+            )
+            if key < next_version
+        ]
+        if find_prev
+        else [
+            tag_version_map[key]
+            for key in difflib.get_close_matches(
+                next_version, tag_version_map.keys(), n=5
+            )
+            if key > prev_version
+        ]
+    )
+    return [tag for tags in candidates for tag in tags]
+
+
+# def recursively_split_version_string(input_version: str, output_version: list = []):
+#     """
+#     Splits a version/tag string into a list with integers and strings
+#         i.e. "8.0.0.RC10" --> [8, '.', 0, '.', 0, '.RC', 10]
+#     Input:
+#         input_version (str): a version or tag i.e. "8.0.0.RC10"
+#         output_version (list): an empty list, which will be filled iteratively
+#     Returns:
+#         list: the version/tag string in a list with integers and strings i.e. [8, '.', 0, '.', 0, '.RC', 10]
+#     """
+#     if type(input_version) != str:
+#         raise TypeError(
+#             "The provided version should be a str data type but is of type {}.".format(
+#                 type(input_version)
+#             )
+#         )
+
+#     # when the part to split is only digits or no digits at all, the process is finished
+#     if (
+#         input_version.isdigit()
+#         or any(char.isdigit() for char in input_version) == False
+#     ):
+#         version = output_version + [input_version]
+#         return [int(segment) if segment.isdigit() else segment for segment in version]
+
+#     # otherwise check until what position it is a digit (since we want to keep i.e. a multiple digits number as one integer)
+#     pos = 0
+#     while (
+#         input_version[pos].isdigit() == input_version[pos + 1].isdigit()
+#         and pos != len(input_version) - 2
+#     ):  #
+#         pos += 1
+
+#     return recursively_split_version_string(
+#         input_version[pos + 1 :], output_version + [input_version[: pos + 1]]
+#     )
+
+
+# def get_tag_for_version(tags, version):
+#     """
+#     Map a version onto an existing tag
+#     Input:
+#         tags (list): a list of tags to map version onto
+#         version (str): the version
+#     Returns:
+#         list: list with tags that could be the version
+#         @TODO: only return the most relevant tag i.e. for key 8 version 4.1 returns ['version-3.4.1', 'version-4.1', 'version-4.4.1']
+#     """
+#     if isinstance(tags, tuple):
+#         tags = list(tags)
+#     if type(tags) != list or len(tags) == 0:
+#         raise ValueError(
+#             "tags should be a list of tags to map the version onto, is a {} of length {}".format(
+#                 type(tags), len(tags)
+#             )
+#         )
+
+#     # stripped_tags = [tag[len(tag)-len(version):] for tag in tags]
+#     stripped_tags = [
+#         tag[
+#             tag.index(
+#                 [
+#                     str(value)
+#                     for value in recursively_split_version_string(tag)
+#                     if type(value) == int
+#                 ][0]
+#             ) :
+#         ]
+#         if any(char.isdigit() for char in tag)
+#         else tag
+#         for tag in tags
+#     ]
+# print(stripped_tags)
+# stripped_tags = []
+# stripped_version = (
+#     version[
+#         version.index(
+#             [
+#                 str(value)
+#                 for value in recursively_split_version_string(version)
+#                 if type(value) == int
+#             ][0]
+#         ) :
+#     ]
+#     if any(char.isdigit() for char in version)
+#     else version
+# )
+# print(stripped_version)
+
+# if version in tags and tags.count(version) == 1:
+#     tag = version
+# elif version in stripped_tags and stripped_tags.count(version) == 1:
+#     tag = tags[stripped_tags.index(version)]
+# elif version in stripped_tags and stripped_tags.count(version) > 1:
+#     return [
+#         tags[index] for index, tag in enumerate(stripped_tags) if tag == version
+#     ]
+# elif (
+#     stripped_version in stripped_tags and stripped_tags.count(stripped_version) == 1
+# ):
+#     tag = tags[stripped_tags.index(stripped_version)]
+# elif (
+#     stripped_version in stripped_tags and stripped_tags.count(stripped_version) > 1
+# ):
+#     return [
+#         tags[index]
+#         for index, tag in enumerate(stripped_tags)
+#         if tag == stripped_version
+#     ]
+
+# else:
+#     version = re.sub("[^0-9]", "", version)
+#     best_match = ("", 0.0)
+#     for tag in tags:
+#         t_strip = re.sub("[^0-9]", "", tag)
+#         match_score = difflib.SequenceMatcher(None, t_strip, version).ratio()
+#         if match_score > best_match[1]:
+#             best_match = (tag, match_score)
+#     tag = best_match[0]
+# return [tag]
 
 
 # def get_timestamp_for_tag(tag, git_repo):

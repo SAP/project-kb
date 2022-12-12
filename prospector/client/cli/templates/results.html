@@ -13,50 +13,45 @@
                     </div>
                     <div class="col col-auto align-self-end mb-2">
                         <span class="popuptext" id="copy-popup">Copied!</span>
-                        <a target="_blank" class="btn btn-primary btn-sm" onclick="copyToClipboard()">Copy
+                        <a target="_blank" class="btn btn-primary btn-sm" id="clipboardCopyButton">Copy
                             to clipboard</a>
-                        <a target="_blank" class="btn btn-primary btn-sm" onclick="downloadAsFile()">Download
+                        <a target="_blank" class="btn btn-primary btn-sm" id="downloadYamlButton">Download
                             as YAML statement</a>
                     </div>
 
                 </div>
                 <div id="col accordion">
                     {% for annotated_commit in candidates %}
-                    {% if annotated_commit.relevance > 10 %}
                     <div class="card commit d-flex"
                         data-annotations="{{ annotated_commit.matched_rules | tojson | forceescape }}"
                         data-relevances="{{annotated_commit.relevance}}">
-                        {% else %}
-                        <div class="card commit d-none"
-                            data-annotations="{{ annotated_commit.matched_rules | tojson | forceescape }}"
-                            data-relevances="{{annotated_commit.relevance}}">
-                            {% endif %}
 
-                            <div class="card-header" id="candidateheader{{ loop.index }}">
-                                {% include "card/commit_header.html" %}
-                            </div>
+                        <div class="card-header" id="candidateheader{{ loop.index }}">
+                            {% include "card/commit_header.html" %}
+                        </div>
 
 
 
 
-                            <div id="candidatebody-{{ loop.index }}" class="collapse show"
-                                aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
-                                <div class="card-body">
-                                    {% include "card/commit_title_block.html" %}
-                                    {% include "card/matched_rules_block.html" %}
-                                    {% include "card/message_block.html" %}
-                                    {% include "card/changed_paths_block.html" %}
-                                    {% include "card/mentioned_cves_block.html" %}
-                                    <!-- {% include "card/pages_linked_from_advisories_block.html" %} -->
-                                </div>
+                        <div id="candidatebody-{{ loop.index }}" class="collapse hide"
+                            aria-labelledby="candidateheader-{{ loop.index }}" data-parent="#accordion">
+                            <div class="card-body">
+                                {% include "card/commit_title_block.html" %}
+                                {% include "card/matched_rules_block.html" %}
+                                {% include "card/message_block.html" %}
+                                {% include "card/changed_paths_block.html" %}
+                                {% include "card/twin_list_block.html" %}
+                                <!-- {% include "card/pages_linked_from_advisories_block.html" %} -->
                             </div>
                         </div>
-                        {% endfor %}
                     </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-    {% include "filtering_scripts.html" %}
-    {% include "collapse_all_scripts.html" %}
-    {% endblock %}
+</div>
+
+{% include "filtering_scripts.html" %}
+{% include "collapse_all_scripts.html" %}
+{% endblock %}

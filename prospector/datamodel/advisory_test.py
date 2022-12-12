@@ -1,3 +1,5 @@
+import time
+
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
 
 ADVISORY_TEXT = """Unspecified vulnerability in Uconnect before 15.26.1, as used
@@ -15,6 +17,42 @@ the same value, thus possibly providing access to files in the parent directory,
 but not further above (thus "limited" path traversal), if the calling code would
 use the result to construct a path value."""
 
+cve_list = """
+CVE-2020-13924
+CVE-2020-11987
+CVE-2020-17516
+CVE-2021-25640
+CVE-2020-11995
+CVE-2021-25646
+CVE-2020-13922
+CVE-2020-17514
+CVE-2020-11997
+CVE-2020-9492
+CVE-2020-1926
+CVE-2020-13950
+CVE-2020-35452
+CVE-2021-20190
+CVE-2020-27223
+CVE-2020-9493
+CVE-2020-17534
+CVE-2021-21295
+CVE-2021-25958
+CVE-2020-17532
+CVE-2020-17523
+CVE-2020-1946
+CVE-2020-17525
+CVE-2020-13949
+CVE-2021-25122
+CVE-2020-17522
+CVE-2020-13936
+CVE-2020-13959
+CVE-2021-23926
+CVE-2020-11988
+CVE-2019-10095
+CVE-2020-13929"""
+
+test = """The Apache Beam MongoDB connector in versions 2.10.0 to 2.16.0 has an option to disable SSL trust verification. However this configuration is not respected and the certificate verification disables trust verification in every case. This exclusion also gets registered globally which disables trust checking for any code running in the same JVM."""
+
 
 def test_advisory_basic():
     adv = AdvisoryRecord(
@@ -31,13 +69,12 @@ def test_advisory_basic():
 def test_get_advisory():
     advisory = AdvisoryRecord("CVE-2021-22696")
     advisory.get_advisory()
-    print(advisory.__dict__)
     assert advisory.cve_id == "CVE-2021-22696"
-    assert ("3.4.0", "3.4.3") in advisory.versions
+    assert "3.4.0" in advisory.versions["affected"]
+    assert "3.4.3" in advisory.versions["fixed"]
 
 
 def test_build_advisory_record():
-    advisory = build_advisory_record("CVE-2014-0050")
-    print(advisory.__dict__)
-    assert advisory.cve_id == "CVE-2014-0050"
-    assert advisory.versions == []
+    advisory = build_advisory_record("CVE-2021-29943", fetch_references=True)
+
+    assert advisory.cve_id == "CVE-2021-29943"

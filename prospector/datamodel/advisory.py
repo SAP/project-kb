@@ -1,15 +1,21 @@
 import logging
 import os
-from typing import List, Set, Tuple
+import re
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
 from dateutil.parser import isoparse
 
 from log.logger import get_level, logger, pretty_log
-from util.http import fetch_url
+from util.http import extract_from_webpage, fetch_url
 
-from .nlp import extract_affected_filenames, extract_products, extract_words_from_text
+from .nlp import (
+    extract_affected_filenames,
+    extract_products,
+    extract_references_keywords,
+    extract_words_from_text,
+)
 
 ALLOWED_SITES = [
     "github.com",
@@ -51,62 +57,65 @@ class AdvisoryRecord:
         description: str = "",
         published_timestamp: int = 0,
         last_modified_timestamp: int = 0,
-        references: List[str] = None,
-        references_content: List[str] = None,
+        references: Dict[str, List[str]] = None,
+        # references: List[str] = None,
+        # references_content: List[str] = None,
         affected_products: List[str] = None,
-        versions: List[Tuple[str, str]] = None,
+        versions: Dict[str, List[str]] = None,
         files: Set[str] = None,
         keywords: Set[str] = None,
+        files_extensions: Set[str] = None,
     ):
         self.cve_id = cve_id
         self.description = description
         self.published_timestamp = published_timestamp
         self.last_modified_timestamp = last_modified_timestamp
-        self.references = references or list()
-        self.references_content = references_content or list()
+        self.references = references or dict()
+        # self.references_content = references_content or list()
         self.affected_products = affected_products or list()
-        self.versions = versions or list()
+        self.versions = versions or dict()
         self.files = files or set()
         self.keywords = keywords or set()
+        self.files_extension = files_extensions or set()
 
     def analyze(
         self,
         fetch_references: bool = False,
     ):
-        self.versions = [
-            version for version in self.versions if version[0] != version[1]
-        ]
+        # self.versions = [
+        #     version for version in self.versions if version[0] != version[1]
+        # ]
         # self.versions.extend(extract_versions(self.description))
         # self.versions = list(set(self.versions))
 
         self.affected_products.extend(extract_products(self.description))
         self.affected_products = list(set(self.affected_products))
 
+        files, extension = extract_affected_filenames(self.description)
+        self.files_extension = extension
         # TODO: this could be done on the words extracted from the description
-        self.files.update(extract_affected_filenames(self.description))
+        self.files.update(files)
 
-        self.keywords.update(extract_words_from_text(self.description))
+        self.keywords.update(set(extract_words_from_text(self.description)))
 
         logger.debug("References: " + str(self.references))
         # TODO: misses something because of subdomains not considered e.g. lists.apache.org
 
-        self.references = [
-            r
+        self.references = {
+            r: extract_references_keywords(fetch_url(r)) if fetch_references else []
             for r in self.references
             if ".".join(urlparse(r).hostname.split(".")[-2:]) in ALLOWED_SITES
-        ]
-        logger.debug("Relevant references: " + str(self.references))
-
-        if fetch_references:
-            self.references_content = [
-                " ".join(str(fetch_url(r)).split()) for r in self.references
-            ]
+        }
+        # TODO: I should extract interesting stuff from the references immediately ad maintain them just for a fast lookup
+        logger.debug(f"Relevant references: {len(self.references)}")
 
     def get_advisory(self):
-        data = get_from_local(self.cve_id) or get_from_nvd(self.cve_id)
+        data = get_from_local(self.cve_id)
+        if not data:
+            data = get_from_nvd(self.cve_id)
 
-        if data is None:
-            raise Exception("Backend error and NVD error. Missing API key?")
+        if not data:
+            raise Exception("Backend error and NVD error. Wrong API key?")
 
         self.parse_advisory(data)
 
@@ -115,13 +124,26 @@ class AdvisoryRecord:
         self.last_modified_timestamp = int(isoparse(data["lastModified"]).timestamp())
         self.description = data["descriptions"][0]["value"]
         self.references = [r["url"] for r in data.get("references", [])]
-        self.versions = [
-            (
-                item.get("versionStartIncluding", item.get("versionStartExcluding")),
-                item.get("versionEndExcluding", item.get("versionEndIncluding")),
-            )
-            for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
+        self.versions = {
+            "affected": [
+                item.get("versionEndIncluding", item.get("versionStartIncluding"))
+                for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
+            ],  # TODO: can return to tuples
+            "fixed": [
+                item.get("versionEndExcluding")
+                for item in data["configurations"][0]["nodes"][0]["cpeMatch"]
+            ],
+        }
+        self.versions["affected"] = [
+            v for v in self.versions["affected"] if v is not None
         ]
+        self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
+
+    def get_fixing_commit(self) -> Optional[str]:
+        for reference in self.references.keys():
+            if "github.com" in reference and "commit" in reference:
+                return reference.split("/")[-1]
+        return None
 
 
 def get_from_nvd(cve_id: str):
@@ -157,14 +179,13 @@ def get_from_local(vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOIN
 
 def build_advisory_record(
     cve_id: str,
-    description: str = None,
-    nvd_rest_endpoint: str = None,
+    description: Optional[str] = None,
+    nvd_rest_endpoint: Optional[str] = None,
     fetch_references: bool = False,
     use_nvd: bool = True,
-    publication_date: str = None,
-    advisory_keywords: Set[str] = None,
-    modified_files: Set[str] = None,
-    filter_extensions: List[str] = None,
+    publication_date: Optional[str] = None,
+    advisory_keywords: Set[str] = set(),
+    modified_files: Optional[str] = None,
 ) -> AdvisoryRecord:
 
     advisory_record = AdvisoryRecord(
@@ -187,11 +208,11 @@ def build_advisory_record(
             isoparse(publication_date).timestamp()
         )
 
-    if advisory_keywords and len(advisory_keywords) > 0:
-        advisory_record.keywords.update(advisory_keywords)
+    if len(advisory_keywords) > 0:
+        advisory_record.keywords = advisory_keywords
 
     if modified_files and len(modified_files) > 0:
-        advisory_record.files.update(modified_files)
+        advisory_record.files.update(set(modified_files.split(",")))
 
     logger.debug(f"{advisory_record.keywords=}")
     logger.debug(f"{advisory_record.files=}")
