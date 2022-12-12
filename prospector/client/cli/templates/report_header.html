@@ -15,6 +15,14 @@
                 All</button>
         </div>
     </div>
+    {% if candidates|length == 1 and candidates[0].relevance >= 30%}
+    <div class="warning-msg" style="margin-top: 3ex">
+        <h3 class="text-warning">Warning!</h3>
+        <p class="text-justify">The fixing commit was found in the advisory references, Prospector was runned only to
+            look for twins</p>
+    </div>
+    {% endif %}
+
 
     <div class="advisory-record" style="margin-top: 3ex">
         <h3>Advisory Record</h3>

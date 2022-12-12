@@ -34,37 +34,38 @@ core_statistics = execution_statistics.sub_collection("core")
 
 
 def prospector_find_twins(
-    vulnerability_id: str,
-    repository_url: str,
+    advisory_record: AdvisoryRecord,
+    repository: Git,
     commit_id: str,
-    git_cache: str = "/tmp/git_cache",
 ):
-    advisory_record = build_advisory_record(
-        vulnerability_id,
-    )
-    repository = Git(repository_url, git_cache)
-    repository.clone()
 
     # tags = repository.get_tags()
 
     commits = repository.find_commits_for_twin_lookups(commit_id=commit_id)
+    commits, _ = filter_commits(commits)
     preprocessed_commits = list()
     pbar = tqdm(
         list(commits.values()),
-        desc="Preprocessing commits",
+        desc="Searching twins",
         unit="commit",
     )
     for raw_commit in pbar:
-        preprocessed_commits.append(make_from_raw_commit(raw_commit))
+        preprocessed_commits.append(make_from_raw_commit(raw_commit, simplify=True))
 
-    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, None)
+    ranked_candidates = evaluate_commits(
+        preprocessed_commits,
+        advisory_record,
+        ["COMMIT_HAS_TWINS", "COMMIT_IN_ADVISORY"],
+    )
 
     ConsoleWriter.print("Commit ranking and aggregation...")
     # I NEED TO GET THE FIRST REACHABLE TAG OR NO-TAG
-    ranked_candidates = tag_and_aggregate_commits(ranked_candidates, None)
+    # ranked_candidates = tag_and_aggregate_commits(ranked_candidates, None)
     ConsoleWriter.print_(MessageStatus.OK)
 
-    return ranked_candidates, advisory_record
+    return [
+        commit for commit in ranked_candidates if commit.commit_id == commit_id
+    ], advisory_record
 
 
 # @profile
@@ -87,6 +88,7 @@ def prospector(  # noqa: C901
     use_backend: str = "always",
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
+    ignore_adv_refs: bool = False,
     rules: List[str] = ["ALL"],
 ) -> Tuple[List[Commit], AdvisoryRecord]:
 
@@ -107,9 +109,6 @@ def prospector(  # noqa: C901
             set(modified_files),
         )
 
-    fixing_commit = advisory_record.get_fixing_commit()
-    if fixing_commit is not None:
-        pass
     # obtain a repository object
     repository = Git(repository_url, git_cache)
 
@@ -121,6 +120,12 @@ def prospector(  # noqa: C901
 
         logger.debug(f"Found tags: {tags}")
         logger.info(f"Done retrieving {repository.url}")
+
+    fixing_commit = advisory_record.get_fixing_commit()
+    if fixing_commit is not None and not ignore_adv_refs:
+        ConsoleWriter.print("Fixing commit was found in the advisory")
+        ConsoleWriter.print("Looking for twins of fixing commit")
+        return prospector_find_twins(advisory_record, repository, fixing_commit)
 
     # if tag_interval and len(tag_interval) > 0:
     #     prev_tag, next_tag = tag_interval.split(":")

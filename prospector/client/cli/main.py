@@ -79,6 +79,7 @@ def main(argv):  # noqa: C901
         use_backend=config.use_backend,
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
+        ignore_adv_refs=config.ignore_refs,
     )
 
     if config.preprocess_only:
