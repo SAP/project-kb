@@ -118,6 +118,13 @@ def parse_cli_args(args):
         help="Set the logging level",
     )
 
+    parser.add_argument(
+        "--ignore-refs",
+        type=bool,
+        default=False,
+        help="Whether to ignore the fact that the fixing commit is reachable directly from the advisory",
+    )
+
     return parser.parse_args()
 
 
@@ -125,7 +132,6 @@ def parse_config_file(filename: str = "config.yaml"):
     if os.path.isfile(filename):
         logger.info(f"Loading configuration from {filename}")
         config = OmegaConf.load(filename)
-        print(config.database)
         return config
 
     return None
@@ -155,6 +161,7 @@ class Config:
         ping: bool,
         log_level: str,
         git_cache: str,
+        ignore_refs: bool,
     ):
         self.cve_id = cve_id
         self.repository = repository
@@ -176,6 +183,7 @@ class Config:
         self.ping = ping
         self.log_level = log_level
         self.git_cache = git_cache
+        self.ignore_refs = ignore_refs
 
 
 def get_configuration(argv):
@@ -204,4 +212,5 @@ def get_configuration(argv):
         ping=args.ping,
         git_cache=conf.git_cache,
         log_level=args.log_level or conf.log_level,
+        ignore_refs=args.ignore_refs,
     )

@@ -208,14 +208,14 @@ class Git:
 
         if next_tag:
             until = self.extract_tag_timestamp(next_tag) + TEN_DAYS_TIME_DELTA
-            if until:
-                cmd += f" --until={until}"
+        if until:
+            cmd += f" --until={until}"
 
         # TODO: if find twins is true, we dont need the ancestors, only the timestamps
         if prev_tag:
             since = self.extract_tag_timestamp(prev_tag) - TEN_DAYS_TIME_DELTA
-            if since:
-                cmd += f" --since={since}"
+        if since:
+            cmd += f" --since={since}"
 
         if filter_extension:
             cmd += " *." + " *.".join(filter_extension)

@@ -81,21 +81,13 @@ def apply_rules(
 
 def get_enabled_rules(rules: List[str]) -> List[Rule]:
 
-    return RULES
-    enabled_rules = []
-
     if "ALL" in rules:
-        enabled_rules = RULES
+        return RULES
 
-    for r in rules:
-        if r == "ALL":
-            continue
-        if r[0] != "-":
-            enabled_rules.append(RULES.pop)
-        elif r[0] == "-":
-            rule_to_exclude = r[1:]
-            if rule_to_exclude in enabled_rules:
-                del enabled_rules[rule_to_exclude]
+    enabled_rules = []
+    for r in RULES:
+        if r.id in rules:
+            enabled_rules.append(r)
 
     return enabled_rules
 
@@ -183,12 +175,6 @@ class AdvKeywordsInMsg(Rule):
         #         if m.group(1).casefold() not in candidate.repository
         #     ]
         # )
-        # if candidate.commit_id == "0e826ceae97a1258cb15c73a3072118c920e8654":
-        #     print("\n" + "\n")
-        #     print(regex)
-        #     print(advisory_record.keywords)
-        #     print(candidate.message)
-        #     print(matching_keywords)
         matching_keywords = set(
             [
                 token
@@ -405,7 +391,7 @@ class CommitHasTwins(Rule):
         return False
 
 
-RULES = [
+RULES: List[Rule] = [
     CveIdInMessage("CVE_ID_IN_MESSAGE", 30),
     CommitMentionedInAdv("COMMIT_IN_ADVISORY", 30),
     CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 30),

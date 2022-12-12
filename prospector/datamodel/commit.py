@@ -115,7 +115,7 @@ def apply_ranking(candidates: List[Commit]) -> List[Commit]:
     return sorted(candidates, reverse=True)
 
 
-def make_from_raw_commit(raw: RawCommit) -> Commit:
+def make_from_raw_commit(raw: RawCommit, simplify: bool = False) -> Commit:
     """
     This function is responsible of translating a RawCommit (git)
     into a preprocessed Commit, that can be saved to the DB
@@ -136,8 +136,12 @@ def make_from_raw_commit(raw: RawCommit) -> Commit:
     # Space-efficiency is important.
     commit.minhash = get_encoded_minhash(raw.get_msg(50))
 
+    # commit.tags = raw.find_tags()
+    if simplify:
+        # commit.tags = [commit.tags[0]] if len(commit.tags) else ["no-tag"]
+        return commit
+
     commit.diff, commit.hunks = raw.get_diff()
-    commit.tags = raw.find_tags()
     commit.jira_refs = extract_jira_references(commit.repository, commit.message)
     commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
     commit.cve_refs = extract_cve_references(commit.message)
