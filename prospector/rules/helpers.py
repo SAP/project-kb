@@ -164,23 +164,6 @@ def extract_referred_to_by_nvd(
 #     return True
 
 
-# TODO: implement this properly
-def extract_commit_mentioned_in_linked_pages(
-    commit: Commit, advisory_record: AdvisoryRecord
-) -> int:
-
-    # TODO: convert advisory.references to a dictionary (the key must be the url,
-    # else we cannot say in which side we found a reference to the commit at hand,
-    # when we find one);
-    # for now, we can only return an integer from this function, but not ideal
-    matching_references_count = 0
-    for content_of_reference in advisory_record.references.values():
-        if commit.commit_id[:8] in content_of_reference:
-            matching_references_count += 1
-
-    return matching_references_count
-
-
 # # Unused
 # def extract_path_similarities(commit: Commit, advisory_record: AdvisoryRecord):
 #     similarities = pandas.DataFrame(
