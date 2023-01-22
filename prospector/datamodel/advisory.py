@@ -40,6 +40,8 @@ ALLOWED_SITES = [
     "openstack.org",
     "python.org",
     "pypi.org",
+    "bugzilla.redhat.com",
+    "redhat.com",
 ]
 
 
@@ -57,9 +59,7 @@ class AdvisoryRecord:
         description: str = "",
         published_timestamp: int = 0,
         last_modified_timestamp: int = 0,
-        references: Dict[str, List[str]] = None,
-        # references: List[str] = None,
-        # references_content: List[str] = None,
+        references: Dict[str, str] = None,
         affected_products: List[str] = None,
         versions: Dict[str, List[str]] = None,
         files: Set[str] = None,
@@ -71,7 +71,6 @@ class AdvisoryRecord:
         self.published_timestamp = published_timestamp
         self.last_modified_timestamp = last_modified_timestamp
         self.references = references or dict()
-        # self.references_content = references_content or list()
         self.affected_products = affected_products or list()
         self.versions = versions or dict()
         self.files = files or set()
@@ -80,13 +79,8 @@ class AdvisoryRecord:
 
     def analyze(
         self,
-        fetch_references: bool = False,
+        fetch_references: bool = True,
     ):
-        # self.versions = [
-        #     version for version in self.versions if version[0] != version[1]
-        # ]
-        # self.versions.extend(extract_versions(self.description))
-        # self.versions = list(set(self.versions))
 
         self.affected_products.extend(extract_products(self.description))
         self.affected_products = list(set(self.affected_products))
@@ -97,17 +91,39 @@ class AdvisoryRecord:
         self.files.update(files)
 
         self.keywords.update(set(extract_words_from_text(self.description)))
+        # TODO: misses something because of subdomains not considered e.g. lists.apache.org
+        self.parse_references_from_third_party()
+        self.fetch_references()
 
         logger.debug("References: " + str(self.references))
-        # TODO: misses something because of subdomains not considered e.g. lists.apache.org
 
-        self.references = {
-            r: extract_references_keywords(fetch_url(r)) if fetch_references else []
-            for r in self.references
-            if ".".join(urlparse(r).hostname.split(".")[-2:]) in ALLOWED_SITES
-        }
         # TODO: I should extract interesting stuff from the references immediately ad maintain them just for a fast lookup
         logger.debug(f"Relevant references: {len(self.references)}")
+
+    def fetch_references(self):
+        # Clean useless github references
+        self.references = {
+            k: v
+            for k, v in self.references.items()
+            if "github.com" not in k
+            or ("github.com" in k and ("issues" in k or "pull" in k or "commit" in k))
+        }
+
+        for reference in list(self.references.keys()):
+            ref = (
+                extract_references_keywords(fetch_url(reference))
+                if ".".join(urlparse(reference).hostname.split(".")[-2:])
+                in ALLOWED_SITES
+                else ""
+            )
+            if ref != "" and ref not in self.references:
+                self.references.update({ref: reference})
+
+    def parse_references_from_third_party(self):
+        """Parse the references from third party sites"""
+        for ref in self.search_references_debian_sec_tracker():
+            if ref not in self.references:
+                self.references[ref] = "security-tracker.debian.org"
 
     def get_advisory(self):
         data = get_from_local(self.cve_id)
@@ -123,7 +139,7 @@ class AdvisoryRecord:
         self.published_timestamp = int(isoparse(data["published"]).timestamp())
         self.last_modified_timestamp = int(isoparse(data["lastModified"]).timestamp())
         self.description = data["descriptions"][0]["value"]
-        self.references = [r["url"] for r in data.get("references", [])]
+        self.references = {r["url"]: "" for r in data.get("references", [])}
         self.versions = {
             "affected": [
                 item.get("versionEndIncluding", item.get("versionStartIncluding"))
@@ -139,11 +155,38 @@ class AdvisoryRecord:
         ]
         self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
 
-    def get_fixing_commit(self) -> Optional[str]:
-        for reference in self.references.keys():
-            if "github.com" in reference and "commit" in reference:
-                return reference.split("/")[-1]
-        return None
+    def get_fixing_commit(self, repository_url: str = "") -> List[str]:
+        repo_references = [
+            r
+            for r in self.references.keys()
+            if r.startswith(repository_url) and "/commit/" in r
+        ]
+        if len(repo_references) == 0:
+            repo_references = [
+                r
+                for r in self.references
+                if bool(re.match(r"github\.com\/(?:\w+|\/){3}\/commit\/\w+", r))
+            ]
+        return [
+            re.sub(r"[^0-9a-z]", "", reference.split("/")[-1][:40])
+            for reference in repo_references
+        ]
+
+    def search_references_debian_sec_tracker(self) -> List[str]:
+        url = "https://security-tracker.debian.org/tracker/"
+        content = fetch_url(url + self.cve_id, False)
+        if content is None:
+            return []
+
+        notes = content.find("pre")
+        # print(notes.get_text().split("https://"))
+        if notes is not None:
+            links = notes.find_all("a", href=True)
+            # for link in links:
+            #     print(str(notes).split(str(link)))
+            return [a["href"] for a in links]
+
+        return []
 
 
 def get_from_nvd(cve_id: str):
@@ -218,33 +261,3 @@ def build_advisory_record(
     logger.debug(f"{advisory_record.files=}")
 
     return advisory_record
-
-
-# might be used in the future
-# @dataclass
-# class Reference:
-#     """
-#     Used for analyzing the references
-#     """
-
-#     url: str
-#     repo_url: str
-
-#     # TODO we do not need a class for this, this is a collection of
-#     # functions, with not state at all, they can become part of some
-#     # other general string analysis module
-#     def __post_init__(self):
-#         # TODO this is not general (the .git suffix can be stripped only for github)
-#         self.repo_url = re.sub(r"\.git$|/$", "", self.repo_url)
-
-#     def is_pull_page(self):
-#         return self.repo_url + "/pull/" in self.url
-
-#     def is_issue_page(self):
-#         return self.repo_url + "/issues/" in self.url
-
-#     def is_tag_page(self):
-#         return self.repo_url + "/releases/tag/" in self.url
-
-#     def is_commit_page(self):
-#         return self.repo_url + "/commit/" in self.url
