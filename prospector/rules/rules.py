@@ -5,10 +5,7 @@ from typing import List, Tuple
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.nlp import clean_string, find_similar_words
-from rules.helpers import (
-    extract_commit_mentioned_in_linked_pages,
-    extract_security_keywords,
-)
+from rules.helpers import extract_security_keywords
 from stats.execution import Counter, execution_statistics
 from util.lsh import build_lsh_index, decode_minhash
 
@@ -150,7 +147,7 @@ class ChangesRelevantFiles(Rule):
                 for file in candidate.changed_files
                 for adv_file in advisory_record.files
                 if adv_file.casefold() in file.casefold()
-                and adv_file.casefold() not in candidate.repository
+                and adv_file.casefold() not in candidate.repository.split("/")
                 and len(adv_file)
                 > 3  # TODO: when fixed extraction the >3 should be useless
             ]
@@ -204,7 +201,7 @@ class ChangesRelevantCode(Rule):
                 if (
                     word not in matching_keywords
                     and word in diffline
-                    and word.casefold() not in candidate.repository
+                    and word.casefold() not in candidate.repository.split("/")
                     and "diff --git" not in diffline
                     and "---" not in diffline
                     and "+++" not in diffline
@@ -251,20 +248,10 @@ class CommitMentionedInAdv(Rule):
     """Matches commits that are linked in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        for ref in advisory_record.references:
-            if candidate.commit_id[:8] in ref:
+        for ref, src in advisory_record.references.items():
+            if candidate.commit_id[:8] in ref and len(src) == 0:
                 self.message = "The commit is mentioned in the advisory page"
                 return True
-        # matching_references = set(
-        #     [
-        #         ref
-        #         for ref in advisory_record.references
-        #         if candidate.commit_id[:8] in ref
-        #     ]
-        # )
-        # if len(matching_references) > 0:
-        #     self.message = "The advisory mentions the commit directly"  #: {', '.join(matching_references)}"
-        #     return True
         return False
 
 
@@ -363,22 +350,22 @@ class CrossReferencedGhLink(Rule):
         return False
 
 
-# TODO: implement this properly as it is not working
 class CommitMentionedInReference(Rule):
     """Matches commits that are mentioned in any of the links contained in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if extract_commit_mentioned_in_linked_pages(candidate, advisory_record):
-            self.message = "A page linked in the advisory mentions this commit"
-
-            return True
+        for ref, src in advisory_record.references.items():
+            if candidate.commit_id[:8] in ref and len(src) > 0:
+                self.message = f"{src} mention this commit."
+                return True
         return False
 
 
 class CommitHasTwins(Rule):
     def apply(self, candidate: Commit, _: AdvisoryRecord) -> bool:
-        if not Rule.lsh_index.is_empty():
-
+        if not Rule.lsh_index.is_empty() and not bool(
+            re.match(r"Merge", candidate.message, flags=re.IGNORECASE)
+        ):
             twin_list = Rule.lsh_index.query(decode_minhash(candidate.minhash))
             # twin_list.remove(candidate.commit_id)
             candidate.twins = [
