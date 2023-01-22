@@ -83,6 +83,7 @@ def extract_products(text: str) -> List[str]:
     )
 
 
+# TODO: add list of non-relevant or relevant extensions
 def extract_affected_filenames(
     text: str, extensions: List[str] = RELEVANT_EXTENSIONS
 ) -> Tuple[Set[str], Set[str]]:
@@ -91,10 +92,12 @@ def extract_affected_filenames(
     for word in text.split():
         res = re.sub(r"^[^a-z0-9]+|[^a-z0-9]+$", "", word, flags=re.IGNORECASE)
         res = re.split(r"[\\\/]", res)[-1]
+        if res == "Node.js":
+            continue
         res, ext = extract_filename(res, extensions)
         if len(res) > 0:
             files.update(res)
-        if ext is not None:
+        if ext is not None and ext not in ("yml", "yaml"):
             extension.add(ext)
 
     return files, extension
@@ -138,12 +141,14 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
         gh_ref_data = content.find_all(
             attrs={
                 "class": ["comment-body", "markdown-title"],
-            }
+            },
+            recursive=False,
         )
+        # TODO: when an issue/pr is referenced somewhere, the page contains also the "message" of that reference (e.g. a commit). This may lead to unwanted detection of certain rules.
         gh_ref_data.extend(
             content.find_all(
                 attrs={
-                    "id": re.compile(r"ref-issue|ref-pullrequest|ref-commit"),
+                    "id": re.compile(r"ref-issue|ref-pullrequest"),
                 }
             )
         )
@@ -179,12 +184,13 @@ def extract_cve_references(text: str) -> List[str]:
     return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
 
 
-def extract_references_keywords(text: str) -> List[str]:
+def extract_references_keywords(text: str) -> str:
     """
     Extract keywords that refer to references
     """
-    return [
-        result.group(0)
-        for result in re.finditer(r"[A-Z]{2,}-\d+|github\.com\/(?:\w+|\/)*", text)
-        if "CVE" not in result.group(0)
-    ]
+    # SHould probably look for hrefs too
+    result = re.search(r"github\.com\/(?:\w+|\/){3}\/commit\/\w+", text)
+    if result is not None:
+        return result.group(0)
+    else:
+        return ""
