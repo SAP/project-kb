@@ -8,7 +8,7 @@ NON_RELEVANT_FILES = [
     ".md",
     ".txt",
     ".rst",
-    "docs/",
+    "/docs/",
     ".meta",
     ".utf8",
     "README",
