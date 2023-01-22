@@ -98,6 +98,7 @@ class Commit(BaseModel):
             "jira_refs": self.jira_refs,
             "ghissue_refs": self.ghissue_refs,
             "cve_refs": self.cve_refs,
+            "twins": self.twins,
             "tags": self.tags,
         }
         if not no_hash:
@@ -136,10 +137,11 @@ def make_from_raw_commit(raw: RawCommit, simplify: bool = False) -> Commit:
     # Space-efficiency is important.
     commit.minhash = get_encoded_minhash(raw.get_msg(50))
 
-    # commit.tags = raw.find_tags()
     if simplify:
         # commit.tags = [commit.tags[0]] if len(commit.tags) else ["no-tag"]
         return commit
+    else:
+        commit.tags = raw.find_tags()
 
     commit.diff, commit.hunks = raw.get_diff()
     commit.jira_refs = extract_jira_references(commit.repository, commit.message)
