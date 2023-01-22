@@ -69,7 +69,6 @@ def main(argv):  # noqa: C901
         repository_url=config.repository,
         publication_date=config.pub_date,
         vuln_descr=config.description,
-        # tag_interval=config.tag_interval,
         version_interval=config.version_interval,
         modified_files=config.modified_files,
         advisory_keywords=config.keywords,

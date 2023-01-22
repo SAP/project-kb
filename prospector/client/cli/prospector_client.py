@@ -36,12 +36,16 @@ core_statistics = execution_statistics.sub_collection("core")
 def prospector_find_twins(
     advisory_record: AdvisoryRecord,
     repository: Git,
-    commit_id: str,
+    commit_ids: List[str],
 ):
-
+    commits: Dict[str, RawCommit] = dict()
     # tags = repository.get_tags()
+    for commit_id in commit_ids:
+        commits = commits | repository.find_commits_for_twin_lookups(
+            commit_id=commit_id
+        )
+        print("05531fc4080ae24070930d15ae0cea7ae056457d" in commits)
 
-    commits = repository.find_commits_for_twin_lookups(commit_id=commit_id)
     commits, _ = filter_commits(commits)
     preprocessed_commits = list()
     pbar = tqdm(
@@ -55,7 +59,7 @@ def prospector_find_twins(
     ranked_candidates = evaluate_commits(
         preprocessed_commits,
         advisory_record,
-        ["COMMIT_HAS_TWINS", "COMMIT_IN_ADVISORY"],
+        ["COMMIT_HAS_TWINS", "COMMIT_IN_ADVISORY", "COMMIT_IN_REFERENCE"],
     )
 
     ConsoleWriter.print("Commit ranking and aggregation...")
@@ -64,7 +68,7 @@ def prospector_find_twins(
     ConsoleWriter.print_(MessageStatus.OK)
 
     return [
-        commit for commit in ranked_candidates if commit.commit_id == commit_id
+        commit for commit in ranked_candidates if commit.relevance >= 30
     ], advisory_record
 
 
@@ -88,9 +92,9 @@ def prospector(  # noqa: C901
     use_backend: str = "always",
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    ignore_adv_refs: bool = False,
+    ignore_adv_refs: bool = False,  # TODO: change to False
     rules: List[str] = ["ALL"],
-) -> Tuple[List[Commit], AdvisoryRecord]:
+) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
 
     logger.debug(f"time-limit before: {TIME_LIMIT_BEFORE}")
     logger.debug(f"time-limit after: {TIME_LIMIT_AFTER}")
@@ -121,22 +125,39 @@ def prospector(  # noqa: C901
         logger.debug(f"Found tags: {tags}")
         logger.info(f"Done retrieving {repository.url}")
 
-    fixing_commit = advisory_record.get_fixing_commit()
-    if fixing_commit is not None and not ignore_adv_refs:
-        ConsoleWriter.print("Fixing commit was found in the advisory")
-        ConsoleWriter.print("Looking for twins of fixing commit")
-        return prospector_find_twins(advisory_record, repository, fixing_commit)
+    fixing_commit = advisory_record.get_fixing_commit(repository_url)
+    if len(fixing_commit) > 0 and not ignore_adv_refs:
+        ConsoleWriter.print("Fixing commit was found in the advisory\n")
+        ConsoleWriter.print("Looking for twins of fixing commit\n")
+        try:
+            commits, advisory = prospector_find_twins(
+                advisory_record, repository, fixing_commit
+            )
+            if len(commits) > 0:
+                return commits, advisory
 
-    # if tag_interval and len(tag_interval) > 0:
-    #     prev_tag, next_tag = tag_interval.split(":")
+            print(
+                "Fixing commit was not found in the repository, running in classic mode..."
+            )
+        except Exception as e:
+            print(
+                "Fixing commit was not found in the repository, running in classic mode..."
+            )
+            logger.error(e)
+
     if version_interval and len(version_interval) > 0:
         prev_tag, next_tag = get_possible_tags(tags, version_interval)
+        if prev_tag == "" and next_tag == "":
+            logger.info("Tag mismatch")
+            return None, -1
         ConsoleWriter.print(f"Found tags: {prev_tag} - {next_tag}")
+        logger.info(f"Found tags: {prev_tag} - {next_tag}")
         ConsoleWriter.print_(MessageStatus.OK)
     else:
         logger.info("No version/tag interval provided")
         console.print("No interval provided", status=MessageStatus.ERROR)
-        sys.exit(1)
+        # Tag Mismatch
+        return None, -1
 
     # retrieve of commit candidates
     candidates = get_candidates(
@@ -146,10 +167,17 @@ def prospector(  # noqa: C901
         next_tag,
         time_limit_before,
         time_limit_after,
-        limit_candidates,
     )
 
     candidates = filter(candidates)
+
+    if len(candidates) > limit_candidates:
+        logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
+
+        ConsoleWriter.print(
+            f"Found {len(candidates)} candidates, too many to proceed.",
+        )
+        return None, len(candidates)
 
     with ExecutionTimer(
         core_statistics.sub_collection("commit preprocessing")
@@ -321,7 +349,6 @@ def get_candidates(
     next_tag: str,
     time_limit_before: int,
     time_limit_after: int,
-    limit_candidates: int,
 ):
     with ExecutionTimer(
         core_statistics.sub_collection(name="retrieval of commit candidates")
@@ -348,15 +375,5 @@ def get_candidates(
             )
             logger.info("Found %d candidates" % len(candidates))
         writer.print(f"Found {len(candidates)} candidates")
-
-        if len(candidates) > limit_candidates:
-            logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
-
-            writer.print(
-                f"Found {len(candidates)} candidates, too many to proceed.",
-                status=MessageStatus.ERROR,
-            )
-            writer.print("Please try running the tool again.")
-            sys.exit(-1)
 
     return candidates
