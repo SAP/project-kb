@@ -201,18 +201,17 @@ class Git:
         since=None,
         until=None,
         filter_extension=None,
-        find_in_code="",
-        find_in_msg="",
     ) -> Dict[str, RawCommit]:
         cmd = f"git log --all --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
 
-        if next_tag:
+        # Since we found that the --since and --until use committer date, maybe we can remove the extra time delta.
+        # The fact that sometimes we could not find the commit in that interval could be explained by this fact.
+        if next_tag is not None:
             until = self.extract_tag_timestamp(next_tag) + TEN_DAYS_TIME_DELTA
         if until:
             cmd += f" --until={until}"
 
-        # TODO: if find twins is true, we dont need the ancestors, only the timestamps
-        if prev_tag:
+        if prev_tag is not None:
             since = self.extract_tag_timestamp(prev_tag) - TEN_DAYS_TIME_DELTA
         if since:
             cmd += f" --since={since}"
@@ -294,7 +293,8 @@ class Git:
         return best_match
 
     def extract_tag_timestamp(self, tag: str) -> int:
-        out = self.execute(f"git log -1 --format=%at {tag}")
+        # ct is committer date, it is the default for the research using --until and --since
+        out = self.execute(f"git log -1 --format=%ct {tag}")
         return int(out[0])
 
     def get_tags(self):
