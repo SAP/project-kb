@@ -97,7 +97,7 @@ def extract_affected_filenames(
         res, ext = extract_filename(res, extensions)
         if len(res) > 0:
             files.update(res)
-        if ext is not None and ext not in ("yml", "yaml"):
+        if ext is not None and ext not in ("yml", "yaml", "json", "bat"):
             extension.add(ext)
 
     return files, extension
@@ -134,7 +134,7 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     """
     refs = dict()
 
-    for result in re.finditer(r"(?:#|gh-)(\d+)", text):
+    for result in re.finditer(r"(?:#|gh-)(\d{1,6})", text):
         id = result.group(1)
         url = f"{repository}/issues/{id}"
         content = fetch_url(url=url, extract_text=False)
@@ -168,11 +168,10 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     if "apache" not in repository:
         return refs
 
-    for result in re.finditer(r"[A-Z]+-\d+", text):
+    for result in re.finditer(r"[A-Z]+-\d{1,6}", text):
         id = result.group()
-        if id.startswith("CVE-"):
-            continue
-        refs[id] = get_from_xml(id)
+        if not id.startswith("CVE-"):
+            refs[id] = get_from_xml(id)
 
     return refs
 
