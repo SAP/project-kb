@@ -1,10 +1,10 @@
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 from datamodel.commit import Commit
 from git.raw_commit import RawCommit
 
 NON_RELEVANT_FILES = [
-    "test",
+    "/test/",
     ".md",
     ".txt",
     ".rst",
@@ -23,7 +23,6 @@ NON_RELEVANT_FILES = [
 ]
 
 
-# TODO: this filtering should be done earlier to avoid useless commit preprocessing
 def filter_commits(
     candidates: Dict[str, RawCommit]
 ) -> Tuple[Dict[str, RawCommit], int]:
@@ -39,20 +38,40 @@ def filter_commits(
     MAX_FILES = 100
     MAX_MSG_LEN = 5000
 
+    old_length = len(candidates)
+    for commit in list(candidates.keys()):
+        if len(candidates[commit].changed_files) > MAX_FILES:
+            del candidates[commit]
+            # log deletion
+        elif len(candidates[commit].msg) > MAX_MSG_LEN:
+            del candidates[commit]
+            # log deletion
+        elif not contains_relevant_files(candidates[commit]):
+            del candidates[commit]
+            # log deletion
+        elif (
+            not contains_relevant_files(candidates[commit])
+            and len(candidates[commit].changed_files) != 0
+        ):
+            del candidates[commit]
+            # log deletion
+        else:
+            remove_irrelevant_files(candidates[commit])
+
     # Merge commits have zero modified files with git log, so we want to consider them
-    filtered_candidates = {
-        id: commit
-        for id, commit in candidates.items()
-        if len(commit.changed_files) <= MAX_FILES
-        and len(commit.msg) < MAX_MSG_LEN
-        and (contains_relevant_files(commit) or len(commit.changed_files) == 0)
-    }
+    # filtered_candidates = {
+    #     id: commit
+    #     for id, commit in candidates.items()
+    #     if len(commit.changed_files) <= MAX_FILES
+    #     and len(commit.msg) < MAX_MSG_LEN
+    #     and (contains_relevant_files(commit) or len(commit.changed_files) == 0)
+    # }
 
     # We remove the useless files so that they will not be considered later in the diffs
-    for _, commit in filtered_candidates.items():
-        remove_irrelevant_files(commit)
+    # for _, commit in filtered_candidates.items():
+    #     remove_irrelevant_files(commit)
 
-    return filtered_candidates, len(candidates) - len(filtered_candidates)
+    return candidates, len(candidates) - old_length
 
 
 def contains_relevant_files(commit: Commit) -> bool:
