@@ -101,14 +101,6 @@ class AdvisoryRecord:
         logger.debug(f"Relevant references: {len(self.references)}")
 
     def fetch_references(self):
-        # Clean useless github references
-        self.references = {
-            k: v
-            for k, v in self.references.items()
-            if "github.com" not in k
-            or ("github.com" in k and ("issues" in k or "pull" in k or "commit" in k))
-        }
-
         for reference in list(self.references.keys()):
             ref = (
                 extract_references_keywords(fetch_url(reference))
@@ -155,21 +147,11 @@ class AdvisoryRecord:
         ]
         self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
 
-    def get_fixing_commit(self, repository_url: str = "") -> List[str]:
-        repo_references = [
-            r
-            for r in self.references.keys()
-            if r.startswith(repository_url) and "/commit/" in r
-        ]
-        if len(repo_references) == 0:
-            repo_references = [
-                r
-                for r in self.references
-                if bool(re.match(r"github\.com\/(?:\w+|\/){3}\/commit\/\w+", r))
-            ]
+    def get_fixing_commit(self) -> List[str]:
         return [
-            re.sub(r"[^0-9a-z]", "", reference.split("/")[-1][:40])
-            for reference in repo_references
+            c.group(1)
+            for ref in self.references
+            if (c := re.search(r"github\.com\/(?:[\w-]+\/){2}commit\/(\w{6,40})", ref))
         ]
 
     def search_references_debian_sec_tracker(self) -> List[str]:
@@ -179,11 +161,8 @@ class AdvisoryRecord:
             return []
 
         notes = content.find("pre")
-        # print(notes.get_text().split("https://"))
         if notes is not None:
             links = notes.find_all("a", href=True)
-            # for link in links:
-            #     print(str(notes).split(str(link)))
             return [a["href"] for a in links]
 
         return []
