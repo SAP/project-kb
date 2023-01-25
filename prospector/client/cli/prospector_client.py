@@ -44,17 +44,21 @@ def prospector_find_twins(
         commits = commits | repository.find_commits_for_twin_lookups(
             commit_id=commit_id
         )
-        print("05531fc4080ae24070930d15ae0cea7ae056457d" in commits)
 
     commits, _ = filter_commits(commits)
-    preprocessed_commits = list()
-    pbar = tqdm(
-        list(commits.values()),
-        desc="Searching twins",
-        unit="commit",
-    )
-    for raw_commit in pbar:
-        preprocessed_commits.append(make_from_raw_commit(raw_commit, simplify=True))
+    preprocessed_commits = [
+        make_from_raw_commit(raw_commit, simplify=True)
+        for raw_commit in commits.values()
+    ]
+
+    # preprocessed_commits = list()
+    # pbar = tqdm(
+    #     list(commits.values()),
+    #     desc="Searching twins",
+    #     unit="commit",
+    # )
+    # for raw_commit in pbar:
+    #     preprocessed_commits.append(make_from_raw_commit(raw_commit, simplify=True))
 
     ranked_candidates = evaluate_commits(
         preprocessed_commits,
@@ -62,10 +66,10 @@ def prospector_find_twins(
         ["COMMIT_HAS_TWINS", "COMMIT_IN_ADVISORY", "COMMIT_IN_REFERENCE"],
     )
 
-    ConsoleWriter.print("Commit ranking and aggregation...")
+    # ConsoleWriter.print("Commit ranking and aggregation...")
     # I NEED TO GET THE FIRST REACHABLE TAG OR NO-TAG
     # ranked_candidates = tag_and_aggregate_commits(ranked_candidates, None)
-    ConsoleWriter.print_(MessageStatus.OK)
+    # ConsoleWriter.print_(MessageStatus.OK)
 
     return [
         commit for commit in ranked_candidates if commit.relevance >= 30
@@ -79,7 +83,6 @@ def prospector(  # noqa: C901
     repository_url: str,
     publication_date: str = "",
     vuln_descr: str = "",
-    # tag_interval: str = "",
     version_interval: str = "",
     modified_files: Set[str] = set(),
     advisory_keywords: Set[str] = set(),
@@ -87,12 +90,12 @@ def prospector(  # noqa: C901
     time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
-    fetch_references: bool = False,
+    fetch_references: bool = True,
     backend_address: str = DEFAULT_BACKEND,
     use_backend: str = "always",
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    ignore_adv_refs: bool = False,  # TODO: change to False
+    ignore_adv_refs: bool = False,
     rules: List[str] = ["ALL"],
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
 
@@ -101,7 +104,7 @@ def prospector(  # noqa: C901
     logger.debug("begin main commit and CVE processing")
 
     # construct an advisory record
-    with ConsoleWriter("Processing advisory") as _:
+    with ConsoleWriter("Processing advisory") as console:
         advisory_record = build_advisory_record(
             vulnerability_id,
             vuln_descr,
@@ -112,7 +115,10 @@ def prospector(  # noqa: C901
             set(advisory_keywords),
             set(modified_files),
         )
+    fixing_commit = advisory_record.get_fixing_commit()
 
+    if len(fixing_commit) > 0:
+        ConsoleWriter.print("Fixing commit found in the advisory references\n")
     # obtain a repository object
     repository = Git(repository_url, git_cache)
 
@@ -125,10 +131,7 @@ def prospector(  # noqa: C901
         logger.debug(f"Found tags: {tags}")
         logger.info(f"Done retrieving {repository.url}")
 
-    fixing_commit = advisory_record.get_fixing_commit(repository_url)
     if len(fixing_commit) > 0 and not ignore_adv_refs:
-        ConsoleWriter.print("Fixing commit was found in the advisory\n")
-        ConsoleWriter.print("Looking for twins of fixing commit\n")
         try:
             commits, advisory = prospector_find_twins(
                 advisory_record, repository, fixing_commit
