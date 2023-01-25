@@ -15,7 +15,7 @@
                 All</button>
         </div>
     </div>
-    {% if candidates|length < 5 and candidates[0].relevance>= 30%}
+    {% if candidates|length <= 5 and candidates|length> 0 and candidates[0].relevance>= 30%}
         <div class="warning-msg" style="margin-top: 3ex">
             <h3 class="text-warning">Warning!</h3>
             <p class="text-justify">The fixing commit was found in the advisory references, Prospector was runned only
