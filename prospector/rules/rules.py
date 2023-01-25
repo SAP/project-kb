@@ -378,21 +378,46 @@ class CommitHasTwins(Rule):
         return False
 
 
+class RelevantWordsInMessage(Rule):
+    """Matches commits whose message contains one or more relevant words."""
+
+    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
+        matching_words = [
+            token
+            for token in advisory_record.files
+            if token in candidate.message.split()
+        ]
+        # [
+        #     file
+        #     for file in candidate.changed_files
+        #     for adv_file in advisory_record.files
+        #     if adv_file.casefold() in file.casefold()
+        #     and adv_file.casefold() not in candidate.repository.split("/")
+        #     and len(adv_file)
+        #     > 3  # TODO: when fixed extraction the >3 should be useless
+        # ]
+        if len(matching_words) > 0:
+            self.message = f"The commit message contains some relevant words: {', '.join(set(matching_words))}"
+            return True
+        return False
+
+
 RULES: List[Rule] = [
-    CveIdInMessage("CVE_ID_IN_MESSAGE", 30),
-    CommitMentionedInAdv("COMMIT_IN_ADVISORY", 30),
-    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 30),
-    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 30),
-    CommitMentionedInReference("COMMIT_IN_REFERENCE", 30),
-    CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 30),
+    CveIdInMessage("CVE_ID_IN_MESSAGE", 64),
+    CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
+    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 32),
+    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 32),
+    CommitMentionedInReference("COMMIT_IN_REFERENCE", 32),
+    CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 32),
     ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 8),
     ChangesRelevantCode("CHANGES_RELEVANT_CODE", 8),
-    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 5),
-    AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 5),
-    SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 5),
-    SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 5),
-    SecurityKeywordInLinkedJiraIssue("SEC_KEYWORDS_IN_LINKED_JIRA", 5),
+    RelevantWordsInMessage("RELEVANT_WORDS_IN_MESSAGE", 8),
+    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 4),
+    AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 4),
+    SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 4),
+    SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 4),
+    SecurityKeywordInLinkedJiraIssue("SEC_KEYWORDS_IN_LINKED_JIRA", 4),
     ReferencesGhIssue("GITHUB_ISSUE_IN_MESSAGE", 2),
     ReferencesJiraIssue("JIRA_ISSUE_IN_MESSAGE", 2),
-    CommitHasTwins("COMMIT_HAS_TWINS", 4),
+    CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
