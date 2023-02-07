@@ -46,9 +46,12 @@ def filter_commits(
         elif len(candidates[commit].msg) > MAX_MSG_LEN:
             del candidates[commit]
             # log deletion
-        elif not contains_relevant_files(candidates[commit]):
-            del candidates[commit]
-            # log deletion
+        # Those are merge commits, must be included
+        # elif not contains_relevant_files(candidates[commit]):
+        #     if candidates[commit].id == "6e46f9e3f014d64dd7d1e258eaf626e39870ee1f":
+        #         print("SIMOLA")
+        #     del candidates[commit]
+        #     # log deletion
         elif (
             not contains_relevant_files(candidates[commit])
             and len(candidates[commit].changed_files) != 0

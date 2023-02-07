@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+import time
 from typing import Dict, List, Set, Tuple
 
 import requests
@@ -23,8 +24,8 @@ from stats.execution import (
 )
 
 SECS_PER_DAY = 86400
-TIME_LIMIT_BEFORE = 3 * 365 * SECS_PER_DAY
-TIME_LIMIT_AFTER = 180 * SECS_PER_DAY
+TIME_LIMIT_BEFORE = 60 * SECS_PER_DAY
+TIME_LIMIT_AFTER = 60 * SECS_PER_DAY
 
 MAX_CANDIDATES = 2000
 DEFAULT_BACKEND = "http://localhost:8000"
@@ -40,12 +41,12 @@ def prospector_find_twins(
 ):
     commits: Dict[str, RawCommit] = dict()
     # tags = repository.get_tags()
-    for commit_id in commit_ids:
+    for commit_id in set(commit_ids):
         commits = commits | repository.find_commits_for_twin_lookups(
             commit_id=commit_id
         )
-
     commits, _ = filter_commits(commits)
+
     preprocessed_commits = [
         make_from_raw_commit(raw_commit, simplify=True)
         for raw_commit in commits.values()
@@ -63,7 +64,7 @@ def prospector_find_twins(
     ranked_candidates = evaluate_commits(
         preprocessed_commits,
         advisory_record,
-        ["COMMIT_HAS_TWINS", "COMMIT_IN_ADVISORY", "COMMIT_IN_REFERENCE"],
+        ["COMMIT_HAS_TWINS", "COMMIT_IN_REFERENCE"],
     )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
@@ -116,7 +117,7 @@ def prospector(  # noqa: C901
             set(modified_files),
         )
     fixing_commit = advisory_record.get_fixing_commit()
-
+    # print(fixing_commit)
     if len(fixing_commit) > 0:
         ConsoleWriter.print("Fixing commit found in the advisory references\n")
     # obtain a repository object
@@ -139,17 +140,15 @@ def prospector(  # noqa: C901
             if len(commits) > 0:
                 return commits, advisory
 
-            print(
-                "Fixing commit was not found in the repository, running in classic mode..."
-            )
+            print("Fixing commit was not found in the repository")
         except Exception as e:
-            print(
-                "Fixing commit was not found in the repository, running in classic mode..."
-            )
+            print("Exception: Fixing commit was not found in the repository.")
             logger.error(e)
 
     if version_interval and len(version_interval) > 0:
         prev_tag, next_tag = get_possible_tags(tags, version_interval)
+        print(f"Previous tag: {prev_tag}")
+        print(f"Next tag: {next_tag}")
         if prev_tag == "" and next_tag == "":
             logger.info("Tag mismatch")
             return None, -1
@@ -208,12 +207,14 @@ def prospector(  # noqa: C901
                 preprocessed_commits: List[Commit] = list()
 
             if len(missing) > 0:
+                # preprocessed_commits += preprocess_commits(missing, timer)
 
                 pbar = tqdm(
                     missing,
                     desc="Preprocessing commits",
                     unit="commit",
                 )
+                s_pre_time = time.time()
                 with Counter(
                     timer.collection.sub_collection("commit preprocessing")
                 ) as counter:
@@ -221,6 +222,19 @@ def prospector(  # noqa: C901
                     for raw_commit in pbar:
                         counter.increment("preprocessed commits")
                         preprocessed_commits.append(make_from_raw_commit(raw_commit))
+                        e_pre_time = time.time() - s_pre_time
+                        if (
+                            counter.__dict__["collection"]["preprocessed commits"][0]
+                            % 100
+                            == 0
+                            and e_pre_time
+                            > counter.__dict__["collection"]["preprocessed commits"][0]
+                            * 2
+                            and len(candidates) > 1000
+                        ):
+                            logger.error("Preprocessing timeout")
+                            return None, len(candidates)
+
             else:
                 writer.print("\nAll commits found in the backend")
 
@@ -228,7 +242,7 @@ def prospector(  # noqa: C901
 
             payload = [c.to_dict() for c in preprocessed_commits]
 
-    if len(payload) > 0 and use_backend != "never":
+    if len(payload) > 0 and use_backend != "never" and len(missing) > 0:
         save_preprocessed_commits(backend_address, payload)
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
@@ -240,6 +254,23 @@ def prospector(  # noqa: C901
     ConsoleWriter.print_(MessageStatus.OK)
 
     return ranked_candidates, advisory_record
+
+
+def preprocess_commits(commits: List[RawCommit], timer: ExecutionTimer) -> List[Commit]:
+    preprocessed_commits: List[Commit] = list()
+    with Counter(timer.collection.sub_collection("commit preprocessing")) as counter:
+        counter.initialize("preprocessed commits", unit="commit")
+        for raw_commit in tqdm(
+            commits,
+            desc="Preprocessing commits",
+            unit=" commit",
+        ):
+            counter.increment("preprocessed commits")
+            counter_val = counter.__dict__["collection"]["preprocessed commits"][0]
+            if counter_val % 100 == 0 and counter_val * 2 > time.time():
+                pass
+            preprocessed_commits.append(make_from_raw_commit(raw_commit))
+    return preprocessed_commits
 
 
 def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:

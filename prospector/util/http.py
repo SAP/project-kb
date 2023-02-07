@@ -19,7 +19,7 @@ def fetch_url(url: str, extract_text=True) -> Union[str, BeautifulSoup]:
         str: text extracted from URL
     """
     try:
-        session = requests_cache.CachedSession("requests-cache")
+        session = requests_cache.CachedSession("requests-cache", expire_after=604800)
         content = session.get(url).content
     except Exception:
         logger.debug(f"cannot retrieve url content: {url}", exc_info=True)
@@ -58,6 +58,7 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
+# TODO: properly scrape github issues
 def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str:
 
     content = fetch_url(url, False)

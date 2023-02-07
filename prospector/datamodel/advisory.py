@@ -13,8 +13,8 @@ from util.http import extract_from_webpage, fetch_url
 from .nlp import (
     extract_affected_filenames,
     extract_products,
-    extract_references_keywords,
     extract_words_from_text,
+    find_commits_references,
 )
 
 ALLOWED_SITES = [
@@ -102,14 +102,19 @@ class AdvisoryRecord:
 
     def fetch_references(self):
         for reference in list(self.references.keys()):
-            ref = (
-                extract_references_keywords(fetch_url(reference))
-                if ".".join(urlparse(reference).hostname.split(".")[-2:])
-                in ALLOWED_SITES
-                else ""
-            )
-            if ref != "" and ref not in self.references:
-                self.references.update({ref: reference})
+            if ".".join(urlparse(reference).hostname.split(".")[-2:]) in ALLOWED_SITES:
+                commits = set(find_commits_references(fetch_url(reference)))
+                for commit in commits:
+                    self.references.update({commit: reference})
+
+            # ref = (
+            #     extract_references_keywords(fetch_url(reference))
+            #     if ".".join(urlparse(reference).hostname.split(".")[-2:])
+            #     in ALLOWED_SITES
+            #     else ""
+            # )
+            # if ref != "" and ref not in self.references:
+            #     self.references.update({ref: reference})
 
     def parse_references_from_third_party(self):
         """Parse the references from third party sites"""
@@ -131,7 +136,7 @@ class AdvisoryRecord:
         self.published_timestamp = int(isoparse(data["published"]).timestamp())
         self.last_modified_timestamp = int(isoparse(data["lastModified"]).timestamp())
         self.description = data["descriptions"][0]["value"]
-        self.references = {r["url"]: "" for r in data.get("references", [])}
+        self.references = {r["url"]: "NVD" for r in data.get("references", [])}
         self.versions = {
             "affected": [
                 item.get("versionEndIncluding", item.get("versionStartIncluding"))
@@ -151,8 +156,9 @@ class AdvisoryRecord:
         return [
             c.group(1)
             for ref in self.references
-            if (c := re.search(r"github\.com\/(?:[\w-]+\/){2}commit\/(\w{6,40})", ref))
+            if (c := re.search(r"\/commit\/(\w{6,40})", ref))
         ]
+        # here match only /commit/XXX
 
     def search_references_debian_sec_tracker(self) -> List[str]:
         url = "https://security-tracker.debian.org/tracker/"

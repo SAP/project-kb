@@ -20,14 +20,14 @@ from stats.execution import execution_statistics, measure_execution_time
 
 GIT_SEPARATOR = "-@-@-@-@-"
 
-TEN_DAYS_TIME_DELTA = 14 * 24 * 60 * 60
+TEN_DAYS_TIME_DELTA = 10 * 24 * 60 * 60
 ONE_MONTH_TIME_DELTA = 30 * 24 * 60 * 60
 
 
-def do_clone(url, output_folder, shallow=False, skip_existing=False):
-    git = Git(url, cache_path=output_folder, shallow=shallow)
-    git.clone(shallow=shallow, skip_existing=skip_existing)
-    return str(len(git.get_commits()))
+# def do_clone(url, output_folder, shallow=False, skip_existing=False):
+#     git = Git(url, cache_path=output_folder, shallow=shallow)
+#     git.clone(shallow=shallow, skip_existing=skip_existing)
+#     return str(len(git.get_commits()))
 
 
 def clone_repo_multiple(
@@ -193,6 +193,37 @@ class Git:
             shutil.rmtree(self.path)
             raise e
 
+    def get_commits(
+        self,
+        next_tag=None,
+        prev_tag=None,
+        since=None,
+        until=None,
+        filter_extension=None,
+    ) -> Dict[str, RawCommit]:
+        cmd = f"git log --all --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+        if next_tag and prev_tag:
+            cmd += f"{prev_tag}..{next_tag}"
+        elif next_tag and not prev_tag:
+            ts = self.get_timestamp(next_tag, "c")
+            cmd += f"--until={ts}"
+        elif not next_tag and prev_tag:
+            ts = self.get_timestamp(prev_tag, "a")
+            cmd += f"--since={ts}"
+        else:
+            cmd += f"--since={since} --until={until}"
+
+        if filter_extension:
+            cmd += " *." + " *.".join(filter_extension)
+        try:
+            logger.debug(cmd)
+            out = self.execute(cmd)
+            return self.parse_git_output(out)
+
+        except Exception:
+            logger.error("Git command failed, cannot get commits", exc_info=True)
+            return dict()
+
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def create_commits(
         self,
@@ -204,15 +235,21 @@ class Git:
     ) -> Dict[str, RawCommit]:
         cmd = f"git log --all --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
 
-        # Since we found that the --since and --until use committer date, maybe we can remove the extra time delta.
-        # The fact that sometimes we could not find the commit in that interval could be explained by this fact.
+        # --since and --until use committer date
+        # We get the bigger timeframe using both, so we don't miss commits
         if next_tag is not None:
-            until = self.extract_tag_timestamp(next_tag) + TEN_DAYS_TIME_DELTA
+            author_date = self.get_timestamp(next_tag, "a")
+            commit_date = self.get_timestamp(next_tag, "c")
+            if commit_date > author_date:
+                until = commit_date
+            else:
+                until = author_date
+            # until = self.get_timestamp(next_tag)  # + TEN_DAYS_TIME_DELTA
         if until:
             cmd += f" --until={until}"
 
         if prev_tag is not None:
-            since = self.extract_tag_timestamp(prev_tag) - TEN_DAYS_TIME_DELTA
+            since = self.get_timestamp(prev_tag, "a")  # - TEN_DAYS_TIME_DELTA
         if since:
             cmd += f" --since={since}"
 
@@ -258,11 +295,18 @@ class Git:
         return commits
 
     def find_commits_for_twin_lookups(self, commit_id):
-        commit_timestamp = self.extract_tag_timestamp(commit_id)
-        return self.create_commits(
-            since=commit_timestamp - ONE_MONTH_TIME_DELTA,
-            until=commit_timestamp + ONE_MONTH_TIME_DELTA,
-        )
+        # Using both author date and commit date we should cover all cases.
+        try:
+            commit_timestamp_a = self.get_timestamp(commit_id, "a")
+            commit_timestamp_c = self.get_timestamp(commit_id, "c")
+            return self.create_commits(
+                since=commit_timestamp_a - ONE_MONTH_TIME_DELTA,
+                until=commit_timestamp_c + ONE_MONTH_TIME_DELTA,
+            )
+        except Exception:
+            logger.error("Git command failed, cannot get commits", exc_info=True)
+
+            return dict()
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
     def get_commit(self, id):
@@ -292,9 +336,9 @@ class Git:
 
         return best_match
 
-    def extract_tag_timestamp(self, tag: str) -> int:
+    def get_timestamp(self, item: str, ts_format: str) -> int:
         # ct is committer date, it is the default for the research using --until and --since
-        out = self.execute(f"git log -1 --format=%ct {tag}")
+        out = self.execute(f"git log -1 --format=%{ts_format}t {item}")
         return int(out[0])
 
     def get_tags(self):

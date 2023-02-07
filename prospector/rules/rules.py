@@ -355,7 +355,7 @@ class CommitMentionedInReference(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for ref, src in advisory_record.references.items():
-            if candidate.commit_id[:8] in ref and len(src) > 0:
+            if candidate.commit_id[:8] in ref:
                 self.message = f"{src} mention this commit."
                 return True
         return False
@@ -404,10 +404,10 @@ class RelevantWordsInMessage(Rule):
 
 RULES: List[Rule] = [
     CveIdInMessage("CVE_ID_IN_MESSAGE", 64),
-    CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
+    # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
     CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 32),
     CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 32),
-    CommitMentionedInReference("COMMIT_IN_REFERENCE", 32),
+    CommitMentionedInReference("COMMIT_IN_REFERENCE", 64),
     CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 32),
     ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 8),
     ChangesRelevantCode("CHANGES_RELEVANT_CODE", 8),

@@ -183,12 +183,20 @@ def extract_cve_references(text: str) -> List[str]:
     return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
 
 
-def extract_references_keywords(text: str) -> str:
-    """
-    Extract keywords that refer to references
-    """
+def find_commits_references(text: str) -> List[str]:
     # SHould probably look for hrefs too
-    result = re.search(r"github\.com\/(?:\w+|\/){3}\/commit\/\w+", text)
+    # hrefs containing /commit/xxx (handles github issues)
+    # in repo names we have to consider also . -
+    # github\.com\/[\w\-\.\/]+\/commit\/\w{6,40}
+    return [
+        res.group(0)
+        for res in re.finditer(r"\/commit\/\w{6,40}", text)
+        if res is not None
+    ]
+    result = re.search(
+        r"\/commit\/\w{6,40}",
+        text,
+    )
     if result is not None:
         return result.group(0)
     else:
