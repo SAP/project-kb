@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
-	github.com/gin-gonic/gin v1.7.1
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-git/go-git/v5 v5.3.0
 	github.com/gookit/color v1.4.2
 	github.com/magiconair/properties v1.8.5
