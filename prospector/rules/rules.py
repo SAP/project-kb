@@ -94,8 +94,9 @@ class CveIdInMessage(Rule):
     """Matches commits that refer to the CVE-ID in the commit message."""  # Check if works for the title or comments
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if bool(
-            re.search(advisory_record.cve_id, candidate.message, flags=re.IGNORECASE)
+        if (
+            advisory_record.cve_id in candidate.cve_refs
+            and len(candidate.cve_refs) == 1
         ):
             self.message = "The commit message mentions the CVE ID"
             return True
@@ -354,9 +355,9 @@ class CommitMentionedInReference(Rule):
     """Matches commits that are mentioned in any of the links contained in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        for ref, src in advisory_record.references.items():
+        for ref, n in advisory_record.references.items():
             if candidate.commit_id[:8] in ref:
-                self.message = f"{src} mention this commit."
+                self.message = f"This commit is mentioned {n} times in the references."
                 return True
         return False
 

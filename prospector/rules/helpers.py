@@ -4,15 +4,15 @@ import pandas
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from git.git import Git
-from util.similarity import (
-    damerau_levenshtein_edit_distance,
-    jaccard_set_similarity,
-    levenshtein_edit_distance,
-    otsuka_ochiai_set_similarity,
-    sorensen_dice_set_similarity,
-)
-from util.tokenize import tokenize_non_nl_term
+
+# from util.similarity import (
+#     damerau_levenshtein_edit_distance,
+#     jaccard_set_similarity,
+#     levenshtein_edit_distance,
+#     otsuka_ochiai_set_similarity,
+#     sorensen_dice_set_similarity,
+# )
+# from util.tokenize import tokenize_non_nl_term
 
 DAYS_BEFORE = 180
 DAYS_AFTER = 365

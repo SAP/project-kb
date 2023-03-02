@@ -1,7 +1,7 @@
 import difflib
 import re
 import sys
-from typing import Optional
+from typing import List, Optional
 
 from log.logger import logger
 
@@ -38,24 +38,62 @@ def get_possible_missing_tag(
         ][:3]
 
 
+def handle_tag_or_substring(version: str, tags: list[str]) -> List[str]:
+    """Given a tag and a list of tags, return True if the tag is in the list or is a substring of one of the tags."""
+    if version in tags:
+        return [version]
+    elif (
+        len(
+            [
+                t
+                for t in tags
+                if t.endswith(version)
+                or (
+                    version in t
+                    and ends_with_zero(t)
+                    or (t in version and ends_with_zero(version))
+                )
+            ]
+        )
+        == 1
+    ):
+        return [
+            t
+            for t in tags
+            if t.endswith(version)
+            or (version in t and ends_with_zero(t))
+            or (t in version and ends_with_zero(version))
+        ]
+    else:
+        return []
+
+
+def ends_with_zero(version: str):
+    """Given a version string, return True if the last digit is zero."""
+    return bool(re.search(r"[\.-_]0$", version))
+
+
 # flake8: noqa: C901
-def get_possible_tags(tags: list[str], versions: str):
+def get_possible_tags(tags: list[str], versions: str, unsupervised: bool = True):
     """Given a list of tags and a version interval, return the possible tag interval that matches."""
-    prev_version, next_version = versions.split(":")
-    prev_tag = [prev_version] if prev_version in tags else []
+    prev_version, next_version = versions.replace("None", "").split(":")
+    prev_tag = handle_tag_or_substring(prev_version, tags)
+    # print(f"prev_tag: {prev_tag}, prev_version: {prev_version}")
     if len(prev_tag) == 0 and len(prev_version) > 0:
         prev_tag = [
             tag
             for tag in tags
             if prev_version == clean_tag(tag) and not is_rc_or_date(tag)
         ]
-    next_tag = [next_version] if next_version in tags else []
+    next_tag = handle_tag_or_substring(next_version, tags)
+    # print(f"next_tag: {next_tag}, next_version: {next_version}")
     if len(next_tag) == 0 and len(next_version) > 0:
         next_tag = [
             tag
             for tag in tags
             if next_version == clean_tag(tag) and not is_rc_or_date(tag)
         ]
+
     if len(prev_tag) == 1 and len(next_tag) == 1:
         return prev_tag[0], next_tag[0]
     elif len(prev_tag) == 1 and len(next_tag) > 1:
@@ -103,7 +141,6 @@ def get_possible_tags(tags: list[str], versions: str):
             return None, None
         elif prev_version == "" and next_version == "":
             return None, None
-
     return "", ""
 
 

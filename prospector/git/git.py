@@ -237,19 +237,18 @@ class Git:
 
         # --since and --until use committer date
         # We get the bigger timeframe using both, so we don't miss commits
-        if next_tag is not None:
+        if next_tag:
             author_date = self.get_timestamp(next_tag, "a")
             commit_date = self.get_timestamp(next_tag, "c")
             if commit_date > author_date:
                 until = commit_date
             else:
                 until = author_date
-            # until = self.get_timestamp(next_tag)  # + TEN_DAYS_TIME_DELTA
         if until:
             cmd += f" --until={until}"
 
-        if prev_tag is not None:
-            since = self.get_timestamp(prev_tag, "a")  # - TEN_DAYS_TIME_DELTA
+        if prev_tag:
+            since = self.get_timestamp(prev_tag, "a")
         if since:
             cmd += f" --since={since}"
 
@@ -281,6 +280,7 @@ class Git:
             else:
                 if sector == 1:
                     id, timestamp, parent = line.split(":")
+
                     commit = RawCommit(
                         repository=self,
                         commit_id=id,
@@ -343,7 +343,8 @@ class Git:
 
     def get_tags(self):
         try:
-            return self.execute("git tag")
+            # Committer date to have the proper tag ordering
+            return self.execute("git tag --sort=committerdate")
         except subprocess.CalledProcessError as exc:
             logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []

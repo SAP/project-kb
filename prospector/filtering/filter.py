@@ -26,14 +26,7 @@ NON_RELEVANT_FILES = [
 def filter_commits(
     candidates: Dict[str, RawCommit]
 ) -> Tuple[Dict[str, RawCommit], int]:
-    """
-    Takes in input a set of candidate (datamodel) commits (coming from the commitdb)
-    and returns in output a filtered list obtained by discarding the irrelevant
-    ones based on different criteria (timestamp of commit compared to advisory record date,
-    extensions of the files modified in the commit, and the like).
 
-    The first return value is the filtered list, the second is the list of rejected commits.
-    """
     # MAX_HUNKS = 200
     MAX_FILES = 100
     MAX_MSG_LEN = 5000

@@ -19,7 +19,6 @@ class RawCommit:
     ):
         self.repository = repository
         self.id = commit_id
-        self.tags = tags or []
         self.timestamp = timestamp
         self.parent_id = parent_id
         self.msg = msg
@@ -36,9 +35,6 @@ class RawCommit:
 
     def get_id(self) -> str:
         return self.id
-
-    def get_tags(self) -> str:
-        return self.tags
 
     def set_changed_files(self, changed_files: List[str]):
         self.changed_files = changed_files
@@ -110,6 +106,13 @@ class RawCommit:
                 exc_info=True,
             )
             raise Exception(f"Failed to obtain timestamp for commit: {self.id}")
+
+    def exists(self):
+        try:
+            self.execute(f"git log -1 {self.id}")
+            return True
+        except Exception:
+            return False
 
     def get_changed_files(self):
         return self.changed_files

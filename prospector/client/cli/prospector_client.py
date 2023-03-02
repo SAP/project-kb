@@ -23,9 +23,15 @@ from stats.execution import (
     measure_execution_time,
 )
 
+# Average distance is -202 days (with commit being authored before the vulnerability usually)
+# Standard deviation is 422 days
+# An ideal search range would be 2 years before and 1 year after (max). However practically this could give
+
 SECS_PER_DAY = 86400
 TIME_LIMIT_BEFORE = 60 * SECS_PER_DAY
 TIME_LIMIT_AFTER = 60 * SECS_PER_DAY
+THREE_YEARS = 3 * 365 * SECS_PER_DAY
+ONE_YEAR = 365 * SECS_PER_DAY
 
 MAX_CANDIDATES = 2000
 DEFAULT_BACKEND = "http://localhost:8000"
@@ -45,6 +51,7 @@ def prospector_find_twins(
         commits = commits | repository.find_commits_for_twin_lookups(
             commit_id=commit_id
         )
+
     commits, _ = filter_commits(commits)
 
     preprocessed_commits = [
@@ -61,20 +68,14 @@ def prospector_find_twins(
     # for raw_commit in pbar:
     #     preprocessed_commits.append(make_from_raw_commit(raw_commit, simplify=True))
 
-    ranked_candidates = evaluate_commits(
-        preprocessed_commits,
-        advisory_record,
-        ["COMMIT_HAS_TWINS", "COMMIT_IN_REFERENCE"],
-    )
+    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, ["ALL"])
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
     # I NEED TO GET THE FIRST REACHABLE TAG OR NO-TAG
     # ranked_candidates = tag_and_aggregate_commits(ranked_candidates, None)
     # ConsoleWriter.print_(MessageStatus.OK)
 
-    return [
-        commit for commit in ranked_candidates if commit.relevance >= 30
-    ], advisory_record
+    return ranked_candidates[:100], advisory_record
 
 
 # @profile
@@ -87,8 +88,8 @@ def prospector(  # noqa: C901
     version_interval: str = "",
     modified_files: Set[str] = set(),
     advisory_keywords: Set[str] = set(),
-    time_limit_before: int = TIME_LIMIT_BEFORE,
-    time_limit_after: int = TIME_LIMIT_AFTER,
+    time_limit_before: int = -THREE_YEARS,
+    time_limit_after: int = ONE_YEAR,
     use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
     fetch_references: bool = True,
@@ -98,7 +99,12 @@ def prospector(  # noqa: C901
     limit_candidates: int = MAX_CANDIDATES,
     ignore_adv_refs: bool = False,
     rules: List[str] = ["ALL"],
+    silent: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
+
+    if silent:
+        logger.disabled = True
+        sys.stdout = open("/dev/null", "w")
 
     logger.debug(f"time-limit before: {TIME_LIMIT_BEFORE}")
     logger.debug(f"time-limit after: {TIME_LIMIT_AFTER}")
@@ -137,7 +143,8 @@ def prospector(  # noqa: C901
             commits, advisory = prospector_find_twins(
                 advisory_record, repository, fixing_commit
             )
-            if len(commits) > 0:
+            if 0 < len(commits) < 10:  # check if commit id is here...
+                advisory.has_fixing_commit = True
                 return commits, advisory
 
             print("Fixing commit was not found in the repository")
@@ -147,8 +154,8 @@ def prospector(  # noqa: C901
 
     if version_interval and len(version_interval) > 0:
         prev_tag, next_tag = get_possible_tags(tags, version_interval)
-        print(f"Previous tag: {prev_tag}")
-        print(f"Next tag: {next_tag}")
+        # print(f"Previous tag: {prev_tag}")
+        # print(f"Next tag: {next_tag}")
         if prev_tag == "" and next_tag == "":
             logger.info("Tag mismatch")
             return None, -1
@@ -162,7 +169,7 @@ def prospector(  # noqa: C901
         return None, -1
 
     # retrieve of commit candidates
-    candidates = get_candidates(
+    candidates = get_commits(
         advisory_record,
         repository,
         prev_tag,
@@ -210,9 +217,7 @@ def prospector(  # noqa: C901
                 # preprocessed_commits += preprocess_commits(missing, timer)
 
                 pbar = tqdm(
-                    missing,
-                    desc="Preprocessing commits",
-                    unit="commit",
+                    missing, desc="Preprocessing commits", unit="commit", disable=silent
                 )
                 s_pre_time = time.time()
                 with Counter(
@@ -281,7 +286,9 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
         return commits
 
 
-def evaluate_commits(commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]):
+def evaluate_commits(
+    commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]
+) -> List[Commit]:
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
             ranked_commits = apply_ranking(apply_rules(commits, advisory, rules=rules))
@@ -376,7 +383,28 @@ def save_preprocessed_commits(backend_address, payload):
                 )
 
 
-def get_candidates(
+# tries to be dynamic
+# def get_candidates(
+#     advisory_record: AdvisoryRecord,
+#     repository: Git,
+#     prev_tag: str,
+#     next_tag: str,
+#     time_limit_before: int,
+#     time_limit_after: int,
+# ):
+#     candidates = filter(
+#         get_commits(
+#             advisory_record,
+#             repository,
+#             prev_tag,
+#             next_tag,
+#             time_limit_before,
+#             time_limit_after,
+#         )
+#     )
+
+
+def get_commits(
     advisory_record: AdvisoryRecord,
     repository: Git,
     prev_tag: str,
@@ -392,7 +420,7 @@ def get_candidates(
 
             since = None
             until = None
-            if advisory_record.published_timestamp:
+            if advisory_record.published_timestamp and not next_tag and not prev_tag:
                 since = advisory_record.published_timestamp - time_limit_before
                 until = advisory_record.published_timestamp + time_limit_after
 
@@ -407,7 +435,7 @@ def get_candidates(
             core_statistics.record(
                 "candidates", len(candidates), unit="commits", overwrite=True
             )
-            logger.info("Found %d candidates" % len(candidates))
+            logger.info(f"Found {len(candidates)} candidates")
         writer.print(f"Found {len(candidates)} candidates")
 
     return candidates
