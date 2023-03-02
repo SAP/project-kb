@@ -5,10 +5,11 @@ from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
+import validators
 from dateutil.parser import isoparse
 
 from log.logger import get_level, logger, pretty_log
-from util.http import extract_from_webpage, fetch_url
+from util.http import extract_from_webpage, fetch_url, get_urls
 
 from .nlp import (
     extract_affected_filenames,
@@ -21,7 +22,7 @@ ALLOWED_SITES = [
     "github.com",
     "github.io",
     "apache.org",
-    "issues.apache.org",
+    # "issues.apache.org",
     "gitlab.org",
     "cpan.org",
     "gnome.org",
@@ -35,13 +36,14 @@ ALLOWED_SITES = [
     "readthedocs.io",
     "atlassian.net",
     "jira.atlassian.com",
-    "lists.debian.org",
-    "access.redhat.com",
+    "debian.org"
+    # "lists.debian.org",
+    # "access.redhat.com",
     "openstack.org",
     "python.org",
     "pypi.org",
     "bugzilla.redhat.com",
-    "redhat.com",
+    # "redhat.com",
 ]
 
 
@@ -59,7 +61,7 @@ class AdvisoryRecord:
         description: str = "",
         published_timestamp: int = 0,
         last_modified_timestamp: int = 0,
-        references: Dict[str, str] = None,
+        references: Dict[str, int] = None,
         affected_products: List[str] = None,
         versions: Dict[str, List[str]] = None,
         files: Set[str] = None,
@@ -76,6 +78,7 @@ class AdvisoryRecord:
         self.files = files or set()
         self.keywords = keywords or set()
         self.files_extension = files_extensions or set()
+        self.has_fixing_commit = False
 
     def analyze(
         self,
@@ -93,8 +96,10 @@ class AdvisoryRecord:
         self.keywords.update(set(extract_words_from_text(self.description)))
         # TODO: misses something because of subdomains not considered e.g. lists.apache.org
         self.parse_references_from_third_party()
-        self.fetch_references()
 
+        self.fetch_references()
+        for k, v in self.references.items():
+            print(k, v)
         logger.debug("References: " + str(self.references))
 
         # TODO: I should extract interesting stuff from the references immediately ad maintain them just for a fast lookup
@@ -102,25 +107,29 @@ class AdvisoryRecord:
 
     def fetch_references(self):
         for reference in list(self.references.keys()):
-            if ".".join(urlparse(reference).hostname.split(".")[-2:]) in ALLOWED_SITES:
-                commits = set(find_commits_references(fetch_url(reference)))
-                for commit in commits:
-                    self.references.update({commit: reference})
+            if validators.url(reference) and any(a in reference for a in ALLOWED_SITES):
+                for link in get_urls(reference):
+                    if link.startswith("/"):
+                        link = "https://github.com" + link
 
-            # ref = (
-            #     extract_references_keywords(fetch_url(reference))
-            #     if ".".join(urlparse(reference).hostname.split(".")[-2:])
-            #     in ALLOWED_SITES
-            #     else ""
-            # )
-            # if ref != "" and ref not in self.references:
-            #     self.references.update({ref: reference})
+                    if link in self.references:
+                        self.references[link] += 1
+                    elif link not in self.references:
+                        self.references[link] = 1
+
+        for reference in list(self.references.keys()):
+            if "/commit/" in reference or "/commits/" in reference:
+                continue
+            else:
+                del self.references[reference]
 
     def parse_references_from_third_party(self):
         """Parse the references from third party sites"""
         for ref in self.search_references_debian_sec_tracker():
-            if ref not in self.references:
-                self.references[ref] = "security-tracker.debian.org"
+            self.references.setdefault(ref, 1)
+
+        for ref in self.search_references_bugzilla_redhat():
+            self.references.setdefault(ref, 1)
 
     def get_advisory(self):
         data = get_from_local(self.cve_id)
@@ -136,7 +145,7 @@ class AdvisoryRecord:
         self.published_timestamp = int(isoparse(data["published"]).timestamp())
         self.last_modified_timestamp = int(isoparse(data["lastModified"]).timestamp())
         self.description = data["descriptions"][0]["value"]
-        self.references = {r["url"]: "NVD" for r in data.get("references", [])}
+        self.references = {r["url"]: 1 for r in data.get("references", [])}
         self.versions = {
             "affected": [
                 item.get("versionEndIncluding", item.get("versionStartIncluding"))
@@ -153,10 +162,16 @@ class AdvisoryRecord:
         self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
 
     def get_fixing_commit(self) -> List[str]:
+        self.references = dict(
+            sorted(self.references.items(), key=lambda item: item[1], reverse=True)
+        )
+        if len(self.references) > 5:
+            self.references = {k: v for k, v in self.references.items() if v > 1}
+
         return [
             c.group(1)
             for ref in self.references
-            if (c := re.search(r"\/commit\/(\w{6,40})", ref))
+            if (c := re.search(r"\/(?:commit|commits)\/(\w{6,40})", ref))
         ]
         # here match only /commit/XXX
 
@@ -172,6 +187,20 @@ class AdvisoryRecord:
             return [a["href"] for a in links]
 
         return []
+
+    def search_references_bugzilla_redhat(self) -> List[str]:
+        url = "https://bugzilla.redhat.com/show_bug.cgi?id="
+
+        content = fetch_url(url + self.cve_id, False)
+        if content is None:
+            return []
+        comments = content.find_all("pre", class_="bz_comment_text")
+        links = []
+        for comment in comments:
+            link = comment.find_all("a", href=True)
+            links.extend([a["href"] for a in link if a["href"][:4] == "http"])
+
+        return links
 
 
 def get_from_nvd(cve_id: str):
@@ -209,7 +238,7 @@ def build_advisory_record(
     cve_id: str,
     description: Optional[str] = None,
     nvd_rest_endpoint: Optional[str] = None,
-    fetch_references: bool = False,
+    fetch_references: bool = True,
     use_nvd: bool = True,
     publication_date: Optional[str] = None,
     advisory_keywords: Set[str] = set(),

@@ -58,6 +58,14 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
+def get_urls(url: str):
+    content = fetch_url(url, False)
+    if not content:
+        return []
+
+    return [link.get("href") for link in content.find_all("a", href=True)]
+
+
 # TODO: properly scrape github issues
 def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str:
 
