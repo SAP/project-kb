@@ -30,6 +30,10 @@ ONE_MONTH_TIME_DELTA = 30 * 24 * 60 * 60
 #     return str(len(git.get_commits()))
 
 
+def do_clone():
+    pass
+
+
 def clone_repo_multiple(
     url_list,
     output_folder,
