@@ -1,4 +1,6 @@
 <div class="col-3 h-100 overflow-scroll bg-light bg-gradient border border-secondary">
+    {% if candidates|length > 0 %}
+    {% if candidates[0].relevance != 0 %}
     <h3>Filters</h3>
     <p class="text-justify">
         Use the slider to filter out lower relevance scores and the button to collapse or expand all the commits.
@@ -15,55 +17,50 @@
                 All</button>
         </div>
     </div>
-    {% if candidates|length <= 5 and candidates|length> 0 and candidates[0].relevance>= 30%}
-        <div class="warning-msg" style="margin-top: 3ex">
-            <h3 class="text-warning">Warning!</h3>
-            <p class="text-justify">The fixing commit was found in the advisory references, Prospector was runned only
-                to
-                look for twins</p>
-        </div>
+    {% endif %}
+    {% endif %}
+
+
+    <div class="advisory-record" style="margin-top: 3ex">
+        <h3>Advisory Record</h3>
+        <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.cve_id }}" target="_blank"><b id="cve_id">{{
+                advisory_record.cve_id }}</b></a><br />
+        <p class="text-justify">{{ advisory_record.description }}</p>
+
+        {% if advisory_record.files|length > 0 %}
+        <h5>Possible relevant files/methods</h5>
+        <p style="margin: 10pt">
+        <ul class="list-group">
+            {% for file in advisory_record.files | sort %}
+            <li class="list-group-item">{{file}}</li>
+            {% endfor %}
+        </ul>
+        </p>
         {% endif %}
+        {% if advisory_record.keywords|length > 0 %}
+        <h5>Other relevant keywords</h5>
+        <p style="margin: 10pt">
+            {% for token in advisory_record.keywords | sort %}
+            <li class="list-group-item">{{token}}</li>
 
+            {% endfor %}
+        </p>
+        {% endif %}
+    </div>
 
-        <div class="advisory-record" style="margin-top: 3ex">
-            <h3>Advisory Record</h3>
-            <a href="https://nvd.nist.gov/vuln/detail/{{ advisory_record.cve_id }}" target="_blank"><b id="cve_id">{{
-                    advisory_record.cve_id }}</b></a><br />
-            <p class="text-justify">{{ advisory_record.description }}</p>
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+        aria-controls="offcanvasExample">
+        Show exec. stats
+    </button>
 
-            <h5>Possible relevant files/methods</h5>
-            <p style="margin: 10pt">
-            <ul class="list-group">
-                {% for file in advisory_record.files | sort %}
-                <li class="list-group-item">{{file}}</li>
-                {% endfor %}
-            </ul>
-
-            </p>
-            <h5>Other relevant keywords</h5>
-            <p style="margin: 10pt">
-                {% for token in advisory_record.keywords | sort %}
-                <li class="list-group-item">{{token}}</li>
-
-                {% endfor %}
-            </p>
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasExampleLabel">Execution Statistics</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-
-        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
-            aria-controls="offcanvasExample">
-            Show exec. stats
-        </button>
-
-        <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample"
-            aria-labelledby="offcanvasExampleLabel">
-            <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasExampleLabel">Execution Statistics</h5>
-                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                    aria-label="Close"></button>
-            </div>
-            <div class="offcanvas-body">
-                {{ execution_statistics | safe }}
-            </div>
+        <div class="offcanvas-body">
+            {{ execution_statistics | safe }}
         </div>
+    </div>
 
 </div>

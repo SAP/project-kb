@@ -274,12 +274,18 @@ class CveIdInLinkedIssue(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for id, content in candidate.ghissue_refs.items():
-            if advisory_record.cve_id in content:
+            if (
+                advisory_record.cve_id in content
+                and len(re.findall(r"CVE-\d{4}-\d{4,8}", content)) == 1
+            ):
                 self.message = f"Issue {id} linked to the commit mentions the CVE ID. "
                 return True
 
         for id, content in candidate.jira_refs.items():
-            if advisory_record.cve_id in content:
+            if (
+                advisory_record.cve_id in content
+                and len(re.findall(r"CVE-\d{4}-\d{4,8}", content)) == 1
+            ):
                 self.message = (
                     f"JIRA issue {id} linked to the commit mentions the CVE ID"
                 )

@@ -1,4 +1,5 @@
 {% extends "titled_block.html" %}
+{% if annotated_commit.matched_rules|length > 0 %}
 {% set title = "Matched rules" %}
 {% set icon = "fas fa-bullhorn" %}
 {% block body %}
@@ -10,3 +11,4 @@
     {% endfor %}
 </ul>
 {% endblock %}
+{% endif %}

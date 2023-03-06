@@ -98,8 +98,8 @@ class AdvisoryRecord:
         self.parse_references_from_third_party()
 
         self.fetch_references()
-        for k, v in self.references.items():
-            print(k, v)
+        # for k, v in self.references.items():
+        #     print(k, v)
         logger.debug("References: " + str(self.references))
 
         # TODO: I should extract interesting stuff from the references immediately ad maintain them just for a fast lookup

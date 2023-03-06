@@ -123,9 +123,7 @@ def prospector(  # noqa: C901
             set(modified_files),
         )
     fixing_commit = advisory_record.get_fixing_commit()
-    # print(fixing_commit)
-    if len(fixing_commit) > 0:
-        ConsoleWriter.print("Fixing commit found in the advisory references\n")
+
     # obtain a repository object
     repository = Git(repository_url, git_cache)
 
@@ -139,11 +137,14 @@ def prospector(  # noqa: C901
         logger.info(f"Done retrieving {repository.url}")
 
     if len(fixing_commit) > 0 and not ignore_adv_refs:
+        console.print("Fixing commit found in the advisory references\n")
         try:
             commits, advisory = prospector_find_twins(
                 advisory_record, repository, fixing_commit
             )
-            if 0 < len(commits) < 10:  # check if commit id is here...
+            if 0 < len(commits) and any(
+                [c for c in commits if c.commit_id in fixing_commit]
+            ):  # check if commit id is here...
                 advisory.has_fixing_commit = True
                 return commits, advisory
 

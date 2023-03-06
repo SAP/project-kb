@@ -20,10 +20,12 @@
     </div>
     <div class="row flex-grow-1">
         <div class="col-2">
+            {% if annotated_commit.relevance > 0 %}
             <h6>
                 <i class="fa fa-star"></i>
                 Relevance: {{ annotated_commit.relevance }}
             </h6>
+            {% endif %}
         </div>
         <div class="col-9">
             <h6 id="mainCommitTag">
@@ -34,10 +36,12 @@
     </div>
     <div class="row flex-grow-1">
         <div class="col-10">
+            {% if annotated_commit.matched_rules|length > 0 %}
             <i class="fas fa-bullhorn"></i>
             {% for rule in annotated_commit.matched_rules %}
             <span class="badge rounded-pill bg-primary" style="font-family: monospace;">{{ rule.id }}</span>
             {% endfor %}
+            {% endif %}
         </div>
     </div>
 </div>
