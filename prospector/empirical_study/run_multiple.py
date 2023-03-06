@@ -157,7 +157,7 @@ def analyze_results_rules(dataset_path: str):
 def analyze_prospector(filename: str):
     # delete_missing_git(dataset_path)
     # return []
-    filename = "results/" + filename + ".csv"
+    filename = "empirical_study/" + filename + ".csv"
     dataset = load_dataset(filename)
     # res_ts = temp_load_reservation_dates(dataset_path[:-4] + "_timestamps.csv")
 
@@ -544,7 +544,7 @@ def update_comparison_table(dataset):
 
 
 def to_latex_table():
-    data = load_dataset("results/scalco.csv")
+    data = load_dataset("empirical_study/scalco.csv")
     for e in data:
         print(f"{e[0]} & {e[1][19:]} & {e[5]} \\\\  \hline")
 
@@ -712,7 +712,7 @@ def mute():
 
 def parallel_execution(filename: str):
     print("Executing in parallel")
-    dataset = load_dataset("results/" + filename + ".csv")
+    dataset = load_dataset("empirical_study/" + filename + ".csv")
     inputs = [
         {
             "vulnerability_id": cve[0],
@@ -724,7 +724,7 @@ def parallel_execution(filename: str):
             "silent": True,
         }
         for cve in dataset
-        if not os.path.exists(f"results/{filename}/{cve[0]}.json")
+        if not os.path.exists(f"empirical_study/{filename}/{cve[0]}.json")
     ]
     if len(inputs) == 0:
         return True
@@ -746,17 +746,17 @@ def execute_prospector_wrapper(kwargs):
     del kwargs["filename"]
     r, a = prospector(**kwargs)
     if r is not None:
-        generate_report(r, a, "json", f"results/{filename}/{a.cve_id}")
+        generate_report(r, a, "json", f"empirical_study/{filename}/{a.cve_id}")
 
 
 def execute_prospector(filename: str, cve: str = ""):
 
-    dataset = load_dataset("results/" + filename + ".csv")
+    dataset = load_dataset("empirical_study/" + filename + ".csv")
     if len(cve) != 0:
         dataset = [c for c in dataset if c[0] == cve]
 
     for cve in dataset:
-        if os.path.exists(f"results/{filename}/{cve[0]}.json"):
+        if os.path.exists(f"empirical_study/{filename}/{cve[0]}.json"):
             continue
         print(
             f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
@@ -781,12 +781,12 @@ def execute_prospector(filename: str, cve: str = ""):
                 result,
                 advisory,
                 "json",
-                f"results/{filename}/{cve[0]}",
+                f"empirical_study/{filename}/{cve[0]}",
             )
 
 
 def list_dir_and_select_folder():
-    files = [file for file in os.listdir("results/") if "." not in file]
+    files = [file for file in os.listdir("empirical_study/") if "." not in file]
     for i, file in enumerate(files):
         print(i, ")", file)
     choice = int(input("Choose a dataset: "))
@@ -794,7 +794,7 @@ def list_dir_and_select_folder():
 
 
 def list_dir_and_select_dataset():
-    files = [file for file in os.listdir("results/") if file.endswith(".csv")]
+    files = [file for file in os.listdir("empirical_study/") if file.endswith(".csv")]
     for i, file in enumerate(files):
         print(i, ")", file)
     choice = int(input("Choose a dataset: "))
@@ -814,43 +814,43 @@ if __name__ == "__main__":
         folder = list_dir_and_select_dataset()
         choice_2 = input("Do you want to run prospector in parallel? (y/n): ")
         choice_2 = True if choice_2 == "y" else False
-        analyze_dataset(f"results/{folder}", parallel=choice_2)
+        analyze_dataset(f"empirical_study/{folder}", parallel=choice_2)
     elif a == "2":
         folder = list_dir_and_select_dataset()
-        # analyze_results(f"results/{folder}")
-        analyze_results_no_output(f"results/{folder}")
+        # analyze_results(f"empirical_study/{folder}")
+        analyze_results_no_output(f"empirical_study/{folder}")
     elif a == "3":
         folder = list_dir_and_select_dataset()
-        find_commits_linked_from_advisory(f"results/{folder}")
-        # find_sure_matches(f"results/{folder}")
-        # analyze_rules_usage(f"results/{folder}")
+        find_commits_linked_from_advisory(f"empirical_study/{folder}")
+        # find_sure_matches(f"empirical_study/{folder}")
+        # analyze_rules_usage(f"empirical_study/{folder}")
     elif a == "4":
         to_latex_table()
     elif a == "5":
         folder = list_dir_and_select_dataset()
-        check_version_to_tag_matching(f"results/{folder}")
+        check_version_to_tag_matching(f"empirical_study/{folder}")
         # b = input("Enter the CVE: ")
         # print("\n")
         # count_rule_single(b)
     elif a == "6":
         folder = list_dir_and_select_dataset()
-        data = load_dataset(f"results/{folder}")
+        data = load_dataset(f"empirical_study/{folder}")
         for itm in data:
             if itm[0] == "CVE-2016-6194":
                 res = check_advisory(itm[0], itm[1], nlp)
-                with open(f"results/{folder}_nlp.txt", "a") as f:
+                with open(f"empirical_study/{folder}_nlp.txt", "a") as f:
                     for item in res:
                         f.write(f"{item}\n")
                 time.sleep(5)
     elif a == "7":
         folder = list_dir_and_select_dataset()
-        data = load_dataset(f"results/{folder}")
+        data = load_dataset(f"empirical_study/{folder}")
         for itm in data:
-            if is_missing(f"results/{folder}/{itm[0]}".replace(".csv", "")):
+            if is_missing(f"empirical_study/{folder}/{itm[0]}".replace(".csv", "")):
                 print(itm[0])
     elif a == "8":
         folder = list_dir_and_select_dataset()
-        data = load_dataset(f"results/{folder}")
+        data = load_dataset(f"empirical_study/{folder}")
         for itm in data:
             print(f"\n{itm[0]}:")
             for commit in itm[4].split(","):
