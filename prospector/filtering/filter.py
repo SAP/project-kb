@@ -22,6 +22,8 @@ NON_RELEVANT_FILES = [
     "STATUS",
 ]
 
+NON_RELEVANT_MESSAGES = ["Release version"]
+
 
 def filter_commits(
     candidates: Dict[str, RawCommit]

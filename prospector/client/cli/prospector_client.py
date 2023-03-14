@@ -42,44 +42,6 @@ DEFAULT_BACKEND = "http://localhost:8000"
 core_statistics = execution_statistics.sub_collection("core")
 
 
-def prospector_find_twins(
-    advisory_record: AdvisoryRecord,
-    repository: Git,
-    commit_ids: List[str],
-):
-    commits: Dict[str, RawCommit] = dict()
-    # tags = repository.get_tags()
-    for commit_id in set(commit_ids):
-        commits = commits | repository.find_commits_for_twin_lookups(
-            commit_id=commit_id
-        )
-
-    commits, _ = filter_commits(commits)
-
-    preprocessed_commits = [
-        make_from_raw_commit(raw_commit, simplify=True)
-        for raw_commit in commits.values()
-    ]
-
-    # preprocessed_commits = list()
-    # pbar = tqdm(
-    #     list(commits.values()),
-    #     desc="Searching twins",
-    #     unit="commit",
-    # )
-    # for raw_commit in pbar:
-    #     preprocessed_commits.append(make_from_raw_commit(raw_commit, simplify=True))
-
-    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, ["ALL"])
-
-    # ConsoleWriter.print("Commit ranking and aggregation...")
-    # I NEED TO GET THE FIRST REACHABLE TAG OR NO-TAG
-    # ranked_candidates = tag_and_aggregate_commits(ranked_candidates, None)
-    # ConsoleWriter.print_(MessageStatus.OK)
-
-    return ranked_candidates[:100], advisory_record
-
-
 # @profile
 @measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
@@ -90,17 +52,16 @@ def prospector(  # noqa: C901
     version_interval: str = "",
     modified_files: Set[str] = set(),
     advisory_keywords: Set[str] = set(),
-    time_limit_before: int = -THREE_YEARS,
-    time_limit_after: int = ONE_YEAR,
+    time_limit_before: int = TIME_LIMIT_BEFORE,
+    time_limit_after: int = TIME_LIMIT_AFTER,
     use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
-    fetch_references: bool = True,
     backend_address: str = DEFAULT_BACKEND,
     use_backend: str = "always",
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    ignore_adv_refs: bool = False,
     rules: List[str] = ["ALL"],
+    tag_commits: bool = False,
     silent: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
 
@@ -108,8 +69,6 @@ def prospector(  # noqa: C901
         logger.disabled = True
         sys.stdout = open("/dev/null", "w")
 
-    logger.debug(f"time-limit before: {TIME_LIMIT_BEFORE}")
-    logger.debug(f"time-limit after: {TIME_LIMIT_AFTER}")
     logger.debug("begin main commit and CVE processing")
 
     # construct an advisory record
@@ -118,14 +77,16 @@ def prospector(  # noqa: C901
             vulnerability_id,
             vuln_descr,
             nvd_rest_endpoint,
-            fetch_references,
             use_nvd,
             publication_date,
             set(advisory_keywords),
             set(modified_files),
         )
-    fixing_commit = advisory_record.get_fixing_commit()
+    if advisory_record is None:
+        return None, -1
 
+    fixing_commit = advisory_record.get_fixing_commit(repository_url)
+    # print(advisory_record.references)
     # obtain a repository object
     repository = Git(repository_url, git_cache)
 
@@ -135,51 +96,40 @@ def prospector(  # noqa: C901
 
         tags = repository.get_tags()
 
-        logger.debug(f"Found tags: {tags}")
+        # logger.debug(f"Found tags: {tags}")
         logger.info(f"Done retrieving {repository.url}")
 
-    if len(fixing_commit) > 0 and not ignore_adv_refs:
-        console.print("Fixing commit found in the advisory references\n")
-        try:
-            commits, advisory = prospector_find_twins(
-                advisory_record, repository, fixing_commit
-            )
-            if 0 < len(commits) and any(
-                [c for c in commits if c.commit_id in fixing_commit]
-            ):  # check if commit id is here...
-                advisory.has_fixing_commit = True
-                return commits, advisory
+    candidates: Dict[str, RawCommit] = dict()
 
-            print("Fixing commit was not found in the repository")
-        except Exception as e:
-            print("Exception: Fixing commit was not found in the repository.")
-            logger.error(e)
+    if len(fixing_commit) > 0:
+        candidates = get_commits_no_tags(repository, fixing_commit)
+        if len(candidates) > 0 and any([c for c in candidates if c in fixing_commit]):
+            console.print("Fixing commit found in the advisory references\n")
+            advisory_record.has_fixing_commit = True
 
-    if version_interval and len(version_interval) > 0:
-        prev_tag, next_tag = get_possible_tags(tags, version_interval)
-        # print(f"Previous tag: {prev_tag}")
-        # print(f"Next tag: {next_tag}")
-        if prev_tag == "" and next_tag == "":
-            logger.info("Tag mismatch")
+    if len(candidates) == 0:
+        if version_interval and len(version_interval) > 0:
+            prev_tag, next_tag = get_possible_tags(tags, version_interval)
+            if prev_tag == "" and next_tag == "":
+                logger.info("Tag mismatch")
+                return None, -1
+            ConsoleWriter.print(f"Found tags: {prev_tag} - {next_tag}")
+            logger.info(f"Found tags: {prev_tag} - {next_tag}")
+            ConsoleWriter.print_(MessageStatus.OK)
+        else:
+            logger.info("No version/tag interval provided")
+            console.print("No interval provided", status=MessageStatus.ERROR)
+            # Tag Mismatch
             return None, -1
-        ConsoleWriter.print(f"Found tags: {prev_tag} - {next_tag}")
-        logger.info(f"Found tags: {prev_tag} - {next_tag}")
-        ConsoleWriter.print_(MessageStatus.OK)
-    else:
-        logger.info("No version/tag interval provided")
-        console.print("No interval provided", status=MessageStatus.ERROR)
-        # Tag Mismatch
-        return None, -1
 
-    # retrieve of commit candidates
-    candidates = get_commits(
-        advisory_record,
-        repository,
-        prev_tag,
-        next_tag,
-        time_limit_before,
-        time_limit_after,
-    )
+        candidates = get_commits_from_tags(
+            advisory_record,
+            repository,
+            prev_tag,
+            next_tag,
+            time_limit_before,
+            time_limit_after,
+        )
 
     candidates = filter(candidates)
 
@@ -187,7 +137,7 @@ def prospector(  # noqa: C901
         logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
 
         ConsoleWriter.print(
-            f"Found {len(candidates)} candidates, too many to proceed.",
+            f"Candidates limit exceeded: {len(candidates)}.",
         )
         return None, len(candidates)
 
@@ -222,26 +172,21 @@ def prospector(  # noqa: C901
                 pbar = tqdm(
                     missing, desc="Preprocessing commits", unit="commit", disable=silent
                 )
-                s_pre_time = time.time()
+                start_time = time.time()
                 with Counter(
                     timer.collection.sub_collection("commit preprocessing")
                 ) as counter:
                     counter.initialize("preprocessed commits", unit="commit")
                     for raw_commit in pbar:
                         counter.increment("preprocessed commits")
-                        preprocessed_commits.append(make_from_raw_commit(raw_commit))
-                        e_pre_time = time.time() - s_pre_time
-                        if (
-                            counter.__dict__["collection"]["preprocessed commits"][0]
-                            % 100
-                            == 0
-                            and e_pre_time
-                            > counter.__dict__["collection"]["preprocessed commits"][0]
-                            * 2
-                            and len(candidates) > 1000
-                        ):
-                            logger.error("Preprocessing timeout")
-                            return None, len(candidates)
+                        # if you want tagging set get_tags=True (slows down)
+                        preprocessed_commits.append(
+                            make_from_raw_commit(raw_commit, tag_commits)
+                        )
+                elapsed_time = time.time() - start_time
+                if elapsed_time > 1800:
+                    logger.error("Processing timeout")
+                    return None, len(candidates)
 
             else:
                 writer.print("\nAll commits found in the backend")
@@ -257,8 +202,9 @@ def prospector(  # noqa: C901
 
     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
 
-    ConsoleWriter.print("Commit ranking and aggregation...")
-    ranked_candidates = tag_and_aggregate_commits(ranked_candidates, next_tag)
+    # ConsoleWriter.print("Commit ranking and aggregation...")
+    ranked_candidates = remove_twins(ranked_candidates)
+    # ranked_candidates = tag_and_aggregate_commits(ranked_candidates, next_tag)
     ConsoleWriter.print_(MessageStatus.OK)
 
     return ranked_candidates, advisory_record
@@ -299,7 +245,22 @@ def evaluate_commits(
     return ranked_commits
 
 
+def remove_twins(commits: List[Commit]) -> List[Commit]:
+    global_twins_list = set()
+    output = list()
+    for commit in list(commits):
+        if commit.commit_id not in global_twins_list:
+            output.append(commit)
+
+            for twin in commit.twins:
+                global_twins_list.add(twin[1])
+
+    return output
+
+
 def tag_and_aggregate_commits(commits: List[Commit], next_tag: str) -> List[Commit]:
+
+    return commits
     if next_tag is None or next_tag == "":
         return commits
 
@@ -407,7 +368,7 @@ def save_preprocessed_commits(backend_address, payload):
 #     )
 
 
-def get_commits(
+def get_commits_from_tags(
     advisory_record: AdvisoryRecord,
     repository: Git,
     prev_tag: str,
@@ -424,8 +385,8 @@ def get_commits(
             since = None
             until = None
             if advisory_record.published_timestamp and not next_tag and not prev_tag:
-                since = advisory_record.published_timestamp - time_limit_before
-                until = advisory_record.published_timestamp + time_limit_after
+                since = advisory_record.reserved_timestamp - time_limit_before
+                until = advisory_record.reserved_timestamp + time_limit_after
 
             candidates = repository.create_commits(
                 since=since,
@@ -435,6 +396,14 @@ def get_commits(
                 filter_extension=advisory_record.files_extension,
             )
 
+            if len(candidates) == 0:
+                candidates = repository.create_commits(
+                    since=advisory_record.reserved_timestamp - time_limit_before,
+                    until=advisory_record.reserved_timestamp + time_limit_after,
+                    next_tag=None,
+                    prev_tag=None,
+                    filter_extension=advisory_record.files_extension,
+                )
             core_statistics.record(
                 "candidates", len(candidates), unit="commits", overwrite=True
             )
@@ -442,3 +411,66 @@ def get_commits(
         writer.print(f"Found {len(candidates)} candidates")
 
     return candidates
+
+
+def get_commits_no_tags(repository: Git, commit_ids: List[str]):
+    candidates: Dict[str, RawCommit] = dict()
+
+    for commit_id in set(commit_ids):
+        candidates = candidates | repository.find_commits_for_twin_lookups(
+            commit_id=commit_id
+        )
+
+    return candidates
+
+
+# def prospector_find_twins(
+#     advisory_record: AdvisoryRecord,
+#     repository: Git,
+#     commit_ids: List[str],
+#     backend_address: str = DEFAULT_BACKEND,
+#     use_backend: str = "always",
+# ):
+#     commits: Dict[str, RawCommit] = dict()
+
+#     # tags = repository.get_tags()
+#     for commit_id in set(commit_ids):
+#         commits = commits | repository.find_commits_for_twin_lookups(
+#             commit_id=commit_id
+#         )
+
+#     commits = filter(commits)
+
+#     if use_backend != "never":
+#         missing, preprocessed_commits = retrieve_preprocessed_commits(
+#             repository.url,
+#             backend_address,
+#             commits,
+#         )
+
+#     # preprocessed_commits = [
+#     #     make_from_raw_commit(raw_commit) for raw_commit in commits.values()
+#     # ]
+
+#     preprocessed_commits = list()
+#     pbar = tqdm(
+#         list(commits.values()),
+#         desc="Searching twins",
+#         unit="commit",
+#     )
+#     for raw_commit in pbar:
+#         preprocessed_commits.append(make_from_raw_commit(raw_commit))
+
+#     if len(preprocessed_commits) > 0 and use_backend != "never":
+#         save_preprocessed_commits(
+#             backend_address, [c.to_dict() for c in preprocessed_commits]
+#         )
+
+#     ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, ["ALL"])
+
+#     # ConsoleWriter.print("Commit ranking and aggregation...")
+#     # I NEED TO GET THE FIRST REACHABLE TAG OR NO-TAG
+#     # ranked_candidates = tag_and_aggregate_commits(ranked_candidates, None)
+#     # ConsoleWriter.print_(MessageStatus.OK)
+
+#     return ranked_candidates[:100], advisory_record

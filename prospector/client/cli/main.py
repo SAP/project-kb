@@ -73,12 +73,10 @@ def main(argv):  # noqa: C901
         modified_files=config.modified_files,
         advisory_keywords=config.keywords,
         use_nvd=config.use_nvd,
-        fetch_references=config.fetch_references,
         backend_address=config.backend,
         use_backend=config.use_backend,
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
-        ignore_adv_refs=config.ignore_refs,
     )
 
     if config.preprocess_only:

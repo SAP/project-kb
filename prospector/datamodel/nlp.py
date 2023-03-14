@@ -180,7 +180,9 @@ def extract_cve_references(text: str) -> List[str]:
     """
     Extract CVE identifiers
     """
-    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
+    return list(
+        set([result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)])
+    )
 
 
 def find_commits_references(text: str) -> List[str]:

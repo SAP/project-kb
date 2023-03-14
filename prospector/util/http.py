@@ -8,19 +8,13 @@ from bs4 import BeautifulSoup
 from log.logger import logger
 
 
-def fetch_url(url: str, extract_text=True) -> Union[str, BeautifulSoup]:
-    """fetch_url
-
-    Args:
-        url (str): target URL to fetch
-        extract_text (bool, optional): Enables the extraction of human readable text from HTML pages. Defaults to True.
-
-    Returns:
-        str: text extracted from URL
-    """
+def fetch_url(url: str, params=None, extract_text=True) -> Union[str, BeautifulSoup]:
     try:
         session = requests_cache.CachedSession("requests-cache", expire_after=604800)
-        content = session.get(url).content
+        if params is None:
+            content = session.get(url).content
+        else:
+            content = session.get(url, params=params).content
     except Exception:
         logger.debug(f"cannot retrieve url content: {url}", exc_info=True)
         return ""
@@ -58,8 +52,8 @@ def ping_backend(server_url: str, verbose: bool = False) -> bool:
         return False
 
 
-def get_urls(url: str):
-    content = fetch_url(url, False)
+def get_urls(url: str) -> List[str]:
+    content = fetch_url(url, extract_text=False)
     if not content:
         return []
 
@@ -69,7 +63,7 @@ def get_urls(url: str):
 # TODO: properly scrape github issues
 def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str:
 
-    content = fetch_url(url, False)
+    content = fetch_url(url, None, False)
     if not content:
         return ""
     print(content.get_text())
@@ -99,11 +93,15 @@ def get_from_xml(id: str):
     try:
         params = {"field": {"description", "summary", "comments"}}
 
-        response = requests.get(
+        # response = requests.get(
+        #     f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
+        #     params=params,
+        # )
+        # xml_data = BeautifulSoup(response.text, features="html.parser")
+        xml_data = fetch_url(
             f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
             params=params,
         )
-        xml_data = BeautifulSoup(response.text, features="html.parser")
         item = xml_data.find("item")
         if item is None:
             return ""

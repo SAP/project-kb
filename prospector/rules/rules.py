@@ -428,3 +428,24 @@ RULES: List[Rule] = [
     ReferencesJiraIssue("JIRA_ISSUE_IN_MESSAGE", 2),
     CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
+
+rules_list = [
+    "COMMIT_IN_REFERENCE",
+    "CVE_ID_IN_MESSAGE",
+    "CVE_ID_IN_LINKED_ISSUE",
+    "CROSS_REFERENCED_JIRA_LINK",
+    "CROSS_REFERENCED_GH_LINK",
+    "CHANGES_RELEVANT_FILES",
+    "CHANGES_RELEVANT_CODE",
+    "RELEVANT_WORDS_IN_MESSAGE",
+    "ADV_KEYWORDS_IN_FILES",
+    "ADV_KEYWORDS_IN_MSG",
+    "SEC_KEYWORDS_IN_MESSAGE",
+    "SEC_KEYWORDS_IN_LINKED_GH",
+    "SEC_KEYWORDS_IN_LINKED_JIRA",
+    "GITHUB_ISSUE_IN_MESSAGE",
+    "JIRA_ISSUE_IN_MESSAGE",
+    "COMMIT_HAS_TWINS",
+]
+
+print(" & ".join([f"\\rot{{{x}}}" for x in rules_list]))

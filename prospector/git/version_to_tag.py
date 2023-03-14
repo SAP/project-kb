@@ -141,7 +141,8 @@ def get_possible_tags(tags: list[str], versions: str, unsupervised: bool = True)
             return None, None
         elif prev_version == "" and next_version == "":
             return None, None
-    return "", ""
+    # return "","" to trigger tag mismatch
+    return None, None
 
 
 def get_tag_candidates(
