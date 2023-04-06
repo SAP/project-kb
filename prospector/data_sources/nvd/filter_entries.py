@@ -75,9 +75,7 @@ def csv_to_json(csv_file_path):
 # Given the list of entries in json format filter them and
 def find_matching_entries(data):
     # TODO decide the format and strucutre of the match list
-    match_list = csv_to_json(
-        "/home/matt/sap/project-kb/prospector/data_sources/test.csv"
-    )
+    match_list = csv_to_json("./data_sources/test.csv")
     match_list = json.loads(match_list)
 
     filtered_cves = []
