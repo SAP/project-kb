@@ -4,9 +4,9 @@ services:
   backend:
     build:
       context: .
-      dockerfile: docker/api/Dockerfile
+      dockerfile: docker/service/Dockerfile
     ports:
-      - "8000:80"
+      - "8000:8000"
     depends_on:
       - redis
       - db
@@ -23,8 +23,8 @@ services:
 
   worker:
     build:
-      context: docker/worker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/worker/Dockerfile
     volumes:
       - .:/pythonimports
     depends_on:
@@ -44,7 +44,6 @@ services:
       POSTGRES_PASSWORD: example #${POSTGRES_PASSWORD}
     volumes:
       - ./ddl:/docker-entrypoint-initdb.d
-
 
   redis:
     image: "redis:alpine"

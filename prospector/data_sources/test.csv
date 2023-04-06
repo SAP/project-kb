@@ -1,0 +1,4 @@
+project,service_name,repository
+Apache,Common fileupload,https://github.com/apache/commons-fileupload
+Redis,redis,https://github.com/redis/redis
+Flatpak,flatpak,https://github.com/flatpak/flatpak
