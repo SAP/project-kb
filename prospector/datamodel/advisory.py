@@ -90,7 +90,6 @@ class AdvisoryRecord:
         self.has_fixing_commit = False
 
     def analyze(self):
-
         self.affected_products.extend(extract_products(self.description))
         self.affected_products = list(set(self.affected_products))
 
@@ -134,7 +133,6 @@ class AdvisoryRecord:
             self.references[self.extract_hashes(ref)] += 2
 
     def get_advisory(self):
-
         details, metadata = get_from_mitre(self.cve_id)
         if metadata is None:
             raise Exception("MITRE API Error")
@@ -224,7 +222,6 @@ class AdvisoryRecord:
             return "commit::" + re.search(r";h=(\w{6,40})", reference).group(1)
 
         if bool(re.search(r"(?:commit|commits)\/\w{6,40}", reference)):
-
             return "commit::" + re.search(
                 r"(?:commit|commits)\/(\w{6,40})", reference
             ).group(1)
@@ -321,7 +318,6 @@ def build_advisory_record(
     advisory_keywords: Set[str] = set(),
     modified_files: Optional[str] = None,
 ) -> AdvisoryRecord:
-
     advisory_record = AdvisoryRecord(
         cve_id=cve_id,
         description=description,

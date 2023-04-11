@@ -1,8 +1,8 @@
 import csv
-import json
-import requests
-import json
 import datetime
+import json
+
+import requests
 from versions_extraction import extract_version_ranges_cpe, process_ranges
 
 

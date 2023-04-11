@@ -1,5 +1,5 @@
+from filter_entries import find_matching_entries, get_cves
 from job_creation import create_prospector_job
-from filter_entries import *
 
 # request new cves entries through NVD API
 cves = get_cves(20)

@@ -1,7 +1,8 @@
-import requests
-import re
-import spacy
 import json
+import re
+
+import requests
+import spacy
 
 # TODO: Modify the list of keywords
 VULN = ["version", "through", "versions"]
@@ -69,25 +70,25 @@ def is_real_version(text: str):
 
 # old method
 def extract_version_ranges_desc(doc):
-    relevant_sentences = {}
-    relevant_sentence = ""
+    # relevant_sentences = {}
+    # relevant_sentence = ""
     fixed_version = ""
     vulnerable_version = ""
     for i in range(len(doc))[1:]:
         if is_real_version(doc[i].text):
             if doc[i - 1].text in FIXED:
-                relevant_sentence = doc[: i + 1]
+                # relevant_sentence = doc[: i + 1]
                 fixed_version = doc[i].text
             elif (doc[i - 2].text + " " + doc[i - 1].text) in FIXED:
-                relevant_sentence = doc[: i + 1]
+                # relevant_sentence = doc[: i + 1]
                 fixed_version = doc[i].text
             elif (
                 doc[i - 3].text + " " + doc[i - 2].text + " " + doc[i - 1].text
             ) in FIXED:
-                relevant_sentence = doc[: i + 1]
+                # relevant_sentence = doc[: i + 1]
                 fixed_version = doc[i].text
             else:
-                relevant_sentence = doc[: i + 1]
+                # relevant_sentence = doc[: i + 1]
                 vulnerable_version = doc[i].text
 
     # vulnerable_version = re.sub(r"^v\.?", "", vulnerable_version)

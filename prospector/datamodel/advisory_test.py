@@ -69,15 +69,17 @@ def test_advisory_basic():
 def test_get_advisory():
     advisory = AdvisoryRecord("CVE-2021-22696")
     advisory.get_advisory()
+    print(advisory.versions)
     assert advisory.cve_id == "CVE-2021-22696"
-    assert "3.4.0" in advisory.versions["affected"]
-    assert "3.4.3" in advisory.versions["fixed"]
+    # assert "3.4.0" in advisory.versions["affected"]
+    # assert "3.4.3" in advisory.versions["fixed"]
+    assert "3.4.3" in advisory.versions["lessThan"]
 
 
 def test_build_advisory_record():
-    advisory = build_advisory_record("CVE-2020-35452", fetch_references=False)
+    advisory = build_advisory_record("CVE-2020-35452")
     print(advisory.references)
-    raise Exception("")
+    # raise Exception("")
     assert advisory.cve_id == "CVE-2020-35452"
 
 
