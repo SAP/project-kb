@@ -41,6 +41,9 @@ jobs:
         volumes:
           - ${{ github.workspace }}/prospector/ddl:/docker-entrypoint-initdb.d
     steps:
+      - name: Change ownership of ddl directory
+        run: |
+          sudo chown -R ${{ github.actor }}:${{ github.actor }} ${{ github.workspace }}/prospector/ddl
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
@@ -70,7 +73,6 @@ jobs:
           POSTGRES_DBNAME: "postgres"
           REDIS_URL: ""
         run: |
-          chown -R ${{ github.actor }}:${{ github.actor }} prospector/ddl
           cd prospector
           [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
           pytest
