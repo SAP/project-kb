@@ -39,7 +39,7 @@ jobs:
           # Maps tcp port 5432 on service container to the host
           - 5432:5432
         volumes:
-          - prospector/ddl:/docker-entrypoint-initdb.d
+          - ${GITHUB_WORKSPACE}/prospector/ddl:/docker-entrypoint-initdb.d
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
