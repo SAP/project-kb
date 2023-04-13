@@ -71,6 +71,7 @@ jobs:
           POSTGRES_DBNAME: "postgres"
           REDIS_URL: ""
         run: |
+          chown -R $USER:$USER prospector/ddl
           cd prospector
           [ -d /tmp/git-cache ] || mkdir -p /tmp/git-cache
           pytest
