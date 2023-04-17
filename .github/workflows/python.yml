@@ -41,9 +41,6 @@ jobs:
         volumes:
           - ${{ github.workspace }}/prospector/ddl:/docker-entrypoint-initdb.d
     steps:
-      - name: Change ownership of ddl directory
-        run: |
-          sudo chown -R ${{ github.actor }}:${{ github.actor }} ${{ github.workspace }}/prospector/ddl
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
