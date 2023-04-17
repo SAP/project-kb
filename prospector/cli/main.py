@@ -14,11 +14,11 @@ if path_root not in sys.path:
     sys.path.append(path_root)
 
 
-import client.cli.report as report  # noqa: E402
-from client.cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from client.cli.prospector_client import TIME_LIMIT_AFTER  # noqa: E402
-from client.cli.prospector_client import TIME_LIMIT_BEFORE  # noqa: E402
-from client.cli.prospector_client import prospector  # noqa: E402; noqa: E402
+import core.report as report  # noqa: E402
+from cli.console import ConsoleWriter, MessageStatus  # noqa: E402
+from core.prospector import TIME_LIMIT_AFTER  # noqa: E402
+from core.prospector import TIME_LIMIT_BEFORE  # noqa: E402
+from core.prospector import prospector  # noqa: E402; noqa: E402
 
 # Load logger before doing anything else
 from log.logger import get_level, logger, pretty_log  # noqa: E402
@@ -30,7 +30,9 @@ from util.config_parser import get_configuration  # noqa: E402
 
 def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
+        print("before config: ", argv)
         config = get_configuration(argv)
+        print("after config: ", config.cve_id)
 
         if not config:
             logger.error("No configuration file found. Cannot proceed.")
@@ -69,16 +71,16 @@ def main(argv):  # noqa: C901
         repository_url=config.repository,
         publication_date=config.pub_date,
         vuln_descr=config.description,
-        # tag_interval=config.tag_interval,
         version_interval=config.version_interval,
         modified_files=config.modified_files,
         advisory_keywords=config.keywords,
         use_nvd=config.use_nvd,
-        fetch_references=config.fetch_references,
+        # fetch_references=config.fetch_references,
         backend_address=config.backend,
         use_backend=config.use_backend,
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
+        # ignore_adv_refs=config.ignore_refs,
     )
 
     if config.preprocess_only:

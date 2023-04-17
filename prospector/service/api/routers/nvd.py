@@ -17,8 +17,32 @@ router = APIRouter(
 
 
 NVD_REST_ENDPOINT = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+MITRE_REST_ENDPOINT = "https://cveawg.mitre.org/api/cve/"
 NVD_API_KEY = os.getenv("NVD_API_KEY")
 DATA_PATH = os.getenv("CVE_DATA_PATH")
+
+
+def get_from_mitre(cve_id: str):
+    """
+    Get an advisory from the MITRE database
+    """
+    try:
+        response = requests.get(MITRE_REST_ENDPOINT + cve_id)
+
+        if response.status_code != 200:
+            return False
+
+        data = response.json()
+        if len(data) == 0:
+            return False
+
+        with open(f"{DATA_PATH}/{cve_id}.json", "w") as out:
+            json.dump(data, out)
+
+        return data
+
+    except Exception:
+        return None
 
 
 def get_from_nvd(cve_id: str):

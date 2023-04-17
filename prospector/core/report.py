@@ -6,7 +6,7 @@ from typing import List
 
 import jinja2
 
-from client.cli.console import ConsoleWriter, MessageStatus
+from cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from log.logger import get_level, logger
@@ -57,7 +57,7 @@ def html_(
 
     logger.info(f"Writing results to {fn}")
     environment = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(os.path.join("client", "cli", "templates")),
+        loader=jinja2.FileSystemLoader(os.path.join("core", "templates")),
         autoescape=jinja2.select_autoescape(),
     )
     template = environment.get_template("results.html")

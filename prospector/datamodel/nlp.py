@@ -83,6 +83,7 @@ def extract_products(text: str) -> List[str]:
     )
 
 
+# TODO: add list of non-relevant or relevant extensions
 def extract_affected_filenames(
     text: str, extensions: List[str] = RELEVANT_EXTENSIONS
 ) -> Tuple[Set[str], Set[str]]:
@@ -91,10 +92,12 @@ def extract_affected_filenames(
     for word in text.split():
         res = re.sub(r"^[^a-z0-9]+|[^a-z0-9]+$", "", word, flags=re.IGNORECASE)
         res = re.split(r"[\\\/]", res)[-1]
+        if res == "Node.js":
+            continue
         res, ext = extract_filename(res, extensions)
         if len(res) > 0:
             files.update(res)
-        if ext is not None:
+        if ext is not None and ext not in ("yml", "yaml", "json", "bat"):
             extension.add(ext)
 
     return files, extension
@@ -131,19 +134,21 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
     """
     refs = dict()
 
-    for result in re.finditer(r"(?:#|gh-)(\d+)", text):
+    for result in re.finditer(r"(?:#|gh-)(\d{1,6})", text):
         id = result.group(1)
         url = f"{repository}/issues/{id}"
         content = fetch_url(url=url, extract_text=False)
         gh_ref_data = content.find_all(
             attrs={
                 "class": ["comment-body", "markdown-title"],
-            }
+            },
+            recursive=False,
         )
+        # TODO: when an issue/pr is referenced somewhere, the page contains also the "message" of that reference (e.g. a commit). This may lead to unwanted detection of certain rules.
         gh_ref_data.extend(
             content.find_all(
                 attrs={
-                    "id": re.compile(r"ref-issue|ref-pullrequest|ref-commit"),
+                    "id": re.compile(r"ref-issue|ref-pullrequest"),
                 }
             )
         )
@@ -163,11 +168,10 @@ def extract_jira_references(repository: str, text: str) -> Dict[str, str]:
     if "apache" not in repository:
         return refs
 
-    for result in re.finditer(r"[A-Z]+-\d+", text):
+    for result in re.finditer(r"[A-Z]+-\d{1,6}", text):
         id = result.group()
-        if id.startswith("CVE-"):
-            continue
-        refs[id] = get_from_xml(id)
+        if not id.startswith("CVE-"):
+            refs[id] = get_from_xml(id)
 
     return refs
 
@@ -176,15 +180,26 @@ def extract_cve_references(text: str) -> List[str]:
     """
     Extract CVE identifiers
     """
-    return [result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)]
+    return list(
+        set([result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)])
+    )
 
 
-def extract_references_keywords(text: str) -> List[str]:
-    """
-    Extract keywords that refer to references
-    """
+def find_commits_references(text: str) -> List[str]:
+    # SHould probably look for hrefs too
+    # hrefs containing /commit/xxx (handles github issues)
+    # in repo names we have to consider also . -
+    # github\.com\/[\w\-\.\/]+\/commit\/\w{6,40}
     return [
-        result.group(0)
-        for result in re.finditer(r"[A-Z]{2,}-\d+|github\.com\/(?:\w+|\/)*", text)
-        if "CVE" not in result.group(0)
+        res.group(0)
+        for res in re.finditer(r"\/commit\/\w{6,40}", text)
+        if res is not None
     ]
+    result = re.search(
+        r"\/commit\/\w{6,40}",
+        text,
+    )
+    if result is not None:
+        return result.group(0)
+    else:
+        return ""

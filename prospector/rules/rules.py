@@ -5,10 +5,7 @@ from typing import List, Tuple
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.nlp import clean_string, find_similar_words
-from rules.helpers import (
-    extract_commit_mentioned_in_linked_pages,
-    extract_security_keywords,
-)
+from rules.helpers import extract_security_keywords
 from stats.execution import Counter, execution_statistics
 from util.lsh import build_lsh_index, decode_minhash
 
@@ -81,21 +78,13 @@ def apply_rules(
 
 def get_enabled_rules(rules: List[str]) -> List[Rule]:
 
-    return RULES
-    enabled_rules = []
-
     if "ALL" in rules:
-        enabled_rules = RULES
+        return RULES
 
-    for r in rules:
-        if r == "ALL":
-            continue
-        if r[0] != "-":
-            enabled_rules.append(RULES.pop)
-        elif r[0] == "-":
-            rule_to_exclude = r[1:]
-            if rule_to_exclude in enabled_rules:
-                del enabled_rules[rule_to_exclude]
+    enabled_rules = []
+    for r in RULES:
+        if r.id in rules:
+            enabled_rules.append(r)
 
     return enabled_rules
 
@@ -105,8 +94,9 @@ class CveIdInMessage(Rule):
     """Matches commits that refer to the CVE-ID in the commit message."""  # Check if works for the title or comments
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if bool(
-            re.search(advisory_record.cve_id, candidate.message, flags=re.IGNORECASE)
+        if (
+            advisory_record.cve_id in candidate.cve_refs
+            and len(candidate.cve_refs) == 1
         ):
             self.message = "The commit message mentions the CVE ID"
             return True
@@ -158,7 +148,7 @@ class ChangesRelevantFiles(Rule):
                 for file in candidate.changed_files
                 for adv_file in advisory_record.files
                 if adv_file.casefold() in file.casefold()
-                and adv_file.casefold() not in candidate.repository
+                and adv_file.casefold() not in candidate.repository.split("/")
                 and len(adv_file)
                 > 3  # TODO: when fixed extraction the >3 should be useless
             ]
@@ -183,12 +173,6 @@ class AdvKeywordsInMsg(Rule):
         #         if m.group(1).casefold() not in candidate.repository
         #     ]
         # )
-        # if candidate.commit_id == "0e826ceae97a1258cb15c73a3072118c920e8654":
-        #     print("\n" + "\n")
-        #     print(regex)
-        #     print(advisory_record.keywords)
-        #     print(candidate.message)
-        #     print(matching_keywords)
         matching_keywords = set(
             [
                 token
@@ -218,7 +202,7 @@ class ChangesRelevantCode(Rule):
                 if (
                     word not in matching_keywords
                     and word in diffline
-                    and word.casefold() not in candidate.repository
+                    and word.casefold() not in candidate.repository.split("/")
                     and "diff --git" not in diffline
                     and "---" not in diffline
                     and "+++" not in diffline
@@ -265,20 +249,10 @@ class CommitMentionedInAdv(Rule):
     """Matches commits that are linked in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        for ref in advisory_record.references:
-            if candidate.commit_id[:8] in ref:
+        for ref, src in advisory_record.references.items():
+            if candidate.commit_id[:8] in ref and len(src) == 0:
                 self.message = "The commit is mentioned in the advisory page"
                 return True
-        # matching_references = set(
-        #     [
-        #         ref
-        #         for ref in advisory_record.references
-        #         if candidate.commit_id[:8] in ref
-        #     ]
-        # )
-        # if len(matching_references) > 0:
-        #     self.message = "The advisory mentions the commit directly"  #: {', '.join(matching_references)}"
-        #     return True
         return False
 
 
@@ -300,12 +274,18 @@ class CveIdInLinkedIssue(Rule):
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for id, content in candidate.ghissue_refs.items():
-            if advisory_record.cve_id in content:
+            if (
+                advisory_record.cve_id in content
+                and len(re.findall(r"CVE-\d{4}-\d{4,8}", content)) == 1
+            ):
                 self.message = f"Issue {id} linked to the commit mentions the CVE ID. "
                 return True
 
         for id, content in candidate.jira_refs.items():
-            if advisory_record.cve_id in content:
+            if (
+                advisory_record.cve_id in content
+                and len(re.findall(r"CVE-\d{4}-\d{4,8}", content)) == 1
+            ):
                 self.message = (
                     f"JIRA issue {id} linked to the commit mentions the CVE ID"
                 )
@@ -377,22 +357,22 @@ class CrossReferencedGhLink(Rule):
         return False
 
 
-# TODO: implement this properly as it is not working
 class CommitMentionedInReference(Rule):
     """Matches commits that are mentioned in any of the links contained in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        if extract_commit_mentioned_in_linked_pages(candidate, advisory_record):
-            self.message = "A page linked in the advisory mentions this commit"
-
-            return True
+        for ref, n in advisory_record.references.items():
+            if candidate.commit_id[:8] in ref:
+                self.message = f"This commit is mentioned {n} times in the references."
+                return True
         return False
 
 
 class CommitHasTwins(Rule):
     def apply(self, candidate: Commit, _: AdvisoryRecord) -> bool:
-        if not Rule.lsh_index.is_empty():
-
+        if not Rule.lsh_index.is_empty() and not bool(
+            re.match(r"Merge", candidate.message, flags=re.IGNORECASE)
+        ):
             twin_list = Rule.lsh_index.query(decode_minhash(candidate.minhash))
             # twin_list.remove(candidate.commit_id)
             candidate.twins = [
@@ -405,21 +385,67 @@ class CommitHasTwins(Rule):
         return False
 
 
-RULES = [
-    CveIdInMessage("CVE_ID_IN_MESSAGE", 30),
-    CommitMentionedInAdv("COMMIT_IN_ADVISORY", 30),
-    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 30),
-    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 30),
-    CommitMentionedInReference("COMMIT_IN_REFERENCE", 30),
-    CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 30),
+class RelevantWordsInMessage(Rule):
+    """Matches commits whose message contains one or more relevant words."""
+
+    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
+        matching_words = [
+            token
+            for token in advisory_record.files
+            if token in candidate.message.split()
+        ]
+        # [
+        #     file
+        #     for file in candidate.changed_files
+        #     for adv_file in advisory_record.files
+        #     if adv_file.casefold() in file.casefold()
+        #     and adv_file.casefold() not in candidate.repository.split("/")
+        #     and len(adv_file)
+        #     > 3  # TODO: when fixed extraction the >3 should be useless
+        # ]
+        if len(matching_words) > 0:
+            self.message = f"The commit message contains some relevant words: {', '.join(set(matching_words))}"
+            return True
+        return False
+
+
+RULES: List[Rule] = [
+    CveIdInMessage("CVE_ID_IN_MESSAGE", 64),
+    # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
+    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 32),
+    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 32),
+    CommitMentionedInReference("COMMIT_IN_REFERENCE", 64),
+    CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 32),
     ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 8),
     ChangesRelevantCode("CHANGES_RELEVANT_CODE", 8),
-    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 5),
-    AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 5),
-    SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 5),
-    SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 5),
-    SecurityKeywordInLinkedJiraIssue("SEC_KEYWORDS_IN_LINKED_JIRA", 5),
+    RelevantWordsInMessage("RELEVANT_WORDS_IN_MESSAGE", 8),
+    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 4),
+    AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 4),
+    SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 4),
+    SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 4),
+    SecurityKeywordInLinkedJiraIssue("SEC_KEYWORDS_IN_LINKED_JIRA", 4),
     ReferencesGhIssue("GITHUB_ISSUE_IN_MESSAGE", 2),
     ReferencesJiraIssue("JIRA_ISSUE_IN_MESSAGE", 2),
-    CommitHasTwins("COMMIT_HAS_TWINS", 4),
+    CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
+
+rules_list = [
+    "COMMIT_IN_REFERENCE",
+    "CVE_ID_IN_MESSAGE",
+    "CVE_ID_IN_LINKED_ISSUE",
+    "CROSS_REFERENCED_JIRA_LINK",
+    "CROSS_REFERENCED_GH_LINK",
+    "CHANGES_RELEVANT_FILES",
+    "CHANGES_RELEVANT_CODE",
+    "RELEVANT_WORDS_IN_MESSAGE",
+    "ADV_KEYWORDS_IN_FILES",
+    "ADV_KEYWORDS_IN_MSG",
+    "SEC_KEYWORDS_IN_MESSAGE",
+    "SEC_KEYWORDS_IN_LINKED_GH",
+    "SEC_KEYWORDS_IN_LINKED_JIRA",
+    "GITHUB_ISSUE_IN_MESSAGE",
+    "JIRA_ISSUE_IN_MESSAGE",
+    "COMMIT_HAS_TWINS",
+]
+
+print(" & ".join([f"\\rot{{{x}}}" for x in rules_list]))

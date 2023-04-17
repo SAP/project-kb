@@ -4,9 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 # from .dependencies import oauth2_scheme
-from api.routers import jobs, nvd, preprocessed, users
+from api.routers import jobs, nvd, preprocessed, users, endpoints, home
 from log.logger import logger
 from util.config_parser import parse_config_file
+from fastapi.staticfiles import StaticFiles
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},
@@ -31,9 +32,12 @@ app.add_middleware(
 )
 
 app.include_router(users.router)
-app.include_router(jobs.router)
 app.include_router(nvd.router)
 app.include_router(preprocessed.router)
+app.include_router(endpoints.router)
+app.include_router(home.router)
+
+app.mount("/static", StaticFiles(directory="service/static"), name="static")
 
 
 # -----------------------------------------------------------------------------
@@ -56,5 +60,5 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=80,
+        port=8000,
     )

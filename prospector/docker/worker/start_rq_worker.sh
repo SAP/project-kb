@@ -18,5 +18,5 @@ if [ "${PIP_REQUIREMENTS}" != 'none' ]; then
 fi
 
 cat /etc/supervisor.d/rqworker.ini.j2 | python3 -c 'import os;import sys; import jinja2; sys.stdout.write(jinja2.Template(sys.stdin.read()).render(env=os.environ))' > /etc/supervisor.d/rqworker.ini
-
+echo "files = /etc/supervisor.d/*.ini" >> /etc/supervisor/supervisord.conf
 supervisord -n

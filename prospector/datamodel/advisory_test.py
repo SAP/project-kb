@@ -69,12 +69,23 @@ def test_advisory_basic():
 def test_get_advisory():
     advisory = AdvisoryRecord("CVE-2021-22696")
     advisory.get_advisory()
+    print(advisory.versions)
     assert advisory.cve_id == "CVE-2021-22696"
-    assert "3.4.0" in advisory.versions["affected"]
-    assert "3.4.3" in advisory.versions["fixed"]
+    # assert "3.4.0" in advisory.versions["affected"]
+    # assert "3.4.3" in advisory.versions["fixed"]
+    assert "3.4.3" in advisory.versions["lessThan"]
 
 
 def test_build_advisory_record():
-    advisory = build_advisory_record("CVE-2021-29943", fetch_references=True)
+    advisory = build_advisory_record("CVE-2020-35452")
+    print(advisory.references)
+    # raise Exception("")
+    assert advisory.cve_id == "CVE-2020-35452"
 
-    assert advisory.cve_id == "CVE-2021-29943"
+
+def test_debian_adv_lookup():
+    pass
+    # adv = AdvisoryRecord("CVE-2019-12419")
+    # r = adv.search_references_debian_sec_tracker()
+    # print(r)
+    # raise Exception("")

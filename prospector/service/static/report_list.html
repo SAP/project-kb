@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Job List</title>
+    <meta http-equiv="refresh" content="4" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/index.css">
+
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script> -->
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h3>Report list</h3>
+                <p>List of all the reports</p>
+                <table class="table">
+                    <tbody>
+                        {% for report in report_list %}
+                        <tr>
+                            <td><a href="/jobs/get_report/{{ report.0 }}">{{report.0}}</a></td>
+                            <td>{{ report.1.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

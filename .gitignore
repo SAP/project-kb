@@ -32,6 +32,7 @@ prospector/.env
 prospector/workspace.code-workspace
 prospector/disabled_tests/skip_test-commits.db
 prospector/disabled_tests/skip_test-vulnerabilities.db
+prospector/tracer_dataset_final_2
 prospector/results
 prospector/*.py
 prospector/.vscode/launch.json

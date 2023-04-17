@@ -1,13 +1,17 @@
 import difflib
 import re
 import sys
-from typing import Optional
+from typing import List, Optional
+
+from log.logger import logger
 
 
-def clean_tag(tag: str) -> str:
+def clean_tag(tag: str, digits_only: bool = True) -> str:
     """Clean a tag name returning only the numeric part separated by dots."""
-    return ".".join(re.findall(r"\d+", tag))
-    return re.sub(r"[^0-9a-zA-Z]+", ".", tag, flags=re.IGNORECASE)
+    if digits_only:
+        return ".".join(re.findall(r"\d+", tag))
+    else:
+        return re.sub(r"[^0-9a-zA-Z]+", ".", tag, flags=re.IGNORECASE)
     re.sub(r"^[^0-9]+|[^0-9]+$", "", tag, flags=re.IGNORECASE)
 
 
@@ -34,33 +38,69 @@ def get_possible_missing_tag(
         ][:3]
 
 
-def get_possible_tags(tags: list[str], versions: str):
-    """Given a list of tags and a version interval, return the possible tag interval that matches."""
-    prev_version, next_version = versions.split(":")
+def handle_tag_or_substring(version: str, tags: list[str]) -> List[str]:
+    """Given a tag and a list of tags, return True if the tag is in the list or is a substring of one of the tags."""
+    if version in tags:
+        return [version]
+    elif (
+        len(
+            [
+                t
+                for t in tags
+                if t.endswith(version)
+                or (
+                    version in t
+                    and ends_with_zero(t)
+                    or (t in version and ends_with_zero(version))
+                )
+            ]
+        )
+        == 1
+    ):
+        return [
+            t
+            for t in tags
+            if t.endswith(version)
+            or (version in t and ends_with_zero(t))
+            or (t in version and ends_with_zero(version))
+        ]
+    else:
+        return []
 
-    prev_tag = [prev_version] if prev_version in tags else []
+
+def ends_with_zero(version: str):
+    """Given a version string, return True if the last digit is zero."""
+    return bool(re.search(r"[\.-_]0$", version))
+
+
+# flake8: noqa: C901
+def get_possible_tags(tags: list[str], versions: str, unsupervised: bool = True):
+    """Given a list of tags and a version interval, return the possible tag interval that matches."""
+    prev_version, next_version = versions.replace("None", "").split(":")
+    prev_tag = handle_tag_or_substring(prev_version, tags)
+    # print(f"prev_tag: {prev_tag}, prev_version: {prev_version}")
     if len(prev_tag) == 0 and len(prev_version) > 0:
         prev_tag = [
             tag
             for tag in tags
             if prev_version == clean_tag(tag) and not is_rc_or_date(tag)
         ]
-    next_tag = [next_version] if next_version in tags else []
+    next_tag = handle_tag_or_substring(next_version, tags)
+    # print(f"next_tag: {next_tag}, next_version: {next_version}")
     if len(next_tag) == 0 and len(next_version) > 0:
         next_tag = [
             tag
             for tag in tags
             if next_version == clean_tag(tag) and not is_rc_or_date(tag)
         ]
-    # print(tags)
-    # print(prev_tag, next_tag)
+
     if len(prev_tag) == 1 and len(next_tag) == 1:
         return prev_tag[0], next_tag[0]
     elif len(prev_tag) == 1 and len(next_tag) > 1:
         next_tag = [
             tag for tag in next_tag if tag != prev_tag[0] or tag not in prev_tag[0]
         ]  # this may lead to empty list
-        print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
+        logger.info(f"Possible tags are:{prev_tag}:{next_tag}")
         return (
             prev_tag[0],
             next_tag[0],  # difflib.get_close_matches(prev_tag[0], next_tag, n=1)[0],
@@ -69,7 +109,7 @@ def get_possible_tags(tags: list[str], versions: str):
         prev_tag = [
             tag for tag in prev_tag if tag != next_tag[0] or next_tag[0] not in tag
         ]
-        print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
+        logger.info(f"Possible tags are:{prev_tag}:{next_tag}")
         return (
             prev_tag[-1],  # difflib.get_close_matches(next_tag[0], prev_tag, n=1)[0],
             next_tag[0],
@@ -79,23 +119,30 @@ def get_possible_tags(tags: list[str], versions: str):
         prev_candidates = get_possible_missing_tag(tags, next_tag=next_tag[0])
         if len(prev_version) == 0 and len(prev_candidates) == 0:
             return "", next_tag[0]
-        print(f"Next tag is: {next_tag[0]}")
-        sys.exit(f"Previous tag can be: {','.join(prev_candidates)}\n")
+        logger.info(f"Previous tag can be: {','.join(prev_candidates)}")
     elif len(prev_tag) == 1 and len(next_tag) == 0:
         next_candidates = get_possible_missing_tag(tags, prev_tag=prev_tag[0])
         if len(next_version) == 0 and len(next_candidates) == 0:
             return prev_tag[0], ""
-        print(f"Prev tag is: {prev_tag[0]}")
-        sys.exit(f"Next tag can be: {','.join(next_candidates)}\n")
+        logger.info(f"Next tag can be: {','.join(next_candidates)}")
     elif len(prev_tag) > 1 and len(next_tag) > 1:
-        sys.exit(
-            f"Multiple tag candidates found. Aborting.\nTry running it again with:\n  Prev tag: {prev_tag}\n  Next tag: {next_tag}"
-        )
+        logger.info("Multiple tag candidates found.")
     else:
-        return None, None
-        sys.exit(
-            f"Tag candidates not found for versions: {prev_version}, {next_version}"
-        )
+        prev_tag = [tag for tag in tags if prev_version in clean_tag(tag, False)]
+        next_tag = [tag for tag in tags if next_version in clean_tag(tag, False)]
+        # print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
+        if len(prev_tag) == 1 and len(next_tag) == 1:
+            return prev_tag[0], next_tag[0]
+        elif len(prev_tag) == 1 and len(next_tag) == 0 and next_version == "":
+            return prev_tag[0], None
+        elif len(prev_tag) == 0 and len(next_tag) == 1 and prev_version == "":
+            return None, next_tag[0]
+        elif len(prev_tag) == 0 and len(next_tag) == 0:
+            return None, None
+        elif prev_version == "" and next_version == "":
+            return None, None
+    # return "","" to trigger tag mismatch
+    return None, None
 
 
 def get_tag_candidates(

@@ -1,4 +1,4 @@
-FROM alpine:3.13.4
+FROM python:3.10-slim
 
 LABEL Author="Antonino Sabetta <antonino.sabetta@sap.com>"
 
@@ -21,16 +21,18 @@ ENV PIP_REQUIREMENTS=none
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN apk add python3 py3-pip git supervisor curl \
-    && pip3 install rq \
-    && pip3 install Jinja2 \
-    && rm  -rf /tmp/* /var/cache/apk/*
+RUN pip install --upgrade pip
+RUN apt update && apt install -y --no-install-recommends gcc g++ libffi-dev python3-dev libpq-dev git supervisor curl 
 
 COPY requirements.txt /requirements.txt
-COPY start_rq_worker.sh /usr/bin/start_rq_worker.sh
+RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m spacy download en_core_web_sm
+COPY docker/worker/start_rq_worker.sh /usr/local/bin/start_rq_worker.sh
 # COPY etc_supervisor_confd_rqworker.conf.j2 /etc/supervisor/conf.d/rqworker.conf.j2
-COPY etc_supervisor_confd_rqworker.conf.j2 /etc/supervisor.d/rqworker.ini.j2
+COPY docker/worker/etc_supervisor_confd_rqworker.conf.j2 /etc/supervisor.d/rqworker.ini.j2
 VOLUME ["/pythonimports"]
+ENV PYTHONPATH "${PYTHONPATH}:/pythonimports"
 
-RUN chmod +x /usr/bin/start_rq_worker.sh
-ENTRYPOINT ["/usr/bin/start_rq_worker.sh"]
+#CMD tail -f /dev/null
+RUN chmod +x /usr/local/bin/start_rq_worker.sh
+ENTRYPOINT ["/usr/local/bin/start_rq_worker.sh"]

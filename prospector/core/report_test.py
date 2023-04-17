@@ -2,7 +2,7 @@ import os
 import os.path
 from random import randint
 
-import client.cli.report as report
+import prospector.core.report as report
 from datamodel.advisory import build_advisory_record
 from datamodel.commit import Commit
 from util.sample_data_generation import (  # random_list_of_url,

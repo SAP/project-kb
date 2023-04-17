@@ -18,7 +18,8 @@ nvd_token: Null
 use_backend: optional
 
 # Optional backend info to save/use already preprocessed data
-backend: http://localhost:8000
+backend: http://backend:8000
+#backend: http://localhost:8000
 
 database:
   user: postgres
@@ -27,7 +28,7 @@ database:
   port: 5432
   dbname: postgres
 
-redis_url: redis://localhost:6379/0
+redis_url: redis://redis:6379/0
 
 # Report file format: "html", "json", "console" or "all"
 # and the file name

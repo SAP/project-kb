@@ -1,4 +1,6 @@
 <div class="col-3 h-100 overflow-scroll bg-light bg-gradient border border-secondary">
+    {% if candidates|length > 0 %}
+    {% if candidates[0].relevance != 0 %}
     <h3>Filters</h3>
     <p class="text-justify">
         Use the slider to filter out lower relevance scores and the button to collapse or expand all the commits.
@@ -15,6 +17,9 @@
                 All</button>
         </div>
     </div>
+    {% endif %}
+    {% endif %}
+
 
     <div class="advisory-record" style="margin-top: 3ex">
         <h3>Advisory Record</h3>
@@ -22,6 +27,7 @@
                 advisory_record.cve_id }}</b></a><br />
         <p class="text-justify">{{ advisory_record.description }}</p>
 
+        {% if advisory_record.files|length > 0 %}
         <h5>Possible relevant files/methods</h5>
         <p style="margin: 10pt">
         <ul class="list-group">
@@ -29,8 +35,9 @@
             <li class="list-group-item">{{file}}</li>
             {% endfor %}
         </ul>
-
         </p>
+        {% endif %}
+        {% if advisory_record.keywords|length > 0 %}
         <h5>Other relevant keywords</h5>
         <p style="margin: 10pt">
             {% for token in advisory_record.keywords | sort %}
@@ -38,6 +45,7 @@
 
             {% endfor %}
         </p>
+        {% endif %}
     </div>
 
     <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"

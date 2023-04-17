@@ -2,7 +2,7 @@ import subprocess
 
 import pytest
 
-from .prospector_client import prospector
+from .prospector import prospector
 
 OPENCAST_CVE = "CVE-2021-21318"
 OPENCAST_REPO = "https://github.com/opencast/opencast"
