@@ -128,15 +128,16 @@ Prospector makes use of `pytest`.
 
 :exclamation: **NOTE:** before using it please make sure to have running instances of the backend and the database.
 
-## Extra
+## History
 
-The approach implemented in patch-finder is described in detail in this
-document: https://arxiv.org/pdf/2103.13375.pdf
+The high-level structuring of the Prospector operation follows the approach of its
+ancestor FixFinder, which is described in detail here: https://arxiv.org/pdf/2103.13375.pdf
 
-This project is inspired by the prototype developed by Daan Hommersom as part of his thesis
+FixFinder is the prototype developed by Daan Hommersom as part of his thesis
 done in partial fulfillment of the requirements for the degree of Master of
 Science in Data Science & Entrepreneurship at the Jheronimus Academy of Data
 Science during a graduation internship at SAP.
+
 The document can be cited as follows:
 
 @misc{hommersom2021mapping,
@@ -144,6 +145,7 @@ The document can be cited as follows:
     author = {Hommersom, Daan and
     Sabetta, Antonino and
     Coppola, Bonaventura and
+    Dario Di Nucci and
     Tamburri, Damian A. },
     year = {2021},
     month = {March},
