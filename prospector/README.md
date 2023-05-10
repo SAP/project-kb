@@ -130,15 +130,19 @@ Prospector makes use of `pytest`.
 
 ## History
 
-The high-level structuring of the Prospector operation follows the approach of its
-ancestor FixFinder, which is described in detail here: https://arxiv.org/pdf/2103.13375.pdf
+The high-level structure of Prospector follows the approach of its
+predecessor FixFinder, which is described in detail here: https://arxiv.org/pdf/2103.13375.pdf
 
 FixFinder is the prototype developed by Daan Hommersom as part of his thesis
 done in partial fulfillment of the requirements for the degree of Master of
 Science in Data Science & Entrepreneurship at the Jheronimus Academy of Data
 Science during a graduation internship at SAP.
 
-The document can be cited as follows:
+The main difference between FixFinder and Prospector (which has been implemented from scratch)
+is that the former takes a definite data-driven approach and trains a ML model to perform the ranking,
+whereas the latter applies hand-crafted rules to assign a relevance score to each candidate commit.
+
+The document that describes FixFinder can be cited as follows:
 
 @misc{hommersom2021mapping,
     title = {Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories},
