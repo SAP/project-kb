@@ -43,7 +43,6 @@ def apply_rules(
     advisory_record: AdvisoryRecord,
     rules=["ALL"],
 ) -> List[Commit]:
-
     enabled_rules = get_enabled_rules(rules)
 
     rule_statistics.collect("active", len(enabled_rules), unit="rules")
@@ -77,7 +76,6 @@ def apply_rules(
 
 
 def get_enabled_rules(rules: List[str]) -> List[Rule]:
-
     if "ALL" in rules:
         return RULES
 
@@ -90,15 +88,15 @@ def get_enabled_rules(rules: List[str]) -> List[Rule]:
 
 
 # TODO: This could include issues, PRs, etc.
-class CveIdInMessage(Rule):
-    """Matches commits that refer to the CVE-ID in the commit message."""  # Check if works for the title or comments
+class VulnIdInMessage(Rule):
+    """Matches commits that refer to the Vuln-ID in the commit message."""  # Check if works for the title or comments
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         if (
             advisory_record.cve_id in candidate.cve_refs
             and len(candidate.cve_refs) == 1
         ):
-            self.message = "The commit message mentions the CVE ID"
+            self.message = "The commit message mentions the vulnerability ID"
             return True
         return False
 
@@ -126,14 +124,14 @@ class ReferencesGhIssue(Rule):
         return False
 
 
-class ReferencesJiraIssue(Rule):
-    """Matches commits that refer to a JIRA issue in the commit message or title."""
+class ReferencesBug(Rule):
+    """Matches commits that refer to a bug tracking ticket in the commit message or title."""
 
     def apply(
         self, candidate: Commit, _: AdvisoryRecord = None
     ):  # test to see if I can remove the advisory record from here
         if len(candidate.jira_refs) > 0:
-            self.message = f"The commit message references some jira issue: {', '.join(candidate.jira_refs)}"
+            self.message = f"The commit message references some bug tracking ticket: {', '.join(candidate.jira_refs)}"
             return True
         return False
 
@@ -211,7 +209,7 @@ class ChangesRelevantCode(Rule):
                 elif word in matching_keywords:
                     break
         if len(matching_keywords) > 0:
-            self.message = f"The commit changes code containing relevant methods/parameters: {', '.join(matching_keywords)}"
+            self.message = f"The commit modifies code containing relevant filename or methods: {', '.join(matching_keywords)}"
             return True
         return False
 
@@ -220,13 +218,15 @@ class AdvKeywordsInFiles(Rule):
     """Matches commits that modify paths corresponding to a keyword extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        matching_keywords = [
-            (p, token)
-            for p in candidate.changed_files
-            for token in advisory_record.keywords
-            if token.casefold() in p.casefold()
-            and token.casefold() not in candidate.repository
-        ]
+        matching_keywords = set(
+            [
+                (p, token)
+                for p in candidate.changed_files
+                for token in advisory_record.keywords
+                if token.casefold() in p.casefold()
+                and token.casefold() not in candidate.repository
+            ]
+        )
 
         if len(matching_keywords) > 0:
             self.message = f"An advisory keyword is contained in the changed files: {', '.join(set([t for _, t in matching_keywords]))}"
@@ -269,8 +269,8 @@ class TwinMentionedInAdv(Rule):
 
 
 # TODO: refactor these rules to not scan multiple times the same commit
-class CveIdInLinkedIssue(Rule):
-    """Matches commits linked to an issue containing the CVE-ID."""
+class VulnIdInLinkedIssue(Rule):
+    """Matches commits linked to an issue containing the Vuln-ID."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for id, content in candidate.ghissue_refs.items():
@@ -278,7 +278,7 @@ class CveIdInLinkedIssue(Rule):
                 advisory_record.cve_id in content
                 and len(re.findall(r"CVE-\d{4}-\d{4,8}", content)) == 1
             ):
-                self.message = f"Issue {id} linked to the commit mentions the CVE ID. "
+                self.message = f"Issue {id} linked to the commit mentions the Vuln ID. "
                 return True
 
         for id, content in candidate.jira_refs.items():
@@ -286,9 +286,7 @@ class CveIdInLinkedIssue(Rule):
                 advisory_record.cve_id in content
                 and len(re.findall(r"CVE-\d{4}-\d{4,8}", content)) == 1
             ):
-                self.message = (
-                    f"JIRA issue {id} linked to the commit mentions the CVE ID"
-                )
+                self.message = f"The bug tracking ticket {id} linked to the commit mentions the Vuln ID"
 
                 return True
 
@@ -300,7 +298,6 @@ class SecurityKeywordInLinkedGhIssue(Rule):
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
         for id, issue_content in candidate.ghissue_refs.items():
-
             matching_keywords = extract_security_keywords(issue_content)
 
             if len(matching_keywords) > 0:
@@ -309,38 +306,39 @@ class SecurityKeywordInLinkedGhIssue(Rule):
         return False
 
 
-class SecurityKeywordInLinkedJiraIssue(Rule):
-    """Matches commits linked to a jira issue containing one or more security-related keywords."""
+class SecurityKeywordInLinkedBug(Rule):
+    """Matches commits linked to a bug tracking ticket containing one or more security-related keywords."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
         for id, issue_content in candidate.jira_refs.items():
-
             matching_keywords = extract_security_keywords(issue_content)
 
             if len(matching_keywords) > 0:
-                self.message = f"The jira issue {id} contains some security-related terms: {', '.join(matching_keywords)}"
+                self.message = f"The bug tracking ticket {id} contains some security-related terms: {', '.join(matching_keywords)}"
                 return True
 
         return False
 
 
-class CrossReferencedJiraLink(Rule):
-    """Matches commits whose message contains a jira issue which is also referenced by the advisory."""
+class CrossReferencedBug(Rule):
+    """Matches commits whose message contains a bug tracking ticket which is also referenced by the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        matches = [
-            id
-            for id in candidate.jira_refs
-            for url in advisory_record.references
-            if id in url and "jira" in url
-        ]
+        matches = set(
+            [
+                id
+                for id in candidate.jira_refs
+                for url in advisory_record.references
+                if id in url and "jira" in url
+            ]
+        )
         if len(matches) > 0:
-            self.message = f"The commit and the advisory mention the same jira issue(s): {', '.join(matches)}"
+            self.message = f"The commit and the advisory (including referenced pages) mention the same bug tracking ticket: {', '.join(matches)}"
             return True
         return False
 
 
-class CrossReferencedGhLink(Rule):
+class CrossReferencedGh(Rule):
     """Matches commits whose message contains a github issue/pr which is also referenced by the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -352,7 +350,7 @@ class CrossReferencedGhLink(Rule):
         ]
 
         if len(matches) > 0:
-            self.message = f"The commit and the advisory mention the same github issue(s): {', '.join(matches)}"
+            self.message = f"The commit and the advisory (including referenced pages) mention the same github issue: {', '.join(matches)}"
             return True
         return False
 
@@ -389,11 +387,13 @@ class RelevantWordsInMessage(Rule):
     """Matches commits whose message contains one or more relevant words."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        matching_words = [
-            token
-            for token in advisory_record.files
-            if token in candidate.message.split()
-        ]
+        matching_words = set(
+            [
+                token
+                for token in advisory_record.files
+                if token in candidate.message.split()
+            ]
+        )
         # [
         #     file
         #     for file in candidate.changed_files
@@ -410,12 +410,12 @@ class RelevantWordsInMessage(Rule):
 
 
 RULES: List[Rule] = [
-    CveIdInMessage("CVE_ID_IN_MESSAGE", 64),
+    VulnIdInMessage("VULN_ID_IN_MESSAGE", 64),
     # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
-    CrossReferencedJiraLink("CROSS_REFERENCED_JIRA_LINK", 32),
-    CrossReferencedGhLink("CROSS_REFERENCED_GH_LINK", 32),
+    CrossReferencedBug("XREF_BUG", 32),
+    CrossReferencedGh("XREF_GH", 32),
     CommitMentionedInReference("COMMIT_IN_REFERENCE", 64),
-    CveIdInLinkedIssue("CVE_ID_IN_LINKED_ISSUE", 32),
+    VulnIdInLinkedIssue("VULN_ID_IN_LINKED_ISSUE", 32),
     ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 8),
     ChangesRelevantCode("CHANGES_RELEVANT_CODE", 8),
     RelevantWordsInMessage("RELEVANT_WORDS_IN_MESSAGE", 8),
@@ -423,18 +423,18 @@ RULES: List[Rule] = [
     AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 4),
     SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 4),
     SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 4),
-    SecurityKeywordInLinkedJiraIssue("SEC_KEYWORDS_IN_LINKED_JIRA", 4),
+    SecurityKeywordInLinkedBug("SEC_KEYWORDS_IN_LINKED_BUG", 4),
     ReferencesGhIssue("GITHUB_ISSUE_IN_MESSAGE", 2),
-    ReferencesJiraIssue("JIRA_ISSUE_IN_MESSAGE", 2),
+    ReferencesBug("BUG_IN_MESSAGE", 2),
     CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
 
 rules_list = [
     "COMMIT_IN_REFERENCE",
-    "CVE_ID_IN_MESSAGE",
-    "CVE_ID_IN_LINKED_ISSUE",
-    "CROSS_REFERENCED_JIRA_LINK",
-    "CROSS_REFERENCED_GH_LINK",
+    "VULN_ID_IN_MESSAGE",
+    "VULN_ID_IN_LINKED_ISSUE",
+    "XREF_BUG",
+    "XREF_GH",
     "CHANGES_RELEVANT_FILES",
     "CHANGES_RELEVANT_CODE",
     "RELEVANT_WORDS_IN_MESSAGE",
@@ -442,10 +442,10 @@ rules_list = [
     "ADV_KEYWORDS_IN_MSG",
     "SEC_KEYWORDS_IN_MESSAGE",
     "SEC_KEYWORDS_IN_LINKED_GH",
-    "SEC_KEYWORDS_IN_LINKED_JIRA",
+    "SEC_KEYWORDS_IN_LINKED_BUG",
     "GITHUB_ISSUE_IN_MESSAGE",
-    "JIRA_ISSUE_IN_MESSAGE",
+    "BUG_IN_MESSAGE",
     "COMMIT_HAS_TWINS",
 ]
 
-print(" & ".join([f"\\rot{{{x}}}" for x in rules_list]))
+# print(" & ".join([f"\\rot{{{x}}}" for x in rules_list]))

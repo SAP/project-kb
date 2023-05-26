@@ -24,6 +24,7 @@ dev-setup: setup requirements-dev.txt
 	@echo "$(DONE) Installed development requirements"
 
 docker-setup:
+	docker build -t prospector-base:1.0 -f ./docker/Dockerfile .
 	docker-compose up -d --build
 
 docker-clean:

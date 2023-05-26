@@ -34,7 +34,7 @@
                         {% for job in joblist %}
                         <tr onclick="window.location.href = '/jobs/get_settings/{{ job.id }}'" class="highlight">
                             <td><span
-                                    class="badge {{ {'finished': 'badge-success', 'started': 'badge-info', 'failed': 'badge-danger'}[job.get_status()] | default('badge-dark') }} ">
+                                    class="badge {{ {'finished': 'badge-success', 'started': 'badge-info', 'failed': 'badge-danger'}[job.get_status() or ''] | default('badge-dark') }} ">
                                     {{job.get_status()}}</td>
                             <td>{{ job.id }}</td>
                             <td><a href="/jobs/get_report/{{ job.id }}" class="btn btn-sm btn-primary">Result</a></td>

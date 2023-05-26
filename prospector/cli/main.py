@@ -30,10 +30,7 @@ from util.config_parser import get_configuration  # noqa: E402
 
 def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
-        print("before config: ", argv)
         config = get_configuration(argv)
-        print("after config: ", config.cve_id)
-
         if not config:
             logger.error("No configuration file found. Cannot proceed.")
 
@@ -46,7 +43,7 @@ def main(argv):  # noqa: C901
         logger.setLevel(config.log_level)
         logger.info(f"Global log level set to {get_level(string=True)}")
 
-        if config.cve_id is None:
+        if config.vuln_id is None:
             logger.error("No vulnerability id was specified. Cannot proceed.")
             console.print(
                 "No configuration file found.",
@@ -64,10 +61,10 @@ def main(argv):  # noqa: C901
         logger.debug("Using the following configuration:")
         pretty_log(logger, config.__dict__)
 
-        logger.debug("Vulnerability ID: " + config.cve_id)
+        logger.debug("Vulnerability ID: " + config.vuln_id)
 
     results, advisory_record = prospector(
-        vulnerability_id=config.cve_id,
+        vulnerability_id=config.vuln_id,
         repository_url=config.repository,
         publication_date=config.pub_date,
         vuln_descr=config.description,
