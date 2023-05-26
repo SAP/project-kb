@@ -1,12 +1,13 @@
+import json
+import sys
+
 import redis
 from rq import Connection, Queue
 from rq.job import Job
 
-import json
-from core.report import generate_report
 from core.prospector import prospector
+from core.report import generate_report
 from util.config_parser import parse_config_file
-import sys
 
 # get the redis server url
 config = parse_config_file()
@@ -38,9 +39,9 @@ def run_prospector(vuln_id, repo_url, v_int):
 def create_prospector_job(entry):
     # data = json.loads(entry)
 
-    id = entry["id"]
-    repo = entry["repository"]
-    version = entry["version"]
+    id = entry["nvd_info"]["cve"]["id"]
+    repo = entry["repo_url"]
+    version = entry["version_interval"]
 
     with Connection(redis.from_url(redis_url)):
         queue = Queue()

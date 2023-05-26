@@ -230,6 +230,8 @@ class AdvisoryRecord:
             return "commit::" + re.search(
                 r"(?:commit|patch)\/\?id=(\w{6,40})", reference
             ).group(1)
+        if validators.url(reference):
+            return reference
 
         if filter:
             # if any(
@@ -238,7 +240,7 @@ class AdvisoryRecord:
             # )
             return None
         # validators.url(reference)
-        return reference
+        return None
 
     def parse_advisory_2(self, details, metadata):
         self.affected_products = [details["affected"][0]["product"]]
@@ -246,7 +248,8 @@ class AdvisoryRecord:
         self.published_timestamp = int(isoparse(metadata["datePublished"]).timestamp())
         self.updated_timestamp = int(isoparse(metadata["dateUpdated"]).timestamp())
         self.reserved_timestamp = int(isoparse(metadata["dateReserved"]).timestamp())
-        self.description = details["descriptions"][0]["value"]
+        if not self.description:
+            self.description = details["descriptions"][0]["value"]
         self.references = defaultdict(
             int, {self.extract_hashes(r["url"]): 2 for r in details["references"]}
         )

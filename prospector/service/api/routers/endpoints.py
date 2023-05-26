@@ -82,7 +82,7 @@ async def get_settings(job_id, request: Request):
         return {"message": "job not found"}
 
 
-@router.get("/report_page", response_class=HTMLResponse, tags=["jobs"])
+@router.get("/report_page", response_class=HTMLResponse)
 async def report_page(request: Request):
     report_list = []
     for filename in os.listdir("/app/data_sources/reports"):

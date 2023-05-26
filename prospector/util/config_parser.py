@@ -11,7 +11,7 @@ from log.logger import logger
 def parse_cli_args(args):
     parser = argparse.ArgumentParser(description="Prospector CLI")
     parser.add_argument(
-        "cve_id",
+        "vuln_id",
         nargs="?",
         type=str,
         help="ID of the vulnerability to analyze",
@@ -141,7 +141,7 @@ def parse_config_file(filename: str = "config.yaml"):
 class Config:
     def __init__(
         self,
-        cve_id: str,
+        vuln_id: str,
         repository: str,
         preprocess_only: bool,
         pub_date: str,
@@ -163,14 +163,14 @@ class Config:
         git_cache: str,
         ignore_refs: bool,
     ):
-        self.cve_id = cve_id
+        self.vuln_id = vuln_id
         self.repository = repository
         self.preprocess_only = preprocess_only
         self.pub_date = pub_date
         self.description = description
         self.max_candidates = max_candidates
         # self.tag_interval = tag_interval
-        self.version_interval = version_interval
+        self.version_interval = version_interval if version_interval else "None:None"
         self.modified_files = modified_files.split(",") if modified_files else []
         self.filter_extensions = filter_extensions
         self.keywords = keywords.split(",") if keywords else []
@@ -192,7 +192,7 @@ def get_configuration(argv):
     if conf is None:
         sys.exit("No configuration file found")
     return Config(
-        cve_id=args.cve_id,
+        vuln_id=args.vuln_id,
         repository=args.repository,
         preprocess_only=args.preprocess_only or conf.preprocess_only,
         pub_date=args.pub_date,
