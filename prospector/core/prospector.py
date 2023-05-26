@@ -61,7 +61,7 @@ def prospector(  # noqa: C901
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
     rules: List[str] = ["ALL"],
-    tag_commits: bool = False,
+    tag_commits: bool = True,
     silent: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
@@ -143,7 +143,7 @@ def prospector(  # noqa: C901
     with ExecutionTimer(
         core_statistics.sub_collection("commit preprocessing")
     ) as timer:
-        with ConsoleWriter("\nPreprocessing commits") as writer:
+        with ConsoleWriter("\nProcessing commits") as writer:
             try:
                 if use_backend != "never":
                     missing, preprocessed_commits = retrieve_preprocessed_commits(
@@ -158,7 +158,7 @@ def prospector(  # noqa: C901
                 )
                 if use_backend == "always":
                     print("Backend not reachable: aborting")
-                    sys.exit(0)
+                    sys.exit(1)
                 print("Backend not reachable: continuing")
 
             if "missing" not in locals():
@@ -169,7 +169,7 @@ def prospector(  # noqa: C901
                 # preprocessed_commits += preprocess_commits(missing, timer)
 
                 pbar = tqdm(
-                    missing, desc="Preprocessing commits", unit="commit", disable=silent
+                    missing, desc="Processing commits", unit="commit", disable=silent
                 )
                 start_time = time.time()
                 with Counter(
@@ -215,7 +215,7 @@ def preprocess_commits(commits: List[RawCommit], timer: ExecutionTimer) -> List[
         counter.initialize("preprocessed commits", unit="commit")
         for raw_commit in tqdm(
             commits,
-            desc="Preprocessing commits",
+            desc="Processing commits",
             unit=" commit",
         ):
             counter.increment("preprocessed commits")
@@ -321,8 +321,8 @@ def retrieve_preprocessed_commits(
 
 def save_preprocessed_commits(backend_address, payload):
     with ExecutionTimer(core_statistics.sub_collection(name="save commits to backend")):
-        with ConsoleWriter("Saving preprocessed commits to backend") as writer:
-            logger.debug("Sending preprocessing commits to backend...")
+        with ConsoleWriter("Saving processed commits to backend") as writer:
+            logger.debug("Sending processing commits to backend...")
             try:
                 r = requests.post(
                     backend_address + "/commits/",
