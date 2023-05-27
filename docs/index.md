@@ -18,19 +18,12 @@ as well as set of tools to support the mining, curation and management of such d
 ## Available Tools
 <div style="text-align: center;">
  <div style="display: inline-block; margin-right: 20px;">
-  <a href="kaybee" class="md-button md-button--primary">Kaybee</a>
- </div>
- <div style="display: inline-block;">
   <a href="prospector" class="md-button md-button--primary">Prospector</a>
  </div>
+ <div style="display: inline-block;">
+  <a href="kaybee" class="md-button md-button--primary">Kaybee</a>
+ </div>
 </div>
-
-### Kaybee
-
-KayBee is a vulnerability data management tool, it makes possible to fetch the vulnerability statements from this
-repository (or from any other repository) and export them to a number of
-formats, including a script to import them to a [Steady
-backend](https://github.com/eclipse/steady).
 
 ### Prospector
 
@@ -39,6 +32,14 @@ Prospector is a vulnerability data mining tool that aims at reducing the effort 
 Given a vulnerability advisory and a software repository, it
 analyses them to produce a report in which commits are ranked
 according to the likelihood that they fix the vulnerability.
+
+### Kaybee
+
+KayBee is a vulnerability data management tool, it makes possible to fetch the vulnerability statements from this
+repository (or from any other repository) and export them to a number of
+formats, including a script to import them to a [Steady
+backend](https://github.com/eclipse/steady).
+
 
 ## Vulnerability data
 
