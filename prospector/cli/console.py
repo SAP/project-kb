@@ -22,7 +22,7 @@ class ConsoleWriter(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_val is not None and exc_val.code != 0:
+        if exc_val is not None:
             self.status = MessageStatus.ERROR
         print(
             f"{ConsoleWriter.indent}[{self.status.value}{self.status.name}{Style.RESET_ALL}]",
