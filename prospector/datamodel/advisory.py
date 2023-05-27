@@ -240,7 +240,7 @@ class AdvisoryRecord:
             # )
             return None
         # validators.url(reference)
-        return None
+        return ""
 
     def parse_advisory_2(self, details, metadata):
         self.affected_products = [details["affected"][0]["product"]]
