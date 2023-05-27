@@ -1,11 +1,11 @@
-from filter_entries import find_matching_entries, get_cves
+from filter_entries import find_matching_entries_test, get_cves
 from job_creation import create_prospector_job
 
 # request new cves entries through NVD API
-cves = get_cves(20)
+cves = get_cves(5)
 
 # filter out undesired cves based on mathcing rules
-filtered_cves = find_matching_entries(cves)
+filtered_cves = find_matching_entries_test(cves)
 
 """with open("filtered_cves.json", "w") as outfile:
     json.dump(filtered_cves, outfile)"""

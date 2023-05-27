@@ -112,10 +112,11 @@ def extract_filename_from_path(text: str) -> str:
 def extract_filename(text: str, relevant_extensions: List[str]) -> List[str]:
     # Covers cases file.extension if extension is relevant, extensions come from CLI parameter
     res = re.search(r"(?:(\w{2,})\.)+(\w+)", text, flags=re.IGNORECASE)
+    is_version = re.search(r"(\d+(?:\.\d+)+)", text)
     if res is not None:
         if res.group(2) in relevant_extensions:
             return [res.group(1)], res.group(2)
-        elif not res.group(2).isdigit():
+        elif not res.group(2).isdigit() and not is_version:
             return [res.group(2), res.group(1)], None
 
     # This regex covers cases with various camelcase filenames and underscore, dash names
