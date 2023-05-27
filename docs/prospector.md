@@ -78,7 +78,7 @@ By default, Prospector saves the results in a HTML file named *prospector-report
 ## Tool Demostration
 
 ### Video Recording
-<iframe width="560" height="315" src="https://www.youtube.com/<IDHERE>" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ZYAJb6lixCA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 A video recording of the tool demo is also available [here](https://zenodo.org/record/7974442)
 
