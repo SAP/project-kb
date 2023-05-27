@@ -3,47 +3,60 @@
 :warning: **WARNING** Prospector is a research prototype,
 currently under development: the instructions below are intended for development, testing and demonstration purposes only!
 
+:exclamation: Please note that **Windows is not supported** while WSL and WSL2 are fine.
+
 ## Description
 
 Prospector is a tool to reduce the effort needed to find security fixes for
-*known* vulnerabilities in open source software repositories
+*known* vulnerabilities in open source software repositories.
 
-It takes a vulnerability description (in natural language) in input and
-produces in output a ranked list of commits, in decreasing order of relevance.
+Given an advisory expressed in natural language, Prospector processes the commits found in the target source code repository, ranks them based on a set of predefined rules, and produces a report that the user can inspect to determine which commits to retain as the actual fix.
 
-If you find a bug, please open an issue. If you can also fix the bug, please
-create a pull request (make sure it includes a test case that passes with your correction
-but fails without it)
+## Setup & Run
 
+:warning: The tool requires Docker and Docker-compose, as it employes Docker containers for certain functionalities. Make sure you have Docker installed and running before proceeding with the setup and usage of Prospector.
 
-## Setup
+To quickly set up Prospector:
+1. Clone the project KB repository
+```
+git clone https://github.com/sap/project-kb
+```
+2. Navigate to the *prospector* folder
+```
+cd project-kb/prospector
+```
 
-:exclamation: Please note that **Windows is not supported** while WSL and WSL2 are fine.
+3. Execute the bash script *run_prospector.sh* specifying the *-h* flag. This will display a list of options that you can use to customize the execution of Prospector.
+
+```
+./run_prospector.sh -h
+```
+The bash script builds and starts the required Docker containers. Once the building step is completed, the script will show the list of available options.
+
+4. Try the following example:
+
+```
+./run_prospector.sh CVE-2020-1925 --repository https://github.com/apache/olingo-odata4
+```
+By default, Prospector saves the results in a HTML file named *prospector-report.html*.
+Open this file in a web browser to view what Prospector was able to find!
+
+## Development
 
 Prerequisites:
 
 * Python 3.10
-* postgresql
-* gcc g++ libffi-dev python3-dev libpq-dev (to build python dependencies)
-
-The easiest way to set up Prospector is to clone the project KB repository and then navigate to the prospector folder:
-
-```
-git clone https://github.com/sap/project-kb
-cd project-kb/prospector
-```
+* postgreSQL
+* gcc g++ libffi-dev python3-dev libpq-dev
+* Docker & Docker-compose
 
 You can setup everything and install the dependencies by running:
 ```
 make setup
-```
-or (for development purposes):
-```
 make dev-setup
 ```
 
 This is necessary only the first time you set up your dev. environment.
-
 
 Afterwards, you will just have to set the environment variables using the `.env` file and sourcing it with:
 
@@ -72,15 +85,9 @@ If you use VSCode, this can be achieved by pasting these lines in your configura
     "editor.formatOnSave": true,
 ```
 
-## Starting the backend database and the job workers [OPTIONAL]
+### Starting the backend database and the job workers
 
-If you run the client without running the backend you will get a warning and have slower response times when making multiple queries. If you only intend to try out the client, feel free to skip this section and the next and go straight to "Using the CLI".
-
-Note: this section and the following assume you have performed succesfully the
-steps in the *setup* section above.
-
-This is achieved with docker and docker-compose, make sure you have both installed
-and working before proceeding.
+If you run the client without running the backend you will get a warning and have slower response times when making multiple queries.
 
 You can then start the necessary containers with the following command:
 
@@ -92,7 +99,7 @@ If you wish to cleanup docker to run a fresh version of the backend you can run:
 
 `make docker-clean`
 
-## Starting the RESTful server
+### Starting the RESTful server
 
 `uvicorn api.main:app --reload`
 
@@ -107,26 +114,15 @@ You might also want to take a look at `http://127.0.0.1:8000/docs`.
 
 which is equivalent but more convenient for debugging.
 
-
-## Using the CLI
-
-Try the following example:
-
-`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd`
-
-or, specifying the tag interval to restrict the retrieval of candidate commits:
-
-`python client/cli/main.py CVE-2014-0050 --repository https://github.com/apache/commons-fileupload --use-nvd --tag-interval FILEUPLOAD_1_3:FILEUPLOAD_1_3_1`
-
-In the example above, the tag interval has been chosen by considering the text of the advisory ("MultipartStream.java in Apache Commons FileUpload before 1.3.1 [...]") and comparing it with the set of tags found  in the git repository.
-
-*HEADS-UP*: Prospector has the capability to "guess" tag names from version intervals, but that functionality is not yet exposed to the command line client (it will be in the future). If you are curious to know how that works, please see the last page of [this paper](https://arxiv.org/pdf/2103.13375).
-
-## Testing
+### Testing
 
 Prospector makes use of `pytest`.
 
 :exclamation: **NOTE:** before using it please make sure to have running instances of the backend and the database.
+
+If you find a bug, please open an issue. If you can also fix the bug, please
+create a pull request (make sure it includes a test case that passes with your correction
+but fails without it)
 
 ## History
 
