@@ -1,26 +1,27 @@
-margin: 1.6rem 0;
-    span.toctitle {
+/*margin: 1.6rem 0;*/
+
+span.toctitle {
     font-size: 1.8rem;
     font-weight: 600;
     letter-spacing: -0.01em;
 }
 
-div.toc > ul  {
+div.toc>ul {
     margin: 0;
 }
 
-div.toc > ul > li {
+div.toc>ul>li {
     margin: 10px;
     list-style: none;
     font-weight: 800;
 }
 
-div.toc > ul > li > ul> li {
+div.toc>ul>li>ul>li {
     list-style: none;
     font-weight: 400;
 }
 
-div.toc > ul > li > ul> li:before {
+div.toc>ul>li>ul>li:before {
     content: "-";
     font-weight: 600;
     display: block;
@@ -31,4 +32,4 @@ div.toc > ul > li > ul> li:before {
 
 /* div.md-sidebar--secondary {
     /* display: none; */
-} */
+/*} */

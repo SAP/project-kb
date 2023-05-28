@@ -17,6 +17,7 @@ Given an advisory expressed in natural language, Prospector processes the commit
 :warning: The tool requires Docker and Docker-compose, as it employes Docker containers for certain functionalities. Make sure you have Docker installed and running before proceeding with the setup and usage of Prospector.
 
 To quickly set up Prospector:
+
 1. Clone the project KB repository
 ```
 git clone https://github.com/sap/project-kb
@@ -27,21 +28,22 @@ cd project-kb/prospector
 ```
 
 3. Execute the bash script *run_prospector.sh* specifying the *-h* flag. This will display a list of options that you can use to customize the execution of Prospector.
-
 ```
 ./run_prospector.sh -h
 ```
+
 The bash script builds and starts the required Docker containers. Once the building step is completed, the script will show the list of available options.
 
 4. Try the following example:
-
 ```
 ./run_prospector.sh CVE-2020-1925 --repository https://github.com/apache/olingo-odata4
 ```
+
 By default, Prospector saves the results in a HTML file named *prospector-report.html*.
+
 Open this file in a web browser to view what Prospector was able to find!
 
-## Development
+## Development Setup
 
 Prerequisites:
 
@@ -113,6 +115,10 @@ You might also want to take a look at `http://127.0.0.1:8000/docs`.
 `python api/main.py`
 
 which is equivalent but more convenient for debugging.
+
+### Running the CLI version
+
+The script `run_prospector.sh` also containerize the CLI version of the tool. To execute Prospector outside of the docker container run `python cli/main.py`
 
 ### Testing
 
