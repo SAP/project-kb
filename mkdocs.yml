@@ -1,10 +1,9 @@
 site_name: project "KB"
 nav:
   - Home: index.md
-  - Getting started: getting_started.md
-  - User manual: user_manual.md
-  - Contributing: contributing.md
-  - Developer docs: dev_docs.md
+  - Prospector: prospector.md
+  - Kaybee: kaybee.md
+  - How to contribute: contributing.md
   - FAQ: faq.md
   - Team: team.md
 
@@ -32,8 +31,8 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.critic
   - pymdownx.details
-  # - pymdownx.emoji:
-  #     emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  #- pymdownx.emoji:
+   #   emoji_generator: !!python/name:pymdownx.emoji.to_svg
   - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.magiclink
@@ -43,13 +42,14 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
+  - attr_list
 
 
 # Customization
 extra:
   social:
-    - type: 'github'
-      link: 'https://github.com/sap/project-kb'
+    #- type: 'github'
+    #  link: 'https://github.com/sap/project-kb'
     # - type: 'twitter'
     #   link: 'https://twitter.com/antoninosabetta'
     # - type: 'linkedin'
@@ -60,10 +60,11 @@ theme:
   palette:
     primary: 'green'
     accent: 'green'
-  logo:
-    icon: 'cloud'
+  icon:
+    repo: fontawesome/brands/github
   feature:
     tabs: false
 
 extra_css:
   - css/faq.css
+  - css/buttons.css

@@ -1,4 +1,4 @@
-# Getting started with project "KB"
+# KayBee
 
 ## Installation
 
@@ -51,6 +51,8 @@ as in this example:
       branch: vulnerability-data
       rank: 10
 
+Please refer to the output of `kaybee help` and `kaybee <command> help` to
+know what flags and options are available.
 
 ## Retrieving vulnerability data
 
@@ -143,3 +145,6 @@ will probably come later on.
 ## Publishing
 
 *To be written....*
+
+## Contributing
+* [How to contribute](contributing.md)
