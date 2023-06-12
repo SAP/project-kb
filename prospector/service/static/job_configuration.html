@@ -24,17 +24,15 @@
             {{job.get_status()}}
         </span>
         <form>
-            <label for="repo">Repository:
-                <input type="text" id="repo" name="repo" value="{{job.args[1]}}">
-            </label>
+            <label for="repo">Repository: </label>
+            <input type="text" id="repo" name="repo" value="{{job.args[1]}}">
 
-            <label for="versions">Version interval:
-                <input type="text" id="versions" name="versions" value="{{job.args[2]}}">
-            </label>
+            <label for="versions">Version interval: </label>
+            <input type="text" id="versions" name="versions" value="{{job.args[2]}}">
 
-            <label for="other">Others:
-                <input type="text" id="other" name="other">
-            </label>
+            <label for="other">Others: </label>
+            <input type="text" id="other" name="other">
+
             <button type="button" onclick="callEnqueue('{{job.args[0]}}')" class="btn btn-sm btn-primary">Enqueue
                 Job</button>
         </form>

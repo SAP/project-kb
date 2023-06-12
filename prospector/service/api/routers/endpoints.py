@@ -4,7 +4,7 @@ from datetime import datetime
 
 import redis
 from api.rq_utils import get_all_jobs, queue
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from rq import Connection, Queue
@@ -60,12 +60,15 @@ async def get_report(job_id):
     # queue = Queue()
     # job = queue.fetch_job(job_id)
     # get and redirect to the html page of the generated report
-    with open(
-        f"/app/data_sources/reports/{job_id}.html",
-        "r",
-    ) as f:
-        html_report = f.read()
-    return HTMLResponse(content=html_report, status_code=200)
+    report_path = f"/app/data_sources/reports/{job_id}.html"
+    if os.path.exists(report_path):
+        with open(
+            report_path,
+            "r",
+        ) as f:
+            html_report = f.read()
+        return HTMLResponse(content=html_report, status_code=200)
+    return {"message": "report not found"}
 
 
 # endpoint for opening the settings page of the selected job
