@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from typing import Dict, List, Set, Tuple
 
 from spacy import load
@@ -70,17 +71,28 @@ def extract_products(text: str) -> List[str]:
     """
     Extract product names from advisory text
     """
-    return list(
-        set(
-            [
-                token.text
-                for token in nlp(text)
-                if token.pos_ in ("PROPN")
-                and token.text.isalpha()
-                and len(token.text) > 2
-            ]
-        )  # "NOUN",
-    )
+    # return list(
+    #    set(
+    #        [
+    #            token.text
+    #            for token in nlp(text)
+    #            if token.pos_ in ("PROPN")
+    #            and token.text.isalpha()
+    #            and len(token.text) > 2
+    #        ]
+    #    )  # "NOUN",
+    # )
+    products = [
+        token.text
+        for token in nlp(text)
+        if token.pos_ in ("PROPN")
+        and token.text.isalpha()
+        and len(token.text) > 2
+        and token.text
+        != "Apache"  # exclude Apache string (depends on how we perform matching)
+    ]
+
+    return list(OrderedDict.fromkeys(products))
 
 
 # TODO: add list of non-relevant or relevant extensions
