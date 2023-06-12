@@ -44,6 +44,7 @@ class PostgresCommitDB(CommitDB):
                 host=self.host,
                 port=self.port,
             )
+            print("Connected to the database")
         except Exception:
             self.host = "localhost"
             self.connection = psycopg2.connect(
@@ -53,6 +54,14 @@ class PostgresCommitDB(CommitDB):
                 host=self.host,
                 port=self.port,
             )
+
+    def disconnect(self):
+        if self.connection:
+            self.connection.close()
+            print("Disconnected from the database")
+            self.connection = None
+        else:
+            print("No active database connection")
 
     def lookup(self, repository: str, commit_id: str = None) -> List[Dict[str, Any]]:
         if not self.connection:
@@ -114,6 +123,203 @@ class PostgresCommitDB(CommitDB):
         self.connection.commit()
 
         cursor.close()
+
+    def lookup_vuln_id(self, vuln_id: str, last_modified_date):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = None
+        try:
+            cur = self.connection.cursor()
+            cur.execute(
+                "SELECT COUNT(*) FROM vulnerability WHERE vuln_id = %s AND last_modified_date = %s",
+                (vuln_id, last_modified_date),
+            )
+            results = cur.fetchone()
+            self.connection.commit()
+        except Exception:
+            self.connection.rollback()
+            logger.error("Could not lookup vulnerability in database", exc_info=True)
+        finally:
+            cur.close()
+        return results
+
+    def save_vuln(
+        self, vuln_id, published_date, last_modified_date, raw_record, source, url
+    ):
+        if not self.connection:
+            raise Exception("Invalid connection")
+
+        try:
+            cur = self.connection.cursor()
+            cur.execute(
+                "INSERT INTO vulnerability (vuln_id, published_date, last_modified_date, raw_record, source, url) VALUES (%s,%s,%s,%s,%s,%s)",
+                (vuln_id, published_date, last_modified_date, raw_record, source, url),
+            )
+            self.connection.commit()
+            cur.close()
+        except Exception:
+            logger.error("Could not save vulnerability to database", exc_info=True)
+            cur.close()
+
+    def update_vuln(self, vuln_id, descr, published_date, last_modified_date):
+        if not self.connection:
+            raise Exception("Invalid connection")
+
+        try:
+            cur = self.connection.cursor()
+            cur.execute(
+                "UPDATE entries SET descr = %s, published_date = %s, last_modified_date = %s WHERE vuln_id = %s",
+                (descr, published_date, last_modified_date, vuln_id),
+            )
+            self.connection.commit()
+            cur.close()
+        except Exception:
+            logger.error("Could not update vulnerability in database", exc_info=True)
+            cur.close()
+
+    def save_job(
+        self,
+        _id,
+        pv_id,
+        params,
+        enqueued_at,
+        started_at,
+        finished_at,
+        results,
+        created_by,
+        created_from,
+        status,
+    ):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        try:
+            cur = self.connection.cursor()
+            cur.execute(
+                "INSERT INTO job (_id, pv_id, params, enqueued_at, started_at, finished_at, results, created_by, created_from, status) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (
+                    _id,
+                    pv_id,
+                    params,
+                    enqueued_at,
+                    started_at,
+                    finished_at,
+                    results,
+                    created_by,
+                    created_from,
+                    status,
+                ),
+            )
+            self.connection.commit()
+            cur.close()
+        except Exception:
+            logger.error("Could not save job entry to database", exc_info=True)
+            cur.close()
+
+    def lookup_job(self):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = []
+        try:
+            cur = self.connection.cursor(cursor_factory=DictCursor)
+            cur.execute("SELECT * FROM job")
+            results = cur.fetchall()
+        except Exception:
+            logger.error("Could not retrieve jobs from database", exc_info=True)
+        finally:
+            cur.close()
+        return results
+
+    def lookup_processed_no_job(self):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = []
+        try:
+            cur = self.connection.cursor(cursor_factory=DictCursor)
+            cur.execute(
+                "SELECT _id FROM processed_vuln WHERE _id NOT IN ( SELECT pv_id FROM job)"
+            )
+            results = cur.fetchall()
+        except Exception:
+            logger.error("Could not retrieve jobs from database", exc_info=True)
+        finally:
+            cur.close()
+        return results
+
+    def get_processed_vulns(self):  # every entry
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = []
+        try:
+            cur = self.connection.cursor(cursor_factory=DictCursor)
+            cur.execute(
+                "SELECT pv.*, v.vuln_id FROM processed_vuln pv JOIN vulnerability v ON v._id = pv.fk_vulnerability"
+            )
+            results = cur.fetchall()
+        except Exception:
+            logger.error(
+                "Could not retrieve processed vulnerabilities from database",
+                exc_info=True,
+            )
+        finally:
+            cur.close()
+        return results
+
+    def get_processed_vulns_not_in_job(
+        self,
+    ):  # entries in processed vuln excluding the ones already in the job table
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = []
+        try:
+            cur = self.connection.cursor(cursor_factory=DictCursor)
+            cur.execute(
+                "SELECT pv._id, pv.repository, pv.versions, v.vuln_id FROM processed_vuln pv JOIN vulnerability v ON v._id = pv.fk_vulnerability WHERE pv._id NOT IN (SELECT pv_id FROM job)"
+            )
+            results = cur.fetchall()
+        except Exception:
+            logger.error(
+                "Could not retrieve processed vulnerabilities from database",
+                exc_info=True,
+            )
+        finally:
+            cur.close()
+        return results
+
+    def get_unprocessed_vulns(self):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = []
+        try:
+            cur = self.connection.cursor(cursor_factory=DictCursor)
+            cur.execute(
+                "SELECT _id, raw_record FROM vulnerability WHERE _id NOT IN ( SELECT fk_vulnerability FROM processed_vuln)"
+            )
+            results = cur.fetchall()
+        except Exception:
+            logger.error(
+                "Could not retrieve unprocessed vulnerabilities from database",
+                exc_info=True,
+            )
+        finally:
+            cur.close()
+        return results
+
+    def save_processed_vuln(self, fk_vuln, repository, versions):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        try:
+            cur = self.connection.cursor()
+            cur.execute(
+                "INSERT INTO processed_vuln (fk_vulnerability, repository,versions) VALUES (%s,%s,%s)",
+                (fk_vuln, repository, versions),
+            )
+            self.connection.commit()
+            cur.close()
+        except Exception:
+            logger.error(
+                "Could not save processed vulnerability to database", exc_info=True
+            )
+            cur.close()
 
 
 def parse_connect_string(connect_string):
