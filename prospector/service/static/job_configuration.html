@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/static/job_configuration.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/static/job_configuration.js"></script>
 
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
@@ -18,25 +19,16 @@
 
 <body>
     <div class="container">
-        <h1> {{job.args[0]}} </h1>
-        <span
-            class="badge {{ {'finished': 'badge-success', 'started': 'badge-info', 'failed': 'badge-danger'}[job.get_status()] | default('badge-dark') }} ">
-            {{job.get_status()}}
-        </span>
+        <h1 id="job-id"></h1>
+        <span id="job-status" class="badge"></span>
         <form>
             <label for="repo">Repository: </label>
-            <input type="text" id="repo" name="repo" value="{{job.args[1]}}">
+            <input type="text" id="repo" name="repo">
 
             <label for="versions">Version interval: </label>
-            <input type="text" id="versions" name="versions" value="{{job.args[2]}}">
-
-            <label for="other">Others: </label>
-            <input type="text" id="other" name="other">
-
-            <button type="button" onclick="callEnqueue('{{job.args[0]}}')" class="btn btn-sm btn-primary">Enqueue
-                Job</button>
+            <input type="text" id="versions" name="versions">
+            <button type="button" onclick="callEnqueue()" class="btn btn-sm btn-primary">Enqueue Job</button>
         </form>
     </div>
-</body>
 
 </html>

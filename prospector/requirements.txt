@@ -71,6 +71,8 @@ wasabi==0.10.1
 wrapt==1.14.1
 python-multipart==0.0.5
 omegaconf==2.2.3
+aiohttp==3.8.4
+aiofiles==23.1.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

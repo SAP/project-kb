@@ -1,26 +1,33 @@
+import asyncio
 import csv
 import datetime
 import json
 
+import aiohttp
 import psycopg2
 import requests
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
-from versions_extraction import (
+
+from backenddb.postgres import PostgresBackendDB
+from data_sources.nvd.versions_extraction import (
     extract_version_range,
     extract_version_ranges_cpe,
     process_versions,
 )
-
-from commitdb.postgres import PostgresCommitDB
 from datamodel.nlp import extract_products
+from log.logger import logger
 from util.config_parser import parse_config_file
 
 config = parse_config_file()
 
+with open("./data/project_metadata.json", "r") as f:
+    global match_list
+    match_list = json.load(f)
+
 
 def connect_to_db():
-    db = PostgresCommitDB(
+    db = PostgresBackendDB(
         config.database.user,
         config.database.password,
         config.database.host,
@@ -35,7 +42,7 @@ def disconnect_from_database(db):
     db.disconnect()
 
 
-def retrieve_vulns(d_time):
+async def retrieve_vulns(d_time):
 
     start_date, end_date = get_time_range(d_time)
 
@@ -45,18 +52,18 @@ def retrieve_vulns(d_time):
 
     nvd_url += f"lastModStartDate={start_date}&lastModEndDate={end_date}"
 
-    # Retrieve the data from NVD
-    try:
-        print(nvd_url)
-        response = requests.get(nvd_url)
-    except Exception as e:
-        print(str(e))
-
-    if response.status_code == 200:
-        data = json.loads(response.text)
-
-    else:
-        print("Error while trying to retrieve entries")
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(nvd_url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                else:
+                    print("Error while trying to retrieve entries")
+        except aiohttp.ClientError as e:
+            print(str(e))
+            logger.error(
+                "Error while retrieving vulnerabilities from NVD", exc_info=True
+            )
 
     # save to db
     save_vuln_to_db(data)
@@ -132,7 +139,7 @@ def get_time_range(d_time):
     return start_date, end_date
 
 
-def process_entries():
+async def process_entries():
     # start_date,end_date=get_time_range(d_time)
     db = connect_to_db()
 
@@ -145,7 +152,7 @@ def process_entries():
         entry_id = unprocessed_vuln[0]
         raw_record = unprocessed_vuln[1]
 
-        processed_vuln = map_entry(raw_record)
+        processed_vuln = await map_entry(raw_record)
         if processed_vuln is not None:
             processed_vulns.append(processed_vuln)
             db.save_processed_vuln(
@@ -155,10 +162,10 @@ def process_entries():
     return processed_vulns
 
 
-def map_entry(vuln):
+async def map_entry(vuln):
     # TODO: improve mapping technique
-    with open("./data/project_metadata.json", "r") as f:
-        match_list = json.load(f)
+    # async with aiofiles.open("./data/project_metadata.json", "r") as f:
+    #    match_list = json.loads(await f.read())
 
     project_names = extract_products(vuln["cve"]["descriptions"][0]["value"])
     # print(project_names)
@@ -176,5 +183,26 @@ def map_entry(vuln):
                 }
                 print(vuln["cve"]["id"])
                 return filtered_vuln
+
+    return None
+
+
+# if no map is possible search project name using GitHub API
+def retrieve_repository(project_name):
+    """
+    Retrieve the GitHub repository URL for a given project name
+    """
+    # GitHub API endpoint for searching repositories
+    url = "https://api.github.com/search/repositories"
+
+    query_params = {"q": project_name, "sort": "stars", "order": "desc"}
+
+    response = requests.get(url, params=query_params)
+
+    if response.status_code == 200:
+        data = response.json()
+        if data["total_count"] > 0:
+            repository_url = data["items"][0]["html_url"]
+            return repository_url
 
     return None
