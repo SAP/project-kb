@@ -1,6 +1,7 @@
 import pytest
 
 from data_sources.nvd.versions_extraction import (
+    extract_version_range,
     extract_version_ranges_cpe,
     extract_version_ranges_description,
     process_versions,
@@ -11,6 +12,7 @@ ADVISORY_TEXT_2 = "Apache Olingo versions 4.0.0 to 4.7.0 provide the AsyncReques
 ADVISORY_TEXT_3 = "Pivotal Spring Framework through 5.3.16 suffers from a potential remote code execution (RCE) issue if used for Java deserialization of untrusted data. Depending on how the library is implemented within a product, this issue may or not occur, and authentication may be required. NOTE: the vendor's position is that untrusted data is not an intended use case. The product's behavior will not be changed because some users rely on deserialization of trusted data."
 ADVISORY_TEXT_4 = "Integer overflow in java/org/apache/tomcat/util/buf/Ascii.java in Apache Tomcat before 6.0.40, 7.x before 7.0.53, and 8.x before 8.0.4, when operated behind a reverse proxy, allows remote attackers to conduct HTTP request smuggling attacks via a crafted Content-Length HTTP header."
 ADVISORY_TEXT_5 = "FasterXML jackson-databind through 2.8.10 and 2.9.x through 2.9.3 allows unauthenticated remote code execution because of an incomplete fix for the CVE-2017-7525 deserialization flaw. This is exploitable by sending maliciously crafted JSON input to the readValue method of the ObjectMapper, bypassing a blacklist that is ineffective if the Spring libraries are available in the classpath."
+ADVISORY_TEXT_6 = "Allocation of Resources Without Limits or Throttling vulnerability in Apache Software Foundation Apache Struts.This issue affects Apache Struts: through 2.5.30, through 6.1.2.\n\nUpgrade to Struts 2.5.31 or 6.1.2.1 or greater."
 JSON_DATA_1 = {
     "configurations": [
         {
@@ -97,33 +99,27 @@ JSON_DATA_3 = {
     ]
 }
 
+JSON_DATA_4 = {}
+
+
 VERSION_RANGES = ["[1.0:2.0]", "(2.0:3.0)", "[2.1:None)", "[4.0:5.0]"]
 
 
 def test_extract_version_ranges_description():
-    affected_version, fixed_version = extract_version_ranges_description(
-        ADVISORY_TEXT_1
-    )
-    assert affected_version == "9.4.23"
-    assert fixed_version is None
+    version_range = extract_version_ranges_description(ADVISORY_TEXT_1)
+    assert version_range == "9.4.23:None"
 
-    affected_version, fixed_version = extract_version_ranges_description(
-        ADVISORY_TEXT_2
-    )
-    assert affected_version == "4.7.0"
-    assert fixed_version is None
+    version_range = extract_version_ranges_description(ADVISORY_TEXT_2)
+    assert version_range == "4.7.0:None"
 
-    affected_version, fixed_version = extract_version_ranges_description(
-        ADVISORY_TEXT_3
-    )
-    assert affected_version == "5.3.16"
-    assert fixed_version is None
+    version_range = extract_version_ranges_description(ADVISORY_TEXT_3)
+    assert version_range == "5.3.16:None"
 
-    affected_version, fixed_version = extract_version_ranges_description(
-        ADVISORY_TEXT_4
-    )
-    assert affected_version is None
-    assert fixed_version == "8.0.4"
+    version_range = extract_version_ranges_description(ADVISORY_TEXT_4)
+    assert version_range == "None:8.0.4"
+
+    version_range = extract_version_ranges_description(ADVISORY_TEXT_6)
+    assert version_range == "6.1.2:None"
 
 
 def test_extract_version_ranges_cpe():
@@ -145,3 +141,8 @@ def test_extract_version_ranges_cpe():
 def test_process_ranges():
     version_ranges = process_versions(VERSION_RANGES)
     assert version_ranges == "4.0:5.1"
+
+
+def test_extract_version_ranges():
+    version_range = extract_version_range(JSON_DATA_4, ADVISORY_TEXT_6)
+    assert version_range == "6.1.2:None"

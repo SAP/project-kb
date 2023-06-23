@@ -142,34 +142,13 @@ def extract_version_ranges_description(description):
                             min_dist_vuln = dist
                             affected_version = version
 
-    return affected_version, fixed_version
+    return f"{affected_version}:{fixed_version}"
 
 
 def extract_version_range(json_data, description):
     version_range = extract_version_ranges_cpe(json_data)
-    if not version_range:
-        # try using the description
-        version_range = extract_version_ranges_description(description)
-    else:
+    if version_range:
         version_range = process_versions(version_range)
+    else:
+        version_range = extract_version_ranges_description(description)
     return version_range
-
-
-def retrieve_repository(project_name):
-    """
-    Retrieve the GitHub repository URL for a given project name
-    """
-    # GitHub API endpoint for searching repositories
-    url = "https://api.github.com/search/repositories"
-
-    query_params = {"q": project_name, "sort": "stars", "order": "desc"}
-
-    response = requests.get(url, params=query_params)
-
-    if response.status_code == 200:
-        data = response.json()
-        if data["total_count"] > 0:
-            repository_url = data["items"][0]["html_url"]
-            return repository_url
-
-    return None

@@ -1,17 +1,20 @@
 import uvicorn
+
+# from .dependencies import oauth2_scheme
+from api.routers import feeds, jobs, nvd, preprocessed, users
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from log.logger import logger
-
-# from .dependencies import oauth2_scheme
-from service.api.routers import endpoints, home, jobs, nvd, preprocessed, users
 from util.config_parser import parse_config_file
 
 api_metadata = [
-    {"name": "data", "description": "Operations with data used to train ML models."},
+    {
+        "name": "data",
+        "description": "Operations with data used to train ML models.",
+    },
     {
         "name": "jobs",
         "description": "Manage jobs.",
@@ -35,16 +38,16 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(nvd.router)
 app.include_router(preprocessed.router)
-app.include_router(endpoints.router)
-app.include_router(home.router)
+app.include_router(feeds.router)
+app.include_router(jobs.router)
 
 app.mount("/static", StaticFiles(directory="service/static"), name="static")
 
 
 # -----------------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
-async def read_items():
-    response = RedirectResponse(url="/docs")
+async def read_index():
+    response = RedirectResponse(url="static/feed.html")
     return response
 
 

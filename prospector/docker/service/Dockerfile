@@ -19,8 +19,8 @@
 
 FROM prospector-base:1.0
 
-VOLUME ["/app"]
-ENV PYTHONPATH "${PYTHONPATH}:/app"
-WORKDIR /app
+#VOLUME ["/app"]
+#ENV PYTHONPATH "${PYTHONPATH}:/app"
+#WORKDIR /app
 
 CMD ["python","./service/main.py"]
