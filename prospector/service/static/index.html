@@ -2,13 +2,13 @@
 <html lang="en">
 
 <head>
-    <title>Job List</title>
-    <meta http-equiv="refresh" content="4" />
+    <title>Jobs</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/index.css">
-
+    <script src="/static/index.js"></script>
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script> -->
@@ -19,28 +19,18 @@
         <div class="row mt-3">
             <div class="col-md-12">
                 <h3>Job list</h3>
-                <p>List of all the jobs. In list until result_ttl has expired</p>
-                <a href="/jobs/report_page" class="btn btn-sm btn-primary" id="reports">Reports</a>
-                <table class="table">
+                <a href="feed.html" class="btn btn-sm btn-primary" id="reports">Feed</a>
+                <table id="job-table" class="table">
                     <thead>
                         <tr>
                             <th>State</th>
                             <th>Job Id</th>
                             <th>Result</th>
-                            <th>Actions</th>
+                            <th>Settings</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for job in joblist %}
-                        <tr onclick="window.location.href = '/jobs/get_settings/{{ job.id }}'" class="highlight">
-                            <td><span
-                                    class="badge {{ {'finished': 'badge-success', 'started': 'badge-info', 'failed': 'badge-danger'}[job.get_status() or ''] | default('badge-dark') }} ">
-                                    {{job.get_status()}}</td>
-                            <td>{{ job.id }}</td>
-                            <td><a href="/jobs/get_report/{{ job.id }}" class="btn btn-sm btn-primary">Result</a></td>
-                            <td><a href="/jobs/delete/{{ job.id }}" class="btn btn-sm btn-primary">Delete</a></td>
-                        </tr>
-                        {% endfor %}
+                        <!-- Job data will be dynamically inserted here -->
                     </tbody>
                 </table>
             </div>

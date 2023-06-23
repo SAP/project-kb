@@ -24,7 +24,7 @@
                     <tbody>
                         {% for report in report_list %}
                         <tr>
-                            <td><a href="/jobs/get_report/{{ report.0 }}">{{report.0}}</a></td>
+                            <td><a href="/jobs/report/{{ report.0 }}">{{report.0}}</a></td>
                             <td>{{ report.1.strftime('%Y-%m-%d %H:%M') }}</td>
                         </tr>
                         {% endfor %}

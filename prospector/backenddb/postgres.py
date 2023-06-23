@@ -7,9 +7,9 @@ from typing import Any, Dict, List
 
 import psycopg2
 from psycopg2.extensions import parse_dsn
-from psycopg2.extras import DictCursor, DictRow, Json
+from psycopg2.extras import DictCursor, DictRow, Json, RealDictCursor
 
-from commitdb import CommitDB
+from backenddb import BackendDB
 from log.logger import logger
 
 # DB_CONNECT_STRING = "postgresql://{}:{}@{}:{}/{}".format(
@@ -21,7 +21,7 @@ from log.logger import logger
 # ).lower()
 
 
-class PostgresCommitDB(CommitDB):
+class PostgresBackendDB(BackendDB):
     """
     This class implements the database abstraction layer
     for PostgreSQL
@@ -129,11 +129,13 @@ class PostgresCommitDB(CommitDB):
             raise Exception("Invalid connection")
         results = None
         try:
-            cur = self.connection.cursor()
+            cur = self.connection.cursor(cursor_factory=DictCursor)
             cur.execute(
                 "SELECT COUNT(*) FROM vulnerability WHERE vuln_id = %s AND last_modified_date = %s",
                 (vuln_id, last_modified_date),
             )
+            # cur = self.connection.cursor()
+            # cur.execute("SELECT * FROM vulnerability WHERE vuln_id = %s", (vuln_id,))
             results = cur.fetchone()
             self.connection.commit()
         except Exception:
@@ -143,8 +145,47 @@ class PostgresCommitDB(CommitDB):
             cur.close()
         return results
 
+    def lookup_vuln(self, vuln_id: str):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = None
+        try:
+            cur = self.connection.cursor(cursor_factory=RealDictCursor)
+            cur.execute("SELECT * FROM vulnerability WHERE vuln_id = %s", (vuln_id,))
+            results = cur.fetchone()
+            self.connection.commit()
+        except Exception:
+            self.connection.rollback()
+            logger.error("Could not lookup vulnerability in database", exc_info=True)
+        finally:
+            cur.close()
+        return results
+
+    def lookup_vulnList(self):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = []
+        try:
+            cur = self.connection.cursor(cursor_factory=RealDictCursor)
+            cur.execute("SELECT * FROM vulnerability")
+            results = cur.fetchall()
+        except Exception:
+            logger.error(
+                "Could not retrieve vulns from database",
+                exc_info=True,
+            )
+        finally:
+            cur.close()
+        return results
+
     def save_vuln(
-        self, vuln_id, published_date, last_modified_date, raw_record, source, url
+        self,
+        vuln_id: str,
+        published_date: str,
+        last_modified_date: str,
+        raw_record: Json,
+        source: str,
+        url: str,
     ):
         if not self.connection:
             raise Exception("Invalid connection")
@@ -161,44 +202,141 @@ class PostgresCommitDB(CommitDB):
             logger.error("Could not save vulnerability to database", exc_info=True)
             cur.close()
 
-    def update_vuln(self, vuln_id, descr, published_date, last_modified_date):
-        if not self.connection:
-            raise Exception("Invalid connection")
-
-        try:
-            cur = self.connection.cursor()
-            cur.execute(
-                "UPDATE entries SET descr = %s, published_date = %s, last_modified_date = %s WHERE vuln_id = %s",
-                (descr, published_date, last_modified_date, vuln_id),
-            )
-            self.connection.commit()
-            cur.close()
-        except Exception:
-            logger.error("Could not update vulnerability in database", exc_info=True)
-            cur.close()
-
     def save_job(
         self,
-        _id,
-        pv_id,
-        params,
-        enqueued_at,
-        started_at,
-        finished_at,
-        results,
-        created_by,
-        created_from,
-        status,
+        _id: str,
+        pv_id: int,
+        params: str,
+        enqueued_at: str,
+        started_at: str,
+        finished_at: str,
+        results: str,
+        created_by: str,
+        status: str,
     ):
         if not self.connection:
             raise Exception("Invalid connection")
         try:
             cur = self.connection.cursor()
             cur.execute(
-                "INSERT INTO job (_id, pv_id, params, enqueued_at, started_at, finished_at, results, created_by, created_from, status) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                "INSERT INTO job (_id, pv_id, params, enqueued_at, started_at, finished_at, results, created_by, status)"
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                 (
                     _id,
                     pv_id,
+                    params,
+                    enqueued_at,
+                    started_at,
+                    finished_at,
+                    results,
+                    created_by,
+                    status,
+                ),
+            )
+            self.connection.commit()
+            cur.close()
+        except Exception:
+            logger.error("Could not save job entry to database", exc_info=True)
+            cur.close()
+
+    def save_manual_job(
+        self,
+        _id: str,
+        params: str,
+        enqueued_at: str,
+        started_at: str,
+        finished_at: str,
+        results: str,
+        created_by: str,
+        status: str,
+    ):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        params
+        try:
+            cur = self.connection.cursor()
+
+            # Divide job.args into separate elements
+            vuln_id, repo, versions = params
+
+            # Insert into vulnerability table
+            cur.execute(
+                "INSERT INTO vulnerability (vuln_id, last_modified_date, source) "
+                "VALUES (%s, %s, %s)",
+                (vuln_id, enqueued_at, created_by),
+            )
+
+            # Retrieve the newly inserted vulnerability ID
+            cur.execute("SELECT _id FROM vulnerability WHERE vuln_id = %s", (vuln_id,))
+            vulnerability_id = cur.fetchone()[0]
+
+            # Insert into processed_vuln table
+            cur.execute(
+                "INSERT INTO processed_vuln (fk_vulnerability, repository, versions) "
+                "VALUES (%s, %s, %s)",
+                (vulnerability_id, repo, versions),
+            )
+
+            # Retrieve the newly inserted processed_vuln ID
+            cur.execute(
+                "SELECT _id FROM processed_vuln WHERE fk_vulnerability = %s",
+                (vulnerability_id,),
+            )
+            processed_vuln_id = cur.fetchone()[0]
+
+            # Insert into job table
+            cur.execute(
+                "INSERT INTO job (_id, pv_id, params, enqueued_at, started_at, finished_at, results, created_by, status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    _id,
+                    processed_vuln_id,
+                    params,
+                    enqueued_at,
+                    started_at,
+                    finished_at,
+                    results,
+                    created_by,
+                    status,
+                ),
+            )
+
+            self.connection.commit()
+            cur.close()
+        except Exception:
+            logger.error("Could not save job entry to database", exc_info=True)
+            cur.close()
+
+    def save_dependent_job(
+        self,
+        parent_id: str,
+        _id: str,
+        params: str,
+        enqueued_at: str,
+        started_at: str,
+        finished_at: str,
+        results: str,
+        created_by: str,
+        status: str,
+    ):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        params
+        try:
+            cur = self.connection.cursor()
+
+            # retrieve parent job
+            parent_job = self.lookup_job_id(parent_id)
+            created_from = parent_job["_id"]
+            parent_job_pv_id = parent_job["pv_id"]
+
+            # Insert child job into job table
+            cur.execute(
+                "INSERT INTO job (_id, pv_id, params, enqueued_at, started_at, finished_at, results, created_by, created_from, status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    _id,
+                    parent_job_pv_id,
                     params,
                     enqueued_at,
                     started_at,
@@ -209,6 +347,7 @@ class PostgresCommitDB(CommitDB):
                     status,
                 ),
             )
+
             self.connection.commit()
             cur.close()
         except Exception:
@@ -245,7 +384,7 @@ class PostgresCommitDB(CommitDB):
             cur.close()
         return results
 
-    def get_processed_vulns(self):  # every entry
+    def get_processed_vulns(self):
         if not self.connection:
             raise Exception("Invalid connection")
         results = []
@@ -273,7 +412,7 @@ class PostgresCommitDB(CommitDB):
         try:
             cur = self.connection.cursor(cursor_factory=DictCursor)
             cur.execute(
-                "SELECT pv._id, pv.repository, pv.versions, v.vuln_id FROM processed_vuln pv JOIN vulnerability v ON v._id = pv.fk_vulnerability WHERE pv._id NOT IN (SELECT pv_id FROM job)"
+                "SELECT pv._id, pv.repository, pv.versions, v.vuln_id FROM processed_vuln pv JOIN vulnerability v ON v._id = pv.fk_vulnerability LEFT JOIN job j ON pv._id = j.pv_id WHERE j.pv_id IS NULL"
             )
             results = cur.fetchall()
         except Exception:
@@ -304,7 +443,7 @@ class PostgresCommitDB(CommitDB):
             cur.close()
         return results
 
-    def save_processed_vuln(self, fk_vuln, repository, versions):
+    def save_processed_vuln(self, fk_vuln: int, repository: str, versions: str):
         if not self.connection:
             raise Exception("Invalid connection")
         try:
@@ -319,6 +458,70 @@ class PostgresCommitDB(CommitDB):
             logger.error(
                 "Could not save processed vulnerability to database", exc_info=True
             )
+            cur.close()
+
+    def get_all_jobs(self):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = []
+        try:
+            cur = self.connection.cursor(cursor_factory=RealDictCursor)
+            cur.execute("SELECT * FROM job")
+            results = cur.fetchall()
+        except Exception:
+            logger.error(
+                "Could not retrieve jobs from database",
+                exc_info=True,
+            )
+        finally:
+            cur.close()
+        return results
+
+    def lookup_job_id(self, job_id: str):
+        if not self.connection:
+            raise Exception("Invalid connection")
+        results = None
+        try:
+            cur = self.connection.cursor(cursor_factory=DictCursor)
+            cur.execute("SELECT * FROM job WHERE _id = %s", (job_id,))
+            results = cur.fetchone()
+            self.connection.commit()
+            logger.error(f"Job {job_id} retrieved correctly")
+        except Exception:
+            self.connection.rollback()
+            logger.error("Could not lookup job in database", exc_info=True)
+        finally:
+            cur.close()
+        return results
+
+    def update_job(
+        self,
+        job_id: str,
+        status: str,
+        started_at: str = None,
+        ended_at: str = None,
+        results: str = None,
+    ):
+        if not self.connection:
+            raise Exception("Invalid connection")
+
+        try:
+            cur = self.connection.cursor()
+
+            if ended_at is None:
+                cur.execute(
+                    "UPDATE job SET status = %s, started_at = %s WHERE _id = %s",
+                    (status, started_at, job_id),
+                )
+            else:
+                cur.execute(
+                    "UPDATE job SET status = %s, finished_at = %s, results = %s WHERE _id = %s",
+                    (status, ended_at, results, job_id),
+                )
+            self.connection.commit()
+            cur.close()
+        except Exception:
+            logger.error("Could not update job status in database", exc_info=True)
             cur.close()
 
 

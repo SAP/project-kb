@@ -1,5 +1,6 @@
 import time
 
+from api.rq_utils import queue, get_all_jobs
 import redis
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import HTMLResponse
@@ -8,7 +9,6 @@ from rq import Connection, Queue
 from rq.job import Job
 from starlette.responses import RedirectResponse
 
-from service.api.rq_utils import get_all_jobs, queue
 from util.config_parser import parse_config_file
 
 # from core.report import generate_report

@@ -14,5 +14,23 @@ if [[ "$(docker images -q $IMAGE_NAME 2> /dev/null)" == "" ]]; then
     docker build -t $IMAGE_NAME -f docker/cli/Dockerfile .
 fi
 
+# Function to extract the value of a specific option
+get_option_value() {
+  while [[ $# -gt 0 ]]; do
+    if [[ $1 == "--report-filename" ]]; then
+      echo "$2"
+      return
+    fi
+    shift
+  done
+}
+
+REPORT_FILENAME=$(get_option_value "$@")
+if [[ -z $REPORT_FILENAME ]]; then
+  OUTPUT_DIR="."
+else
+  OUTPUT_DIR=$(dirname "$REPORT_FILENAME")
+fi
+
 # run the docker container
-docker run --network=prospector_default --rm -t -v $(pwd):/clirun $IMAGE_NAME "$@"
+docker run --network=prospector_default --rm -t -v $(pwd)/$OUTPUT_DIR:/app/results $IMAGE_NAME "$@"
