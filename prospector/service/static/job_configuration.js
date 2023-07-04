@@ -50,6 +50,3 @@ function callEnqueue() {
             console.log('Error:', error);
         });
 }
-
-// Call the populatePage function when the page loads
-populatePage();

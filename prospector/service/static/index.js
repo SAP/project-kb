@@ -17,8 +17,11 @@ async function updateJobTable(jobList) {
         row.append(jobIdCell);
 
         const resultCell = $('<td>');
-        const resultLink = $('<a>').attr('href', `/jobs/${job._id}`).text('Result');
-        resultCell.append(resultLink);
+        const configureBtn1 = $('<button>')
+            .addClass('btn btn-sm btn-primary configure-btn')
+            .text('Info')
+            .attr('onclick', `infoJob('${job._id}')`);
+        resultCell.append(configureBtn1);
         row.append(resultCell);
 
         const settingsCell = $('<td>');
@@ -42,18 +45,16 @@ async function fetchJobData() {
         })
         .catch(error => {
             console.error(error);
-            // Handle the error as needed
         });
 }
 
-// Function to handle the "Configure" button click
 function configureJob(jobId) {
-    // Redirect to the configure page with the job ID in the query string
     window.location.href = `job_configuration.html?jobId=${jobId}`;
 }
 
-// Call fetchJobData initially to populate the table
-fetchJobData();
+function infoJob(jobId) {
+    window.location.href = `job_info.html?jobId=${jobId}`;
+}
 
 // Call fetchJobData every 4 seconds to update the table
 setInterval(fetchJobData, 1000);

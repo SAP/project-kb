@@ -74,5 +74,3 @@ async function fetchVulnData() {
             console.error(error);
         });
 }
-
-fetchVulnData()

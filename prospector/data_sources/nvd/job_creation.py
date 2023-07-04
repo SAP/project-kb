@@ -1,9 +1,10 @@
 import json
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import redis
+import requests
 from rq import Connection, Queue, get_current_job
 
 from backenddb.postgres import PostgresBackendDB
@@ -12,18 +13,30 @@ from core.report import generate_report
 from log.logger import logger
 from util.config_parser import parse_config_file
 
-# get the redis server url
+# get the redis server url and backend from configuration file
 config = parse_config_file()
 redis_url = config.redis_url
 backend = config.backend
 
 
 def run_prospector(vuln_id, repo_url, v_int):
-
-    start_time = time.time()
     job = get_current_job()
-    db = connect_to_db()
-    db.update_job(job.get_id(), job.get_status(), job.started_at)
+    job_id = job.get_id()
+    url = f"{backend}/jobs/{job_id}"
+    data = {
+        "status": job.get_status(),
+        "started_at": job.started_at.isoformat(),
+    }
+
+    try:
+        response = requests.put(url, json=data)
+        if response.status_code == 200:
+            response_object = response.json()
+            print(response_object)
+        else:
+            print("Error:", response.status_code)
+    except requests.exceptions.RequestException as e:
+        print("Error:", e)
 
     try:
         results, advisory_record = prospector(
@@ -36,36 +49,40 @@ def run_prospector(vuln_id, repo_url, v_int):
             results,
             advisory_record,
             "html",
-            f"data_sources/reports/{vuln_id}",
+            f"data_sources/reports/{vuln_id}_{job_id}",
         )
+        status = "finished"
+        results = f"data_sources/reports/{vuln_id}_{job_id}"
     except Exception:
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        ended_at = job.started_at + timedelta(seconds=int(elapsed_time))
+        status = "failed"
+        results = None
         logger.error("job failed during execution")
-        print(job.get_id(), "failed", ended_at)
-        db.update_job(job.get_id(), "failed", ended_at=ended_at)
-        db.disconnect()
-    else:
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        ended_at = job.started_at + timedelta(seconds=int(elapsed_time))
-        print(job.get_id(), "finished", ended_at, f"data_sources/reports/{vuln_id}")
-        db.update_job(
-            job.get_id(),
-            "finished",
-            ended_at=ended_at,
-            results=f"data_sources/reports/{vuln_id}",
-        )
-        db.disconnect()
+    finally:
+        end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+        print(job_id, status, end_time, results)
+        data = {"status": status, "finished_at": end_time, "results": results}
+        try:
+            response = requests.put(url, json=data)
+            if response.status_code == 200:
+                response_object = response.json()
+                print(response_object)
+            else:
+                print("Error:", response.status_code)
+        except requests.exceptions.RequestException as e:
+            print("Error:", e)
 
-    return f"data_sources/reports/{vuln_id}"
+    return f"data_sources/reports/{vuln_id}_{job_id}"
 
 
-def create_prospector_job(vuln_id, repo, version):
+def create_prospector_job(vuln_id, repo, version, at_front=False):
     with Connection(redis.from_url(redis_url)):
-        queue = Queue(default_timeout=500)
-        job = queue.enqueue(run_prospector, args=(vuln_id, repo, version))
+        queue = Queue(default_timeout=800)
+        if at_front:
+            job = queue.enqueue(
+                run_prospector, args=(vuln_id, repo, version), at_front=True
+            )
+        else:
+            job = queue.enqueue(run_prospector, args=(vuln_id, repo, version))
 
     return job
 

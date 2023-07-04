@@ -3,7 +3,6 @@
 
 <head>
     <title>Job List</title>
-    <meta http-equiv="refresh" content="4" />
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
@@ -24,7 +23,8 @@
                     <tbody>
                         {% for report in report_list %}
                         <tr>
-                            <td><a href="/jobs/report/{{ report.0 }}">{{report.0}}</a></td>
+                            <td><a href="/reports/{{ report.0 }}.html" target="_blank">{{report.0}}</a>
+                            </td>
                             <td>{{ report.1.strftime('%Y-%m-%d %H:%M') }}</td>
                         </tr>
                         {% endfor %}
