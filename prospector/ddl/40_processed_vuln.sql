@@ -8,6 +8,6 @@ CREATE TABLE public.processed_vuln (
     _id SERIAL PRIMARY KEY,
 	fk_vulnerability INT NOT NULL UNIQUE,
     repository varchar NOT NULL,
-    versions varchar NOT NULL,
+    versions varchar,
     FOREIGN KEY (fk_vulnerability) REFERENCES public.vulnerability (_id)
 );

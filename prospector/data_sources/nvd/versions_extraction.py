@@ -66,9 +66,10 @@ def process_versions(ranges_list):
         start, end = last_range[1:].split(":")
         if "]" in end:
             end_components = end[:-1].split(".")
-            end_components[-1] = str(
-                int(end_components[-1]) + 1
-            )  # Increment the last component
+            if end_components[-1].isdigit():
+                end_components[-1] = str(
+                    int(end_components[-1]) + 1
+                )  # Increment the last component
             end = ".".join(end_components)
         else:
             end = end.strip(")")

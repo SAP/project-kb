@@ -4,6 +4,12 @@ tr.highlight:hover {
 
 #reports {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 40px;
+    right: 150px;
+}
+
+#joblist {
+    position: absolute;
+    top: 40px;
+    right: 20px;
 }

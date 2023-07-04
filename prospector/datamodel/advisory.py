@@ -245,9 +245,17 @@ class AdvisoryRecord:
     def parse_advisory_2(self, details, metadata):
         self.affected_products = [details["affected"][0]["product"]]
         self.versions = dict(details["affected"][0]["versions"][0])
-        self.published_timestamp = int(isoparse(metadata["datePublished"]).timestamp())
-        self.updated_timestamp = int(isoparse(metadata["dateUpdated"]).timestamp())
-        self.reserved_timestamp = int(isoparse(metadata["dateReserved"]).timestamp())
+        timestamp_fields = {
+            "published_timestamp": "datePublished",
+            "updated_timestamp": "dateUpdated",
+            "reserved_timestamp": "dateReserved",
+        }
+
+        for field, key in timestamp_fields.items():
+            timestamp = metadata.get(key)
+            setattr(
+                self, field, int(isoparse(timestamp).timestamp()) if timestamp else None
+            )
         if not self.description:
             self.description = details["descriptions"][0]["value"]
         self.references = defaultdict(

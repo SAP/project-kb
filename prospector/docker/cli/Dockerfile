@@ -23,5 +23,5 @@ FROM prospector-base:1.0
 #WORKDIR /app
 #ENV PYTHONPATH "${PYTHONPATH}:/app"
 
-VOLUME [ "/results" ]
+#VOLUME [ "/results" ]
 ENTRYPOINT [ "python","cli/main.py" ]

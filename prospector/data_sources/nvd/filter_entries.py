@@ -3,6 +3,7 @@ import csv
 import datetime
 import json
 
+import aiofiles
 import aiohttp
 import psycopg2
 import requests
@@ -21,9 +22,9 @@ from util.config_parser import parse_config_file
 
 config = parse_config_file()
 
-with open("./data/project_metadata.json", "r") as f:
-    global match_list
-    match_list = json.load(f)
+# with open("./data/project_metadata.json", "r") as f:
+#    global match_list
+#    match_list = json.load(f)
 
 
 def connect_to_db():
@@ -43,7 +44,6 @@ def disconnect_from_database(db):
 
 
 async def retrieve_vulns(d_time):
-
     start_date, end_date = get_time_range(d_time)
 
     data = ""
@@ -88,23 +88,25 @@ def save_vuln_to_db(vulns):
     db.disconnect()
 
 
-def get_cve_by_id(id):
+async def get_cve_by_id(id):
     nvd_url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveID={id}"
 
-    try:
-        print(nvd_url)
-        response = requests.get(nvd_url)
-    except Exception as e:
-        print(str(e))
-
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        # print(data["vulnerabilities"])
-
-    else:
-        print("Error while trying to retrieve entries")
-
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(nvd_url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                else:
+                    print("Error while trying to retrieve entry")
+        except aiohttp.ClientError as e:
+            print(str(e))
+            logger.error("Error while retrieving vulnerability from NVD", exc_info=True)
     return data
+
+
+async def add_single_cve(vuln_id: str):
+    raw_json_cve = get_cve_by_id(vuln_id)
+    save_vuln_to_db(raw_json_cve)
 
 
 def write_list_to_file(lst, filename):
@@ -164,8 +166,8 @@ async def process_entries():
 
 async def map_entry(vuln):
     # TODO: improve mapping technique
-    # async with aiofiles.open("./data/project_metadata.json", "r") as f:
-    #    match_list = json.loads(await f.read())
+    async with aiofiles.open("./data/project_metadata.json", "r") as f:
+        match_list = json.loads(await f.read())
 
     project_names = extract_products(vuln["cve"]["descriptions"][0]["value"])
     # print(project_names)

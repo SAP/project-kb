@@ -14,19 +14,19 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script> -->
 </head>
 
-<body>
+<body onload="fetchJobData()">
     <div class="container mt-5">
         <div class="row mt-3">
             <div class="col-md-12">
                 <h3>Job list</h3>
-                <a href="feed.html" class="btn btn-sm btn-primary" id="reports">Feed</a>
+                <a href="feed.html" class="btn btn-sm btn-primary" id="joblist">Feed</a>
                 <table id="job-table" class="table">
                     <thead>
                         <tr>
                             <th>State</th>
-                            <th>Job Id</th>
-                            <th>Result</th>
-                            <th>Settings</th>
+                            <th>Id</th>
+                            <th>Info</th>
+                            <th>Modify</th>
                         </tr>
                     </thead>
                     <tbody>
