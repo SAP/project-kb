@@ -14,7 +14,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script> -->
 </head>
 
-<body>
+<body onload="fetchVulnData()">
     <div class="container mt-5">
         <div class="row mt-3">
             <div class="col-md-12">
@@ -27,7 +27,7 @@
                     <button onclick="createJobs()" class="btn btn-sm btn-primary">Create Jobs</button>
                 </div>
                 <a href="/feeds/reports" class="btn btn-sm btn-primary" id="reports">Reports</a>
-                <a href="index.html" class="btn btn-sm btn-primary" id="reports">Job list</a>
+                <a href="index.html" class="btn btn-sm btn-primary" id="joblist">Job list</a>
                 <table id="vuln-table" class="table">
                     <thead>
                         <tr>

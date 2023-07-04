@@ -35,6 +35,21 @@ def connect_to_db():
     return db
 
 
+@router.get("/reports")
+async def get_reports(request: Request):
+    report_list = []
+    for filename in os.listdir("/app/data_sources/reports"):
+        if filename.endswith(".html"):
+            file_path = os.path.join("/app/data_sources/reports", filename)
+            mtime = os.path.getmtime(file_path)
+            mtime_dt = datetime.fromtimestamp(mtime)
+            report_list.append((os.path.splitext(filename)[0], mtime_dt))
+            report_list.sort(key=lambda x: x[1], reverse=True)
+    return templates.TemplateResponse(
+        "report_list.html", {"request": request, "report_list": report_list}
+    )
+
+
 @router.get("/{vuln_id}")
 async def get_vuln(vuln_id: str):
 
@@ -68,21 +83,6 @@ async def get_vulnList():
     except Exception:
         logger.error("error updating the vuln list", exc_info=True)
     return vulnlist
-
-
-@router.get("/reports")
-async def get_reports(request: Request):
-    report_list = []
-    for filename in os.listdir("/app/data_sources/reports"):
-        if filename.endswith(".html"):
-            file_path = os.path.join("/app/data_sources/reports", filename)
-            mtime = os.path.getmtime(file_path)
-            mtime_dt = datetime.fromtimestamp(mtime)
-            report_list.append((os.path.splitext(filename)[0], mtime_dt))
-            report_list.sort(key=lambda x: x[1], reverse=True)
-    return templates.TemplateResponse(
-        "report_list.html", {"request": request, "report_list": report_list}
-    )
 
 
 @router.get("/fetch_vulns/{d_time}")
