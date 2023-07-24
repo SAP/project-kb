@@ -1,13 +1,7 @@
 #!/usr/bin/python3
-import logging
 import os
 import signal
 import sys
-from typing import Any, Dict
-
-from dotenv import load_dotenv
-
-from util.http import ping_backend
 
 path_root = os.getcwd()
 if path_root not in sys.path:
@@ -16,8 +10,6 @@ if path_root not in sys.path:
 
 import core.report as report  # noqa: E402
 from cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from core.prospector import TIME_LIMIT_AFTER  # noqa: E402
-from core.prospector import TIME_LIMIT_BEFORE  # noqa: E402
 from core.prospector import prospector  # noqa: E402; noqa: E402
 
 # Load logger before doing anything else
@@ -84,7 +76,11 @@ def main(argv):  # noqa: C901
         return
 
     report.generate_report(
-        results, advisory_record, config.report, config.report_filename
+        results,
+        advisory_record,
+        config.report,
+        config.report_filename,
+        config.report_diff,
     )
 
     execution_time = execution_statistics["core"]["execution time"][0]

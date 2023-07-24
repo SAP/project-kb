@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -84,15 +84,15 @@ class Commit(BaseModel):
     def deserialize_minhash(self, binary_minhash):
         self.minhash = decode_minhash(binary_minhash)
 
-    # TODO: can i delete this?
-    def as_dict(self, no_hash: bool = True, no_rules: bool = True):
+    def as_dict(
+        self, no_hash: bool = True, no_rules: bool = True, no_diff: bool = True
+    ):
         out = {
             "commit_id": self.commit_id,
             "repository": self.repository,
             "timestamp": self.timestamp,
             "hunks": self.hunks,
             "message": self.message,
-            "diff": self.diff,
             "changed_files": self.changed_files,
             "message_reference_content": self.message_reference_content,
             "jira_refs": self.jira_refs,
@@ -101,6 +101,8 @@ class Commit(BaseModel):
             "twins": self.twins,
             "tags": self.tags,
         }
+        if not no_diff:
+            out["diff"] = self.diff
         if not no_hash:
             out["minhash"] = encode_minhash(self.minhash)
         if not no_rules:

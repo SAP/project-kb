@@ -158,6 +158,7 @@ class Config:
         use_backend: str,
         report: str,
         report_filename: str,
+        report_diff: bool,
         ping: bool,
         log_level: str,
         git_cache: str,
@@ -180,6 +181,7 @@ class Config:
         self.use_backend = use_backend
         self.report = report
         self.report_filename = report_filename
+        self.report_diff = report_diff
         self.ping = ping
         self.log_level = log_level
         self.git_cache = git_cache
@@ -209,6 +211,7 @@ def get_configuration(argv):
         use_backend=args.use_backend or conf.use_backend,
         report=args.report or conf.report.format,
         report_filename=args.report_filename or conf.report.name,
+        report_diff=conf.report.no_diff,
         ping=args.ping,
         git_cache=conf.git_cache,
         log_level=args.log_level or conf.log_level,
