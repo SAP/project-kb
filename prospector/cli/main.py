@@ -111,7 +111,11 @@ def main(argv):  # noqa: C901
         return
 
     report.generate_report(
-        results, advisory_record, config.report, config.report_filename
+        results,
+        advisory_record,
+        config.report,
+        config.report_filename,
+        config.report_diff,
     )
 
     execution_time = execution_statistics["core"]["execution time"][0]

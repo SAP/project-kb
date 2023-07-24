@@ -62,6 +62,8 @@ enabled_rules:
 report:
   format: html
   name: prospector-report
+  no_diff: False
+
 
 # Log level: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
 log_level: INFO
