@@ -35,7 +35,9 @@ def parse_cli_args(args):
         help="Commit preprocessing only",
     )
 
-    parser.add_argument("--pub-date", type=str, help="Publication date of the advisory")
+    parser.add_argument(
+        "--pub-date", type=str, help="Publication date of the advisory"
+    )
 
     # Allow the user to manually supply advisory description
     parser.add_argument("--description", type=str, help="Advisory description")
@@ -154,7 +156,9 @@ def parse_config_file(filename: str = "config.yaml"):
             logger.error(f"Type error in {filename}: {e}")
         except Exception as e:
             # General exception catch block for any other exceptions
-            logger.error(f"An unexpected error occurred when parsing config.yaml: {e}")
+            logger.error(
+                f"An unexpected error occurred when parsing config.yaml: {e}"
+            )
     else:
         logger.error("No configuration file found, cannot proceed.")
 
@@ -202,7 +206,11 @@ class ConfigSchema:
     enabled_rules: List[str] = MISSING
     nvd_token: Optional[str] = None
     database: DatabaseConfig = DatabaseConfig(
-        user="postgres", password="example", host="db", port=5432, dbname="postgres"
+        user="postgres",
+        password="example",
+        host="db",
+        port=5432,
+        dbname="postgres",
     )
     llm_service: Optional[LLMServiceConfig] = None
     github_token: Optional[str] = None
@@ -230,6 +238,7 @@ class Config:
         backend: str,
         report: ReportConfig,
         report_filename: str,
+        report_diff: bool,
         ping: bool,
         log_level: str,
         git_cache: str,
@@ -245,8 +254,12 @@ class Config:
         self.description = description
         self.max_candidates = max_candidates
         # self.tag_interval = tag_interval
-        self.version_interval = version_interval if version_interval else "None:None"
-        self.modified_files = modified_files.split(",") if modified_files else []
+        self.version_interval = (
+            version_interval if version_interval else "None:None"
+        )
+        self.modified_files = (
+            modified_files.split(",") if modified_files else []
+        )
         self.filter_extensions = filter_extensions
         self.keywords = keywords.split(",") if keywords else []
         self.use_nvd = use_nvd
@@ -255,6 +268,7 @@ class Config:
         self.use_backend = use_backend
         self.report = report
         self.report_filename = report_filename
+        self.report_diff = report_diff
         self.ping = ping
         self.log_level = log_level
         self.git_cache = git_cache
@@ -292,6 +306,7 @@ def get_configuration(argv):
             use_backend=args.use_backend or conf.use_backend,
             report=args.report or conf.report.format,
             report_filename=args.report_filename or conf.report.name,
+            report_diff=conf.report.no_diff,
             ping=args.ping,
             git_cache=conf.git_cache,
             enabled_rules=conf.enabled_rules,
