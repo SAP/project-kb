@@ -85,6 +85,12 @@ def parse_cli_args(args):
     )
 
     parser.add_argument(
+        "--no-diff",
+        action="store_true",
+        help="Do not include diff field in JSON report",
+    )
+
+    parser.add_argument(
         "--fetch-references",
         action="store_true",
         help="Fetch content of references linked from the advisory",
