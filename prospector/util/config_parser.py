@@ -72,6 +72,12 @@ def parse_cli_args(args):
     )
 
     parser.add_argument(
+        "--no-diff",
+        action="store_true",
+        help="Do not include diff field in JSON report",
+    )
+
+    parser.add_argument(
         "--fetch-references",
         action="store_true",
         help="Fetch content of references linked from the advisory",
@@ -211,7 +217,7 @@ def get_configuration(argv):
         use_backend=args.use_backend or conf.use_backend,
         report=args.report or conf.report.format,
         report_filename=args.report_filename or conf.report.name,
-        report_diff=conf.report.no_diff,
+        report_diff=args.no_diff or conf.report.no_diff,
         ping=args.ping,
         git_cache=conf.git_cache,
         log_level=args.log_level or conf.log_level,
