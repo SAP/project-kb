@@ -19,29 +19,30 @@ Given an advisory expressed in natural language, Prospector processes the commit
 To quickly set up Prospector:
 
 1. Clone the project KB repository
-```
-git clone https://github.com/sap/project-kb
-```
+    ```
+    git clone https://github.com/sap/project-kb
+    ```
 2. Navigate to the *prospector* folder
-```
-cd project-kb/prospector
-```
+    ```
+    cd project-kb/prospector
+    ```
+3. Rename the *config-sample.yaml* file in *config.yaml*. <br> Optionally adjust settings such as backend usage, NVD database preference, report format, and more.
+    ```
+    mv config-sample.yaml config.yaml
+    ```
 
-3. Execute the bash script *run_prospector.sh* specifying the *-h* flag. This will display a list of options that you can use to customize the execution of Prospector.
-```
-./run_prospector.sh -h
-```
+4. Execute the bash script *run_prospector.sh* specifying the *-h* flag. <br> This will display a list of options that you can use to customize the execution of Prospector.
+    ```
+    ./run_prospector.sh -h
+    ```
+    The bash script builds and starts the required Docker containers. Once the building step is completed, the script will show the list of available options.
 
-The bash script builds and starts the required Docker containers. Once the building step is completed, the script will show the list of available options.
-
-4. Try the following example:
-```
-./run_prospector.sh CVE-2020-1925 --repository https://github.com/apache/olingo-odata4
-```
-
-By default, Prospector saves the results in a HTML file named *prospector-report.html*.
-
-Open this file in a web browser to view what Prospector was able to find!
+5. Try the following example:
+    ```
+    ./run_prospector.sh CVE-2020-1925 --repository https://github.com/apache/olingo-odata4
+    ```
+    By default, Prospector saves the results in a HTML file named *prospector-report.html*.
+    Open this file in a web browser to view what Prospector was able to find!
 
 ## Development Setup
 
