@@ -95,6 +95,10 @@ scripts described in that paper](MSR2019)
 
 > If you wrote a paper that uses the data or the tools from this repository, please let us know (through an issue) and we'll add it to this list.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=sap/project-kb&type=Date)](https://star-history.com/#sap/project-kb&Date)
+
 ## Credits
 
 ### EU-funded research projects
