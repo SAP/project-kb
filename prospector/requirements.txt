@@ -6,7 +6,6 @@
 #
 anyio==3.6.2
 appdirs==1.4.4
-argparse==1.4.0
 async-timeout==4.0.2
 attrs==22.1.0
 beautifulsoup4==4.11.1
@@ -21,7 +20,6 @@ confection==0.0.3
 cymem==2.0.7
 datasketch==1.5.8
 deprecated==1.2.13
-exceptiongroup==1.0.0rc9
 fastapi==0.85.1
 h11==0.14.0
 idna==3.4
@@ -59,18 +57,14 @@ spacy-loggers==1.0.3
 srsly==2.4.5
 starlette==0.20.4
 thinc==8.1.5
-tomli==2.0.1
 tqdm==4.64.1
 typer==0.4.2
 typing-extensions==4.4.0
 url-normalize==1.4.3
-urllib3==1.26.12
+urllib3==1.26.17
 uvicorn==0.19.0
-validators==0.20.0
 wasabi==0.10.1
 wrapt==1.14.1
-python-multipart==0.0.5
-omegaconf==2.2.3
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
