@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Vulnerabilities</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/index.css">
+    <script src="/static/feed.js"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script> -->
+</head>
+
+<body onload="fetchVulnData()">
+    <div class="container mt-5">
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h3>Vulnerabilities</h3>
+                <div class="mt-4">
+                    <label for="time range">Time range </label>
+                    <input type="number" id="time_range" name="time_range">
+                    <button onclick="fetchVulns()" class="btn btn-sm btn-primary">Fetch vulnerabilities</button>
+                    <button onclick="processVulns()" class="btn btn-sm btn-primary">Process Vulnerabilities</button>
+                    <button onclick="createJobs()" class="btn btn-sm btn-primary">Create Jobs</button>
+                </div>
+                <a href="/feeds/reports" class="btn btn-sm btn-primary" id="reports">Reports</a>
+                <a href="index.html" class="btn btn-sm btn-primary" id="joblist">Job list</a>
+                <table id="vuln-table" class="table">
+                    <thead>
+                        <tr>
+                            <th>Vuln Id</th>
+                            <th>Published Date</th>
+                            <th>Last Mod Date</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Feed data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

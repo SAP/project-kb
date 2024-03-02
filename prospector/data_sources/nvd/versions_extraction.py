@@ -24,42 +24,58 @@ def extract_version_ranges_cpe(json_data):
     # json_data = json.loads(json_data)
     version_ranges = []
     if "configurations" in json_data:
-        for configuration in json_data["configurations"]:
-            for node in configuration["nodes"]:
-                for cpe_match in node["cpeMatch"]:
-                    if "versionStartIncluding" in cpe_match:
-                        version_range = "[" + cpe_match["versionStartIncluding"] + ":"
-                    elif "versionStartExcluding" in cpe_match:
-                        version_range = "(" + cpe_match["versionStartExcluding"] + ":"
-                    elif "criteria" in cpe_match:
-                        if re.match(
-                            r"\d+\.(?:\d+\.*)*\d", cpe_match["criteria"].split(":")[5]
-                        ):
-                            version_range = (
-                                "[" + cpe_match["criteria"].split(":")[5] + ":"
-                            )
-                        else:
-                            version_range = "None:"
+        configuration = json_data["configurations"][0]
+        for node in configuration["nodes"]:
+            for cpe_match in node["cpeMatch"]:
+                if "versionStartIncluding" in cpe_match:
+                    version_range = "[" + cpe_match["versionStartIncluding"] + ":"
+                elif "versionStartExcluding" in cpe_match:
+                    version_range = "(" + cpe_match["versionStartExcluding"] + ":"
+                elif "criteria" in cpe_match:
+                    if re.match(
+                        r"\d+\.(?:\d+\.*)*\d", cpe_match["criteria"].split(":")[5]
+                    ):
+                        version_range = "[" + cpe_match["criteria"].split(":")[5] + ":"
                     else:
                         version_range = "(None:"
-
-                    if "versionEndIncluding" in cpe_match:
-                        version_range += cpe_match["versionEndIncluding"] + "]"
-                    elif "versionEndExcluding" in cpe_match:
-                        version_range += cpe_match["versionEndExcluding"] + ")"
-                    else:
-                        version_range += "None)"
-
-                    version_ranges.append(version_range)
+                else:
+                    version_range = "(None:"
+                if "versionEndIncluding" in cpe_match:
+                    version_range += cpe_match["versionEndIncluding"] + "]"
+                elif "versionEndExcluding" in cpe_match:
+                    version_range += cpe_match["versionEndExcluding"] + ")"
+                else:
+                    version_range += "None)"
+                version_ranges.append(version_range)
     return version_ranges
 
 
-def process_ranges(ranges_list):
+# def process_ranges(ranges_list):
+#    if ranges_list:
+#        last_entry = ranges_list[-1]
+#        version_range = last_entry.strip("[]()")
+#    else:
+#        version_range = "None:None"
+#    return version_range
+
+
+def process_versions(ranges_list):
+    version_range = "None:None"
     if ranges_list:
-        last_entry = ranges_list[-1]
-        version_range = last_entry.strip("[]()")
-    else:
-        version_range = "None:None"
+        last_range = ranges_list[-1]  # take the last range of the list
+        start, end = last_range[1:].split(":")
+        if "]" in end:
+            end_components = end[:-1].split(".")
+            if end_components[-1].isdigit():
+                end_components[-1] = str(
+                    int(end_components[-1]) + 1
+                )  # Increment the last component
+            end = ".".join(end_components)
+        else:
+            end = end.strip(")")
+
+        version_range = f"{start}:{end}"
+
     return version_range
 
 
@@ -97,7 +113,10 @@ def extract_version_ranges_desc(doc):
 
 
 # New method. Need validation
-def extract_version_ranges_description(doc):
+def extract_version_ranges_description(description):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(description)
+
     fixed_version = None
     affected_version = None
     for sent in doc.sents:
@@ -124,4 +143,13 @@ def extract_version_ranges_description(doc):
                             min_dist_vuln = dist
                             affected_version = version
 
-    return affected_version, fixed_version
+    return f"{affected_version}:{fixed_version}"
+
+
+def extract_version_range(json_data, description):
+    version_range = extract_version_ranges_cpe(json_data)
+    if version_range:
+        version_range = process_versions(version_range)
+    else:
+        version_range = extract_version_ranges_description(description)
+    return version_range
