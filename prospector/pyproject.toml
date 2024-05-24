@@ -9,7 +9,8 @@ testpaths = [
     "api",
     "filtering",
     "stats",
-    "util"
+    "util",
+    "llm",
 ]
 
 [tool.isort]

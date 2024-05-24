@@ -2,12 +2,13 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
+from log.logger import logger
 
 # from .dependencies import oauth2_scheme
-from api.routers import jobs, nvd, preprocessed, users, endpoints, home
-from log.logger import logger
+from service.api.routers import endpoints, home, jobs, nvd, preprocessed, users
 from util.config_parser import parse_config_file
-from fastapi.staticfiles import StaticFiles
 
 api_metadata = [
     {"name": "data", "description": "Operations with data used to train ML models."},

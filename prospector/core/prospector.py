@@ -1,6 +1,7 @@
 # flake8: noqa
 
 import logging
+import os
 import re
 import sys
 import time
@@ -36,7 +37,7 @@ THREE_YEARS = 3 * 365 * SECS_PER_DAY
 ONE_YEAR = 365 * SECS_PER_DAY
 
 MAX_CANDIDATES = 2000
-DEFAULT_BACKEND = "http://localhost:8000"
+DEFAULT_BACKEND = "http://backend:8000"
 
 
 core_statistics = execution_statistics.sub_collection("core")
@@ -157,7 +158,14 @@ def prospector(  # noqa: C901
                     exc_info=get_level() < logging.WARNING,
                 )
                 if use_backend == "always":
-                    print("Backend not reachable: aborting")
+                    if backend_address == "http://localhost:8000" and os.path.exists(
+                        "/.dockerenv"
+                    ):
+                        print(
+                            "The backend address should be 'http://backend:8000' when running the containerised version of Prospector: aborting"
+                        )
+                    else:
+                        print("Backend not reachable: aborting")
                     sys.exit(1)
                 print("Backend not reachable: continuing")
 
@@ -227,7 +235,7 @@ def preprocess_commits(commits: List[RawCommit], timer: ExecutionTimer) -> List[
 
 
 def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
-    with ConsoleWriter("\nCandidate filtering\n") as console:
+    with ConsoleWriter("\nCandidate filtering") as console:
         commits, rejected = filter_commits(commits)
         if rejected > 0:
             console.print(f"Dropped {rejected} candidates")

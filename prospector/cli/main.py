@@ -7,6 +7,7 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
+import llm.llm_operations as llm
 from util.http import ping_backend
 
 path_root = os.getcwd()
@@ -32,10 +33,12 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
         config = get_configuration(argv)
         if not config:
-            logger.error("No configuration file found. Cannot proceed.")
+            logger.error(
+                "No configuration file found, or error in configuration file. Cannot proceed."
+            )
 
             console.print(
-                "No configuration file found.",
+                "No configuration file found, or error in configuration file. Check logs.",
                 status=MessageStatus.ERROR,
             )
             return
@@ -51,6 +54,16 @@ def main(argv):  # noqa: C901
             )
             return
 
+        if not config.repository and not config.use_llm_repository_url:
+            logger.error(
+                "Either provide the repository URL or allow LLM usage to obtain it."
+            )
+            console.print(
+                "Either provide the repository URL or allow LLM usage to obtain it.",
+                status=MessageStatus.ERROR,
+            )
+            sys.exit(1)
+
         # if config.ping:
         #     return ping_backend(backend, get_level() < logging.INFO)
 
@@ -62,6 +75,12 @@ def main(argv):  # noqa: C901
         pretty_log(logger, config.__dict__)
 
         logger.debug("Vulnerability ID: " + config.vuln_id)
+
+    # whether to use LLM support
+    if not config.repository:
+        config.repository = llm.get_repository_url(
+            llm_config=config.llm, vuln_id=config.vuln_id
+        )
 
     results, advisory_record = prospector(
         vulnerability_id=config.vuln_id,
@@ -88,7 +107,7 @@ def main(argv):  # noqa: C901
     )
 
     execution_time = execution_statistics["core"]["execution time"][0]
-    ConsoleWriter.print(f"Execution time: {execution_time:.3f}s")
+    ConsoleWriter.print(f"Execution time: {execution_time:.3f}s\n")
 
     return
 
