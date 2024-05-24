@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: docker/service/Dockerfile
     ports:
-      - "8000:8000"
+      - "8022:8000"
     volumes:
       - .:/app
     depends_on:
