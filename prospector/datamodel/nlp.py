@@ -139,23 +139,24 @@ def extract_ghissue_references(repository: str, text: str) -> Dict[str, str]:
         id = result.group(1)
         url = f"{repository}/issues/{id}"
         content = fetch_url(url=url, extract_text=False)
-        gh_ref_data = content.find_all(
-            attrs={
-                "class": ["comment-body", "markdown-title"],
-            },
-            recursive=False,
-        )
-        # TODO: when an issue/pr is referenced somewhere, the page contains also the "message" of that reference (e.g. a commit). This may lead to unwanted detection of certain rules.
-        gh_ref_data.extend(
-            content.find_all(
+        if content is not None:
+            gh_ref_data = content.find_all(
                 attrs={
-                    "id": re.compile(r"ref-issue|ref-pullrequest"),
-                }
+                    "class": ["comment-body", "markdown-title"],
+                },
+                recursive=False,
             )
-        )
-        refs[id] = " ".join(
-            [" ".join(block.get_text().split()) for block in gh_ref_data]
-        )
+            # TODO: when an issue/pr is referenced somewhere, the page contains also the "message" of that reference (e.g. a commit). This may lead to unwanted detection of certain rules.
+            gh_ref_data.extend(
+                content.find_all(
+                    attrs={
+                        "id": re.compile(r"ref-issue|ref-pullrequest"),
+                    }
+                )
+            )
+            refs[id] = " ".join(
+                [" ".join(block.get_text().split()) for block in gh_ref_data]
+            )
 
     return refs
 

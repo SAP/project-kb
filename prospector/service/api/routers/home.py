@@ -1,14 +1,15 @@
-from api.rq_utils import queue, get_all_jobs
-from fastapi import FastAPI, Request
-from fastapi import APIRouter
-from fastapi.templating import Jinja2Templates
+import time
+
+import redis
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import HTMLResponse
-from starlette.responses import RedirectResponse
-from util.config_parser import parse_config_file
+from fastapi.templating import Jinja2Templates
 from rq import Connection, Queue
 from rq.job import Job
-import redis
-import time
+from starlette.responses import RedirectResponse
+
+from service.api.rq_utils import get_all_jobs, queue
+from util.config_parser import parse_config_file
 
 # from core.report import generate_report
 

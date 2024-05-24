@@ -9,6 +9,20 @@ from log.logger import logger
 
 
 def fetch_url(url: str, params=None, extract_text=True) -> Union[str, BeautifulSoup]:
+    """
+    Fetches the content of a web page located at the specified URL and optionally extracts text from it.
+
+    Parameters:
+    - url (str): The URL of the web page to fetch.
+    - params (dict, optional): Optional parameters to be sent with the request (default: None).
+    - extract_text (bool, optional): Whether to extract text content from the HTML (default: True).
+
+    Returns:
+    - Union[str, BeautifulSoup]: If `extract_text` is True, returns the text content of the web page as a string.
+      If `extract_text` is False, returns the parsed HTML content as a BeautifulSoup object.
+
+    If an exception occurs during the HTTP request, an empty string ("") is returned.
+    """
     try:
         session = requests_cache.CachedSession("requests-cache", expire_after=604800)
         if params is None:
@@ -17,7 +31,7 @@ def fetch_url(url: str, params=None, extract_text=True) -> Union[str, BeautifulS
             content = session.get(url, params=params).content
     except Exception:
         logger.debug(f"cannot retrieve url content: {url}", exc_info=True)
-        return ""
+        return None
 
     soup = BeautifulSoup(content, "html.parser")
     if extract_text:

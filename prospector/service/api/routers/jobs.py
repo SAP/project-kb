@@ -5,9 +5,9 @@ from fastapi import APIRouter
 from rq import Connection, Queue
 from rq.job import Job
 
-from api.routers.nvd_feed_update import main
 from git.git import do_clone
 from log.logger import logger
+from service.api.routers.nvd_feed_update import main
 from util.config_parser import parse_config_file
 
 config = parse_config_file()

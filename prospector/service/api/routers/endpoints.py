@@ -3,7 +3,6 @@ import sys
 from datetime import datetime
 
 import redis
-from api.rq_utils import get_all_jobs, queue
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -12,6 +11,7 @@ from rq.job import Job
 from starlette.responses import RedirectResponse
 
 from data_sources.nvd.job_creation import run_prospector
+from service.api.rq_utils import get_all_jobs, queue
 from util.config_parser import parse_config_file
 
 # from core.report import generate_report
