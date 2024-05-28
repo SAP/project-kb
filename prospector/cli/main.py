@@ -88,7 +88,7 @@ def main(argv):  # noqa: C901
     )
 
     execution_time = execution_statistics["core"]["execution time"][0]
-    ConsoleWriter.print(f"Execution time: {execution_time:.3f}s")
+    ConsoleWriter.print(f"Execution time: {execution_time:.3f}s\n")
 
     return
 
