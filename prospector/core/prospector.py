@@ -36,7 +36,9 @@ THREE_YEARS = 3 * 365 * SECS_PER_DAY
 ONE_YEAR = 365 * SECS_PER_DAY
 
 MAX_CANDIDATES = 2000
-DEFAULT_BACKEND = "http://localhost:8000"
+DEFAULT_BACKEND = (
+    "http://backend:8000"  # TODO: Change this so it fits the way prospector is run
+)
 
 
 core_statistics = execution_statistics.sub_collection("core")
@@ -156,6 +158,7 @@ def prospector(  # noqa: C901
                     "Backend not reachable",
                     exc_info=get_level() < logging.WARNING,
                 )
+                print(backend_address)
                 if use_backend == "always":
                     print("Backend not reachable: aborting")
                     sys.exit(1)
@@ -287,6 +290,8 @@ def retrieve_preprocessed_commits(
 ) -> Tuple[List[RawCommit], List[Commit]]:
     retrieved_commits: List[dict] = list()
     missing: List[RawCommit] = list()
+
+    backend_address = "http://backend:8000"
 
     responses = list()
     for i in range(0, len(candidates), 500):
