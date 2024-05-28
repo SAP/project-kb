@@ -5,18 +5,29 @@ currently under development: the instructions below are intended for development
 
 :exclamation: Please note that **Windows is not supported** while WSL and WSL2 are fine.
 
-## Description
+## Table of Contents
+
+1. [Description](#description)
+2. [Quick Setup & Run](#setup--run)
+3. [Development Setup](#development-setup)
+4. [Contributing](#contributing)
+5. [History](#history)
+
+## 📖 Description
 
 Prospector is a tool to reduce the effort needed to find security fixes for
 *known* vulnerabilities in open source software repositories.
 
 Given an advisory expressed in natural language, Prospector processes the commits found in the target source code repository, ranks them based on a set of predefined rules, and produces a report that the user can inspect to determine which commits to retain as the actual fix.
 
-## Setup & Run
+## ⚡️ Quick Setup & Run
 
-:warning: The tool requires Docker and Docker-compose, as it employes Docker containers for certain functionalities. Make sure you have Docker installed and running before proceeding with the setup and usage of Prospector.
+Prerequisites:
 
-To quickly set up Prospector:
+* Docker (make sure you have Docker installed and running before proceeding with the setup)
+* Docker-compose
+
+To quickly set up Prospector, follow these steps. This will run Prospector in its containerised version. If you wish to debug or run Prospector's components individually, follow the steps below at [Development Setup](#development-setup).
 
 1. Clone the project KB repository
     ```
@@ -44,7 +55,9 @@ To quickly set up Prospector:
     By default, Prospector saves the results in a HTML file named *prospector-report.html*.
     Open this file in a web browser to view what Prospector was able to find!
 
-## Development Setup
+## 👩‍💻 Development Setup
+
+Following these steps allows you to run Prospector's components individually: [Backend database and worker containers](#starting-the-backend-database-and-the-job-workers), [RESTful Server](#starting-the-restful-server) for API endpoints, [Prospector CLI](#running-the-cli-version) and [Tests](#testing).
 
 Prerequisites:
 
@@ -52,6 +65,8 @@ Prerequisites:
 * postgreSQL
 * gcc g++ libffi-dev python3-dev libpq-dev
 * Docker & Docker-compose
+
+### General
 
 You can setup everything and install the dependencies by running:
 ```
@@ -81,11 +96,13 @@ your editor so that autoformatting is enforced "on save". The pre-commit hook en
 black is run prior to committing anyway, but the auto-formatting might save you some time
 and avoid frustration.
 
-If you use VSCode, this can be achieved by pasting these lines in your configuration file:
+If you use VSCode, this can be achieved by installing the Black Formatter extension and pasting these lines in your configuration file:
 
-```
-    "python.formatting.provider": "black",
-    "editor.formatOnSave": true,
+```json
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+    }
 ```
 
 ### Starting the backend database and the job workers
@@ -127,11 +144,13 @@ Prospector makes use of `pytest`.
 
 :exclamation: **NOTE:** before using it please make sure to have running instances of the backend and the database.
 
+## 🤝 Contributing
+
 If you find a bug, please open an issue. If you can also fix the bug, please
 create a pull request (make sure it includes a test case that passes with your correction
 but fails without it)
 
-## History
+## 🕰️ History
 
 The high-level structure of Prospector follows the approach of its
 predecessor FixFinder, which is described in detail here: https://arxiv.org/pdf/2103.13375.pdf
