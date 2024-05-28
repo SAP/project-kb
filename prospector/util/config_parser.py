@@ -27,6 +27,7 @@ def parse_cli_args(args):
 
     parser.add_argument("--pub-date", type=str, help="Publication date of the advisory")
 
+    # Allow the user to manually supply advisory description
     parser.add_argument("--description", type=str, help="Advisory description")
 
     parser.add_argument(
