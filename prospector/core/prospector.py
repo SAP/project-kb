@@ -164,7 +164,7 @@ def prospector(  # noqa: C901
                         "/.dockerenv"
                     ):
                         print(
-                            "The backend address should be changed to 'http://backend:8000' when running the containerised version of Prospector."
+                            "The backend address should be 'http://backend:8000' when running the containerised version of Prospector: aborting"
                         )
                     else:
                         print("Backend not reachable: aborting")
