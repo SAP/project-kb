@@ -1,6 +1,7 @@
 # flake8: noqa
 
 import logging
+import os
 import re
 import sys
 import time
@@ -158,9 +159,15 @@ def prospector(  # noqa: C901
                     "Backend not reachable",
                     exc_info=get_level() < logging.WARNING,
                 )
-                print(backend_address)
                 if use_backend == "always":
-                    print("Backend not reachable: aborting")
+                    if backend_address == "http://localhost:8000" and os.path.exists(
+                        "/.dockerenv"
+                    ):
+                        print(
+                            "The backend address should be changed to 'http://backend:8000' when running the containerised version of Prospector."
+                        )
+                    else:
+                        print("Backend not reachable: aborting")
                     sys.exit(1)
                 print("Backend not reachable: continuing")
 
@@ -291,7 +298,7 @@ def retrieve_preprocessed_commits(
     retrieved_commits: List[dict] = list()
     missing: List[RawCommit] = list()
 
-    backend_address = "http://backend:8000"
+    # backend_address = "http://localhost:8000"
 
     responses = list()
     for i in range(0, len(candidates), 500):

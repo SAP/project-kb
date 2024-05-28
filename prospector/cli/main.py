@@ -51,6 +51,11 @@ def main(argv):  # noqa: C901
             )
             return
 
+        if config.backend == "http://localhost:8000" and os.path.exists("/.dockerenv"):
+            logger.warning(
+                "The backend address should be changed to 'http://backend:8000' when running the containerised version of Prospector."
+            )
+
         # if config.ping:
         #     return ping_backend(backend, get_level() < logging.INFO)
 
