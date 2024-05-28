@@ -82,7 +82,6 @@ def parse_cli_args(args):
 
     parser.add_argument(
         "--use-backend",
-        default="always",
         choices=["always", "never", "optional"],
         type=str,
         help="Use the backend server",
