@@ -121,7 +121,7 @@ If you wish to cleanup docker to run a fresh version of the backend you can run:
 
 ### Starting the RESTful server
 
-`uvicorn api.main:app --reload`
+`uvicorn service.main:app --reload`
 
 Note, that it requires `POSTGRES_USER`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DBNAME` to be set in the .env file.
 
