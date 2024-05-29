@@ -1,18 +1,18 @@
 import pytest
 
-from commitdb.postgres import PostgresCommitDB, parse_connect_string
+from backenddb.postgres import PostgresBackendDB, parse_connect_string
 from datamodel.commit import Commit
 
 
 @pytest.fixture
 def setupdb():
-    db = PostgresCommitDB("postgres", "example", "localhost", "5432", "postgres")
+    db = PostgresBackendDB("postgres", "example", "localhost", "5432", "postgres")
     db.connect()
     # db.reset()
     return db
 
 
-def test_save_lookup(setupdb: PostgresCommitDB):
+def test_save_lookup(setupdb: PostgresBackendDB):
     commit = Commit(
         commit_id="42423b2423",
         repository="https://fasfasdfasfasd.com/rewrwe/rwer",
@@ -37,7 +37,7 @@ def test_save_lookup(setupdb: PostgresCommitDB):
     assert commit.commit_id == retrieved_commit.commit_id
 
 
-def test_lookup_nonexisting(setupdb: PostgresCommitDB):
+def test_lookup_nonexisting(setupdb: PostgresBackendDB):
     result = setupdb.lookup(
         "https://fasfasdfasfasd.com/rewrwe/rwer",
         "42423b242342423b2423",

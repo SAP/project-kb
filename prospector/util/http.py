@@ -62,7 +62,6 @@ def get_urls(url: str) -> List[str]:
 
 # TODO: properly scrape github issues
 def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str:
-
     content = fetch_url(url, None, False)
     if not content:
         return ""

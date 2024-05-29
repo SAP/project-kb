@@ -28,7 +28,7 @@ services:
       context: .
       dockerfile: docker/worker/Dockerfile
     volumes:
-      - .:/pythonimports
+      - ./data_sources/reports:/app/data_sources/reports
     depends_on:
       - redis
     environment:

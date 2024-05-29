@@ -390,9 +390,7 @@
       "spring framework",
       "spring-framework",
       "Spring Framework",
-      "Spring-Framework",
-      "Spring",
-      "spring"
+      "Spring-Framework"
     ]
   },
   "tomcat": {
@@ -488,6 +486,28 @@
     "search keywords": [
       "Flatpak",
       "flatpak"
+    ]
+  },
+  "Tuleap": {
+    "mailing_list_archives": "",
+    "jira_prefix": "",
+    "security_advisory_page": "",
+    "jira_link_template": "",
+    "git": "https://github.com/Enalean/tuleap",
+    "search keywords": [
+      "Tuleap Community",
+      "Tuleap"
+    ]
+  },
+  "spring-boot": {
+    "mailing_list_archives": "",
+    "jira_prefix": "",
+    "security_advisory_page": "",
+    "jira_link_template": "",
+    "git": "https://github.com/spring-projects/spring-boot",
+    "search keywords": [
+      "spring-boot",
+      "spring boot"
     ]
   }
 }

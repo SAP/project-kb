@@ -2,6 +2,7 @@ from .nlp import (
     extract_affected_filenames,
     extract_ghissue_references,
     extract_jira_references,
+    extract_products,
     find_similar_words,
 )
 
@@ -57,3 +58,8 @@ def test_extract_gh_issues():
 def test_extract_filenames_single():
     fn, ext = extract_affected_filenames(ADVISORY_TEXT_6)
     assert "Content-Length" in fn
+
+
+def test_extract_products():
+    result = extract_products(ADVISORY_TEXT_5)
+    assert ["JsonMapObjectReaderWriter", "CXF"] == result
