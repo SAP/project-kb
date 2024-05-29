@@ -134,7 +134,9 @@ but fails without it)
 ## History
 
 The high-level structure of Prospector follows the approach of its
-predecessor FixFinder, which is described in detail here: https://arxiv.org/pdf/2103.13375.pdf
+predecessor FixFinder, which is described in:
+
+> Daan Hommersom, Antonino Sabetta, Bonaventura Coppola, Dario Di Nucci, and Damian A. Tamburri. 2024. Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories. ACM Trans. Softw. Eng. Methodol. March 2024. https://doi.org/10.1145/3649590
 
 FixFinder is the prototype developed by Daan Hommersom as part of his thesis
 done in partial fulfillment of the requirements for the degree of Master of
@@ -145,16 +147,17 @@ The main difference between FixFinder and Prospector (which has been implemented
 is that the former takes a definite data-driven approach and trains a ML model to perform the ranking,
 whereas the latter applies hand-crafted rules to assign a relevance score to each candidate commit.
 
-The document that describes FixFinder can be cited as follows:
+The paper that describes FixFinder can be cited as follows:
 
-@misc{hommersom2021mapping,
-    title = {Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories},
-    author = {Hommersom, Daan and
-    Sabetta, Antonino and
-    Coppola, Bonaventura and
-    Dario Di Nucci and
-    Tamburri, Damian A. },
-    year = {2021},
-    month = {March},
-    url = {https://arxiv.org/pdf/2103.13375.pdf}
+@article{10.1145/3649590,
+author = {Hommersom, Daan and Sabetta, Antonino and Coppola, Bonaventura and Nucci, Dario Di and Tamburri, Damian A.},
+title = {Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories},
+year = {2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+issn = {1049-331X},
+url = {https://doi.org/10.1145/3649590},
+doi = {10.1145/3649590},
+journal = {ACM Trans. Softw. Eng. Methodol.},
+month = {mar},
 }
