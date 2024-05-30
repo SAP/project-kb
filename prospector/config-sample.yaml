@@ -35,6 +35,8 @@ redis_url: redis://redis:6379/0
 report:
   format: html
   name: prospector-report
+  no_diff: False
+
 
 # Log level: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
 log_level: INFO
