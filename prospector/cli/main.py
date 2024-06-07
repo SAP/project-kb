@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
-import llm.llm_operations as llm
+import llm.operations as llm
 from util.http import ping_backend
 
 path_root = os.getcwd()
