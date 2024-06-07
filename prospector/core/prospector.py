@@ -37,7 +37,7 @@ THREE_YEARS = 3 * 365 * SECS_PER_DAY
 ONE_YEAR = 365 * SECS_PER_DAY
 
 MAX_CANDIDATES = 2000
-DEFAULT_BACKEND = "http://backend:8000"
+DEFAULT_BACKEND = "http://localhost:8000"
 
 
 core_statistics = execution_statistics.sub_collection("core")
