@@ -9,6 +9,7 @@ from typing import DefaultDict, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
+from langchain_core.language_models.llms import LLM
 from tqdm import tqdm
 
 from cli.console import ConsoleWriter, MessageStatus
@@ -66,7 +67,7 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    rules: List[str] = ["ALL"],
+    rules: List[str] = ["NLP"],
     tag_commits: bool = True,
     silent: bool = False,
     use_llm_repository_url: bool = False,
@@ -118,7 +119,9 @@ def prospector(  # noqa: C901
     repository = Git(repository_url, git_cache)
 
     with ConsoleWriter("Git repository cloning") as console:
-        logger.debug(f"Downloading repository {repository.url} in {repository.path}")
+        logger.debug(
+            f"Downloading repository {repository.url} in {repository.path}"
+        )
         repository.clone()
 
         tags = repository.get_tags()
@@ -130,7 +133,9 @@ def prospector(  # noqa: C901
 
     if len(fixing_commit) > 0:
         candidates = get_commits_no_tags(repository, fixing_commit)
-        if len(candidates) > 0 and any([c for c in candidates if c in fixing_commit]):
+        if len(candidates) > 0 and any(
+            [c for c in candidates if c in fixing_commit]
+        ):
             console.print("Fixing commit found in the advisory references\n")
             advisory_record.has_fixing_commit = True
 
@@ -161,7 +166,9 @@ def prospector(  # noqa: C901
     candidates = filter(candidates)
 
     if len(candidates) > limit_candidates:
-        logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
+        logger.error(
+            f"Number of candidates exceeds {limit_candidates}, aborting."
+        )
 
         ConsoleWriter.print(f"Candidates limitlimit exceeded: {len(candidates)}.")
         return None, len(candidates)
@@ -172,10 +179,12 @@ def prospector(  # noqa: C901
         with ConsoleWriter("\nProcessing commits") as writer:
             try:
                 if use_backend != USE_BACKEND_NEVER:
-                    missing, preprocessed_commits = retrieve_preprocessed_commits(
-                        repository_url,
-                        backend_address,
-                        candidates,
+                    missing, preprocessed_commits = (
+                        retrieve_preprocessed_commits(
+                            repository_url,
+                            backend_address,
+                            candidates,
+                        )
                     )
             except requests.exceptions.ConnectionError:
                 logger.error(
@@ -226,12 +235,18 @@ def prospector(  # noqa: C901
 
             payload = [c.to_dict() for c in preprocessed_commits]
 
-    if len(payload) > 0 and use_backend != USE_BACKEND_NEVER and len(missing) > 0:
+    if (
+        len(payload) > 0
+        and use_backend != USE_BACKEND_NEVER
+        and len(missing) > 0
+    ):
         save_preprocessed_commits(backend_address, payload)
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
 
-    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
+    ranked_candidates = evaluate_commits(
+        preprocessed_commits, advisory_record, llm_model, rules
+    )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
     ranked_candidates = remove_twins(ranked_candidates)
@@ -241,9 +256,13 @@ def prospector(  # noqa: C901
     return ranked_candidates, advisory_record
 
 
-def preprocess_commits(commits: List[RawCommit], timer: ExecutionTimer) -> List[Commit]:
+def preprocess_commits(
+    commits: List[RawCommit], timer: ExecutionTimer
+) -> List[Commit]:
     preprocessed_commits: List[Commit] = list()
-    with Counter(timer.collection.sub_collection("commit preprocessing")) as counter:
+    with Counter(
+        timer.collection.sub_collection("commit preprocessing")
+    ) as counter:
         counter.initialize("preprocessed commits", unit="commit")
         for raw_commit in tqdm(
             commits,
@@ -251,7 +270,9 @@ def preprocess_commits(commits: List[RawCommit], timer: ExecutionTimer) -> List[
             unit=" commit",
         ):
             counter.increment("preprocessed commits")
-            counter_val = counter.__dict__["collection"]["preprocessed commits"][0]
+            counter_val = counter.__dict__["collection"][
+                "preprocessed commits"
+            ][0]
             if counter_val % 100 == 0 and counter_val * 2 > time.time():
                 pass
             preprocessed_commits.append(make_from_raw_commit(raw_commit))
@@ -267,11 +288,16 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 
 
 def evaluate_commits(
-    commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]
+    commits: List[Commit],
+    advisory: AdvisoryRecord,
+    llm_model: LLM,
+    rules: List[str],
 ) -> List[Commit]:
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
-            ranked_commits = apply_ranking(apply_rules(commits, advisory, rules=rules))
+            ranked_commits = apply_ranking(
+                apply_rules(commits, advisory, model=llm_model, rules=rules)
+            )
 
     return ranked_commits
 
@@ -289,7 +315,9 @@ def remove_twins(commits: List[Commit]) -> List[Commit]:
     return output
 
 
-def tag_and_aggregate_commits(commits: List[Commit], next_tag: str) -> List[Commit]:
+def tag_and_aggregate_commits(
+    commits: List[Commit], next_tag: str
+) -> List[Commit]:
     return commits
     if next_tag is None or next_tag == "":
         return commits
@@ -331,7 +359,9 @@ def retrieve_preprocessed_commits(
             break  # return list(candidates.values()), list()
         responses.append(r.json())
 
-    retrieved_commits = [commit for response in responses for commit in response]
+    retrieved_commits = [
+        commit for response in responses for commit in response
+    ]
 
     logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
 
@@ -352,7 +382,9 @@ def retrieve_preprocessed_commits(
 
 
 def save_preprocessed_commits(backend_address, payload):
-    with ExecutionTimer(core_statistics.sub_collection(name="save commits to backend")):
+    with ExecutionTimer(
+        core_statistics.sub_collection(name="save commits to backend")
+    ):
         with ConsoleWriter("Saving processed commits to backend") as writer:
             logger.debug("Sending processing commits to backend...")
             try:
@@ -412,7 +444,11 @@ def get_commits_from_tags(
         with ConsoleWriter("Candidate commit retrieval") as writer:
             since = None
             until = None
-            if advisory_record.published_timestamp and not next_tag and not prev_tag:
+            if (
+                advisory_record.published_timestamp
+                and not next_tag
+                and not prev_tag
+            ):
                 since = advisory_record.reserved_timestamp - time_limit_before
                 until = advisory_record.reserved_timestamp + time_limit_after
 
@@ -426,7 +462,8 @@ def get_commits_from_tags(
 
             if len(candidates) == 0:
                 candidates = repository.create_commits(
-                    since=advisory_record.reserved_timestamp - time_limit_before,
+                    since=advisory_record.reserved_timestamp
+                    - time_limit_before,
                     until=advisory_record.reserved_timestamp + time_limit_after,
                     next_tag=None,
                     prev_tag=None,
