@@ -15,8 +15,7 @@ use_nvd: True
 # Wheter to use a backend or not: "always", "never", "optional"
 use_backend: optional
 
-# Optional backend info to save/use already preprocessed data
-#backend: http://backend:8000
+# Backend address; when in containerised version, use http://backend:8000, otherwise http://localhost:8000
 backend: http://localhost:8000
 
 database:
@@ -30,7 +29,7 @@ redis_url: redis://redis:6379/0
 
 # LLM Usage (check README for help)
 llm_service:
-  type: sap
+  type: sap # use "sap" or "third_party"
   model_name: gpt-4-turbo
   # temperature: 0.0 # optional, default is 0.0
 

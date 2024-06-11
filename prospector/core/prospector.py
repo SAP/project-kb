@@ -6,6 +6,7 @@ import re
 import sys
 import time
 from typing import Dict, List, Set, Tuple
+from urllib.parse import urlparse
 
 import requests
 from tqdm import tqdm
@@ -38,6 +39,9 @@ ONE_YEAR = 365 * SECS_PER_DAY
 
 MAX_CANDIDATES = 2000
 DEFAULT_BACKEND = "http://localhost:8000"
+USE_BACKEND_ALWAYS = "always"
+USE_BACKEND_OPTIONAL = "optional"
+USE_BACKEND_NEVER = "never"
 
 
 core_statistics = execution_statistics.sub_collection("core")
@@ -58,7 +62,7 @@ def prospector(  # noqa: C901
     use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
     backend_address: str = DEFAULT_BACKEND,
-    use_backend: str = "always",
+    use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
     rules: List[str] = ["ALL"],
@@ -146,7 +150,7 @@ def prospector(  # noqa: C901
     ) as timer:
         with ConsoleWriter("\nProcessing commits") as writer:
             try:
-                if use_backend != "never":
+                if use_backend != USE_BACKEND_NEVER:
                     missing, preprocessed_commits = retrieve_preprocessed_commits(
                         repository_url,
                         backend_address,
@@ -157,17 +161,13 @@ def prospector(  # noqa: C901
                     "Backend not reachable",
                     exc_info=get_level() < logging.WARNING,
                 )
-                if use_backend == "always":
-                    if backend_address == "http://localhost:8000" and os.path.exists(
-                        "/.dockerenv"
-                    ):
+                if use_backend == USE_BACKEND_ALWAYS:
+                    if not is_correct_backend_url(backend_address):
                         print(
-                            "The backend address should be 'http://backend:8000' when running the containerised version of Prospector: aborting"
+                            "The backend address should be 'backend:8000' when running the containerised version of Prospector, and 'localhost:8000' otherwise: Aborting."
                         )
-                    else:
-                        print("Backend not reachable: aborting")
                     sys.exit(1)
-                print("Backend not reachable: continuing")
+                print("Backend not reachable: Continuing.")
 
             if "missing" not in locals():
                 missing = list(candidates.values())
@@ -202,7 +202,7 @@ def prospector(  # noqa: C901
 
             payload = [c.to_dict() for c in preprocessed_commits]
 
-    if len(payload) > 0 and use_backend != "never" and len(missing) > 0:
+    if len(payload) > 0 and use_backend != USE_BACKEND_NEVER and len(missing) > 0:
         save_preprocessed_commits(backend_address, payload)
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
@@ -426,6 +426,29 @@ def get_commits_no_tags(repository: Git, commit_ids: List[str]):
         )
 
     return candidates
+
+
+def is_correct_backend_url(backend_url: str) -> bool:
+    """Returns True if the backend URL set in the config file matches the way prospector is run. Returns False if
+    - Prospector is run containerised and backend_url is not 'backend:8000'
+    - Prospector is run locally and backend_url is not 'localhost:8000'
+    """
+    parsed_config_url = urlparse(backend_url)
+    parsed_default_url = urlparse(DEFAULT_BACKEND)
+
+    if parsed_config_url.port != 8000:
+        return False
+
+    in_container = os.environ.get("IN_CONTAINER", "") == "1"
+
+    if in_container:
+        if parsed_config_url.hostname != "backend":
+            return False
+    else:
+        if parsed_config_url.hostname != parsed_default_url.hostname:
+            return False
+
+    return True
 
 
 # def prospector_find_twins(
