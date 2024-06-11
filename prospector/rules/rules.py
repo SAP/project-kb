@@ -2,6 +2,8 @@ import re
 from abc import abstractmethod
 from typing import List, Tuple
 
+from langchain_core.language_models.llms import LLM
+
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from datamodel.nlp import clean_string, find_similar_words
@@ -22,6 +24,37 @@ class Rule:
 
     @abstractmethod
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord) -> bool:
+        pass
+
+    def get_message(self):
+        return self.message
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "message": self.message,
+            "relevance": self.relevance,
+        }
+
+    def get_rule_as_tuple(self) -> Tuple[str, str, int]:
+        return (self.id, self.message, self.relevance)
+
+
+class LLMRule:
+    lsh_index = None
+
+    def __init__(self, id: str, relevance: int):
+        self.id = id
+        self.message = ""
+        self.relevance = relevance
+
+    @abstractmethod
+    def apply(
+        self,
+        candidate: Commit,
+        advisory_record: AdvisoryRecord,
+        llm_provider: LLM,
+    ) -> bool:
         pass
 
     def get_message(self):
@@ -409,6 +442,13 @@ class RelevantWordsInMessage(Rule):
         return False
 
 
+class SecurityRelevantCommit(LLMRule):
+    """Matches commits who are deemed security relevant by the specified LLM."""
+
+    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
+        pass
+
+
 RULES: List[Rule] = [
     VulnIdInMessage("VULN_ID_IN_MESSAGE", 64),
     # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
@@ -446,6 +486,16 @@ rules_list = [
     "GITHUB_ISSUE_IN_MESSAGE",
     "BUG_IN_MESSAGE",
     "COMMIT_HAS_TWINS",
+]
+
+LLM_RULES: List[LLMRule] = [
+    SecurityRelevantCommit(
+        "COMMIT_IS_SECURITY_RELEVANT", 32
+    ),  # LASCHA: verify that relevance is correct
+]
+
+llm_rules_list = [
+    "COMMIT_IS_SECURITY_RELEVANT",
 ]
 
 # print(" & ".join([f"\\rot{{{x}}}" for x in rules_list]))
