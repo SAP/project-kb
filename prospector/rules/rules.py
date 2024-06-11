@@ -74,9 +74,16 @@ class LLMRule:
 def apply_rules(
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
-    rules=["ALL"],
+    model=None,
+    rules=["NLP"],
 ) -> List[Commit]:
     enabled_rules = get_enabled_rules(rules)
+    enabled_nlp_rules: Rule = [
+        rule for rule in enabled_rules if rule in RULES
+    ]  # obtain all selected NLP rules
+    enabled_llm_rules: LLMRule = [
+        rule for rule in enabled_rules if rule in LLM_RULES
+    ]  # obtain all selected LLM rules
 
     rule_statistics.collect("active", len(enabled_rules), unit="rules")
 
@@ -88,8 +95,12 @@ def apply_rules(
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")
         for candidate in candidates:
-            for rule in enabled_rules:
+            for rule in enabled_nlp_rules:
                 if rule.apply(candidate, advisory_record):
+                    counter.increment("matches")
+                    candidate.add_match(rule.as_dict())
+            for rule in enabled_llm_rules:
+                if rule.apply(candidate, advisory_record, model):
                     counter.increment("matches")
                     candidate.add_match(rule.as_dict())
             candidate.compute_relevance()
@@ -110,6 +121,9 @@ def apply_rules(
 
 def get_enabled_rules(rules: List[str]) -> List[Rule]:
     if "ALL" in rules:
+        return RULES + LLM_RULES
+
+    if "NLP" in rules:
         return RULES
 
     enabled_rules = []
@@ -445,8 +459,10 @@ class RelevantWordsInMessage(Rule):
 class SecurityRelevantCommit(LLMRule):
     """Matches commits who are deemed security relevant by the specified LLM."""
 
-    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
-        pass
+    def apply(self, candidate: Commit, advisory_record: AdvisoryRecord, model: LLM):
+        response_from_cc = 1
+        # print("I'm getting applied, whipiee.") # sanity check
+        return True if response_from_cc == 1 else False
 
 
 RULES: List[Rule] = [

@@ -58,7 +58,10 @@ def main(argv):  # noqa: C901
 
         # Whether to use the LLMService
         if config.llm_service:
-            if not config.repository and not config.llm_service.use_llm_repository_url:
+            if (
+                not config.repository
+                and not config.llm_service.use_llm_repository_url
+            ):
                 logger.error(
                     "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
                 )
@@ -80,13 +83,25 @@ def main(argv):  # noqa: C901
                 return
 
         config.pub_date = (
-            config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
+            config.pub_date + "T00:00:00Z"
+            if config.pub_date is not None
+            else ""
         )
 
         logger.debug("Using the following configuration:")
         pretty_log(logger, config.__dict__)
 
         logger.debug("Vulnerability ID: " + config.vuln_id)
+
+    if not config.repository:
+        config.repository = llm.get_repository_url(
+            model=model, vuln_id=config.vuln_id
+        )
+
+    if config.use_llm_commit_rule:
+        rules = ["ALL"]
+    else:
+        rules = ["NLP"]
 
     results, advisory_record = prospector(
         vulnerability_id=config.vuln_id,
