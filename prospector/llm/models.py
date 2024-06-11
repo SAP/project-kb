@@ -11,6 +11,7 @@ from log.logger import logger
 class SAPProvider(LLM):
     model_name: str
     deployment_url: str
+    temperature: float
 
     @property
     def _llm_type(self) -> str:
@@ -69,7 +70,8 @@ class OpenAI(SAPProvider):
                     "role": "user",
                     "content": f"{prompt}",
                 }
-            ]
+            ],
+            "temperature": self.temperature,
         }
 
         response = requests.post(endpoint, headers=headers, json=data)
@@ -99,7 +101,7 @@ class Gemini(SAPProvider):
         data = {
             "generation_config": {
                 "maxOutputTokens": 1000,
-                "temperature": 0.0,
+                "temperature": self.temperature,
             },
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
             "safetySettings": [
@@ -143,7 +145,7 @@ class Mistral(SAPProvider):
         data = {
             "model": "mistralai--mixtral-8x7b-instruct-v01",
             "max_tokens": 100,
-            "temperature": 0.0,
+            "temperature": self.temperature,
             "messages": [{"role": "user", "content": prompt}],
         }
 
