@@ -79,7 +79,7 @@ def main(argv):  # noqa: C901
     # whether to use LLM support
     if not config.repository:
         config.repository = llm.get_repository_url(
-            llm_config=config.llm, vuln_id=config.vuln_id
+            llm_config=config.llm_service, vuln_id=config.vuln_id
         )
 
     results, advisory_record = prospector(

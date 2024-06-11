@@ -141,7 +141,7 @@ def parse_cli_args(args):
 def parse_config_file(filename: str = "config.yaml"):
     if os.path.isfile(filename):
         logger.info(f"Loading configuration from {filename}")
-        schema = OmegaConf.structured(MandatoryConfig)
+        schema = OmegaConf.structured(ConfigSchema)
         config = OmegaConf.load(filename)
         try:
             merged_config = OmegaConf.merge(schema, config)
@@ -181,11 +181,12 @@ class ReportConfig:
 class LLMServiceConfig:
     type: str
     model_name: str
+    temperature: float = 0.0
 
 
 # Schema class for config.yaml parameters
 @dataclass
-class MandatoryConfig:
+class ConfigSchema:
     redis_url: str = MISSING
     preprocess_only: bool = MISSING
     max_candidates: int = MISSING
@@ -226,18 +227,18 @@ class Config:
         use_backend: str,
         backend: str,
         use_llm_repository_url: bool,
-        report: str,
+        report: ReportConfig,
         report_filename: str,
         ping: bool,
         log_level: str,
         git_cache: str,
         ignore_refs: bool,
-        llm: str,
+        llm_service: LLMServiceConfig,
     ):
         self.vuln_id = vuln_id
         self.repository = repository
         self.use_llm_repository_url = use_llm_repository_url
-        self.llm = llm
+        self.llm_service = llm_service
         self.preprocess_only = preprocess_only
         self.pub_date = pub_date
         self.description = description
@@ -271,7 +272,7 @@ def get_configuration(argv):
             vuln_id=args.vuln_id,
             repository=args.repository,
             use_llm_repository_url=conf.use_llm_repository_url,
-            llm=conf.llm_service,
+            llm_service=conf.llm_service,
             preprocess_only=args.preprocess_only or conf.preprocess_only,
             pub_date=args.pub_date,
             description=args.description,

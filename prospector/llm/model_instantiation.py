@@ -50,12 +50,13 @@ def create_model_instance(llm_config) -> LLM:
             - 'type' (str): Method for accessing the LLM API ('sap' for SAP's AI Core, 'third_party' for
                             external providers).
             - 'model_name' (str): Which model to use, e.g. gpt-4.
+            - 'temperature' (Optional(float)): The temperature for the model, default 0.0.
 
     Returns:
         LLM: An instance of the specified LLM model.
     """
 
-    def create_sap_provider(model_name: str):
+    def create_sap_provider(model_name: str, temperature: float):
         d = SAP_MAPPING.get(model_name, None)
 
         if d is None:
@@ -64,11 +65,12 @@ def create_model_instance(llm_config) -> LLM:
         model = d._class(
             model_name=model_name,
             deployment_url=d.access_info,
+            temperature=temperature,
         )
 
         return model
 
-    def create_third_party_provider(model_name: str):
+    def create_third_party_provider(model_name: str, temperature: float):
         # obtain definition from main mapping
         d = THIRD_PARTY_MAPPING.get(model_name, None)
 
@@ -79,6 +81,7 @@ def create_model_instance(llm_config) -> LLM:
         model = d._class(
             model=model_name,
             api_key=d.access_info,
+            temperature=temperature,
         )
 
         return model
@@ -92,9 +95,13 @@ def create_model_instance(llm_config) -> LLM:
     try:
         match llm_config.type:
             case "sap":
-                model = create_sap_provider(llm_config.model_name)
+                model = create_sap_provider(
+                    llm_config.model_name, llm_config.temperature
+                )
             case "third_party":
-                model = create_third_party_provider(llm_config.model_name)
+                model = create_third_party_provider(
+                    llm_config.model_name, llm_config.temperature
+                )
             case _:
                 logger.error(
                     f"Invalid LLM type specified, '{llm_config.type}' is not available."

@@ -32,6 +32,7 @@ redis_url: redis://redis:6379/0
 llm_service:
   type: sap
   model_name: gpt-4-turbo
+  # temperature: 0.0 # optional, default is 0.0
 
 use_llm_repository_url: True # whether to use LLM's to obtain the repository URL
 
