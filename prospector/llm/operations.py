@@ -2,22 +2,19 @@ import sys
 from typing import Dict
 
 import validators
+from langchain_core.language_models.llms import LLM
 
 from cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import get_from_mitre
-from llm.model_instantiation import create_model_instance
 from llm.prompts import best_guess
 from log.logger import logger
 
 
-def get_repository_url(llm_config: Dict, vuln_id: str):
+def get_repository_url(model: LLM, vuln_id: str):
     """Ask an LLM to obtain the repository URL given the advisory description and references.
 
     Args:
-        llm_config (dict): A dictionary containing the configuration for the LLM. Expected keys are:
-            - 'type' (str): Method for accessing the LLM API ('sap' for SAP's AI Core, 'third_party' for
-                            external providers).
-            - 'model_name' (str): Which model to use, e.g. gpt-4.
+        model (LLM): The instantiated model (instantiated with create_model_instance())
         vuln_id: The ID of the advisory, e.g. CVE-2020-1925.
 
     Returns:
@@ -37,7 +34,6 @@ def get_repository_url(llm_config: Dict, vuln_id: str):
             sys.exit(1)
 
         try:
-            model = create_model_instance(llm_config=llm_config)
             chain = best_guess | model
 
             url = chain.invoke(
