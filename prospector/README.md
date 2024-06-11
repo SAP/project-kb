@@ -55,6 +55,7 @@ To quickly set up Prospector, follow these steps. This will run Prospector in it
     By default, Prospector saves the results in a HTML file named *prospector-report.html*.
     Open this file in a web browser to view what Prospector was able to find!
 
+
 ### 🤖 LLM Support
 
 To use Prospector with LLM support, you simply set required parameters for the API access to the LLM in *config.yaml*. These parameters can vary depending on your choice of provider, please follow what fits your needs (drop-downs below). If you do not want to use LLM support, keep the `llm_service` block in your *config.yaml* file commented out.
