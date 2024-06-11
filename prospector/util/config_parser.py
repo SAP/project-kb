@@ -201,7 +201,11 @@ class ConfigSchema:
     git_cache: str = MISSING
     nvd_token: Optional[str] = None
     database: DatabaseConfig = DatabaseConfig(
-        user="postgres", password="example", host="db", port=5432, dbname="postgres"
+        user="postgres",
+        password="example",
+        host="db",
+        port=5432,
+        dbname="postgres",
     )
     llm_service: Optional[LLMServiceConfig] = None
     github_token: Optional[str] = None
