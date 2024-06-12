@@ -18,6 +18,7 @@ from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
+from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
 from rules.rules import apply_rules
 from stats.execution import (
@@ -68,6 +69,7 @@ def prospector(  # noqa: C901
     rules: List[str] = ["ALL"],
     tag_commits: bool = True,
     silent: bool = False,
+    llm_service_config=None,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -75,24 +77,30 @@ def prospector(  # noqa: C901
 
     logger.debug("begin main commit and CVE processing")
 
+    # instantiate LLM model if needed:
+    if llm_service_config and (llm_service_config.use_llm_repository_url):
+        llm_service = LLMService(llm_service_config)
+
     # construct an advisory record
     with ConsoleWriter("Processing advisory") as console:
         advisory_record = build_advisory_record(
             vulnerability_id,
             vuln_descr,
+            repository_url,
             nvd_rest_endpoint,
             use_nvd,
             publication_date,
             set(advisory_keywords),
             set(modified_files),
+            llm_service if llm_service_config.use_llm_repository_url else None,
         )
     if advisory_record is None:
         return None, -1
 
-    fixing_commit = advisory_record.get_fixing_commit(repository_url)
+    fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)
     # obtain a repository object
-    repository = Git(repository_url, git_cache)
+    repository = Git(advisory_record.repository_url, git_cache)
 
     with ConsoleWriter("Git repository cloning") as console:
         logger.debug(f"Downloading repository {repository.url} in {repository.path}")
@@ -152,7 +160,7 @@ def prospector(  # noqa: C901
             try:
                 if use_backend != USE_BACKEND_NEVER:
                     missing, preprocessed_commits = retrieve_preprocessed_commits(
-                        repository_url,
+                        advisory_record.repository_url,
                         backend_address,
                         candidates,
                     )
