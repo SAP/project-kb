@@ -2,9 +2,14 @@ import pytest
 import requests
 from langchain_openai import ChatOpenAI
 
+<<<<<<< HEAD:prospector/llm/test_llm.py
 from llm.model_instantiation import create_model_instance
 from llm.models import OpenAI
 from llm.operations import get_repository_url
+=======
+from llm.llm_service import create_model_instance, get_repository_url
+from llm.models import Gemini, Mistral, OpenAI
+>>>>>>> 376db10 (basic refactoring mvp):prospector/llm/test_llm_service.py
 
 
 # Mock the llm_service configuration object

@@ -7,7 +7,6 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
-import llm.operations as llm
 from llm.model_instantiation import create_model_instance
 from util.http import ping_backend
 
@@ -55,20 +54,6 @@ def main(argv):  # noqa: C901
             )
             return
 
-        # instantiate LLM model if set in config.yaml
-        if config.llm_service:
-            model = create_model_instance(llm_config=config.llm_service)
-
-        if not config.repository and not config.use_llm_repository_url:
-            logger.error(
-                "Either provide the repository URL or allow LLM usage to obtain it."
-            )
-            console.print(
-                "Either provide the repository URL or allow LLM usage to obtain it.",
-                status=MessageStatus.ERROR,
-            )
-            sys.exit(1)
-
         # if config.ping:
         #     return ping_backend(backend, get_level() < logging.INFO)
 
@@ -81,12 +66,9 @@ def main(argv):  # noqa: C901
 
         logger.debug("Vulnerability ID: " + config.vuln_id)
 
-    if not config.repository:
-        config.repository = llm.get_repository_url(model=model, vuln_id=config.vuln_id)
-
     results, advisory_record = prospector(
         vulnerability_id=config.vuln_id,
-        repository_url=config.repository,
+        repository_url=config.repository,  # LASCHA: change to None
         publication_date=config.pub_date,
         vuln_descr=config.description,
         version_interval=config.version_interval,
@@ -99,6 +81,7 @@ def main(argv):  # noqa: C901
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
+        llm_service_config=config.llm_service,
     )
 
     if config.preprocess_only:

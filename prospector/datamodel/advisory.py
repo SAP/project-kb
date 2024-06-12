@@ -10,6 +10,7 @@ import requests
 import validators
 from dateutil.parser import isoparse
 
+from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
 from util.http import extract_from_webpage, fetch_url, get_urls
 
@@ -69,6 +70,7 @@ class AdvisoryRecord:
         reserved_timestamp: int = 0,
         published_timestamp: int = 0,
         updated_timestamp: int = 0,
+        repository_url: str = None,
         references: DefaultDict[str, int] = None,
         affected_products: List[str] = None,
         versions: Dict[str, List[str]] = None,
@@ -81,6 +83,7 @@ class AdvisoryRecord:
         self.reserved_timestamp = reserved_timestamp
         self.published_timestamp = published_timestamp
         self.updated_timestamp = updated_timestamp
+        self.repository_url = repository_url
         self.references = references or defaultdict(lambda: 0)
         self.affected_products = affected_products or list()
         self.versions = versions or dict()
@@ -176,7 +179,7 @@ class AdvisoryRecord:
         ]
         self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
 
-    def get_fixing_commit(self, repository) -> List[str]:
+    def get_fixing_commit(self) -> List[str]:
         self.references = dict(
             sorted(self.references.items(), key=lambda item: item[1], reverse=True)
         )
@@ -315,11 +318,13 @@ def get_from_local(vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOIN
 def build_advisory_record(
     cve_id: str,
     description: Optional[str] = None,
+    repository_url: str = None,
     nvd_rest_endpoint: Optional[str] = None,
     use_nvd: bool = True,
     publication_date: Optional[str] = None,
     advisory_keywords: Set[str] = set(),
     modified_files: Optional[str] = None,
+    llm_service: LLMService = None,
 ) -> AdvisoryRecord:
     advisory_record = AdvisoryRecord(
         cve_id=cve_id,
@@ -334,6 +339,19 @@ def build_advisory_record(
             exc_info=get_level() < logging.INFO,
         )
         return None
+
+    # Get repository URL if not given by user
+    if llm_service:
+        try:
+            advisory_record.repository_url = llm_service.get_repository_url(
+                advisory_record.description, advisory_record.references
+            )
+        except Exception as e:  # LASCHA: understand this error
+            logger.error(
+                "URL returned by LLM was not valid.",
+                exc_info=get_level() < logging.INFO,
+            )
+            return None
 
     pretty_log(logger, advisory_record)
 
