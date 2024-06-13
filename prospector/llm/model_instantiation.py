@@ -6,7 +6,7 @@ from langchain_google_vertexai import ChatVertexAI
 from langchain_mistralai import ChatMistralAI
 from langchain_openai import ChatOpenAI
 
-from llm.models import Gemini, Mistral, OpenAI
+from llm.models.models import Gemini, Mistral, OpenAI
 from log.logger import logger
 
 
