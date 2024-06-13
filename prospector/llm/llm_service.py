@@ -10,11 +10,22 @@ from llm.prompts import best_guess
 from log.logger import logger
 
 
-class LLMService:
-    model: LLM
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class LLMService(metaclass=Singleton):
+    _instance = None
 
     def __init__(self, config):
-        self.model = create_model_instance(config)
+        if not hasattr(self, "_initialized"):
+            self._model: LLM = create_model_instance(config)
+            self._initliazed = True
 
     def get_repository_url(self, advisory_description, advisory_references):
         """Ask an LLM to obtain the repository URL given the advisory description and references.

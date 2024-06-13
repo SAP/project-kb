@@ -77,10 +77,6 @@ def prospector(  # noqa: C901
 
     logger.debug("begin main commit and CVE processing")
 
-    # instantiate LLM model if needed:
-    if llm_service_config and (llm_service_config.use_llm_repository_url):
-        llm_service = LLMService(llm_service_config)
-
     # construct an advisory record
     with ConsoleWriter("Processing advisory") as console:
         advisory_record = build_advisory_record(
@@ -92,7 +88,7 @@ def prospector(  # noqa: C901
             publication_date,
             set(advisory_keywords),
             set(modified_files),
-            llm_service if llm_service_config.use_llm_repository_url else None,
+            llm_service_config if llm_service_config.use_llm_repository_url else None,
         )
     if advisory_record is None:
         return None, -1
