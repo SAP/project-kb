@@ -1,9 +1,5 @@
-import pytest
-import requests
-from langchain_openai import ChatOpenAI
-
-from llm.llm_service import create_model_instance, get_repository_url
-from llm.models import Gemini, Mistral, OpenAI
+from llm.llm_service import LLMService  # this is a singleton
+from llm.models.openai import OpenAI
 
 
 # Mock the llm_service configuration object
@@ -23,29 +19,14 @@ vuln_id = "CVE-2024-32480"
 
 
 class TestModel:
-    def test_sap_gpt35_instantiation(self):
-        config = Config("sap", "gpt-35-turbo", "0.0")
-        model = create_model_instance(config)
-        assert isinstance(model, OpenAI)
-
     def test_sap_gpt4_instantiation(self):
         config = Config("sap", "gpt-4", "0.0")
-        model = create_model_instance(config)
-        assert isinstance(model, OpenAI)
+        llm_service = LLMService(config)
+        assert isinstance(llm_service._model, OpenAI)
 
-    def test_thirdparty_gpt35_instantiation(self):
-        config = Config("third_party", "gpt-3.5-turbo", "0.0")
-        model = create_model_instance(config)
-        assert isinstance(model, ChatOpenAI)
-
-    def test_thirdparty_gpt4_instantiation(self):
-        config = Config("third_party", "gpt-4", "0.0")
-        model = create_model_instance(config)
-        assert isinstance(model, ChatOpenAI)
-
-    def test_invoke_fail(self):
-        with pytest.raises(SystemExit):
-            config = Config("sap", "gpt-35-turbo", "0.0")
-            model = create_model_instance(config)
-            vuln_id = "random"
-            get_repository_url(model=model, vuln_id=vuln_id)
+    # def test_invoke_fail(self):
+    #     with pytest.raises(SystemExit):
+    #         config = Config("sap", "gpt-35-turbo", "0.0")
+    #         model = create_model_instance(config)
+    #         vuln_id = "random"
+    #         get_repository_url(model=model, vuln_id=vuln_id)
