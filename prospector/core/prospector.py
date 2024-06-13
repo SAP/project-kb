@@ -5,7 +5,7 @@ import os
 import re
 import sys
 import time
-from typing import Dict, List, Set, Tuple
+from typing import DefaultDict, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -52,7 +52,7 @@ core_statistics = execution_statistics.sub_collection("core")
 @measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
     vulnerability_id: str,
-    repository_url: str,
+    repository_url: str = None,
     publication_date: str = "",
     vuln_descr: str = "",
     version_interval: str = "",
@@ -82,21 +82,23 @@ def prospector(  # noqa: C901
         advisory_record = build_advisory_record(
             vulnerability_id,
             vuln_descr,
-            repository_url,
             nvd_rest_endpoint,
             use_nvd,
             publication_date,
             set(advisory_keywords),
             set(modified_files),
-            llm_service_config if llm_service_config.use_llm_repository_url else None,
         )
     if advisory_record is None:
         return None, -1
 
+    repository_url = repository_url or set_repository_url(
+        llm_service_config, advisory_record.description, advisory_record.references
+    )
+
     fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)
     # obtain a repository object
-    repository = Git(advisory_record.repository_url, git_cache)
+    repository = Git(repository_url, git_cache)
 
     with ConsoleWriter("Git repository cloning") as console:
         logger.debug(f"Downloading repository {repository.url} in {repository.path}")
@@ -156,7 +158,7 @@ def prospector(  # noqa: C901
             try:
                 if use_backend != USE_BACKEND_NEVER:
                     missing, preprocessed_commits = retrieve_preprocessed_commits(
-                        advisory_record.repository_url,
+                        repository_url,
                         backend_address,
                         candidates,
                     )
@@ -453,6 +455,43 @@ def is_correct_backend_url(backend_url: str) -> bool:
             return False
 
     return True
+
+
+def set_repository_url(
+    config, advisory_description: str, advisory_references: DefaultDict[str, int]
+):
+    """Returns the URL obtained through the LLM.
+
+    Args:
+        config (LLMServiceConfig): The 'llm_service' configuration block in config.yaml
+        advisory_description (str): The description of the advisory
+        advisory_references (dict[str, int]): The references of the advisory
+
+    Returns:
+        The respository URL as a string.
+
+    Raises:
+        System Exit if no configuration for the llm_service is given or the LLM returns an invalid URL.
+    """  # LASCHA: check error flow in this method
+    if not config:
+        logger.error(
+            "No configuration given for model in `config.yaml`.",
+            exc_info=get_level() < logging.INFO,
+        )
+        sys.exit(1)
+    llm_service = LLMService(config)
+    url_from_llm = None
+    try:
+        url_from_llm = llm_service.get_repository_url(
+            advisory_description, advisory_references
+        )
+    except Exception as e:
+        logger.error(
+            "URL returned by LLM was not valid.",
+            exc_info=get_level() < logging.INFO,
+        )
+        sys.exit(1)
+    return url_from_llm
 
 
 # def prospector_find_twins(

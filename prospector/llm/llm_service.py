@@ -10,22 +10,22 @@ from llm.prompts import best_guess
 from log.logger import logger
 
 
-class Singleton(type):
-    _instances = {}
+class Singleton(object):
+    """Singleton class to ensure that any class inheriting from this one can only be instantiated once."""
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+    def __new__(cls, *args, **kwargs):
+        # See if the instance is already in existence, and return it if yes
+        if not hasattr(cls, "_singleton_instance"):
+            cls._singleton_instance = super(Singleton, cls).__new__(cls)
+        return cls._singleton_instance
 
 
-class LLMService(metaclass=Singleton):
-    _instance = None
-
+class LLMService(Singleton):
     def __init__(self, config):
-        if not hasattr(self, "_initialized"):
-            self._model: LLM = create_model_instance(config)
-            self._initliazed = True
+        if hasattr(self, "_instantiated"):
+            return
+        self._instantiated = True
+        self._model: LLM = create_model_instance(config)
 
     def get_repository_url(self, advisory_description, advisory_references):
         """Ask an LLM to obtain the repository URL given the advisory description and references.
@@ -43,7 +43,7 @@ class LLMService(metaclass=Singleton):
         with ConsoleWriter("Invoking LLM") as console:
 
             try:
-                chain = best_guess | self.model
+                chain = best_guess | self._model
 
                 url = chain.invoke(
                     {
