@@ -136,6 +136,7 @@ class AdvisoryRecord:
             self.references[self.extract_hashes(ref)] += 2
 
     def get_advisory(self):
+        """Fills the advisory record with information obtained from an advisory API."""
         details, metadata = get_from_mitre(self.cve_id)
         if metadata is None:
             raise Exception("MITRE API Error")
@@ -318,13 +319,11 @@ def get_from_local(vuln_id: str, nvd_rest_endpoint: str = LOCAL_NVD_REST_ENDPOIN
 def build_advisory_record(
     cve_id: str,
     description: Optional[str] = None,
-    repository_url: str = None,
     nvd_rest_endpoint: Optional[str] = None,
     use_nvd: bool = True,
     publication_date: Optional[str] = None,
     advisory_keywords: Set[str] = set(),
     modified_files: Optional[str] = None,
-    llm_service_config=None,
 ) -> AdvisoryRecord:
     advisory_record = AdvisoryRecord(
         cve_id=cve_id,
@@ -339,21 +338,6 @@ def build_advisory_record(
             exc_info=get_level() < logging.INFO,
         )
         return None
-
-    # Get repository URL if not given by user
-    if llm_service_config:
-        # instantiate LLM model if needed
-        llm_service = LLMService(llm_service_config)
-        try:
-            advisory_record.repository_url = llm_service.get_repository_url(
-                advisory_record.description, advisory_record.references
-            )
-        except Exception as e:
-            logger.error(
-                "URL returned by LLM was not valid.",
-                exc_info=get_level() < logging.INFO,  # LASCHA: understand this error
-            )
-            return None
 
     pretty_log(logger, advisory_record)
 
