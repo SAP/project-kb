@@ -324,7 +324,7 @@ def build_advisory_record(
     publication_date: Optional[str] = None,
     advisory_keywords: Set[str] = set(),
     modified_files: Optional[str] = None,
-    llm_service: LLMService = None,
+    llm_service_config=None,
 ) -> AdvisoryRecord:
     advisory_record = AdvisoryRecord(
         cve_id=cve_id,
@@ -341,15 +341,17 @@ def build_advisory_record(
         return None
 
     # Get repository URL if not given by user
-    if llm_service:
+    if llm_service_config:
+        # instantiate LLM model if needed
+        llm_service = LLMService(llm_service_config)
         try:
             advisory_record.repository_url = llm_service.get_repository_url(
                 advisory_record.description, advisory_record.references
             )
-        except Exception as e:  # LASCHA: understand this error
+        except Exception as e:
             logger.error(
                 "URL returned by LLM was not valid.",
-                exc_info=get_level() < logging.INFO,
+                exc_info=get_level() < logging.INFO,  # LASCHA: understand this error
             )
             return None
 

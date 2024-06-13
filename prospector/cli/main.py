@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import logging
 import os
 import signal
 import sys
@@ -7,7 +6,6 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
-from llm.model_instantiation import create_model_instance
 from util.http import ping_backend
 
 path_root = os.getcwd()
@@ -68,7 +66,7 @@ def main(argv):  # noqa: C901
 
     results, advisory_record = prospector(
         vulnerability_id=config.vuln_id,
-        repository_url=config.repository,  # LASCHA: change to None
+        repository_url=config.repository,
         publication_date=config.pub_date,
         vuln_descr=config.description,
         version_interval=config.version_interval,
