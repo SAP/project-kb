@@ -8,23 +8,15 @@ from cli.console import ConsoleWriter, MessageStatus
 from llm.model_instantiation import create_model_instance
 from llm.prompts import best_guess
 from log.logger import logger
+from util.singleton import Singleton
 
 
-class Singleton(object):
-    """Singleton class to ensure that any class inheriting from this one can only be instantiated once."""
+class LLMService(metaclass=Singleton):
+    """A wrapper class for all functions requiring an LLM. This class is also a singleton, as only one model
+    should be used throughout the program.
+    """
 
-    def __new__(cls, *args, **kwargs):
-        # See if the instance is already in existence, and return it if yes
-        if not hasattr(cls, "_singleton_instance"):
-            cls._singleton_instance = super(Singleton, cls).__new__(cls)
-        return cls._singleton_instance
-
-
-class LLMService(Singleton):
     def __init__(self, config):
-        if hasattr(self, "_instantiated"):
-            return
-        self._instantiated = True
         self._model: LLM = create_model_instance(config)
 
     def get_repository_url(self, advisory_description, advisory_references):
