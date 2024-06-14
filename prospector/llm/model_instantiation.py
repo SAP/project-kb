@@ -59,14 +59,14 @@ def create_model_instance(llm_config) -> LLM:
     """
 
     def create_sap_provider(model_name: str, temperature: float):
-        d = SAP_MAPPING.get(model_name, None)
+        model_definition = SAP_MAPPING.get(model_name, None)
 
-        if d is None:
+        if model_definition is None:
             raise ValueError(f"Model '{model_name}' is not available.")
 
-        model = d._class(
+        model = model_definition._class(
             model_name=model_name,
-            deployment_url=d.access_info,
+            deployment_url=model_definition.access_info,
             temperature=temperature,
         )
 
@@ -74,15 +74,15 @@ def create_model_instance(llm_config) -> LLM:
 
     def create_third_party_provider(model_name: str, temperature: float):
         # obtain definition from main mapping
-        d = THIRD_PARTY_MAPPING.get(model_name, None)
+        model_definition = THIRD_PARTY_MAPPING.get(model_name, None)
 
-        if d is None:
+        if model_definition is None:
             logger.error(f"Model '{model_name}' is not available.")
             raise ValueError(f"Model '{model_name}' is not available.")
 
-        model = d._class(
+        model = model_definition._class(
             model=model_name,
-            api_key=d.access_info,
+            api_key=model_definition.access_info,
             temperature=temperature,
         )
 
