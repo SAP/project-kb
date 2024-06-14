@@ -9,7 +9,6 @@ from typing import DefaultDict, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
-from langchain_core.language_models.llms import LLM
 from tqdm import tqdm
 
 from cli.console import ConsoleWriter, MessageStatus
@@ -67,10 +66,11 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    rules: List[str] = ["NLP"],
+    rules: List[str] = ["ALL"],
     tag_commits: bool = True,
     silent: bool = False,
     use_llm_repository_url: bool = False,
+    llm_service_config=None,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -245,7 +245,7 @@ def prospector(  # noqa: C901
         logger.warning("Preprocessed commits are not being sent to backend")
 
     ranked_candidates = evaluate_commits(
-        preprocessed_commits, advisory_record, llm_model, rules
+        preprocessed_commits, advisory_record, rules
     )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
@@ -296,7 +296,7 @@ def evaluate_commits(
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
             ranked_commits = apply_ranking(
-                apply_rules(commits, advisory, model=llm_model, rules=rules)
+                apply_rules(commits, advisory, rules=rules)
             )
 
     return ranked_commits
