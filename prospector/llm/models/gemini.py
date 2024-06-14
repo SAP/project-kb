@@ -14,7 +14,7 @@ class Gemini(SAPLLM):
         super()._call(prompt, stop, **kwargs)
         # Model specific request data
         endpoint = f"{self.deployment_url}/models/{self.model_name}:generateContent"
-        headers = get_headers()
+        headers = get_headers(self.ai_core_sk_file_path)
         data = {
             "generation_config": {
                 "maxOutputTokens": 1000,

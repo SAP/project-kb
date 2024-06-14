@@ -14,7 +14,7 @@ class Mistral(SAPLLM):
         super()._call(prompt, stop, **kwargs)
         # Model specific request data
         endpoint = f"{self.deployment_url}/chat/completions"
-        headers = get_headers()
+        headers = get_headers(self.ai_core_sk_file_path)
         data = {
             "model": "mistralai--mixtral-8x7b-instruct-v01",
             "max_tokens": 100,
