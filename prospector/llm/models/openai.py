@@ -14,7 +14,7 @@ class OpenAI(SAPLLM):
         super()._call(prompt, stop, **kwargs)
         # Model specific request data
         endpoint = f"{self.deployment_url}/chat/completions?api-version=2023-05-15"
-        headers = get_headers()
+        headers = get_headers(self.ai_core_sk_file_path)
         data = {
             "messages": [
                 {

@@ -58,7 +58,9 @@ def create_model_instance(llm_config) -> LLM:
         LLM: An instance of the specified LLM model.
     """
 
-    def create_sap_provider(model_name: str, temperature: float):
+    def create_sap_provider(
+        model_name: str, temperature: float, ai_core_sk_file_path: str
+    ):
         model_definition = SAP_MAPPING.get(model_name, None)
 
         if model_definition is None:
@@ -68,6 +70,7 @@ def create_model_instance(llm_config) -> LLM:
             model_name=model_name,
             deployment_url=model_definition.access_info,
             temperature=temperature,
+            ai_core_sk_file_path=ai_core_sk_file_path,
         )
 
         return model
@@ -98,7 +101,9 @@ def create_model_instance(llm_config) -> LLM:
         match llm_config.type:
             case "sap":
                 model = create_sap_provider(
-                    llm_config.model_name, llm_config.temperature
+                    llm_config.model_name,
+                    llm_config.temperature,
+                    llm_config.ai_core_sk,
                 )
             case "third_party":
                 model = create_third_party_provider(

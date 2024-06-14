@@ -12,6 +12,7 @@ class SAPLLM(LLM):
     model_name: str
     deployment_url: str
     temperature: float
+    ai_core_sk_file_path: str
 
     @property
     def _llm_type(self) -> str:
@@ -55,19 +56,18 @@ class SAPLLM(LLM):
         return ""
 
 
-def get_headers():
+def get_headers(ai_core_sk_file_path: str):
     """Generate the request headers to use SAP AI Core. This method generates the authentication token and returns a Dict with headers.
 
     Returns:
         The headers object needed to send requests to the SAP AI Core.
     """
-    with open(dotenv_values()["AI_CORE_KEY_FILEPATH"]) as f:
+    with open(ai_core_sk_file_path) as f:
         sk = json.load(f)
 
     auth_url = f"{sk['url']}/oauth/token"
     client_id = sk["clientid"]
     client_secret = sk["clientsecret"]
-    # api_base_url = f"{sk['serviceurls']['AI_API_URL']}/v2"
 
     response = requests.post(
         auth_url,

@@ -1,5 +1,4 @@
 import sys
-from typing import Dict
 
 import validators
 from langchain_core.language_models.llms import LLM
@@ -19,7 +18,7 @@ class LLMService(metaclass=Singleton):
     def __init__(self, config):
         self._model: LLM = create_model_instance(config)
 
-    def get_repository_url(self, advisory_description, advisory_references):
+    def get_repository_url(self, advisory_description, advisory_references) -> str:
         """Ask an LLM to obtain the repository URL given the advisory description and references.
 
         Args:
