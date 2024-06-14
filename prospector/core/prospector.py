@@ -325,7 +325,7 @@ def retrieve_preprocessed_commits(
             )
         ]
 
-        logger.error(f"Missing {len(missing)} commits")
+        logger.info(f"{len(missing)} commits not found in backend")
     commits = [Commit.parse_obj(rc) for rc in retrieved_commits]
     # Sets the tags
     # for commit in commits:
