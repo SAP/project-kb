@@ -472,26 +472,34 @@ def set_repository_url(
 
     Raises:
         System Exit if no configuration for the llm_service is given or the LLM returns an invalid URL.
-    """  # LASCHA: check error flow in this method
-    if not config:
-        logger.error(
-            "No configuration given for model in `config.yaml`.",
-            exc_info=get_level() < logging.INFO,
-        )
-        sys.exit(1)
-    llm_service = LLMService(config)
-    url_from_llm = None
-    try:
-        url_from_llm = llm_service.get_repository_url(
-            advisory_description, advisory_references
-        )
-    except Exception as e:
-        logger.error(
-            "URL returned by LLM was not valid.",
-            exc_info=get_level() < logging.INFO,
-        )
-        sys.exit(1)
-    return url_from_llm
+    """
+    with ConsoleWriter("LLM Usage (Repo URL)") as console:
+        if not config:
+            logger.error(
+                "No configuration given for model in `config.yaml`.",
+                exc_info=get_level() < logging.INFO,
+            )
+            console.print(
+                "No configuration given for model in `config.yaml`.",
+                status=MessageStatus.ERROR,
+            )
+            sys.exit(1)
+
+        try:
+            llm_service = LLMService(config)
+            url_from_llm = llm_service.get_repository_url(
+                advisory_description, advisory_references
+            )
+            console.print(
+                f"\n  Repository URL: {url_from_llm}", status=MessageStatus.OK
+            )
+            return url_from_llm
+
+        except Exception as e:
+            # Any error that occurs in either LLMService or get_repository_url should be caught here
+            logger.error(e)
+            console.print(e, status=MessageStatus.ERROR)
+            sys.exit(1)
 
 
 # def prospector_find_twins(
