@@ -93,16 +93,6 @@ def main(argv):  # noqa: C901
 
         logger.debug("Vulnerability ID: " + config.vuln_id)
 
-    if not config.repository:
-        config.repository = llm.get_repository_url(
-            model=model, vuln_id=config.vuln_id
-        )
-
-    if config.use_llm_commit_rule:
-        rules = ["ALL"]
-    else:
-        rules = ["NLP"]
-
     results, advisory_record = prospector(
         vulnerability_id=config.vuln_id,
         repository_url=config.repository,
@@ -118,7 +108,7 @@ def main(argv):  # noqa: C901
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
-        use_llm_repository_url=config.llm_service.use_llm_repository_url,
+        llm_service_config=config.llm_service,
     )
 
     if config.preprocess_only:
