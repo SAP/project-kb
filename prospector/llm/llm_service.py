@@ -2,6 +2,7 @@ import sys
 
 import validators
 from langchain_core.language_models.llms import LLM
+from langchain_core.output_parsers import StrOutputParser
 
 from cli.console import ConsoleWriter, MessageStatus
 from llm.model_instantiation import create_model_instance
@@ -34,7 +35,7 @@ class LLMService(metaclass=Singleton):
         with ConsoleWriter("Invoking LLM") as console:
 
             try:
-                chain = best_guess | self._model
+                chain = best_guess | self._model | StrOutputParser()
 
                 url = chain.invoke(
                     {
@@ -42,10 +43,12 @@ class LLMService(metaclass=Singleton):
                         "references": advisory_references,
                     }
                 )
+                logger.info(f"LLM returned the following URL: {url}")
+                console.print(f"\n  Repository URL: {url}", status=MessageStatus.OK)
                 if not validators.url(url):
                     logger.error(f"LLM returned invalid URL: {url}")
                     console.print(
-                        f"LLM returned invalid URL: {url}",
+                        f"\n  LLM returned invalid URL: {url}",
                         status=MessageStatus.ERROR,
                     )
                     sys.exit(1)
