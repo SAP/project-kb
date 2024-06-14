@@ -17,7 +17,10 @@ class LLMService(metaclass=Singleton):
     """
 
     def __init__(self, config):
-        self._model: LLM = create_model_instance(config)
+        try:
+            self._model: LLM = create_model_instance(config)
+        except Exception:
+            raise
 
     def get_repository_url(self, advisory_description, advisory_references) -> str:
         """Ask an LLM to obtain the repository URL given the advisory description and references.
@@ -32,32 +35,21 @@ class LLMService(metaclass=Singleton):
         Raises:
             ValueError if advisory information cannot be obtained or there is an error in the model invocation.
         """
-        with ConsoleWriter("Invoking LLM") as console:
+        try:
+            chain = best_guess | self._model | StrOutputParser()
 
-            try:
-                chain = best_guess | self._model | StrOutputParser()
+            url = chain.invoke(
+                {
+                    "description": advisory_description,
+                    "references": advisory_references,
+                }
+            )
+            logger.info(f"LLM returned the following URL: {url}")
 
-                url = chain.invoke(
-                    {
-                        "description": advisory_description,
-                        "references": advisory_references,
-                    }
-                )
-                logger.info(f"LLM returned the following URL: {url}")
-                console.print(f"\n  Repository URL: {url}", status=MessageStatus.OK)
-                if not validators.url(url):
-                    logger.error(f"LLM returned invalid URL: {url}")
-                    console.print(
-                        f"\n  LLM returned invalid URL: {url}",
-                        status=MessageStatus.ERROR,
-                    )
-                    sys.exit(1)
-            except Exception as e:
-                logger.error(f"Prompt-model chain could not be invoked: {e}")
-                console.print(
-                    "Prompt-model chain could not be invoked.",
-                    status=MessageStatus.ERROR,
-                )
-                sys.exit(1)
+            if not validators.url(url):
+                raise TypeError(f"LLM returned invalid URL: {url}")
 
-            return url
+        except Exception as e:
+            raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
+
+        return url

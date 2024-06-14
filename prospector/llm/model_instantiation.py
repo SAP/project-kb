@@ -9,7 +9,6 @@ from langchain_openai import ChatOpenAI
 from llm.models.gemini import Gemini
 from llm.models.mistral import Mistral
 from llm.models.openai import OpenAI
-from log.logger import logger
 
 
 class ModelDef:
@@ -56,6 +55,7 @@ def create_model_instance(llm_config) -> LLM:
 
     Returns:
         LLM: An instance of the specified LLM model.
+    Exits
     """
 
     def create_sap_provider(
@@ -65,6 +65,11 @@ def create_model_instance(llm_config) -> LLM:
 
         if model_definition is None:
             raise ValueError(f"Model '{model_name}' is not available.")
+
+        if ai_core_sk_file_path is None:
+            raise ValueError(
+                f"AI Core credentials file couldn't be found: '{ai_core_sk_file_path}'"
+            )
 
         model = model_definition._class(
             model_name=model_name,
@@ -76,11 +81,9 @@ def create_model_instance(llm_config) -> LLM:
         return model
 
     def create_third_party_provider(model_name: str, temperature: float):
-        # obtain definition from main mapping
         model_definition = THIRD_PARTY_MAPPING.get(model_name, None)
 
         if model_definition is None:
-            logger.error(f"Model '{model_name}' is not available.")
             raise ValueError(f"Model '{model_name}' is not available.")
 
         model = model_definition._class(
@@ -90,11 +93,6 @@ def create_model_instance(llm_config) -> LLM:
         )
 
         return model
-
-    if llm_config is None:
-        raise ValueError(
-            "When using LLM support, please add necessary parameters to configuration file."
-        )
 
     # LLM Instantiation
     try:
@@ -110,14 +108,10 @@ def create_model_instance(llm_config) -> LLM:
                     llm_config.model_name, llm_config.temperature
                 )
             case _:
-                logger.error(
-                    f"Invalid LLM type specified, '{llm_config.type}' is not available."
-                )
                 raise ValueError(
-                    f"Invalid LLM type specified, '{llm_config.type}' is not available."
+                    f"Invalid LLM type specified (either sap or third_party). '{llm_config.type}' is not available."
                 )
-    except Exception as e:
-        logger.error(f"Problem when initialising model: {e}")
-        raise ValueError(f"Problem when initialising model: {e}")
+    except Exception:
+        raise  # re-raise exceptions from create_[sap|third_party]_provider
 
     return model

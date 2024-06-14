@@ -55,6 +55,16 @@ def main(argv):  # noqa: C901
         # if config.ping:
         #     return ping_backend(backend, get_level() < logging.INFO)
 
+        if not config.repository and not config.llm_service.use_llm_repository_url:
+            logger.error(
+                "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
+            )
+            console.print(
+                "Please set the `--repository` parameter or enable LLM support to infer the repository URL.",
+                status=MessageStatus.ERROR,
+            )
+            return
+
         config.pub_date = (
             config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
         )
