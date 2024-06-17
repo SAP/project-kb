@@ -28,6 +28,7 @@ from stats.execution import (
     execution_statistics,
     measure_execution_time,
 )
+from util.config_parser import LLMServiceConfig
 
 # Average distance is -202 days (with commit being authored before the vulnerability usually)
 # Standard deviation is 422 days
@@ -44,6 +45,7 @@ DEFAULT_BACKEND = "http://localhost:8000"
 USE_BACKEND_ALWAYS = "always"
 USE_BACKEND_OPTIONAL = "optional"
 USE_BACKEND_NEVER = "never"
+MAX_COMMITS_LLM_RULES = 3  # the maximum number of commits to apply LLM rules to
 
 
 core_statistics = execution_statistics.sub_collection("core")
@@ -70,8 +72,7 @@ def prospector(  # noqa: C901
     rules: List[str] = ["ALL"],
     tag_commits: bool = True,
     silent: bool = False,
-    use_llm_repository_url: bool = False,
-    llm_service_config=None,
+    llm_service_config: LLMServiceConfig = None,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -292,7 +293,7 @@ def evaluate_commits(
     commits: List[Commit],
     advisory: AdvisoryRecord,
     rules: List[str],
-    llm_service_config,
+    llm_service_config: LLMServiceConfig,
 ) -> List[Commit]:
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
@@ -301,10 +302,10 @@ def evaluate_commits(
                 commits, advisory, rules=rules
             )
             # second phase (reuse LLM service)
-            llm_service = LLMService(llm_service_config)
-            ranked_commits = LLMPhase(llm_service).apply_rules(
-                commits, rules=rules
-            )
+            if llm_service_config.use_llm_rules:
+                ranked_commits = LLMPhase(llm_service_config).apply_rules(
+                    ranked_commits[:MAX_COMMITS_LLM_RULES], rules=rules
+                )
 
     return ranked_commits
 

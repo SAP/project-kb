@@ -181,8 +181,9 @@ class ReportConfig:
 class LLMServiceConfig:
     type: str
     model_name: str
-    use_llm_repository_url: bool
     ai_core_sk: str
+    use_llm_repository_url: bool
+    use_llm_rules: bool
     temperature: float = 0.0
 
 
