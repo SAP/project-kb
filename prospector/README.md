@@ -71,7 +71,7 @@ llm_service:
     ai_core_sk: <file_path>
 ```
 
-`<model_name>` refers to the model names available in the Generative AI Hub in SAP AI Core. [Here](https://github.tools.sap/I343697/generative-ai-hub-readme#1-supported-models) you can find an overview of available models.
+`<model_name>` refers to the model names available in the Generative AI Hub in SAP AI Core. You can find an overview of available models on the Generative AI Hub GitHub page.
 
 In `.env`, you must set the deployment URL as an environment variable following this naming convention:
 ```yaml
