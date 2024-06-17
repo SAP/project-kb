@@ -6,15 +6,14 @@ from langchain_core.language_models.llms import LLM
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from llm.llm_service import LLMService
+from rules.rule import Rule
 
 
-class LLMRule:
+class LLMRule(Rule):
     llm_service: LLMService
 
     def __init__(self, id: str, relevance: int):
-        self.id = id
-        self.message = ""
-        self.relevance = relevance
+        super().__init__(id, relevance)
 
     @abstractmethod
     def apply(
@@ -26,14 +25,10 @@ class LLMRule:
         pass
 
     def get_message(self):
-        return self.message
+        return super().get_message()
 
     def as_dict(self):
-        return {
-            "id": self.id,
-            "message": self.message,
-            "relevance": self.relevance,
-        }
+        return super().as_dict()
 
     def get_rule_as_tuple(self) -> Tuple[str, str, int]:
-        return (self.id, self.message, self.relevance)
+        return super().get_rule_as_tuple()
