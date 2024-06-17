@@ -246,7 +246,7 @@ def prospector(  # noqa: C901
         logger.warning("Preprocessed commits are not being sent to backend")
 
     ranked_candidates = evaluate_commits(
-        preprocessed_commits, advisory_record, rules
+        preprocessed_commits, advisory_record, rules, llm_service_config
     )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
@@ -291,13 +291,19 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 def evaluate_commits(
     commits: List[Commit],
     advisory: AdvisoryRecord,
-    llm_model: LLM,
     rules: List[str],
+    llm_service_config,
 ) -> List[Commit]:
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
+            # first phase
             ranked_commits = NLPPhase().apply_rules(
                 commits, advisory, rules=rules
+            )
+            # second phase (reuse LLM service)
+            llm_service = LLMService(llm_service_config)
+            ranked_commits = LLMPhase(llm_service).apply_rules(
+                commits, rules=rules
             )
 
     return ranked_commits
