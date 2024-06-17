@@ -10,8 +10,6 @@ from rules.rule import Rule
 
 
 class LLMRule(Rule):
-    llm_service: LLMService
-
     def __init__(self, id: str, relevance: int):
         super().__init__(id, relevance)
 
@@ -19,8 +17,7 @@ class LLMRule(Rule):
     def apply(
         self,
         candidate: Commit,
-        advisory_record: AdvisoryRecord,
-        llm_service: LLM,
+        llm_service: LLMService,
     ) -> bool:
         pass
 
@@ -32,3 +29,11 @@ class LLMRule(Rule):
 
     def get_rule_as_tuple(self) -> Tuple[str, str, int]:
         return super().get_rule_as_tuple()
+
+
+class CommitIsSecurityRelevant(LLMRule):
+    """Matches commits that are deemed security relevant by the commit classification service."""
+
+    def apply(self, candidate: Commit, llm_service: LLMService) -> bool:
+        print("deemed important")
+        return True
