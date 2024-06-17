@@ -15,6 +15,7 @@ from rules.nlp_rules import (
     CommitMentionedInReference,
     CrossReferencedBug,
     CrossReferencedGh,
+    NLPRule,
     ReferencesBug,
     ReferencesGhIssue,
     RelevantWordsInMessage,
@@ -40,10 +41,10 @@ def apply_rules(
 
     rule_statistics.collect("active", len(enabled_rules), unit="rules")
 
-    Rule.lsh_index = build_lsh_index()
+    NLPRule.lsh_index = build_lsh_index()
 
     for candidate in candidates:
-        Rule.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
+        NLPRule.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
 
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")

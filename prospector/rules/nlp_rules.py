@@ -5,37 +5,32 @@ from typing import Tuple
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from rules.helpers import extract_security_keywords
+from rules.rule import Rule
 from util.lsh import decode_minhash
 
 
-class Rule:
+class NLPRule(Rule):
     lsh_index = None
 
     def __init__(self, id: str, relevance: int):
-        self.id = id
-        self.message = ""
-        self.relevance = relevance
+        super().__init__(id, relevance)
 
     @abstractmethod
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord) -> bool:
         pass
 
     def get_message(self):
-        return self.message
+        return super().get_message()
 
     def as_dict(self):
-        return {
-            "id": self.id,
-            "message": self.message,
-            "relevance": self.relevance,
-        }
+        return super().as_dict()
 
     def get_rule_as_tuple(self) -> Tuple[str, str, int]:
-        return (self.id, self.message, self.relevance)
+        return super().get_rule_as_tuple()
 
 
 # TODO: This could include issues, PRs, etc.
-class VulnIdInMessage(Rule):
+class VulnIdInMessage(NLPRule):
     """Matches commits that refer to the Vuln-ID in the commit message."""  # Check if works for the title or comments
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -49,7 +44,7 @@ class VulnIdInMessage(Rule):
 
 
 # TODO: This could include issues, PRs and commits
-class GHSecurityAdvInMessage(Rule):
+class GHSecurityAdvInMessage(NLPRule):
     """Matches commits that refer to a GHSA in the commit message."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -61,7 +56,7 @@ class GHSecurityAdvInMessage(Rule):
         return False
 
 
-class ReferencesGhIssue(Rule):
+class ReferencesGhIssue(NLPRule):
     """Matches commits that refer to a GitHub issue in the commit message or title."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -71,7 +66,7 @@ class ReferencesGhIssue(Rule):
         return False
 
 
-class ReferencesBug(Rule):
+class ReferencesBug(NLPRule):
     """Matches commits that refer to a bug tracking ticket in the commit message or title."""
 
     def apply(
@@ -83,7 +78,7 @@ class ReferencesBug(Rule):
         return False
 
 
-class ChangesRelevantFiles(Rule):
+class ChangesRelevantFiles(NLPRule):
     """Matches commits that modify some file mentioned in the advisory text."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -106,7 +101,7 @@ class ChangesRelevantFiles(Rule):
         return False
 
 
-class AdvKeywordsInMsg(Rule):
+class AdvKeywordsInMsg(NLPRule):
     """Matches commits whose message contain any of the keywords extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -137,7 +132,7 @@ class AdvKeywordsInMsg(Rule):
 
 
 # TODO: Test it
-class ChangesRelevantCode(Rule):
+class ChangesRelevantCode(NLPRule):
     """Matches commits whose diffs contain any of the relevant files/methods extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -161,7 +156,7 @@ class ChangesRelevantCode(Rule):
         return False
 
 
-class AdvKeywordsInFiles(Rule):
+class AdvKeywordsInFiles(NLPRule):
     """Matches commits that modify paths corresponding to a keyword extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -181,7 +176,7 @@ class AdvKeywordsInFiles(Rule):
         return False
 
 
-class SecurityKeywordsInMsg(Rule):
+class SecurityKeywordsInMsg(NLPRule):
     """Matches commits whose message contains one or more security-related keywords."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -192,7 +187,7 @@ class SecurityKeywordsInMsg(Rule):
         return False
 
 
-class CommitMentionedInAdv(Rule):
+class CommitMentionedInAdv(NLPRule):
     """Matches commits that are linked in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -203,7 +198,7 @@ class CommitMentionedInAdv(Rule):
         return False
 
 
-class TwinMentionedInAdv(Rule):
+class TwinMentionedInAdv(NLPRule):
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for ref in advisory_record.references:
             for twin in candidate.twins:
@@ -216,7 +211,7 @@ class TwinMentionedInAdv(Rule):
 
 
 # TODO: refactor these rules to not scan multiple times the same commit
-class VulnIdInLinkedIssue(Rule):
+class VulnIdInLinkedIssue(NLPRule):
     """Matches commits linked to an issue containing the Vuln-ID."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -240,7 +235,7 @@ class VulnIdInLinkedIssue(Rule):
         return False
 
 
-class SecurityKeywordInLinkedGhIssue(Rule):
+class SecurityKeywordInLinkedGhIssue(NLPRule):
     """Matches commits linked to an issue containing one or more security-related keywords."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -253,7 +248,7 @@ class SecurityKeywordInLinkedGhIssue(Rule):
         return False
 
 
-class SecurityKeywordInLinkedBug(Rule):
+class SecurityKeywordInLinkedBug(NLPRule):
     """Matches commits linked to a bug tracking ticket containing one or more security-related keywords."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -267,7 +262,7 @@ class SecurityKeywordInLinkedBug(Rule):
         return False
 
 
-class CrossReferencedBug(Rule):
+class CrossReferencedBug(NLPRule):
     """Matches commits whose message contains a bug tracking ticket which is also referenced by the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -285,7 +280,7 @@ class CrossReferencedBug(Rule):
         return False
 
 
-class CrossReferencedGh(Rule):
+class CrossReferencedGh(NLPRule):
     """Matches commits whose message contains a github issue/pr which is also referenced by the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -302,7 +297,7 @@ class CrossReferencedGh(Rule):
         return False
 
 
-class CommitMentionedInReference(Rule):
+class CommitMentionedInReference(NLPRule):
     """Matches commits that are mentioned in any of the links contained in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -313,12 +308,12 @@ class CommitMentionedInReference(Rule):
         return False
 
 
-class CommitHasTwins(Rule):
+class CommitHasTwins(NLPRule):
     def apply(self, candidate: Commit, _: AdvisoryRecord) -> bool:
-        if not Rule.lsh_index.is_empty() and not bool(
+        if not NLPRule.lsh_index.is_empty() and not bool(
             re.match(r"Merge", candidate.message, flags=re.IGNORECASE)
         ):
-            twin_list = Rule.lsh_index.query(decode_minhash(candidate.minhash))
+            twin_list = NLPRule.lsh_index.query(decode_minhash(candidate.minhash))
             # twin_list.remove(candidate.commit_id)
             candidate.twins = [
                 ["no-tag", twin] for twin in twin_list if twin != candidate.commit_id
@@ -330,7 +325,7 @@ class CommitHasTwins(Rule):
         return False
 
 
-class RelevantWordsInMessage(Rule):
+class RelevantWordsInMessage(NLPRule):
     """Matches commits whose message contains one or more relevant words."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
