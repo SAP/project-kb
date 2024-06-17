@@ -1,12 +1,15 @@
+import json
 from abc import abstractmethod
 from typing import Tuple
 
+import requests
 from langchain_core.language_models.llms import LLM
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from llm.llm_service import LLMService
 from rules.rule import Rule
+from util.config_parser import LLMServiceConfig
 
 
 class LLMRule(Rule):
@@ -18,6 +21,7 @@ class LLMRule(Rule):
         self,
         candidate: Commit,
         llm_service: LLMService,
+        llm_service_config: LLMServiceConfig,
     ) -> bool:
         pass
 
@@ -34,6 +38,21 @@ class LLMRule(Rule):
 class CommitIsSecurityRelevant(LLMRule):
     """Matches commits that are deemed security relevant by the commit classification service."""
 
-    def apply(self, candidate: Commit, llm_service: LLMService) -> bool:
-        print("deemed important")
-        return True
+    def apply(
+        self,
+        candidate: Commit,
+        llm_service: LLMService,
+        llm_service_config: LLMServiceConfig,
+    ) -> bool:
+        data = {
+            "temperature": llm_service_config.temperature,
+            "diff": "\n".join(candidate.diff),
+        }
+
+        response = requests.get("http://127.0.0.1:8001/predict", json=data)
+
+        prediction = response.json()["prediction"]
+        if prediction == "1":
+            return True
+        else:
+            return False
