@@ -57,7 +57,7 @@ To quickly set up Prospector, follow these steps. This will run Prospector in it
 
 ### 🤖 LLM Support
 
-To use Prospector with LLM support, set the `use_llm_<...>` parameters in `config.yaml`. Additionally, you must specify required parameters for API access to the LLM. These parameters can vary depending on your choice of provider, please follow what fits your needs:
+To use Prospector with LLM support, you must specify required parameters for API access to the LLM. These parameters can vary depending on your choice of provider, please follow what fits your needs:
 
 <details><summary><b>Use SAP AI CORE SDK</b></summary>
 
@@ -67,14 +67,21 @@ You will need the following parameters in `config.yaml`:
 llm_service:
     type: sap
     model_name: <model_name>
+    temperature: 0.0
+    ai_core_sk: <file_path>
 ```
 
 `<model_name>` refers to the model names available in the Generative AI Hub in SAP AI Core. [Here](https://github.tools.sap/I343697/generative-ai-hub-readme#1-supported-models) you can find an overview of available models.
 
 In `.env`, you must set the deployment URL as an environment variable following this naming convention:
 ```yaml
-<model_name (in capitals, and - changed to _)>_URL
+<model_name>_URL  # model name in capitals, and "-" changed to "_"
 ```
+For example, for gpt-4's deployment URL, set an environment variable called `GPT_4_URL`.
+
+The `temperature` parameter is optional. The default value is 0.0, but you can change it to something else.
+
+You also need to point the `ai_core_sk` parameter to a file contianing the secret keys. This file is available in Passvault.
 
 </details>
 
@@ -87,6 +94,7 @@ Implemented third party providers are **OpenAI**, **Google** and **Mistral**.
     llm_service:
         type: third_party
         model_name: <model_name>
+        temperature: 0.0
     ```
 
     `<model_name>` refers to the model names available, for example `gpt-4o` for OpenAI. You can find a lists of available models here:
@@ -94,9 +102,19 @@ Implemented third party providers are **OpenAI**, **Google** and **Mistral**.
    2. [Google](https://ai.google.dev/gemini-api/docs/models/gemini)
    3. [Mistral](https://docs.mistral.ai/getting-started/models/)
 
+    The `temperature` parameter is optional. The default value is 0.0, but you can change it to something else.
+
 2. Make sure to add your OpenAI API key to your `.env` file as `[OPENAI|GOOGLE|MISTRAL]_API_KEY`.
 
 </details>
+
+####
+
+You can set the `use_llm_<...>` parameters in `config.yaml` for fine-grained control over LLM support in various aspects of Prospector's phases. Each `use_llm_<...>` parameter allows you to enable or disable LLM support for a specific aspect:
+
+- **`use_llm_repository_url`**: Choose whether LLMs should be used to obtain the repository URL. When not using this option, please provide `--repository` as a command line argument.
+- **`use_llm_commit_rule`**: Choose whether an additional rule should be applied after the other rules, which checks if a commit is security relevant. This rule invokes an LLM-powered service, which takes the diff of a commit and returns whether it is security-relevant or not. Whichever model and temperature is specified in `config.yaml`, will also be used in this rule.
+
 
 ## 👩‍💻 Development Setup
 
