@@ -4,7 +4,7 @@ import pytest
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from rules.rules import apply_rules
+from rules.nlp.nlp_phase import NLPPhase
 
 # from datamodel.commit_features import CommitWithFeatures
 
@@ -57,7 +57,7 @@ def advisory_record():
 
 
 def test_apply_rules_all(candidates: List[Commit], advisory_record: AdvisoryRecord):
-    annotated_candidates = apply_rules(candidates, advisory_record)
+    annotated_candidates = NLPPhase().apply_rules(candidates, advisory_record)
 
     assert len(annotated_candidates[0].matched_rules) == 4
     assert annotated_candidates[0].matched_rules[0][0] == "CVE_ID_IN_MESSAGE"
@@ -92,7 +92,7 @@ def test_apply_rules_all(candidates: List[Commit], advisory_record: AdvisoryReco
 def test_apply_rules_selected(
     candidates: List[Commit], advisory_record: AdvisoryRecord
 ):
-    annotated_candidates = apply_rules(
+    annotated_candidates = NLPPhase().apply_rules(
         candidates=candidates,
         advisory_record=advisory_record,
         rules=[
@@ -134,7 +134,7 @@ def test_apply_rules_selected(
 def test_apply_rules_selected_rules(
     candidates: List[Commit], advisory_record: AdvisoryRecord
 ):
-    annotated_candidates = apply_rules(
+    annotated_candidates = NLPPhase().apply_rules(
         candidates=candidates,
         advisory_record=advisory_record,
         rules=["ALL", "-REF_ADV_VULN_ID"],

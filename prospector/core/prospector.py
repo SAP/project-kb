@@ -20,7 +20,8 @@ from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.rules import apply_rules
+from rules.llm.llm_phase import LLMPhase
+from rules.nlp.nlp_phase import NLPPhase
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -295,8 +296,8 @@ def evaluate_commits(
 ) -> List[Commit]:
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
-            ranked_commits = apply_ranking(
-                apply_rules(commits, advisory, rules=rules)
+            ranked_commits = NLPPhase().apply_rules(
+                commits, advisory, rules=rules
             )
 
     return ranked_commits
