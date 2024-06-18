@@ -1,36 +1,77 @@
 import re
 from abc import abstractmethod
-from typing import Tuple
+from typing import List, Tuple
+
+import requests
 
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit
+from datamodel.commit import Commit, apply_ranking
+from llm.llm_service import LLMService
 from rules.helpers import extract_security_keywords
-from rules.rule import Rule
-from util.lsh import decode_minhash
+from stats.execution import Counter, execution_statistics
+from util.config_parser import LLMServiceConfig
+from util.lsh import build_lsh_index, decode_minhash
+
+rule_statistics = execution_statistics.sub_collection("rules")
 
 
-class NLPRule(Rule):
+class Rule:
     lsh_index = None
 
     def __init__(self, id: str, relevance: int):
-        super().__init__(id, relevance)
+        self.id = id
+        self.relevance = relevance
+        self.message = ""
+        self.llm_service: LLMService = None
 
     @abstractmethod
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord) -> bool:
         pass
 
     def get_message(self):
-        return super().get_message()
+        return self.message
 
     def as_dict(self):
-        return super().as_dict()
+        return {
+            "id": self.id,
+            "message": self.message,
+            "relevance": self.relevance,
+        }
 
     def get_rule_as_tuple(self) -> Tuple[str, str, int]:
-        return super().get_rule_as_tuple()
+        return (self.id, self.message, self.relevance)
+
+
+# LASCHA: this should take care of the phase application, prospector() should call only this function and not have to care about phases
+def apply_rules(
+    self,
+    candidates: List[Commit],
+    advisory_record: AdvisoryRecord,
+    rules=["ALL"],
+) -> List[Commit]:
+    enabled_rules = self.get_enabled_rules(rules)
+
+    rule_statistics.collect("active", len(enabled_rules), unit="rules")
+
+    Rule.lsh_index = build_lsh_index()
+
+    for candidate in candidates:
+        Rule.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
+
+    with Counter(rule_statistics) as counter:
+        counter.initialize("matches", unit="matches")
+        for candidate in candidates:
+            for rule in enabled_rules:
+                if rule.apply(candidate, advisory_record):
+                    counter.increment("matches")
+                    candidate.add_match(rule.as_dict())
+            candidate.compute_relevance()
+
+    return apply_ranking(candidates)
 
 
 # TODO: This could include issues, PRs, etc.
-class VulnIdInMessage(NLPRule):
+class VulnIdInMessage(Rule):
     """Matches commits that refer to the Vuln-ID in the commit message."""  # Check if works for the title or comments
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -44,7 +85,7 @@ class VulnIdInMessage(NLPRule):
 
 
 # TODO: This could include issues, PRs and commits
-class GHSecurityAdvInMessage(NLPRule):
+class GHSecurityAdvInMessage(Rule):
     """Matches commits that refer to a GHSA in the commit message."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -56,7 +97,7 @@ class GHSecurityAdvInMessage(NLPRule):
         return False
 
 
-class ReferencesGhIssue(NLPRule):
+class ReferencesGhIssue(Rule):
     """Matches commits that refer to a GitHub issue in the commit message or title."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -66,7 +107,7 @@ class ReferencesGhIssue(NLPRule):
         return False
 
 
-class ReferencesBug(NLPRule):
+class ReferencesBug(Rule):
     """Matches commits that refer to a bug tracking ticket in the commit message or title."""
 
     def apply(
@@ -78,7 +119,7 @@ class ReferencesBug(NLPRule):
         return False
 
 
-class ChangesRelevantFiles(NLPRule):
+class ChangesRelevantFiles(Rule):
     """Matches commits that modify some file mentioned in the advisory text."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -101,7 +142,7 @@ class ChangesRelevantFiles(NLPRule):
         return False
 
 
-class AdvKeywordsInMsg(NLPRule):
+class AdvKeywordsInMsg(Rule):
     """Matches commits whose message contain any of the keywords extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -132,7 +173,7 @@ class AdvKeywordsInMsg(NLPRule):
 
 
 # TODO: Test it
-class ChangesRelevantCode(NLPRule):
+class ChangesRelevantCode(Rule):
     """Matches commits whose diffs contain any of the relevant files/methods extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -156,7 +197,7 @@ class ChangesRelevantCode(NLPRule):
         return False
 
 
-class AdvKeywordsInFiles(NLPRule):
+class AdvKeywordsInFiles(Rule):
     """Matches commits that modify paths corresponding to a keyword extracted from the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -176,7 +217,7 @@ class AdvKeywordsInFiles(NLPRule):
         return False
 
 
-class SecurityKeywordsInMsg(NLPRule):
+class SecurityKeywordsInMsg(Rule):
     """Matches commits whose message contains one or more security-related keywords."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -187,7 +228,7 @@ class SecurityKeywordsInMsg(NLPRule):
         return False
 
 
-class CommitMentionedInAdv(NLPRule):
+class CommitMentionedInAdv(Rule):
     """Matches commits that are linked in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -198,7 +239,7 @@ class CommitMentionedInAdv(NLPRule):
         return False
 
 
-class TwinMentionedInAdv(NLPRule):
+class TwinMentionedInAdv(Rule):
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for ref in advisory_record.references:
             for twin in candidate.twins:
@@ -211,7 +252,7 @@ class TwinMentionedInAdv(NLPRule):
 
 
 # TODO: refactor these rules to not scan multiple times the same commit
-class VulnIdInLinkedIssue(NLPRule):
+class VulnIdInLinkedIssue(Rule):
     """Matches commits linked to an issue containing the Vuln-ID."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -235,7 +276,7 @@ class VulnIdInLinkedIssue(NLPRule):
         return False
 
 
-class SecurityKeywordInLinkedGhIssue(NLPRule):
+class SecurityKeywordInLinkedGhIssue(Rule):
     """Matches commits linked to an issue containing one or more security-related keywords."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -248,7 +289,7 @@ class SecurityKeywordInLinkedGhIssue(NLPRule):
         return False
 
 
-class SecurityKeywordInLinkedBug(NLPRule):
+class SecurityKeywordInLinkedBug(Rule):
     """Matches commits linked to a bug tracking ticket containing one or more security-related keywords."""
 
     def apply(self, candidate: Commit, _: AdvisoryRecord = None):
@@ -262,7 +303,7 @@ class SecurityKeywordInLinkedBug(NLPRule):
         return False
 
 
-class CrossReferencedBug(NLPRule):
+class CrossReferencedBug(Rule):
     """Matches commits whose message contains a bug tracking ticket which is also referenced by the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -280,7 +321,7 @@ class CrossReferencedBug(NLPRule):
         return False
 
 
-class CrossReferencedGh(NLPRule):
+class CrossReferencedGh(Rule):
     """Matches commits whose message contains a github issue/pr which is also referenced by the advisory."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -297,7 +338,7 @@ class CrossReferencedGh(NLPRule):
         return False
 
 
-class CommitMentionedInReference(NLPRule):
+class CommitMentionedInReference(Rule):
     """Matches commits that are mentioned in any of the links contained in the advisory page."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -308,12 +349,12 @@ class CommitMentionedInReference(NLPRule):
         return False
 
 
-class CommitHasTwins(NLPRule):
+class CommitHasTwins(Rule):
     def apply(self, candidate: Commit, _: AdvisoryRecord) -> bool:
-        if not NLPRule.lsh_index.is_empty() and not bool(
+        if not Rule.lsh_index.is_empty() and not bool(
             re.match(r"Merge", candidate.message, flags=re.IGNORECASE)
         ):
-            twin_list = NLPRule.lsh_index.query(decode_minhash(candidate.minhash))
+            twin_list = Rule.lsh_index.query(decode_minhash(candidate.minhash))
             # twin_list.remove(candidate.commit_id)
             candidate.twins = [
                 ["no-tag", twin] for twin in twin_list if twin != candidate.commit_id
@@ -325,7 +366,7 @@ class CommitHasTwins(NLPRule):
         return False
 
 
-class RelevantWordsInMessage(NLPRule):
+class RelevantWordsInMessage(Rule):
     """Matches commits whose message contains one or more relevant words."""
 
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
@@ -349,3 +390,63 @@ class RelevantWordsInMessage(NLPRule):
             self.message = f"The commit message contains some relevant words: {', '.join(set(matching_words))}"
             return True
         return False
+
+
+class CommitIsSecurityRelevant(Rule):
+    """Matches commits that are deemed security relevant by the commit classification service."""
+
+    def apply(
+        self,
+        candidate: Commit,
+    ) -> bool:
+        data = {
+            "temperature": 0.0,  # get this from LLMService
+            "diff": "\n".join(candidate.diff),
+        }
+
+        response = requests.get("http://127.0.0.1:8001/predict", json=data)
+
+        prediction = response.json()["prediction"]
+        if prediction == "1":
+            return True
+        else:
+            return False
+
+
+PHASE_1: List[Rule] = [
+    VulnIdInMessage("VULN_ID_IN_MESSAGE", 64),
+    # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
+    CrossReferencedBug("XREF_BUG", 32),
+    CrossReferencedGh("XREF_GH", 32),
+    CommitMentionedInReference("COMMIT_IN_REFERENCE", 64),
+    VulnIdInLinkedIssue("VULN_ID_IN_LINKED_ISSUE", 32),
+    ChangesRelevantFiles("CHANGES_RELEVANT_FILES", 8),
+    ChangesRelevantCode("CHANGES_RELEVANT_CODE", 8),
+    RelevantWordsInMessage("RELEVANT_WORDS_IN_MESSAGE", 8),
+    AdvKeywordsInFiles("ADV_KEYWORDS_IN_FILES", 4),
+    AdvKeywordsInMsg("ADV_KEYWORDS_IN_MSG", 4),
+    SecurityKeywordsInMsg("SEC_KEYWORDS_IN_MESSAGE", 4),
+    SecurityKeywordInLinkedGhIssue("SEC_KEYWORDS_IN_LINKED_GH", 4),
+    SecurityKeywordInLinkedBug("SEC_KEYWORDS_IN_LINKED_BUG", 4),
+    ReferencesGhIssue("GITHUB_ISSUE_IN_MESSAGE", 2),
+    ReferencesBug("BUG_IN_MESSAGE", 2),
+    CommitHasTwins("COMMIT_HAS_TWINS", 2),
+]
+
+LLM_RULES: List[Rule] = [
+    CommitIsSecurityRelevant(
+        "COMMIT_IS_SECURITY_RELEVANT", 32, llm_service=LLMService()
+    )
+]
+
+# LASCHA: modify this
+# def get_enabled_rules(self, rules: List[str]) -> List[Rule]:
+#     if "ALL" in rules:
+#         return NLP_RULES
+
+#     enabled_rules = []
+#     for r in NLP_RULES:
+#         if r.id in rules:
+#             enabled_rules.append(r)
+
+#     return enabled_rules
