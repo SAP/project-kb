@@ -9,6 +9,7 @@ from typing import DefaultDict, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
+from omegaconf import MissingMandatoryValue
 from tqdm import tqdm
 
 from cli.console import ConsoleWriter, MessageStatus
@@ -94,26 +95,11 @@ def prospector(  # noqa: C901
     if advisory_record is None:
         return None, -1
 
-    if use_llm_repository_url:
-        with ConsoleWriter("LLM Usage (Repo URL)") as console:
-            try:
-                repository_url = LLMService().get_repository_url(
-                    advisory_record.description, advisory_record.references
-                )
-                console.print(
-                    f"\n  Repository URL: {repository_url}",
-                    status=MessageStatus.OK,
-                )
-            except Exception as e:
-                logger.error(
-                    e,
-                    exc_info=get_level() < logging.INFO,
-                )
-                console.print(
-                    e,
-                    status=MessageStatus.ERROR,
-                )
-                sys.exit(1)
+    repository_url = repository_url or set_repository_url(
+        llm_service_config,
+        advisory_record.description,
+        advisory_record.references,
+    )
 
     fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)
@@ -296,15 +282,24 @@ def evaluate_commits(
     llm_service_config: LLMServiceConfig,
 ) -> List[Commit]:
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
-        with ConsoleWriter("Candidate analysis") as _:
+        with ConsoleWriter("Candidate analysis") as console:
             # first phase
             ranked_commits = NLPPhase().apply_rules(
                 commits, advisory, rules=rules
             )
             # second phase (reuse LLM service)
-            if llm_service_config.use_llm_rules:
-                ranked_commits = LLMPhase(llm_service_config).apply_rules(
-                    ranked_commits[:MAX_COMMITS_LLM_RULES], rules=rules
+            try:
+                if llm_service_config.use_llm_rules:
+                    ranked_commits = LLMPhase(llm_service_config).apply_rules(
+                        ranked_commits[:MAX_COMMITS_LLM_RULES], rules=rules
+                    )
+            except MissingMandatoryValue as e:
+                logger.warn(
+                    f"Missing value in config.yaml: {e}. Continuing without applying LLM rules."
+                )
+                console.print(
+                    f"use_llm_rules parameter not set. Continuing without applying LLM rules.",
+                    status=MessageStatus.WARNING,
                 )
 
     return ranked_commits
@@ -520,6 +515,56 @@ def is_correct_backend_url(backend_url: str) -> bool:
     return True
 
 
+<<<<<<< HEAD
+=======
+def set_repository_url(
+    config,
+    advisory_description: str,
+    advisory_references: DefaultDict[str, int],
+):
+    """Returns the URL obtained through the LLM.
+
+    Args:
+        config (LLMServiceConfig): The 'llm_service' configuration block in config.yaml
+        advisory_description (str): The description of the advisory
+        advisory_references (dict[str, int]): The references of the advisory
+
+    Returns:
+        The respository URL as a string.
+
+    Raises:
+        System Exit if no configuration for the llm_service is given or the LLM returns an invalid URL.
+    """
+    with ConsoleWriter("LLM Usage (Repo URL)") as console:
+        if not config:
+            logger.error(
+                "No configuration given for model in `config.yaml`.",
+                exc_info=get_level() < logging.INFO,
+            )
+            console.print(
+                "No configuration given for model in `config.yaml`.",
+                status=MessageStatus.ERROR,
+            )
+            sys.exit(1)
+
+        try:
+            llm_service = LLMService(config)
+            url_from_llm = llm_service.get_repository_url(
+                advisory_description, advisory_references
+            )
+            console.print(
+                f"\n  Repository URL: {url_from_llm}", status=MessageStatus.OK
+            )
+            return url_from_llm
+
+        except Exception as e:
+            # Any error that occurs in either LLMService or get_repository_url should be caught here
+            logger.error(e)
+            console.print(e, status=MessageStatus.ERROR)
+            sys.exit(1)
+
+
+>>>>>>> b99303e (restructures rules testing files)
 # def prospector_find_twins(
 #     advisory_record: AdvisoryRecord,
 #     repository: Git,

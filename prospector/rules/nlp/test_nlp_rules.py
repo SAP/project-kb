@@ -1,12 +1,18 @@
 from typing import List
 
 import pytest
+from requests_cache import Optional
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
 from rules.nlp.nlp_phase import NLPPhase
+from util.lsh import get_encoded_minhash
 
 # from datamodel.commit_features import CommitWithFeatures
+
+
+def get_msg(text, limit_length: Optional[int] = None) -> str:
+    return text[:limit_length] if limit_length else text
 
 
 @pytest.fixture
@@ -19,19 +25,36 @@ def candidates():
             ghissue_refs={"example": ""},
             changed_files={"foo/bar/otherthing.xml", "pom.xml"},
             cve_refs=["CVE-2020-26258"],
+            minhash=get_encoded_minhash(
+                get_msg(
+                    "Blah blah blah fixes CVE-2020-26258 and a few other issues",
+                    50,
+                )
+            ),
         ),
-        Commit(repository="repo2", commit_id="2", cve_refs=["CVE-2020-26258"]),
+        Commit(
+            repository="repo2",
+            commit_id="2",
+            cve_refs=["CVE-2020-26258"],
+            minhash=get_encoded_minhash(get_msg("")),
+        ),
         Commit(
             repository="repo3",
             commit_id="3",
             message="Another commit that fixes CVE-2020-26258",
             ghissue_refs={"example": ""},
+            minhash=get_encoded_minhash(
+                get_msg("Another commit that fixes CVE-2020-26258", 50)
+            ),
         ),
         Commit(
             repository="repo4",
             commit_id="4",
             message="Endless loop causes DoS vulnerability",
             changed_files={"foo/bar/otherthing.xml", "pom.xml"},
+            minhash=get_encoded_minhash(
+                get_msg("Endless loop causes DoS vulnerability", 50)
+            ),
         ),
         Commit(
             repository="repo5",
@@ -40,6 +63,7 @@ def candidates():
             changed_files={
                 "core/src/main/java/org/apache/cxf/workqueue/AutomaticWorkQueueImpl.java"
             },
+            minhash=get_encoded_minhash(get_msg("Insecure deserialization", 50)),
         ),
     ]
 
@@ -47,17 +71,19 @@ def candidates():
 @pytest.fixture
 def advisory_record():
     return AdvisoryRecord(
-        vulnerability_id="CVE-2020-26258",
+        cve_id="CVE-2020-26258",
         repository_url="https://github.com/apache/struts",
         published_timestamp=1607532756,
-        references=["https://reference.to/some/commit/7532d2fb0d60"],
+        references=["https://reference.to/some/commit/7532d2fb0d60", 1],
         keywords=["AutomaticWorkQueueImpl"],
-        paths=["pom.xml"],
+        # paths=["pom.xml"],
     )
 
 
 def test_apply_rules_all(candidates: List[Commit], advisory_record: AdvisoryRecord):
-    annotated_candidates = NLPPhase().apply_rules(candidates, advisory_record)
+    annotated_candidates = NLPPhase().apply_rules(
+        candidates, advisory_record, rules=["ALL"]
+    )
 
     assert len(annotated_candidates[0].matched_rules) == 4
     assert annotated_candidates[0].matched_rules[0][0] == "CVE_ID_IN_MESSAGE"
