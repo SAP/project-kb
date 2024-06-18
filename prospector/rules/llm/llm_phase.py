@@ -22,9 +22,7 @@ class LLMPhase(Phase):
         self._llm_service = create_model_instance(llm_service_config)
 
     def apply_rules(self, candidates: List[Commit], rules=["ALL"]) -> List[Commit]:
-        enabled_rules = (
-            self.rules
-        )  # LASCHA: add here a similar implementation to get_enabled_rules()
+        enabled_rules = self.get_enabled_rules(rules)
 
         rule_statistics.collect("active", len(enabled_rules), unit="rules")
 
@@ -40,6 +38,17 @@ class LLMPhase(Phase):
                 candidate.compute_relevance()
 
         return apply_ranking(candidates)
+
+    def get_enabled_rules(self, rules: List[str]) -> List[LLMRule]:
+        if "ALL" in rules:
+            return LLM_RULES
+
+        enabled_rules = []
+        for r in LLM_RULES:
+            if r.id in rules:
+                enabled_rules.append(r)
+
+        return enabled_rules
 
     def get_name(self):
         return super().get_name()

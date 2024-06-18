@@ -54,12 +54,12 @@ class NLPPhase(Phase):
         self.rules = NLP_RULES
 
     def apply_rules(
-        self, candidates: List[Commit], advisory_record: AdvisoryRecord, rules=["ALL"]
+        self,
+        candidates: List[Commit],
+        advisory_record: AdvisoryRecord,
+        rules=["ALL"],
     ) -> List[Commit]:
-        # apply the NLP rules
-        enabled_rules = (
-            self.rules
-        )  # LASCHA: add here a similar implementation to get_enabled_rules()
+        enabled_rules = self.get_enabled_rules(rules)
 
         rule_statistics.collect("active", len(enabled_rules), unit="rules")
 
@@ -80,6 +80,17 @@ class NLPPhase(Phase):
                 candidate.compute_relevance()
 
         return apply_ranking(candidates)
+
+    def get_enabled_rules(self, rules: List[str]) -> List[NLPRule]:
+        if "ALL" in rules:
+            return NLP_RULES
+
+        enabled_rules = []
+        for r in NLP_RULES:
+            if r.id in rules:
+                enabled_rules.append(r)
+
+        return enabled_rules
 
     def get_name(self):
         return super().get_name()
