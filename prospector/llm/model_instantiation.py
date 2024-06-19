@@ -37,20 +37,25 @@ THIRD_PARTY_MAPPING = {
 
 
 def create_model_instance(
-    model_type: str, model_name: str, temperature, ai_core_sk_filepath
+    model_type: str,
+    model_name: str,
+    ai_core_sk_filepath: str,
+    temperature: float = 0.0,
 ) -> LLM:
     """Creates and returns the model object given the user's configuration.
 
     Args:
-        llm_config (dict): A dictionary containing the configuration for the LLM. Expected keys are:
-            - 'type' (str): Method for accessing the LLM API ('sap' for SAP's AI Core, 'third_party' for
+        model_type: the way of accessing the LLM API ('sap' for SAP's AI Core, 'third_party' for
                             external providers).
-            - 'model_name' (str): Which model to use, e.g. gpt-4.
-            - 'temperature' (Optional(float)): The temperature for the model, default 0.0.
+        model_name: which model to use, e.g. gpt-4.
+        temperature: the temperature for the model, default 0.0.
+        ai_core_sk_filepath: The path to the file containing AI Core credentials
 
     Returns:
         LLM: An instance of the specified LLM model.
-    Exits
+
+    Raises:
+        ValueError: if there is a problem with deploymenturl, model_name or AI Core credentials
     """
     # LASCHA: correct docstring
 
