@@ -1,5 +1,7 @@
+import json
 from typing import Dict
 
+import requests
 from dotenv import dotenv_values
 from langchain_core.language_models.llms import LLM
 from langchain_google_vertexai import ChatVertexAI
@@ -10,40 +12,33 @@ from llm.models.gemini import Gemini
 from llm.models.mistral import Mistral
 from llm.models.openai import OpenAI
 
-
-class ModelDef:
-    def __init__(self, access_info: str, _class: LLM):
-        self.access_info = (
-            access_info  # either deployment_url (for SAP) or API key (for Third Party)
-        )
-        self._class = _class
-
-
 env: Dict[str, str | None] = dotenv_values()
 
+
 SAP_MAPPING = {
-    "gpt-35-turbo": ModelDef(env.get("GPT_35_TURBO_URL", None), OpenAI),
-    "gpt-35-turbo-16k": ModelDef(env.get("GPT_35_TURBO_16K_URL", None), OpenAI),
-    "gpt-35-turbo-0125": ModelDef(env.get("GPT_35_TURBO_0125_URL", None), OpenAI),
-    "gpt-4": ModelDef(env.get("GPT_4_URL", None), OpenAI),
-    "gpt-4-32k": ModelDef(env.get("GPT_4_32K_URL", None), OpenAI),
-    # "gpt-4-turbo": env.get("GPT_4_TURBO_URL", None), # currently TBD: https://github.tools.sap/I343697/generative-ai-hub-readme
-    # "gpt-4o": env.get("GPT_4O_URL", None),  # currently TBD: https://github.tools.sap/I343697/generative-ai-hub-readme
-    "gemini-1.0-pro": ModelDef(env.get("GEMINI_1_0_PRO_URL", None), Gemini),
-    "mistralai--mixtral-8x7b-instruct-v01": ModelDef(
-        env.get("MISTRALAI_MIXTRAL_8X7B_INSTRUCT_V01", None), Mistral
-    ),
+    "gpt-35-turbo": OpenAI,
+    "gpt-35-turbo-16k": OpenAI,
+    "gpt-35-turbo-0125": OpenAI,
+    "gpt-4": OpenAI,
+    "gpt-4-32k": OpenAI,
+    # "gpt-4-turbo": OpenAI, # currently TBD
+    # "gpt-4o": OpenAI,  # currently TBD
+    "gemini-1.0-pro": Gemini,
+    "mistralai--mixtral-8x7b-instruct-v01": Mistral,
 }
+
 
 THIRD_PARTY_MAPPING = {
-    "gpt-4": ModelDef(env.get("OPENAI_API_KEY", None), ChatOpenAI),
-    "gpt-3.5-turbo": ModelDef(env.get("OPENAI_API_KEY", None), ChatOpenAI),
-    "gemini-pro": ModelDef(env.get("GOOGLE_API_KEY", None), ChatVertexAI),
-    "mistral-large-latest": ModelDef(env.get("MISTRAL_API_KEY", None), ChatMistralAI),
+    "gpt-4": ChatOpenAI,
+    "gpt-3.5-turbo": ChatOpenAI,
+    "gemini-pro": ChatVertexAI,
+    "mistral-large-latest": ChatMistralAI,
 }
 
 
-def create_model_instance(llm_config) -> LLM:
+def create_model_instance(
+    model_type: str, model_name: str, temperature, ai_core_sk_filepath
+) -> LLM:
     """Creates and returns the model object given the user's configuration.
 
     Args:
@@ -57,25 +52,30 @@ def create_model_instance(llm_config) -> LLM:
         LLM: An instance of the specified LLM model.
     Exits
     """
+    # LASCHA: correct docstring
 
     def create_sap_provider(
-        model_name: str, temperature: float, ai_core_sk_file_path: str
+        model_name: str, temperature: float, ai_core_sk_filepath: str
     ):
-        model_definition = SAP_MAPPING.get(model_name, None)
 
-        if model_definition is None:
+        deployment_url = env.get("GPT_35_TURBO_URL", None)
+        if deployment_url is None:
+            raise ValueError(f"Deployment URL for {model_name} is not set.")
+
+        model_class = SAP_MAPPING.get(model_name, None)
+        if model_class is None:
             raise ValueError(f"Model '{model_name}' is not available.")
 
-        if ai_core_sk_file_path is None:
+        if ai_core_sk_filepath is None:
             raise ValueError(
-                f"AI Core credentials file couldn't be found: '{ai_core_sk_file_path}'"
+                f"AI Core credentials file couldn't be found: '{ai_core_sk_filepath}'"
             )
 
-        model = model_definition._class(
+        model = model_class(
             model_name=model_name,
-            deployment_url=model_definition.access_info,
+            deployment_url=deployment_url,
             temperature=temperature,
-            ai_core_sk_file_path=ai_core_sk_file_path,
+            ai_core_sk_filepath=ai_core_sk_filepath,
         )
 
         return model
@@ -96,22 +96,48 @@ def create_model_instance(llm_config) -> LLM:
 
     # LLM Instantiation
     try:
-        match llm_config.type:
+        match model_type:
             case "sap":
                 model = create_sap_provider(
-                    llm_config.model_name,
-                    llm_config.temperature,
-                    llm_config.ai_core_sk,
+                    model_name,
+                    temperature,
+                    ai_core_sk_filepath,
                 )
             case "third_party":
-                model = create_third_party_provider(
-                    llm_config.model_name, llm_config.temperature
-                )
+                model = create_third_party_provider(model_name, temperature)
             case _:
                 raise ValueError(
-                    f"Invalid LLM type specified (either sap or third_party). '{llm_config.type}' is not available."
+                    f"Invalid LLM type specified (either sap or third_party). '{model_type}' is not available."
                 )
     except Exception:
         raise  # re-raise exceptions from create_[sap|third_party]_provider
 
     return model
+
+
+def get_headers(ai_core_sk_file_path: str):
+    """Generate the request headers to use SAP AI Core. This method generates the authentication token and returns a Dict with headers.
+
+    Returns:
+        The headers object needed to send requests to the SAP AI Core.
+    """
+    with open(ai_core_sk_file_path) as f:
+        sk = json.load(f)
+
+    auth_url = f"{sk['url']}/oauth/token"
+    client_id = sk["clientid"]
+    client_secret = sk["clientsecret"]
+
+    response = requests.post(
+        auth_url,
+        data={"grant_type": "client_credentials"},
+        auth=(client_id, client_secret),
+        timeout=8000,
+    )
+
+    headers = {
+        "AI-Resource-Group": "default",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {response.json()['access_token']}",
+    }
+    return headers

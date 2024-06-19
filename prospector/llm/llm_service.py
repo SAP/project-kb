@@ -1,13 +1,11 @@
-import sys
-
 import validators
 from langchain_core.language_models.llms import LLM
 from langchain_core.output_parsers import StrOutputParser
 
-from cli.console import ConsoleWriter, MessageStatus
 from llm.model_instantiation import create_model_instance
 from llm.prompts import best_guess
 from log.logger import logger
+from util.config_parser import LLMServiceConfig
 from util.singleton import Singleton
 
 
@@ -16,12 +14,17 @@ class LLMService(metaclass=Singleton):
     should be used throughout the program.
     """
 
-    config = None
+    config: LLMServiceConfig = None
 
-    def __init__(self, config):
+    def __init__(self, config: LLMServiceConfig):
         self.config = config
         try:
-            self.model: LLM = create_model_instance(config)
+            self.model: LLM = create_model_instance(
+                config.type,
+                config.model_name,
+                config.temperature,
+                config.ai_core_sk,
+            )
         except Exception:
             raise
 
