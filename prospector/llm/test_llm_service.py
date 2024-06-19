@@ -50,23 +50,25 @@ def reset_singletons():
 
 class TestModel:
     def test_sap_gpt_instantiation(self):
-        config = Config("sap", "gpt-4", 0.0, "sk.json")
+        config = Config("sap", "gpt-4", 0.0, "example.json")
         llm_service = LLMService(config)
-        assert isinstance(llm_service._model, OpenAI)
+        assert isinstance(llm_service.model, OpenAI)
 
     def test_sap_gemini_instantiation(self):
-        config = Config("sap", "gemini-1.0-pro", 0.0, "sk.json")
+        config = Config("sap", "gemini-1.0-pro", 0.0, "example.json")
         llm_service = LLMService(config)
-        assert isinstance(llm_service._model, Gemini)
+        assert isinstance(llm_service.model, Gemini)
 
     def test_sap_mistral_instantiation(self):
-        config = Config("sap", "mistralai--mixtral-8x7b-instruct-v01", 0.0, "sk.json")
+        config = Config(
+            "sap", "mistralai--mixtral-8x7b-instruct-v01", 0.0, "example.json"
+        )
         llm_service = LLMService(config)
-        assert isinstance(llm_service._model, Mistral)
+        assert isinstance(llm_service.model, Mistral)
 
     def test_singleton_instance_creation(self):
         """A second instantiation should return the exisiting instance."""
-        config = Config("sap", "gpt-4", 0.0, "sk.json")
+        config = Config("sap", "gpt-4", 0.0, "example.json")
         llm_service = LLMService(config)
         same_service = LLMService(config)
         assert (
@@ -75,47 +77,61 @@ class TestModel:
 
     def test_singleton_same_instance(self):
         """A second instantiation with different parameters should return the existing instance unchanged."""
-        config = Config("sap", "gpt-4", 0.0, "sk.json")
+        config = Config("sap", "gpt-4", 0.0, "example.json")
         llm_service = LLMService(config)
         config = Config(
-            "sap", "gpt-35-turbo", 0.0, "sk.json"
+            "sap", "gpt-35-turbo", 0.0, "example.json"
         )  # This instantiation should not work, but instead return the already existing instance
         same_service = LLMService(config)
         assert llm_service is same_service
-        assert llm_service._model.model_name == "gpt-4"
+        assert llm_service.model.model_name == "gpt-4"
 
     def test_singleton_retains_state(self):
         """Reassigning a field variable of the instance should be allowed and reflected
         across instantiations."""
-        config = Config("sap", "gpt-4", 0.0, "sk.json")
+        config = Config("sap", "gpt-4", 0.0, "example.json")
         service = LLMService(config)
 
-        service._model = OpenAI(
+        service.model = OpenAI(
             model_name="gpt-35-turbo",
             deployment_url="deployment_url_placeholder",
             temperature=0.7,
+            ai_core_sk_file_path="example.json",
         )
         same_service = LLMService(config)
 
-        assert same_service._model == OpenAI(
+        assert same_service.model == OpenAI(
             model_name="gpt-35-turbo",
             deployment_url="deployment_url_placeholder",
             temperature=0.7,
+            ai_core_sk_file_path="example.json",
         ), "LLMService should retain state between instantiations"
 
     def test_get_repository_url(self):
-        config = Config("sap", "gpt-4", 0.0, "sk.json")
+        config = Config("sap", "gpt-4", 0.0, "example.json")
         service = LLMService(config)
         # Reassign the mock model to the service
         model = MockLLM(
             model_name="gpt-4",
             deployment_url="deployment_url_placeholder",
             temperature=0.7,
-            ai_core_sk_file_path="sk.json",
+            ai_core_sk_file_path="example.json",
         )
-        service._model = model
+        service.model = model
 
         assert (
             service.get_repository_url("advisory description", "advisory_references")
             == "https://www.example.com"
         )
+
+    def test_reuse_singleton_without_config(self):
+        config = Config("sap", "gpt-4", 0.0, "example.json")
+        service = LLMService(config)
+
+        same_service = LLMService()
+
+        assert service is same_service
+
+    def test_fail_first_instantiation_without_config(self):
+        with pytest.raises(Exception):
+            LLMService()
