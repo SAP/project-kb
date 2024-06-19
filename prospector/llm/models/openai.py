@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 import requests
 from langchain_core.language_models.llms import LLM
 
-import llm.model_instantiation as instantiation
+import llm.instantiation as instantiation
 from log.logger import logger
 
 
