@@ -15,7 +15,7 @@ class OpenAI(LLM):
 
     @property
     def _llm_type(self) -> str:
-        return "custom"
+        return "SAP OpenAI"
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:
