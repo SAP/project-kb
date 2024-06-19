@@ -281,13 +281,25 @@ def evaluate_commits(
     rules: List[str],
     llm_service_config: LLMServiceConfig,
 ) -> List[Commit]:
+    """This function applies rule phases. Each phase is associated with a set of rules, for example:
+        - Phase 1: NLP Rules
+        - Phase 2: LLM Rules
+
+    Args:
+        commits: the list of candidate commits that rules should be applied to
+        advisory: the object containing all information about the advisory
+        rules: a (sub)set of rules to run
+        llm_service_config: the LLM configuration object to instantiate a model for LLM rules
+    Returns:
+        a list of commits ranked according to their relevance score
+    Raises:
+        MissingMandatoryValue: if there is an error in the LLM configuration object
+    """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as console:
-            # first phase
-            ranked_commits = NLPPhase().apply_rules(
-                commits, advisory, rules=rules
-            )
-            # second phase (reuse LLM service)
+            # first phase: Apply NLP Rules
+            ranked_commits = NLPPhase().apply_rules(commits, advisory, rules=rules)
+            # second phase: Apply LLM Rules
             try:
                 if llm_service_config.use_llm_rules:
                     ranked_commits = LLMPhase(llm_service_config).apply_rules(
@@ -299,6 +311,15 @@ def evaluate_commits(
                 )
                 console.print(
                     f"use_llm_rules parameter not set. Continuing without applying LLM rules.",
+                    status=MessageStatus.WARNING,
+                )
+            except Exception as e:
+                logger.warn(
+                    f"Error occured in llm_service configuration: {e}. "
+                    + "Continuing without applying LLM rules."
+                )
+                console.print(
+                    f"Error occured in llm_service configuration. Continuing without applying LLM rules.",
                     status=MessageStatus.WARNING,
                 )
 
