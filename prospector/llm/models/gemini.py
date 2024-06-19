@@ -1,20 +1,37 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
+from langchain_core.language_models.llms import LLM
 
-from llm.models.sap_llm import SAPLLM, get_headers
+import llm.model_instantiation as instantiation
 from log.logger import logger
 
 
-class Gemini(SAPLLM):
+class Gemini(LLM):
+    model_name: str
+    deployment_url: str
+    temperature: float
+    ai_core_sk_filepath: str
+
+    @property
+    def _llm_type(self) -> str:
+        return "custom"
+
+    @property
+    def _identifying_params(self) -> Dict[str, Any]:
+        """Return a dictionary of identifying parameters."""
+        return {
+            "model_name": self.model_name,
+            "deployment_url": self.deployment_url,
+            "temperature": self.temperature,
+            "ai_core_sk_filepath": self.ai_core_sk_filepath,
+        }
+
     def _call(
         self, prompt: str, stop: Optional[List[str]] = None, **kwargs: Any
     ) -> str:
-        # Call super() to make sure model_name is valid
-        super()._call(prompt, stop, **kwargs)
-        # Model specific request data
         endpoint = f"{self.deployment_url}/models/{self.model_name}:generateContent"
-        headers = get_headers(self.ai_core_sk_file_path)
+        headers = instantiation.get_headers(self.ai_core_sk_filepath)
         data = {
             "generation_config": {
                 "maxOutputTokens": 1000,
@@ -30,8 +47,14 @@ class Gemini(SAPLLM):
                     "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
                     "threshold": "BLOCK_NONE",
                 },
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_NONE",
+                },
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_NONE",
+                },
             ],
         }
 
