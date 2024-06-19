@@ -2,7 +2,7 @@ import validators
 from langchain_core.language_models.llms import LLM
 from langchain_core.output_parsers import StrOutputParser
 
-from llm.model_instantiation import create_model_instance
+from llm.instantiation import create_model_instance
 from llm.prompts import best_guess
 from log.logger import logger
 from util.config_parser import LLMServiceConfig
