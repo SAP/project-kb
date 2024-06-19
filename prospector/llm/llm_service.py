@@ -22,8 +22,8 @@ class LLMService(metaclass=Singleton):
             self.model: LLM = create_model_instance(
                 config.type,
                 config.model_name,
-                config.temperature,
                 config.ai_core_sk,
+                config.temperature,
             )
         except Exception:
             raise
