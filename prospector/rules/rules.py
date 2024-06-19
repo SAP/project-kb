@@ -3,16 +3,17 @@ from abc import abstractmethod
 from typing import List, Tuple
 
 import requests
+from typing import List, Tuple
+
+import requests
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit, apply_ranking
 from llm.llm_service import LLMService
 from rules.helpers import extract_security_keywords
 from stats.execution import Counter, execution_statistics
+from util.config_parser import LLMServiceConfig
 from util.lsh import build_lsh_index, decode_minhash
-
-MAX_COMMITS_FOR_LLM_RULES = 1
-
 
 rule_statistics = execution_statistics.sub_collection("rules")
 
@@ -412,7 +413,28 @@ class RelevantWordsInMessage(Rule):
         return False
 
 
-RULES_PHASE_1: List[Rule] = [
+class CommitIsSecurityRelevant(Rule):
+    """Matches commits that are deemed security relevant by the commit classification service."""
+
+    def apply(
+        self,
+        candidate: Commit,
+    ) -> bool:
+        data = {
+            "temperature": 0.0,  # get this from LLMService
+            "diff": "\n".join(candidate.diff),
+        }
+
+        response = requests.get("http://127.0.0.1:8001/predict", json=data)
+
+        prediction = response.json()["prediction"]
+        if prediction == "1":
+            return True
+        else:
+            return False
+
+
+PHASE_1: List[Rule] = [
     VulnIdInMessage("VULN_ID_IN_MESSAGE", 64),
     # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
     CrossReferencedBug("XREF_BUG", 32),
@@ -432,4 +454,20 @@ RULES_PHASE_1: List[Rule] = [
     CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
 
-RULES_PHASE_2: List[Rule] = []
+LLM_RULES: List[Rule] = [
+    CommitIsSecurityRelevant(
+        "COMMIT_IS_SECURITY_RELEVANT", 32, llm_service=LLMService()
+    )
+]
+
+# LASCHA: modify this
+# def get_enabled_rules(self, rules: List[str]) -> List[Rule]:
+#     if "ALL" in rules:
+#         return NLP_RULES
+
+#     enabled_rules = []
+#     for r in NLP_RULES:
+#         if r.id in rules:
+#             enabled_rules.append(r)
+
+#     return enabled_rules

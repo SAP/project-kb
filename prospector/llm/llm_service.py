@@ -37,7 +37,9 @@ class LLMService(metaclass=Singleton):
         except Exception:
             raise
 
-    def get_repository_url(self, advisory_description, advisory_references) -> str:
+    def get_repository_url(
+        self, advisory_description, advisory_references
+    ) -> str:
         """Ask an LLM to obtain the repository URL given the advisory description and references.
 
         Args:
