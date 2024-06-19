@@ -15,7 +15,7 @@ class Mistral(LLM):
 
     @property
     def _llm_type(self) -> str:
-        return "custom"
+        return "SAP Mistral"
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:

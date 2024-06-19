@@ -15,7 +15,7 @@ class Gemini(LLM):
 
     @property
     def _llm_type(self) -> str:
-        return "custom"
+        return "SAP Gemini"
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:
