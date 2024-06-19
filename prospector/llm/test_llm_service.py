@@ -8,7 +8,6 @@ from llm.llm_service import LLMService  # this is a singleton
 from llm.models.gemini import Gemini
 from llm.models.mistral import Mistral
 from llm.models.openai import OpenAI
-from llm.models.sap_llm import SAPLLM
 from util.singleton import Singleton
 
 
@@ -30,16 +29,18 @@ test_vuln_id = "CVE-2024-32480"
 
 
 # Mock a SAP LLM
-class MockLLM(SAPLLM):
+class MockLLM(LLM):
     def _call(
         self, prompt: str, stop: Optional[List[str]] = None, **kwargs: Any
     ) -> str:
-        # Call super() to make sure model_name is valid
-        super()._call(prompt, stop, **kwargs)
 
         url = "https://www.example.com"
 
         return url
+
+    @property
+    def _llm_type(self) -> str:
+        return "custom"
 
 
 @pytest.fixture(autouse=True)
@@ -96,7 +97,7 @@ class TestModel:
             model_name="gpt-35-turbo",
             deployment_url="deployment_url_placeholder",
             temperature=0.7,
-            ai_core_sk_file_path="example.json",
+            ai_core_sk_filepath="example.json",
         )
         same_service = LLMService(config)
 
@@ -104,7 +105,7 @@ class TestModel:
             model_name="gpt-35-turbo",
             deployment_url="deployment_url_placeholder",
             temperature=0.7,
-            ai_core_sk_file_path="example.json",
+            ai_core_sk_filepath="example.json",
         ), "LLMService should retain state between instantiations"
 
     def test_get_repository_url(self):
@@ -115,7 +116,7 @@ class TestModel:
             model_name="gpt-4",
             deployment_url="deployment_url_placeholder",
             temperature=0.7,
-            ai_core_sk_file_path="example.json",
+            ai_core_sk_filepath="example.json",
         )
         service.model = model
 
