@@ -16,9 +16,12 @@ class LLMService(metaclass=Singleton):
     should be used throughout the program.
     """
 
+    config = None
+
     def __init__(self, config):
+        self.config = config
         try:
-            self._model: LLM = create_model_instance(config)
+            self.model: LLM = create_model_instance(config)
         except Exception:
             raise
 
@@ -36,7 +39,7 @@ class LLMService(metaclass=Singleton):
             ValueError if advisory information cannot be obtained or there is an error in the model invocation.
         """
         try:
-            chain = best_guess | self._model | StrOutputParser()
+            chain = best_guess | self.model | StrOutputParser()
 
             url = chain.invoke(
                 {
