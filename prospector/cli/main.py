@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
+from llm.llm_service import LLMService
 from util.http import ping_backend
 
 path_root = os.getcwd()
@@ -55,15 +56,21 @@ def main(argv):  # noqa: C901
         # if config.ping:
         #     return ping_backend(backend, get_level() < logging.INFO)
 
-        if not config.repository and not config.llm_service.use_llm_repository_url:
-            logger.error(
-                "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
-            )
-            console.print(
-                "Please set the `--repository` parameter or enable LLM support to infer the repository URL.",
-                status=MessageStatus.ERROR,
-            )
-            return
+        # Whether to use the LLMService
+        if config.llm_service:
+            if not config.repository and not config.llm_service.use_llm_repository_url:
+                logger.error(
+                    "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
+                )
+                console.print(
+                    "Please set the `--repository` parameter or enable LLM support to infer the repository URL.",
+                    status=MessageStatus.ERROR,
+                )
+                return
+
+            # If at least one 'use_llm' option is set, then create an LLMService singleton
+            if any([True for x in dir(config.llm_service) if x.startswith("use_llm")]):
+                LLMService(config.llm_service)
 
         config.pub_date = (
             config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
@@ -89,7 +96,7 @@ def main(argv):  # noqa: C901
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
-        llm_service_config=config.llm_service,
+        use_llm_repository_url=config.llm_service.use_llm_repository_url,
     )
 
     if config.preprocess_only:

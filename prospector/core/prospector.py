@@ -69,7 +69,7 @@ def prospector(  # noqa: C901
     rules: List[str] = ["ALL"],
     tag_commits: bool = True,
     silent: bool = False,
-    llm_service_config=None,
+    use_llm_repository_url: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -91,9 +91,26 @@ def prospector(  # noqa: C901
     if advisory_record is None:
         return None, -1
 
-    repository_url = repository_url or set_repository_url(
-        llm_service_config, advisory_record.description, advisory_record.references
-    )
+    if use_llm_repository_url:
+        with ConsoleWriter("LLM Usage (Repo URL)") as console:
+            try:
+                repository_url = LLMService().get_repository_url(
+                    advisory_record.description, advisory_record.references
+                )
+                console.print(
+                    f"\n  Repository URL: {repository_url}",
+                    status=MessageStatus.OK,
+                )
+            except Exception as e:
+                logger.error(
+                    e,
+                    exc_info=get_level() < logging.INFO,
+                )
+                console.print(
+                    e,
+                    status=MessageStatus.ERROR,
+                )
+                sys.exit(1)
 
     fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)
@@ -183,7 +200,10 @@ def prospector(  # noqa: C901
                 # preprocessed_commits += preprocess_commits(missing, timer)
 
                 pbar = tqdm(
-                    missing, desc="Processing commits", unit="commit", disable=silent
+                    missing,
+                    desc="Processing commits",
+                    unit="commit",
+                    disable=silent,
                 )
                 start_time = time.time()
                 with Counter(
@@ -455,51 +475,6 @@ def is_correct_backend_url(backend_url: str) -> bool:
             return False
 
     return True
-
-
-def set_repository_url(
-    config, advisory_description: str, advisory_references: DefaultDict[str, int]
-):
-    """Returns the URL obtained through the LLM.
-
-    Args:
-        config (LLMServiceConfig): The 'llm_service' configuration block in config.yaml
-        advisory_description (str): The description of the advisory
-        advisory_references (dict[str, int]): The references of the advisory
-
-    Returns:
-        The respository URL as a string.
-
-    Raises:
-        System Exit if no configuration for the llm_service is given or the LLM returns an invalid URL.
-    """
-    with ConsoleWriter("LLM Usage (Repo URL)") as console:
-        if not config:
-            logger.error(
-                "No configuration given for model in `config.yaml`.",
-                exc_info=get_level() < logging.INFO,
-            )
-            console.print(
-                "No configuration given for model in `config.yaml`.",
-                status=MessageStatus.ERROR,
-            )
-            sys.exit(1)
-
-        try:
-            llm_service = LLMService(config)
-            url_from_llm = llm_service.get_repository_url(
-                advisory_description, advisory_references
-            )
-            console.print(
-                f"\n  Repository URL: {url_from_llm}", status=MessageStatus.OK
-            )
-            return url_from_llm
-
-        except Exception as e:
-            # Any error that occurs in either LLMService or get_repository_url should be caught here
-            logger.error(e)
-            console.print(e, status=MessageStatus.ERROR)
-            sys.exit(1)
 
 
 # def prospector_find_twins(

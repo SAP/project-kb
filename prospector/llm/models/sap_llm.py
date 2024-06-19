@@ -12,7 +12,7 @@ class SAPLLM(LLM):
     model_name: str
     deployment_url: str
     temperature: float
-    ai_core_sk_file_path: str
+    ai_core_sk_file_path: str = None
 
     @property
     def _llm_type(self) -> str:
