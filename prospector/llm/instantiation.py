@@ -24,15 +24,15 @@ SAP_MAPPING = {
     # "gpt-4-turbo": OpenAI, # currently TBD
     # "gpt-4o": OpenAI,  # currently TBD
     "gemini-1.0-pro": Gemini,
-    "mistralai--mixtral-8x7b-instruct-v01": Mistral,
+    "mistral-large": Mistral,
 }
 
 
 THIRD_PARTY_MAPPING = {
-    "gpt-4": ChatOpenAI,
-    "gpt-3.5-turbo": ChatOpenAI,
-    "gemini-pro": ChatVertexAI,
-    "mistral-large-latest": ChatMistralAI,
+    "gpt-4": (ChatOpenAI, "OPENAI_API_KEY"),
+    "gpt-3.5-turbo": (ChatOpenAI, "OPENAI_API_KEY"),
+    "gemini-pro": (ChatVertexAI, "GOOGLE_API_KEY"),
+    "mistral-large-latest": (ChatMistralAI, "MISTRAL_API_KEY"),
 }
 
 
@@ -55,17 +55,18 @@ def create_model_instance(
         LLM: An instance of the specified LLM model.
 
     Raises:
-        ValueError: if there is a problem with deploymenturl, model_name or AI Core credentials
+        ValueError: if there is a problem with deployment_url, model_name or AI Core credentials
     """
-    # LASCHA: correct docstring
 
     def create_sap_provider(
         model_name: str, temperature: float, ai_core_sk_filepath: str
-    ):
+    ) -> LLM:
 
-        deployment_url = env.get("GPT_35_TURBO_URL", None)
+        deployment_url = env.get(model_name.upper().replace("-", "_") + "_URL", None)
         if deployment_url is None:
-            raise ValueError(f"Deployment URL for {model_name} is not set.")
+            raise ValueError(
+                f"Deployment URL ({model_name.upper().replace('-', '_')}_URL) for {model_name} is not set."
+            )
 
         model_class = SAP_MAPPING.get(model_name, None)
         if model_class is None:
@@ -85,21 +86,22 @@ def create_model_instance(
 
         return model
 
-    def create_third_party_provider(model_name: str, temperature: float):
-        model_definition = THIRD_PARTY_MAPPING.get(model_name, None)
+    def create_third_party_provider(model_name: str, temperature: float) -> LLM:
+        model_class = THIRD_PARTY_MAPPING.get(model_name, None)[0]
 
-        if model_definition is None:
+        if model_class is None:
             raise ValueError(f"Model '{model_name}' is not available.")
 
-        model = model_definition._class(
+        api_key_variable = THIRD_PARTY_MAPPING.get(model_name, None)[1]
+
+        model = model_class(
             model=model_name,
-            api_key=model_definition.access_info,
+            api_key=api_key_variable,
             temperature=temperature,
         )
 
         return model
 
-    # LLM Instantiation
     try:
         match model_type:
             case "sap":
@@ -120,8 +122,11 @@ def create_model_instance(
     return model
 
 
-def get_headers(ai_core_sk_file_path: str):
+def get_headers(ai_core_sk_file_path: str) -> Dict[str, str]:
     """Generate the request headers to use SAP AI Core. This method generates the authentication token and returns a Dict with headers.
+
+    Params:
+        ai_core_sk_file_path (str): the path to the file containing the SAP AI Core credentials.
 
     Returns:
         The headers object needed to send requests to the SAP AI Core.
