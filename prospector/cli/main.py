@@ -108,7 +108,8 @@ def main(argv):  # noqa: C901
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
-        llm_service_config=config.llm_service,
+        use_llm_repository_url=config.llm_service.use_llm_repository_url,
+        use_llm_rules=config.llm_service.use_llm_rules,
     )
 
     if config.preprocess_only:

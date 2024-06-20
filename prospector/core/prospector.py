@@ -21,8 +21,7 @@ from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.llm.llm_phase import LLMPhase
-from rules.nlp.nlp_phase import NLPPhase
+from rules.rules import apply_rules
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -48,6 +47,9 @@ USE_BACKEND_OPTIONAL = "optional"
 USE_BACKEND_NEVER = "never"
 MAX_COMMITS_LLM_RULES = 3  # the maximum number of commits to apply LLM rules to
 
+PHASE_1 = "phase_1"  # distinguish between different rule phases
+PHASE_2 = "phase_2"
+
 
 core_statistics = execution_statistics.sub_collection("core")
 
@@ -70,10 +72,11 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    rules: List[str] = ["ALL"],
+    rules: List[str] = [PHASE_1],
     tag_commits: bool = True,
     silent: bool = False,
-    llm_service_config: LLMServiceConfig = None,
+    use_llm_repository_url: bool = False,
+    use_llm_rules: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -95,11 +98,26 @@ def prospector(  # noqa: C901
     if advisory_record is None:
         return None, -1
 
-    repository_url = repository_url or set_repository_url(
-        llm_service_config,
-        advisory_record.description,
-        advisory_record.references,
-    )
+    if use_llm_repository_url:
+        with ConsoleWriter("LLM Usage (Repo URL)") as console:
+            try:
+                repository_url = LLMService().get_repository_url(
+                    advisory_record.description, advisory_record.references
+                )
+                console.print(
+                    f"\n  Repository URL: {repository_url}",
+                    status=MessageStatus.OK,
+                )
+            except Exception as e:
+                logger.error(
+                    e,
+                    exc_info=get_level() < logging.INFO,
+                )
+                console.print(
+                    e,
+                    status=MessageStatus.ERROR,
+                )
+                sys.exit(1)
 
     fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)
@@ -107,9 +125,7 @@ def prospector(  # noqa: C901
     repository = Git(repository_url, git_cache)
 
     with ConsoleWriter("Git repository cloning") as console:
-        logger.debug(
-            f"Downloading repository {repository.url} in {repository.path}"
-        )
+        logger.debug(f"Downloading repository {repository.url} in {repository.path}")
         repository.clone()
 
         tags = repository.get_tags()
@@ -121,9 +137,7 @@ def prospector(  # noqa: C901
 
     if len(fixing_commit) > 0:
         candidates = get_commits_no_tags(repository, fixing_commit)
-        if len(candidates) > 0 and any(
-            [c for c in candidates if c in fixing_commit]
-        ):
+        if len(candidates) > 0 and any([c for c in candidates if c in fixing_commit]):
             console.print("Fixing commit found in the advisory references\n")
             advisory_record.has_fixing_commit = True
 
@@ -154,9 +168,7 @@ def prospector(  # noqa: C901
     candidates = filter(candidates)
 
     if len(candidates) > limit_candidates:
-        logger.error(
-            f"Number of candidates exceeds {limit_candidates}, aborting."
-        )
+        logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
 
         ConsoleWriter.print(f"Candidates limitlimit exceeded: {len(candidates)}.")
         return None, len(candidates)
@@ -167,12 +179,10 @@ def prospector(  # noqa: C901
         with ConsoleWriter("\nProcessing commits") as writer:
             try:
                 if use_backend != USE_BACKEND_NEVER:
-                    missing, preprocessed_commits = (
-                        retrieve_preprocessed_commits(
-                            repository_url,
-                            backend_address,
-                            candidates,
-                        )
+                    missing, preprocessed_commits = retrieve_preprocessed_commits(
+                        repository_url,
+                        backend_address,
+                        candidates,
                     )
             except requests.exceptions.ConnectionError:
                 logger.error(
@@ -223,17 +233,13 @@ def prospector(  # noqa: C901
 
             payload = [c.to_dict() for c in preprocessed_commits]
 
-    if (
-        len(payload) > 0
-        and use_backend != USE_BACKEND_NEVER
-        and len(missing) > 0
-    ):
+    if len(payload) > 0 and use_backend != USE_BACKEND_NEVER and len(missing) > 0:
         save_preprocessed_commits(backend_address, payload)
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
 
     ranked_candidates = evaluate_commits(
-        preprocessed_commits, advisory_record, rules, llm_service_config
+        preprocessed_commits, advisory_record, rules, use_llm_rules
     )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
@@ -244,13 +250,9 @@ def prospector(  # noqa: C901
     return ranked_candidates, advisory_record
 
 
-def preprocess_commits(
-    commits: List[RawCommit], timer: ExecutionTimer
-) -> List[Commit]:
+def preprocess_commits(commits: List[RawCommit], timer: ExecutionTimer) -> List[Commit]:
     preprocessed_commits: List[Commit] = list()
-    with Counter(
-        timer.collection.sub_collection("commit preprocessing")
-    ) as counter:
+    with Counter(timer.collection.sub_collection("commit preprocessing")) as counter:
         counter.initialize("preprocessed commits", unit="commit")
         for raw_commit in tqdm(
             commits,
@@ -258,9 +260,7 @@ def preprocess_commits(
             unit=" commit",
         ):
             counter.increment("preprocessed commits")
-            counter_val = counter.__dict__["collection"][
-                "preprocessed commits"
-            ][0]
+            counter_val = counter.__dict__["collection"]["preprocessed commits"][0]
             if counter_val % 100 == 0 and counter_val * 2 > time.time():
                 pass
             preprocessed_commits.append(make_from_raw_commit(raw_commit))
@@ -279,7 +279,7 @@ def evaluate_commits(
     commits: List[Commit],
     advisory: AdvisoryRecord,
     rules: List[str],
-    llm_service_config: LLMServiceConfig,
+    use_llm_rules: bool,
 ) -> List[Commit]:
     """This function applies rule phases. Each phase is associated with a set of rules, for example:
         - Phase 1: NLP Rules
@@ -289,39 +289,18 @@ def evaluate_commits(
         commits: the list of candidate commits that rules should be applied to
         advisory: the object containing all information about the advisory
         rules: a (sub)set of rules to run
-        llm_service_config: the LLM configuration object to instantiate a model for LLM rules
+        use_llm_rules: indication whether the user wishes to use the LLM supported rules
     Returns:
         a list of commits ranked according to their relevance score
     Raises:
         MissingMandatoryValue: if there is an error in the LLM configuration object
     """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
-        with ConsoleWriter("Candidate analysis") as console:
-            # first phase: Apply NLP Rules
-            ranked_commits = NLPPhase().apply_rules(commits, advisory, rules=rules)
-            # second phase: Apply LLM Rules
-            try:
-                if llm_service_config.use_llm_rules:
-                    ranked_commits = LLMPhase(llm_service_config).apply_rules(
-                        ranked_commits[:MAX_COMMITS_LLM_RULES], rules=rules
-                    )
-            except MissingMandatoryValue as e:
-                logger.warn(
-                    f"Missing value in config.yaml: {e}. Continuing without applying LLM rules."
-                )
-                console.print(
-                    f"use_llm_rules parameter not set. Continuing without applying LLM rules.",
-                    status=MessageStatus.WARNING,
-                )
-            except Exception as e:
-                logger.warn(
-                    f"Error occured in llm_service configuration: {e}. "
-                    + "Continuing without applying LLM rules."
-                )
-                console.print(
-                    f"Error occured in llm_service configuration. Continuing without applying LLM rules.",
-                    status=MessageStatus.WARNING,
-                )
+        with ConsoleWriter("Candidate analysis") as _:
+            if use_llm_rules:
+                rules.append(PHASE_2)
+
+            ranked_commits = apply_rules(commits, advisory, rules=rules)
 
     return ranked_commits
 
@@ -339,9 +318,7 @@ def remove_twins(commits: List[Commit]) -> List[Commit]:
     return output
 
 
-def tag_and_aggregate_commits(
-    commits: List[Commit], next_tag: str
-) -> List[Commit]:
+def tag_and_aggregate_commits(commits: List[Commit], next_tag: str) -> List[Commit]:
     return commits
     if next_tag is None or next_tag == "":
         return commits
@@ -383,9 +360,7 @@ def retrieve_preprocessed_commits(
             break  # return list(candidates.values()), list()
         responses.append(r.json())
 
-    retrieved_commits = [
-        commit for response in responses for commit in response
-    ]
+    retrieved_commits = [commit for response in responses for commit in response]
 
     logger.info(f"Found {len(retrieved_commits)} preprocessed commits")
 
@@ -406,9 +381,7 @@ def retrieve_preprocessed_commits(
 
 
 def save_preprocessed_commits(backend_address, payload):
-    with ExecutionTimer(
-        core_statistics.sub_collection(name="save commits to backend")
-    ):
+    with ExecutionTimer(core_statistics.sub_collection(name="save commits to backend")):
         with ConsoleWriter("Saving processed commits to backend") as writer:
             logger.debug("Sending processing commits to backend...")
             try:
@@ -468,11 +441,7 @@ def get_commits_from_tags(
         with ConsoleWriter("Candidate commit retrieval") as writer:
             since = None
             until = None
-            if (
-                advisory_record.published_timestamp
-                and not next_tag
-                and not prev_tag
-            ):
+            if advisory_record.published_timestamp and not next_tag and not prev_tag:
                 since = advisory_record.reserved_timestamp - time_limit_before
                 until = advisory_record.reserved_timestamp + time_limit_after
 
@@ -486,8 +455,7 @@ def get_commits_from_tags(
 
             if len(candidates) == 0:
                 candidates = repository.create_commits(
-                    since=advisory_record.reserved_timestamp
-                    - time_limit_before,
+                    since=advisory_record.reserved_timestamp - time_limit_before,
                     until=advisory_record.reserved_timestamp + time_limit_after,
                     next_tag=None,
                     prev_tag=None,
@@ -536,56 +504,6 @@ def is_correct_backend_url(backend_url: str) -> bool:
     return True
 
 
-<<<<<<< HEAD
-=======
-def set_repository_url(
-    config,
-    advisory_description: str,
-    advisory_references: DefaultDict[str, int],
-):
-    """Returns the URL obtained through the LLM.
-
-    Args:
-        config (LLMServiceConfig): The 'llm_service' configuration block in config.yaml
-        advisory_description (str): The description of the advisory
-        advisory_references (dict[str, int]): The references of the advisory
-
-    Returns:
-        The respository URL as a string.
-
-    Raises:
-        System Exit if no configuration for the llm_service is given or the LLM returns an invalid URL.
-    """
-    with ConsoleWriter("LLM Usage (Repo URL)") as console:
-        if not config:
-            logger.error(
-                "No configuration given for model in `config.yaml`.",
-                exc_info=get_level() < logging.INFO,
-            )
-            console.print(
-                "No configuration given for model in `config.yaml`.",
-                status=MessageStatus.ERROR,
-            )
-            sys.exit(1)
-
-        try:
-            llm_service = LLMService(config)
-            url_from_llm = llm_service.get_repository_url(
-                advisory_description, advisory_references
-            )
-            console.print(
-                f"\n  Repository URL: {url_from_llm}", status=MessageStatus.OK
-            )
-            return url_from_llm
-
-        except Exception as e:
-            # Any error that occurs in either LLMService or get_repository_url should be caught here
-            logger.error(e)
-            console.print(e, status=MessageStatus.ERROR)
-            sys.exit(1)
-
-
->>>>>>> b99303e (restructures rules testing files)
 # def prospector_find_twins(
 #     advisory_record: AdvisoryRecord,
 #     repository: Git,

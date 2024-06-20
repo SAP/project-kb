@@ -12,6 +12,12 @@ from stats.execution import Counter, execution_statistics
 from util.config_parser import LLMServiceConfig
 from util.lsh import build_lsh_index, decode_minhash
 
+PHASE_1 = "phase_1"
+PHASE_2 = "phase_2"
+
+MAX_COMMITS_FOR_LLM_RULES = 3
+
+
 rule_statistics = execution_statistics.sub_collection("rules")
 
 
@@ -42,16 +48,25 @@ class Rule:
         return (self.id, self.message, self.relevance)
 
 
-# LASCHA: this should take care of the phase application, prospector() should call only this function and not have to care about phases
 def apply_rules(
-    self,
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
-    rules=["ALL"],
+    rules: List[str] = [PHASE_1],
 ) -> List[Commit]:
-    enabled_rules = self.get_enabled_rules(rules)
 
-    rule_statistics.collect("active", len(enabled_rules), unit="rules")
+    phase_1_rules = get_enabled_rules(rules, phase=PHASE_1)
+    phase_2_rules = get_enabled_rules(rules, phase=PHASE_2)
+    llm_service = LLMService()
+
+    # phase_2_rules = [
+    #     rule.__setattr__("llm_service", llm_service) for rule in phase_2_rules
+    # ]
+    for rule in phase_2_rules:
+        rule.llm_service = llm_service
+
+    rule_statistics.collect(
+        "active", len(phase_1_rules) + len(phase_2_rules), unit="rules"
+    )
 
     Rule.lsh_index = build_lsh_index()
 
@@ -61,7 +76,16 @@ def apply_rules(
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")
         for candidate in candidates:
-            for rule in enabled_rules:
+            for rule in phase_1_rules:
+                if rule.apply(candidate, advisory_record):
+                    counter.increment("matches")
+                    candidate.add_match(rule.as_dict())
+            candidate.compute_relevance()
+
+        candidate = apply_ranking(candidates)
+
+        for candidate in candidates[:MAX_COMMITS_FOR_LLM_RULES]:
+            for rule in phase_2_rules:
                 if rule.apply(candidate, advisory_record):
                     counter.increment("matches")
                     candidate.add_match(rule.as_dict())
@@ -413,7 +437,7 @@ class CommitIsSecurityRelevant(Rule):
             return False
 
 
-PHASE_1: List[Rule] = [
+RULES_PHASE_1: List[Rule] = [
     VulnIdInMessage("VULN_ID_IN_MESSAGE", 64),
     # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
     CrossReferencedBug("XREF_BUG", 32),
@@ -433,20 +457,32 @@ PHASE_1: List[Rule] = [
     CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
 
-LLM_RULES: List[Rule] = [
-    CommitIsSecurityRelevant(
-        "COMMIT_IS_SECURITY_RELEVANT", 32, llm_service=LLMService()
-    )
+RULES_PHASE_2: List[Rule] = [
+    CommitIsSecurityRelevant("COMMIT_IS_SECURITY_RELEVANT", 32)
 ]
 
-# LASCHA: modify this
-# def get_enabled_rules(self, rules: List[str]) -> List[Rule]:
-#     if "ALL" in rules:
-#         return NLP_RULES
 
-#     enabled_rules = []
-#     for r in NLP_RULES:
-#         if r.id in rules:
-#             enabled_rules.append(r)
+def get_enabled_rules(rules: List[str], phase: str) -> List[Rule]:
 
-#     return enabled_rules
+    if PHASE_1 in rules:
+        rules.remove(PHASE_1)  # signify phase 1 is done
+        return RULES_PHASE_1
+
+    if PHASE_2 in rules:
+        rules.remove(PHASE_2)  # signify phase 2 is done
+        return RULES_PHASE_2
+
+    # If here, the user gave a subset of rules
+    if phase == PHASE_1:
+        enabled_rules = []
+        for r in RULES_PHASE_1:
+            if r.id in rules:
+                enabled_rules.append(r)
+        return enabled_rules
+
+    if phase == PHASE_2:
+        enabled_rules = []
+        for r in RULES_PHASE_2:
+            if r.id in rules:
+                enabled_rules.append(r)
+        return enabled_rules
