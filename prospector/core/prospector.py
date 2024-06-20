@@ -289,13 +289,14 @@ def evaluate_commits(
         commits: the list of candidate commits that rules should be applied to
         advisory: the object containing all information about the advisory
         rules: a (sub)set of rules to run
+        use_llm_rules: indication whether the user wishes to use the LLM supported rules
     Returns:
         a list of commits ranked according to their relevance score
     Raises:
         MissingMandatoryValue: if there is an error in the LLM configuration object
     """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
-        with ConsoleWriter("Candidate analysis") as console:
+        with ConsoleWriter("Candidate analysis") as _:
             if use_llm_rules:
                 rules = rules.append[PHASE_2]
 
