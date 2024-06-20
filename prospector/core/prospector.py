@@ -20,7 +20,11 @@ from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
+<<<<<<< HEAD
 from rules.rules import RULES_PHASE_1, apply_rules
+=======
+from rules.rules import apply_rules
+>>>>>>> 2c0b7be (marks working version)
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -66,10 +70,18 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
+<<<<<<< HEAD
     enabled_rules: List[str] = [rule.id for rule in RULES_PHASE_1],
     tag_commits: bool = True,
     silent: bool = False,
     use_llm_repository_url: bool = False,
+=======
+    rules: List[str] = ["PHASE_1"],
+    tag_commits: bool = True,
+    silent: bool = False,
+    use_llm_repository_url: bool = False,
+    use_llm_rules: bool = False,
+>>>>>>> 2c0b7be (marks working version)
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -232,7 +244,11 @@ def prospector(  # noqa: C901
         logger.warning("Preprocessed commits are not being sent to backend")
 
     ranked_candidates = evaluate_commits(
+<<<<<<< HEAD
         preprocessed_commits, advisory_record, enabled_rules
+=======
+        preprocessed_commits, advisory_record, rules, use_llm_rules
+>>>>>>> 2c0b7be (marks working version)
     )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
@@ -271,7 +287,12 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 def evaluate_commits(
     commits: List[Commit],
     advisory: AdvisoryRecord,
+<<<<<<< HEAD
     enabled_rules: List[str],
+=======
+    rules: List[str],
+    use_llm_rules: bool,
+>>>>>>> 2c0b7be (marks working version)
 ) -> List[Commit]:
     """This function applies rule phases. Each phase is associated with a set of rules, for example:
         - Phase 1: NLP Rules
@@ -287,8 +308,16 @@ def evaluate_commits(
         MissingMandatoryValue: if there is an error in the LLM configuration object
     """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
+<<<<<<< HEAD
         with ConsoleWriter("Candidate analysis") as _:
             ranked_commits = apply_rules(commits, advisory, enabled_rules=enabled_rules)
+=======
+        with ConsoleWriter("Candidate analysis") as console:
+            if use_llm_rules:
+                rules = ["ALL"]
+
+            ranked_commits = apply_rules(commits, advisory, rules=rules)
+>>>>>>> 2c0b7be (marks working version)
 
     return ranked_commits
 
