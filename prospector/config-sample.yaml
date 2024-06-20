@@ -31,10 +31,10 @@ redis_url: redis://redis:6379/0
 llm_service:
   type: sap # use "sap" or "third_party"
   model_name: gpt-4-turbo
-  # temperature: 0.0 # optional, default is 0.0
-  # ai_core_sk: <file_path> # needed for type: sap
+  temperature: 0.0 # optional, default is 0.0
+  ai_core_sk: <file_path> # needed for type: sap
 
-  use_llm_repository_url: True # whether to use LLM's to obtain the repository URL
+  use_llm_repository_url: False # whether to use LLM's to obtain the repository URL
 
 # Report file format: "html", "json", "console" or "all"
 # and the file name
