@@ -2,6 +2,9 @@ from typing import Any, List
 
 import pytest
 from langchain_core.language_models.llms import LLM
+from langchain_google_vertexai import ChatVertexAI
+from langchain_mistralai import ChatMistralAI
+from langchain_openai import ChatOpenAI
 from requests_cache import Optional
 
 from llm.llm_service import LLMService  # this is a singleton
@@ -61,11 +64,25 @@ class TestModel:
         assert isinstance(llm_service.model, Gemini)
 
     def test_sap_mistral_instantiation(self):
-        config = Config(
-            "sap", "mistralai--mixtral-8x7b-instruct-v01", 0.0, "example.json"
-        )
+        config = Config("sap", "mistral-large", 0.0, "example.json")
         llm_service = LLMService(config)
         assert isinstance(llm_service.model, Mistral)
+
+    def test_gpt_instantiation(self):
+        config = Config("third_party", "gpt-4", 0.0, "example.json")
+        llm_service = LLMService(config)
+        assert isinstance(llm_service.model, ChatOpenAI)
+
+    # Google throws an error on creation, when no account is found
+    # def test_gemini_instantiation(self):
+    #     config = Config("third_party", "gemini-pro", 0.0, "example.json")
+    #     llm_service = LLMService(config)
+    #     assert isinstance(llm_service.model, ChatVertexAI)
+
+    def test_mistral_instantiation(self):
+        config = Config("third_party", "mistral-large-latest", 0.0, "example.json")
+        llm_service = LLMService(config)
+        assert isinstance(llm_service.model, ChatMistralAI)
 
     def test_singleton_instance_creation(self):
         """A second instantiation should return the exisiting instance."""

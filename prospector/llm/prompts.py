@@ -1,7 +1,7 @@
 from langchain.prompts import FewShotPromptTemplate, PromptTemplate
 
-# example output for few-shot prompting
-examples_without_num = [
+# Get Repository URL, few-shot prompting examples
+examples_data = [
     {
         "cve_description": "Apache Olingo versions 4.0.0 to 4.7.0 provide the AsyncRequestWrapperImpl class which reads a URL from the Location header, and then sends a GET or DELETE request to this URL. It may allow to implement a SSRF attack. If an attacker tricks a client to connect to a malicious server, the server can make the client call any URL including internal resources which are not directly accessible by the attacker.",
         "cve_references": "https://www.zerodayinitiative.com/advisories/ZDI-24-196/",
@@ -20,7 +20,7 @@ examples_without_num = [
 ]
 
 # Formatter for the few-shot examples without CVE numbers
-examples_prompt_without_num = PromptTemplate(
+examples_formatted = PromptTemplate(
     input_variables=["cve_references", "result"],
     template="""<description> {cve_description} </description>
 <references> {cve_references}</references>
@@ -28,12 +28,12 @@ examples_prompt_without_num = PromptTemplate(
 <output> {result} </output>""",
 )
 
-best_guess = FewShotPromptTemplate(
+prompt_best_guess = FewShotPromptTemplate(
     prefix="""You will be provided with the ID, description and references of a vulnerability advisory (CVE). Return nothing but the URL of the repository the given CVE is concerned with.'.
 
 Here are a few examples delimited with XML tags:""",
-    examples=examples_without_num,
-    example_prompt=examples_prompt_without_num,
+    examples=examples_data,
+    example_prompt=examples_formatted,
     suffix="""Here is the CVE information:
 <description> {description} </description>
 <references> {references} </references>
@@ -41,5 +41,5 @@ Here are a few examples delimited with XML tags:""",
 If you cannot find the URL, return your best guess of what the repository URL could be. Use any hints (eg. the mention of GitHub or GitLab) in the CVE description and references. Return nothing but the URL.
 """,
     input_variables=["description", "references"],
-    metadata={"name": "best_guess"},
+    metadata={"name": "prompt_best_guess"},
 )
