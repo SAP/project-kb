@@ -48,7 +48,6 @@ class Rule:
         return (self.id, self.message, self.relevance)
 
 
-# LASCHA: this should take care of the phase application, prospector() should call only this function and not have to care about phases
 def apply_rules(
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
