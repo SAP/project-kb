@@ -69,7 +69,7 @@ def main(argv):  # noqa: C901
                 return
 
             # If at least one 'use_llm' option is set, then create an LLMService singleton
-            if any([True for x in dir(config.llm_service) if x.startswith("use_llm")]):
+            if any([config.llm_service.use_llm_repository_url]):
                 try:
                     LLMService(config.llm_service)
                 except Exception as e:
