@@ -58,12 +58,16 @@ def apply_rules(
     phase_1_rules = get_enabled_rules(rules, phase=PHASE_1)
     phase_2_rules = get_enabled_rules(rules, phase=PHASE_2)
     llm_service = LLMService()
-    phase_2_rules = [
-        rule.__setattr__("llm_service", llm_service) for rule in phase_2_rules
-    ]
 
-    rule_statistics.collect("active", len(phase_1_rules), unit="rules")
-    rule_statistics.collect("active", len(phase_2_rules), unit="rules")
+    # phase_2_rules = [
+    #     rule.__setattr__("llm_service", llm_service) for rule in phase_2_rules
+    # ]
+    for rule in phase_2_rules:
+        rule.llm_service = llm_service
+
+    rule_statistics.collect(
+        "active", len(phase_1_rules) + len(phase_2_rules), unit="rules"
+    )
 
     Rule.lsh_index = build_lsh_index()
 
