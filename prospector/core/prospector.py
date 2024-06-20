@@ -48,6 +48,9 @@ USE_BACKEND_ALWAYS = "always"
 USE_BACKEND_OPTIONAL = "optional"
 USE_BACKEND_NEVER = "never"
 
+PHASE_1 = "phase_1"  # distinguish between different rule phases
+PHASE_2 = "phase_2"
+
 
 core_statistics = execution_statistics.sub_collection("core")
 
@@ -314,7 +317,7 @@ def evaluate_commits(
 =======
         with ConsoleWriter("Candidate analysis") as console:
             if use_llm_rules:
-                rules = ["ALL"]
+                rules = rules.append[PHASE_2]
 
             ranked_commits = apply_rules(commits, advisory, rules=rules)
 >>>>>>> 2c0b7be (marks working version)
