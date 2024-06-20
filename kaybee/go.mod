@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
-	github.com/gin-gonic/gin v1.7.1
+	github.com/gin-gonic/gin v1.9.1
 	github.com/go-git/go-git/v5 v5.3.0
 	github.com/gookit/color v1.4.2
 	github.com/magiconair/properties v1.8.5
@@ -17,6 +17,6 @@ require (
 	github.com/schollz/progressbar/v2 v2.15.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.3
 	gopkg.in/yaml.v2 v2.4.0
 )
