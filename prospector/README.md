@@ -213,9 +213,14 @@ done in partial fulfillment of the requirements for the degree of Master of
 Science in Data Science & Entrepreneurship at the Jheronimus Academy of Data
 Science during a graduation internship at SAP.
 
+The source code of FixFinder can be obtained by checking out the tag [DAAN_HOMMERSOM_THESIS](https://github.com/SAP/project-kb/releases/tag/DAAN_HOMMERSOM_THESIS).
+
 The main difference between FixFinder and Prospector (which has been implemented from scratch)
 is that the former takes a definite data-driven approach and trains a ML model to perform the ranking,
-whereas the latter applies hand-crafted rules to assign a relevance score to each candidate commit.
+whereas the latter is based on hand-crafted rules to assign a relevance score to each candidate commit.
+
+Recent versions of Prospector (2024) also use AI/ML; still that is done through suitable rules
+that are based on the outcome of suitable requests to LLMs.
 
 The paper that describes FixFinder can be cited as follows:
 
