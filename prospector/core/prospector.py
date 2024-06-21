@@ -9,12 +9,11 @@ from typing import DefaultDict, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
-from omegaconf import MissingMandatoryValue
 from tqdm import tqdm
 
 from cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
-from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
+from datamodel.commit import Commit, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
@@ -28,7 +27,6 @@ from stats.execution import (
     execution_statistics,
     measure_execution_time,
 )
-from util.config_parser import LLMServiceConfig
 
 # Average distance is -202 days (with commit being authored before the vulnerability usually)
 # Standard deviation is 422 days
@@ -45,7 +43,6 @@ DEFAULT_BACKEND = "http://localhost:8000"
 USE_BACKEND_ALWAYS = "always"
 USE_BACKEND_OPTIONAL = "optional"
 USE_BACKEND_NEVER = "never"
-MAX_COMMITS_LLM_RULES = 3  # the maximum number of commits to apply LLM rules to
 
 
 core_statistics = execution_statistics.sub_collection("core")
