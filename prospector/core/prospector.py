@@ -72,7 +72,7 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    rules: List[str] = ["PHASE_1"],
+    rules: List[str] = [PHASE_1],
     tag_commits: bool = True,
     silent: bool = False,
     use_llm_repository_url: bool = False,
@@ -298,7 +298,7 @@ def evaluate_commits(
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
             if use_llm_rules:
-                rules = rules.append[PHASE_2]
+                rules.append(PHASE_2)
 
             ranked_commits = apply_rules(commits, advisory, rules=rules)
 
