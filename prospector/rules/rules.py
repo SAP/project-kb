@@ -9,7 +9,6 @@ from datamodel.commit import Commit, apply_ranking
 from llm.llm_service import LLMService
 from rules.helpers import extract_security_keywords
 from stats.execution import Counter, execution_statistics
-from util.config_parser import LLMServiceConfig
 from util.lsh import build_lsh_index, decode_minhash
 
 PHASE_1 = "phase_1"
@@ -54,15 +53,16 @@ def apply_rules(
     rules: List[str] = [PHASE_1],
 ) -> List[Commit]:
 
+    Rule.lsh_index = build_lsh_index()
+    if PHASE_2 in rules:
+        Rule.llm_service = LLMService()
+
     phase_1_rules = get_enabled_rules(rules)
     phase_2_rules = get_enabled_rules(rules)
 
     rule_statistics.collect(
         "active", len(phase_1_rules) + len(phase_2_rules), unit="rules"
     )
-
-    Rule.lsh_index = build_lsh_index()
-    Rule.llm_service = LLMService()
 
     for candidate in candidates:
         Rule.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
@@ -468,3 +468,5 @@ def get_enabled_rules(rules: List[str]) -> List[Rule]:
     if PHASE_2 in rules:
         rules.remove(PHASE_2)  # signify phase 2 is done
         return RULES_PHASE_2
+
+    return []
