@@ -52,6 +52,13 @@ def reset_singletons():
     Singleton._instances = {}
 
 
+@pytest.fixture(autouse=True)
+def mock_environment_variables():
+    mp = pytest.MonkeyPatch()
+    mp.setenv("GPT_4_URL", "https://deployment.url.com")
+    mp.setenv("GEMINI_1.0_PRO_URL", "https://deployment.url.com")
+
+
 class TestModel:
     def test_sap_gpt_instantiation(self):
         config = Config("sap", "gpt-4", 0.0, "example.json")

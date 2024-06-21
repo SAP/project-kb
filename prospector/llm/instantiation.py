@@ -1,8 +1,9 @@
 import json
+import os
 from typing import Dict
 
 import requests
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 from langchain_core.language_models.llms import LLM
 from langchain_google_vertexai import ChatVertexAI
 from langchain_mistralai import ChatMistralAI
@@ -12,7 +13,7 @@ from llm.models.gemini import Gemini
 from llm.models.mistral import Mistral
 from llm.models.openai import OpenAI
 
-env: Dict[str, str | None] = dotenv_values()
+load_dotenv()
 
 
 SAP_MAPPING = {
@@ -62,7 +63,7 @@ def create_model_instance(
         model_name: str, temperature: float, ai_core_sk_filepath: str
     ) -> LLM:
 
-        deployment_url = env.get(model_name.upper().replace("-", "_") + "_URL", None)
+        deployment_url = os.getenv(model_name.upper().replace("-", "_") + "_URL", None)
         if deployment_url is None:
             raise ValueError(
                 f"Deployment URL ({model_name.upper().replace('-', '_')}_URL) for {model_name} is not set."
@@ -88,15 +89,17 @@ def create_model_instance(
 
     def create_third_party_provider(model_name: str, temperature: float) -> LLM:
         model_class = THIRD_PARTY_MAPPING.get(model_name, None)[0]
-
         if model_class is None:
             raise ValueError(f"Model '{model_name}' is not available.")
 
         api_key_variable = THIRD_PARTY_MAPPING.get(model_name, None)[1]
+        api_key = os.getenv(api_key_variable)
+        if api_key is None:
+            raise ValueError(f"API key for {model_name} is not set.")
 
         model = model_class(
             model=model_name,
-            api_key=api_key_variable,
+            api_key=api_key,
             temperature=temperature,
         )
 
