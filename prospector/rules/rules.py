@@ -23,12 +23,12 @@ rule_statistics = execution_statistics.sub_collection("rules")
 
 class Rule:
     lsh_index = None
+    llm_service: LLMService = None
 
     def __init__(self, id: str, relevance: int):
         self.id = id
         self.relevance = relevance
         self.message = ""
-        self.llm_service: LLMService = None
 
     @abstractmethod
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord) -> bool:
@@ -54,21 +54,15 @@ def apply_rules(
     rules: List[str] = [PHASE_1],
 ) -> List[Commit]:
 
-    phase_1_rules = get_enabled_rules(rules, phase=PHASE_1)
-    phase_2_rules = get_enabled_rules(rules, phase=PHASE_2)
-    llm_service = LLMService()
-
-    # phase_2_rules = [
-    #     rule.__setattr__("llm_service", llm_service) for rule in phase_2_rules
-    # ]
-    for rule in phase_2_rules:
-        rule.llm_service = llm_service
+    phase_1_rules = get_enabled_rules(rules)
+    phase_2_rules = get_enabled_rules(rules)
 
     rule_statistics.collect(
         "active", len(phase_1_rules) + len(phase_2_rules), unit="rules"
     )
 
     Rule.lsh_index = build_lsh_index()
+    Rule.llm_service = LLMService()
 
     for candidate in candidates:
         Rule.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
@@ -82,11 +76,11 @@ def apply_rules(
                     candidate.add_match(rule.as_dict())
             candidate.compute_relevance()
 
-        candidate = apply_ranking(candidates)
+        candidates = apply_ranking(candidates)
 
         for candidate in candidates[:MAX_COMMITS_FOR_LLM_RULES]:
             for rule in phase_2_rules:
-                if rule.apply(candidate, advisory_record):
+                if rule.apply(candidate):
                     counter.increment("matches")
                     candidate.add_match(rule.as_dict())
             candidate.compute_relevance()
@@ -423,8 +417,10 @@ class CommitIsSecurityRelevant(Rule):
         self,
         candidate: Commit,
     ) -> bool:
+        # temperature saved in LLMService's model
+        temperature = self.llm_service.model._identifying_params.get("temperature")
         data = {
-            "temperature": 0.0,  # get this from LLMService
+            "temperature": temperature,
             "diff": "\n".join(candidate.diff),
         }
 
@@ -432,6 +428,7 @@ class CommitIsSecurityRelevant(Rule):
 
         prediction = response.json()["prediction"]
         if prediction == "1":
+            self.message = "The commit was deemed security relevant by the commit classification service."
             return True
         else:
             return False
@@ -462,7 +459,7 @@ RULES_PHASE_2: List[Rule] = [
 ]
 
 
-def get_enabled_rules(rules: List[str], phase: str) -> List[Rule]:
+def get_enabled_rules(rules: List[str]) -> List[Rule]:
 
     if PHASE_1 in rules:
         rules.remove(PHASE_1)  # signify phase 1 is done
@@ -471,18 +468,3 @@ def get_enabled_rules(rules: List[str], phase: str) -> List[Rule]:
     if PHASE_2 in rules:
         rules.remove(PHASE_2)  # signify phase 2 is done
         return RULES_PHASE_2
-
-    # If here, the user gave a subset of rules
-    if phase == PHASE_1:
-        enabled_rules = []
-        for r in RULES_PHASE_1:
-            if r.id in rules:
-                enabled_rules.append(r)
-        return enabled_rules
-
-    if phase == PHASE_2:
-        enabled_rules = []
-        for r in RULES_PHASE_2:
-            if r.id in rules:
-                enabled_rules.append(r)
-        return enabled_rules
