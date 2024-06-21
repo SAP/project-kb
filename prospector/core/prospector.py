@@ -163,9 +163,7 @@ def prospector(  # noqa: C901
     if len(candidates) > limit_candidates:
         logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
 
-        ConsoleWriter.print(
-            f"Candidates limit exceeded: {len(candidates)}.",
-        )
+        ConsoleWriter.print(f"Candidates limitlimit exceeded: {len(candidates)}.")
         return None, len(candidates)
 
     with ExecutionTimer(

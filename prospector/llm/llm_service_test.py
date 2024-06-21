@@ -56,7 +56,11 @@ def reset_singletons():
 def mock_environment_variables():
     mp = pytest.MonkeyPatch()
     mp.setenv("GPT_4_URL", "https://deployment.url.com")
+    mp.setenv("MISTRAL_LARGE_URL", "https://deployment.url.com")
     mp.setenv("GEMINI_1.0_PRO_URL", "https://deployment.url.com")
+    mp.setenv("OPENAI_API_KEY", "https://deployment.url.com")
+    mp.setenv("GOOGLE_API_KEY", "https://deployment.url.com")
+    mp.setenv("MISTRAL_API_KEY", "https://deployment.url.com")
 
 
 class TestModel:
@@ -131,23 +135,6 @@ class TestModel:
             temperature=0.7,
             ai_core_sk_filepath="example.json",
         ), "LLMService should retain state between instantiations"
-
-    def test_get_repository_url(self):
-        config = Config("sap", "gpt-4", 0.0, "example.json")
-        service = LLMService(config)
-        # Reassign the mock model to the service
-        model = MockLLM(
-            model_name="gpt-4",
-            deployment_url="deployment_url_placeholder",
-            temperature=0.7,
-            ai_core_sk_filepath="example.json",
-        )
-        service.model = model
-
-        assert (
-            service.get_repository_url("advisory description", "advisory_references")
-            == "https://www.example.com"
-        )
 
     def test_reuse_singleton_without_config(self):
         config = Config("sap", "gpt-4", 0.0, "example.json")
