@@ -4,9 +4,6 @@
 #
 #    pip-compile --no-annotate --strip-extras
 #
-# --extra-index-url https://int.repositories.cloud.sap/artifactory/api/pypi/deploy-releases-pypi/simple
-# --extra-index-url https://int.repositories.cloud.sap/artifactory/api/pypi/proxy-deploy-releases-hyperspace-pypi/simple
-# --trusted-host int.repositories.cloud.sap
 
 aiohttp==3.9.5
 aiosignal==1.3.1
