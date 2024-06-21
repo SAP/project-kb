@@ -21,7 +21,7 @@ from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.rules import apply_rules
+from rules.rules import PHASE_1, PHASE_2, apply_rules
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -46,9 +46,6 @@ USE_BACKEND_ALWAYS = "always"
 USE_BACKEND_OPTIONAL = "optional"
 USE_BACKEND_NEVER = "never"
 MAX_COMMITS_LLM_RULES = 3  # the maximum number of commits to apply LLM rules to
-
-PHASE_1 = "phase_1"  # distinguish between different rule phases
-PHASE_2 = "phase_2"
 
 
 core_statistics = execution_statistics.sub_collection("core")
