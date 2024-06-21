@@ -38,7 +38,7 @@ Here are a few examples delimited with XML tags:""",
 <description> {description} </description>
 <references> {references} </references>
 
-If you cannot find the URL, return your best guess of what the repository URL could be. Use any hints (eg. the mention of GitHub or GitLab) in the CVE description and references. Return nothing but the URL.
+If you cannot find the URL, return your best guess of what the repository URL could be. Use any hints (eg. the mention of GitHub or GitLab) in the CVE description and references. Do not return the delimiters. Do not return delimiters. Return nothing but the URL.
 """,
     input_variables=["description", "references"],
     metadata={"name": "prompt_best_guess"},
