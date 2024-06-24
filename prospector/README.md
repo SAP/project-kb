@@ -57,11 +57,11 @@ To quickly set up Prospector, follow these steps. This will run Prospector in it
 
 ### 🤖 LLM Support
 
-To use Prospector with LLM support, you must specify required parameters for API access to the LLM. These parameters can vary depending on your choice of provider, please follow what fits your needs:
+To use Prospector with LLM support, you simply set required parameters for the API access to the LLM in *config.yaml*. These parameters can vary depending on your choice of provider, please follow what fits your needs (drop-downs below). If you do not want to use LLM support, keep the `llm_service` block in your *config.yaml* file commented out.
 
 <details><summary><b>Use SAP AI CORE SDK</b></summary>
 
-You will need the following parameters in `config.yaml`:
+You will need the following parameters in *config.yaml*:
 
 ```yaml
 llm_service:
@@ -81,7 +81,7 @@ For example, for gpt-4's deployment URL, set an environment variable called `GPT
 
 The `temperature` parameter is optional. The default value is 0.0, but you can change it to something else.
 
-You also need to point the `ai_core_sk` parameter to a file contianing the secret keys. This file is available in Passvault.
+You also need to point the `ai_core_sk` parameter to a file contianing the secret keys.
 
 </details>
 
@@ -89,7 +89,7 @@ You also need to point the `ai_core_sk` parameter to a file contianing the secre
 
 Implemented third party providers are **OpenAI**, **Google** and **Mistral**.
 
-1. You will need the following parameters in `config.yaml`:
+1. You will need the following parameters in *config.yaml*:
     ```yaml
     llm_service:
         type: third_party
@@ -110,10 +110,9 @@ Implemented third party providers are **OpenAI**, **Google** and **Mistral**.
 
 ####
 
-You can set the `use_llm_<...>` parameters in `config.yaml` for fine-grained control over LLM support in various aspects of Prospector's phases. Each `use_llm_<...>` parameter allows you to enable or disable LLM support for a specific aspect:
+You can set the `use_llm_<...>` parameters in *config.yaml* for fine-grained control over LLM support in various aspects of Prospector's phases. Each `use_llm_<...>` parameter allows you to enable or disable LLM support for a specific aspect:
 
-- **`use_llm_repository_url`**: Choose whether LLMs should be used to obtain the repository URL. When not using this option, please provide `--repository` as a command line argument.
-- **`use_llm_commit_rule`**: Choose whether an additional rule should be applied after the other rules, which checks if a commit is security relevant. This rule invokes an LLM-powered service, which takes the diff of a commit and returns whether it is security-relevant or not. Whichever model and temperature is specified in `config.yaml`, will also be used in this rule.
+- **`use_llm_repository_url`**: Choose whether LLMs should be used to obtain the repository URL. When using this option, you can omit the `--repository` flag as a command line argument and run prospector with `./run_prospector.sh CVE-2020-1925`.
 
 
 ## 👩‍💻 Development Setup
@@ -143,7 +142,7 @@ Afterwards, you will just have to set the environment variables using the `.env`
 set -a; source .env; set +a
 ```
 
-You can configure prospector from CLI or from the `config.yaml` file. The (recommended) API Keys for Github and the NVD can be configured from the `.env` file (which must then be sourced with `set -a; source .env; set +a`)
+You can configure prospector from CLI or from the *config.yaml* file. The (recommended) API Keys for Github and the NVD can be configured from the `.env` file (which must then be sourced with `set -a; source .env; set +a`)
 
 If at any time you wish to use a different version of the python interpreter, beware that the `requirements.txt` file contains the exact versioning for `python 3.10.6`.
 
