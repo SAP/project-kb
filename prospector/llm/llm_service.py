@@ -4,8 +4,10 @@ import validators
 from langchain_core.language_models.llms import LLM
 from langchain_core.output_parsers import StrOutputParser
 
+from datamodel.commit import Commit
 from llm.instantiation import create_model_instance
-from llm.prompts import prompt_best_guess
+from llm.prompts.classify_commit import zero_shot as cc_zero_shot
+from llm.prompts.get_repository_url import prompt_best_guess
 from log.logger import logger
 from util.config_parser import LLMServiceConfig
 from util.singleton import Singleton
@@ -74,3 +76,31 @@ class LLMService(metaclass=Singleton):
             raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
 
         return url
+
+    def classify_commit(self, diff: str) -> bool:
+        """Ask an LLM whether a commit is security relevant or not. The response will be either True or False.
+
+        Args:
+            candidate (Commit): The commit to input into the LLM
+
+        Returns:
+            True if the commit is deemed security relevant, False if not.
+
+        Raises:
+            ValueError if there is an error in the model invocation or the response was not valid.
+        """
+        try:
+            chain = cc_zero_shot | self.model | StrOutputParser()
+
+            is_relevant = chain.invoke({"diff": diff})
+            logger.info(f"LLM returned is_relevant={is_relevant}")
+
+        except Exception as e:
+            raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
+
+        if is_relevant == "True":
+            return True
+        elif is_relevant == "False":
+            return False
+        else:
+            raise RuntimeError(f"The model returned an invalid response: {is_relevant}")
