@@ -5,18 +5,7 @@ from requests_cache import Optional
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from rules.rules import (
-    ChangesRelevantCode,
-    ChangesRelevantFiles,
-    CommitMentionedInReference,
-    CrossReferencedBug,
-    CrossReferencedGh,
-    GHSecurityAdvInMessage,
-    ReferencesGhIssue,
-    VulnIdInLinkedIssue,
-    VulnIdInMessage,
-    apply_rules,
-)
+from rules.rules import apply_rules
 from util.lsh import get_encoded_minhash
 
 # from datamodel.commit_features import CommitWithFeatures

@@ -58,10 +58,7 @@ def main(argv):  # noqa: C901
 
         # Whether to use the LLMService
         if config.llm_service:
-            if (
-                not config.repository
-                and not config.llm_service.use_llm_repository_url
-            ):
+            if not config.repository and not config.llm_service.use_llm_repository_url:
                 logger.error(
                     "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
                 )
@@ -71,7 +68,7 @@ def main(argv):  # noqa: C901
                 )
                 return
 
-            # Create the LLMService singleton for later use
+            # Create the LLMService Singleton for later use
             try:
                 LLMService(config.llm_service)
             except Exception as e:
@@ -83,9 +80,7 @@ def main(argv):  # noqa: C901
                 return
 
         config.pub_date = (
-            config.pub_date + "T00:00:00Z"
-            if config.pub_date is not None
-            else ""
+            config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
         )
 
         logger.debug("Using the following configuration:")
@@ -109,7 +104,7 @@ def main(argv):  # noqa: C901
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
         use_llm_repository_url=config.llm_service.use_llm_repository_url,
-        use_llm_rules=config.llm_service.use_llm_rules,
+        enabled_rules=config.enabled_rules,
     )
 
     if config.preprocess_only:
