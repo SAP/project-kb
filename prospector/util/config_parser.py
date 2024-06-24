@@ -266,6 +266,9 @@ def get_configuration(argv):
         sys.exit(
             "No configuration file found, or error in configuration file. Check logs."
         )
+    # --repository in CL overrides config.yaml settings for LLM usage
+    if args.repository:
+        conf.llm_service.use_llm_repository_url = False
     try:
         config = Config(
             vuln_id=args.vuln_id,
