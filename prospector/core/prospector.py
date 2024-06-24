@@ -20,7 +20,7 @@ from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.rules import PHASE_1, PHASE_2, apply_rules
+from rules.rules import apply_rules
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -66,11 +66,10 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    rules: List[str] = [PHASE_1],
+    enabled_rules: List[str] = [],
     tag_commits: bool = True,
     silent: bool = False,
     use_llm_repository_url: bool = False,
-    use_llm_rules: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -233,7 +232,7 @@ def prospector(  # noqa: C901
         logger.warning("Preprocessed commits are not being sent to backend")
 
     ranked_candidates = evaluate_commits(
-        preprocessed_commits, advisory_record, rules, use_llm_rules
+        preprocessed_commits, advisory_record, enabled_rules
     )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
@@ -272,8 +271,7 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 def evaluate_commits(
     commits: List[Commit],
     advisory: AdvisoryRecord,
-    rules: List[str],
-    use_llm_rules: bool,
+    enabled_rules: List[str],
 ) -> List[Commit]:
     """This function applies rule phases. Each phase is associated with a set of rules, for example:
         - Phase 1: NLP Rules
@@ -283,7 +281,6 @@ def evaluate_commits(
         commits: the list of candidate commits that rules should be applied to
         advisory: the object containing all information about the advisory
         rules: a (sub)set of rules to run
-        use_llm_rules: indication whether the user wishes to use the LLM supported rules
     Returns:
         a list of commits ranked according to their relevance score
     Raises:
@@ -291,10 +288,7 @@ def evaluate_commits(
     """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
-            if use_llm_rules:
-                rules.append(PHASE_2)
-
-            ranked_commits = apply_rules(commits, advisory, rules=rules)
+            ranked_commits = apply_rules(commits, advisory, enabled_rules=enabled_rules)
 
     return ranked_commits
 

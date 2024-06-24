@@ -11,10 +11,7 @@ from rules.helpers import extract_security_keywords
 from stats.execution import Counter, execution_statistics
 from util.lsh import build_lsh_index, decode_minhash
 
-PHASE_1 = "phase_1"
-PHASE_2 = "phase_2"
-
-MAX_COMMITS_FOR_LLM_RULES = 3
+MAX_COMMITS_FOR_LLM_RULES = 1
 
 
 rule_statistics = execution_statistics.sub_collection("rules")
@@ -46,19 +43,24 @@ class Rule:
     def get_rule_as_tuple(self) -> Tuple[str, str, int]:
         return (self.id, self.message, self.relevance)
 
+    def get_id(self):
+        return self.id
+
 
 def apply_rules(
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
-    rules: List[str] = [PHASE_1],
+    enabled_rules: List[str] = [],
 ) -> List[Commit]:
+    """Applies the selected set of rules and returns the ranked list of commits (uses apply_ranking())."""
 
     Rule.lsh_index = build_lsh_index()
-    if PHASE_2 in rules:
-        Rule.llm_service = LLMService()
 
-    phase_1_rules = get_enabled_rules(rules)
-    phase_2_rules = get_enabled_rules(rules)
+    phase_1_rules = [rule for rule in RULES_PHASE_1 if rule.get_id() in enabled_rules]
+    phase_2_rules = [rule for rule in RULES_PHASE_2 if rule.get_id() in enabled_rules]
+
+    if phase_2_rules:
+        Rule.llm_service = LLMService()
 
     rule_statistics.collect(
         "active", len(phase_1_rules) + len(phase_2_rules), unit="rules"
@@ -457,16 +459,3 @@ RULES_PHASE_1: List[Rule] = [
 RULES_PHASE_2: List[Rule] = [
     CommitIsSecurityRelevant("COMMIT_IS_SECURITY_RELEVANT", 32)
 ]
-
-
-def get_enabled_rules(rules: List[str]) -> List[Rule]:
-
-    if PHASE_1 in rules:
-        rules.remove(PHASE_1)  # signify phase 1 is done
-        return RULES_PHASE_1
-
-    if PHASE_2 in rules:
-        rules.remove(PHASE_2)  # signify phase 2 is done
-        return RULES_PHASE_2
-
-    return []

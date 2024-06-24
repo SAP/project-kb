@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from dataclasses import MISSING, dataclass
-from typing import Optional
+from typing import List, Optional
 
 from omegaconf import OmegaConf
 from omegaconf.errors import (
@@ -183,7 +183,6 @@ class LLMServiceConfig:
     model_name: str
     ai_core_sk: str
     use_llm_repository_url: bool
-    use_llm_rules: bool
     temperature: float = 0.0
 
 
@@ -200,6 +199,7 @@ class ConfigSchema:
     report: ReportConfig = MISSING
     log_level: str = MISSING
     git_cache: str = MISSING
+    enabled_rules: List[str] = MISSING
     nvd_token: Optional[str] = None
     database: DatabaseConfig = DatabaseConfig(
         user="postgres",
@@ -237,6 +237,7 @@ class Config:
         ping: bool,
         log_level: str,
         git_cache: str,
+        enabled_rules: List[str],
         ignore_refs: bool,
         llm_service: LLMServiceConfig,
     ):
@@ -261,6 +262,7 @@ class Config:
         self.ping = ping
         self.log_level = log_level
         self.git_cache = git_cache
+        self.enabled_rules = enabled_rules
         self.ignore_refs = ignore_refs
 
 
@@ -296,6 +298,7 @@ def get_configuration(argv):
             report_filename=args.report_filename or conf.report.name,
             ping=args.ping,
             git_cache=conf.git_cache,
+            enabled_rules=conf.enabled_rules,
             log_level=args.log_level or conf.log_level,
             ignore_refs=args.ignore_refs,
         )
