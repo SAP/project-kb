@@ -28,24 +28,6 @@ class Config:
         self.ai_core_sk = ai_core_sk
 
 
-test_vuln_id = "CVE-2024-32480"
-
-
-# Mock a SAP LLM
-class MockLLM(LLM):
-    def _call(
-        self, prompt: str, stop: Optional[List[str]] = None, **kwargs: Any
-    ) -> str:
-
-        url = "https://www.example.com"
-
-        return url
-
-    @property
-    def _llm_type(self) -> str:
-        return "custom"
-
-
 @pytest.fixture(autouse=True)
 def reset_singletons():
     # Clean up singleton instances after each test
