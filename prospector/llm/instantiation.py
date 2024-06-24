@@ -30,7 +30,10 @@ SAP_MAPPING = {
 
 
 THIRD_PARTY_MAPPING = {
+    "gpt-4-turbo": (ChatOpenAI, "OPENAI_API_KEY"),
+    "gpt-4o": (ChatOpenAI, "OPENAI_API_KEY"),
     "gpt-4": (ChatOpenAI, "OPENAI_API_KEY"),
+    "gpt-3.5-turbo-0125": (ChatOpenAI, "OPENAI_API_KEY"),
     "gpt-3.5-turbo": (ChatOpenAI, "OPENAI_API_KEY"),
     "gemini-pro": (ChatVertexAI, "GOOGLE_API_KEY"),
     "mistral-large-latest": (ChatMistralAI, "MISTRAL_API_KEY"),
