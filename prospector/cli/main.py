@@ -68,17 +68,16 @@ def main(argv):  # noqa: C901
                 )
                 return
 
-            # If at least one 'use_llm' option is set, then create an LLMService singleton
-            if any([config.llm_service.use_llm_repository_url]):
-                try:
-                    LLMService(config.llm_service)
-                except Exception as e:
-                    logger.error(f"Problem with LLMService instantiation: {e}")
-                    console.print(
-                        "LLMService could not be created. Check logs.",
-                        status=MessageStatus.ERROR,
-                    )
-                    return
+            # Create the LLMService singleton for later use
+            try:
+                LLMService(config.llm_service)
+            except Exception as e:
+                logger.error(f"Problem with LLMService instantiation: {e}")
+                console.print(
+                    "LLMService could not be created. Check logs.",
+                    status=MessageStatus.ERROR,
+                )
+                return
 
         config.pub_date = (
             config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
