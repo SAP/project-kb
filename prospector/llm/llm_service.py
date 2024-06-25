@@ -77,7 +77,9 @@ class LLMService(metaclass=Singleton):
 
         return url
 
-    def classify_commit(self, diff: str) -> bool:
+    def classify_commit(
+        self, diff: str, repository_name: str, commit_message: str
+    ) -> bool:
         """Ask an LLM whether a commit is security relevant or not. The response will be either True or False.
 
         Args:
@@ -92,7 +94,13 @@ class LLMService(metaclass=Singleton):
         try:
             chain = cc_zero_shot | self.model | StrOutputParser()
 
-            is_relevant = chain.invoke({"diff": diff})
+            is_relevant = chain.invoke(
+                {
+                    "diff": diff,
+                    "repository_name": repository_name,
+                    "commit_message": commit_message,
+                }
+            )
             logger.info(f"LLM returned is_relevant={is_relevant}")
 
         except Exception as e:
