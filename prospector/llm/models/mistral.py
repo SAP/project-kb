@@ -41,6 +41,7 @@ class Mistral(LLM):
 
         try:
             response = requests.post(endpoint, headers=headers, json=data)
+            response.raise_for_status()
             return self.parse(response.json())
         except requests.exceptions.HTTPError as http_error:
             logger.error(

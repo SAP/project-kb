@@ -20,7 +20,7 @@ from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.rules import apply_rules
+from rules.rules import RULES_PHASE_1, apply_rules
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -66,7 +66,7 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    enabled_rules: List[str] = [],
+    enabled_rules: List[str] = [rule.id for rule in RULES_PHASE_1],
     tag_commits: bool = True,
     silent: bool = False,
     use_llm_repository_url: bool = False,
