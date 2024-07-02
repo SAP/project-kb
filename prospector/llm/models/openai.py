@@ -30,7 +30,8 @@ class OpenAI(LLM):
     def _call(
         self, prompt: str, stop: Optional[List[str]] = None, **kwargs: Any
     ) -> str:
-        endpoint = f"{self.deployment_url}/chat/completions?api-version=2023-05-15"
+        # endpoint = f"{self.deployment_url}/chat/completions?api-version=2023-05-15"
+        endpoint = f"{self.deployment_url}/chat/cpletions?api-version=2023-05-15"
         headers = instantiation.get_headers(self.ai_core_sk_filepath)
         data = {
             "messages": [
