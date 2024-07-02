@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from dataclasses import MISSING, dataclass
-from typing import Optional
+from typing import List, Optional
 
 from omegaconf import OmegaConf
 from omegaconf.errors import (
@@ -181,6 +181,8 @@ class ReportConfig:
 class LLMServiceConfig:
     type: str
     model_name: str
+    ai_core_sk: str
+    use_llm_repository_url: bool
     temperature: float = 0.0
 
 
@@ -194,13 +196,17 @@ class ConfigSchema:
     use_nvd: bool = MISSING
     use_backend: str = MISSING
     backend: str = MISSING
-    use_llm_repository_url: bool = MISSING
     report: ReportConfig = MISSING
     log_level: str = MISSING
     git_cache: str = MISSING
+    enabled_rules: List[str] = MISSING
     nvd_token: Optional[str] = None
     database: DatabaseConfig = DatabaseConfig(
-        user="postgres", password="example", host="db", port=5432, dbname="postgres"
+        user="postgres",
+        password="example",
+        host="db",
+        port=5432,
+        dbname="postgres",
     )
     llm_service: Optional[LLMServiceConfig] = None
     github_token: Optional[str] = None
@@ -226,18 +232,17 @@ class Config:
         fetch_references: bool,
         use_backend: str,
         backend: str,
-        use_llm_repository_url: bool,
         report: ReportConfig,
         report_filename: str,
         ping: bool,
         log_level: str,
         git_cache: str,
+        enabled_rules: List[str],
         ignore_refs: bool,
         llm_service: LLMServiceConfig,
     ):
         self.vuln_id = vuln_id
         self.repository = repository
-        self.use_llm_repository_url = use_llm_repository_url
         self.llm_service = llm_service
         self.preprocess_only = preprocess_only
         self.pub_date = pub_date
@@ -257,6 +262,7 @@ class Config:
         self.ping = ping
         self.log_level = log_level
         self.git_cache = git_cache
+        self.enabled_rules = enabled_rules
         self.ignore_refs = ignore_refs
 
 
@@ -267,11 +273,13 @@ def get_configuration(argv):
         sys.exit(
             "No configuration file found, or error in configuration file. Check logs."
         )
+    # --repository in CL overrides config.yaml settings for LLM usage
+    if args.repository:
+        conf.llm_service.use_llm_repository_url = False
     try:
         config = Config(
             vuln_id=args.vuln_id,
             repository=args.repository,
-            use_llm_repository_url=conf.use_llm_repository_url,
             llm_service=conf.llm_service,
             preprocess_only=args.preprocess_only or conf.preprocess_only,
             pub_date=args.pub_date,
@@ -290,6 +298,7 @@ def get_configuration(argv):
             report_filename=args.report_filename or conf.report.name,
             ping=args.ping,
             git_cache=conf.git_cache,
+            enabled_rules=conf.enabled_rules,
             log_level=args.log_level or conf.log_level,
             ignore_refs=args.ignore_refs,
         )

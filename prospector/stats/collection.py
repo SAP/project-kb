@@ -8,6 +8,8 @@ from util.type_safety import is_instance_of_either
 
 
 class ForbiddenDuplication(ValueError):
+    """Custom Error for Collections"""
+
     ...
 
 
@@ -54,6 +56,10 @@ def _summarize_list(collection, unit: Optional[str] = None):
 
 
 class StatisticCollection(dict):
+    """The StatisticCollection can contain nested sub-collections, and each entry in the
+    collection can hold a list of values along with an optional unit.
+    """
+
     def __init__(self):
         super().__init__()
         self.units = {}
