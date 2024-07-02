@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import logging
 import os
 import signal
 import sys
@@ -7,8 +6,7 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
-import llm.operations as llm
-from llm.model_instantiation import create_model_instance
+from llm.llm_service import LLMService
 from util.http import ping_backend
 
 path_root = os.getcwd()
@@ -55,22 +53,31 @@ def main(argv):  # noqa: C901
             )
             return
 
-        # instantiate LLM model if set in config.yaml
-        if config.llm_service:
-            model = create_model_instance(llm_config=config.llm_service)
-
-        if not config.repository and not config.use_llm_repository_url:
-            logger.error(
-                "Either provide the repository URL or allow LLM usage to obtain it."
-            )
-            console.print(
-                "Either provide the repository URL or allow LLM usage to obtain it.",
-                status=MessageStatus.ERROR,
-            )
-            sys.exit(1)
-
         # if config.ping:
         #     return ping_backend(backend, get_level() < logging.INFO)
+
+        # Whether to use the LLMService
+        if config.llm_service:
+            if not config.repository and not config.llm_service.use_llm_repository_url:
+                logger.error(
+                    "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
+                )
+                console.print(
+                    "Please set the `--repository` parameter or enable LLM support to infer the repository URL.",
+                    status=MessageStatus.ERROR,
+                )
+                return
+
+            # Create the LLMService singleton for later use
+            try:
+                LLMService(config.llm_service)
+            except Exception as e:
+                logger.error(f"Problem with LLMService instantiation: {e}")
+                console.print(
+                    "LLMService could not be created. Check logs.",
+                    status=MessageStatus.ERROR,
+                )
+                return
 
         config.pub_date = (
             config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
@@ -80,9 +87,6 @@ def main(argv):  # noqa: C901
         pretty_log(logger, config.__dict__)
 
         logger.debug("Vulnerability ID: " + config.vuln_id)
-
-    if not config.repository:
-        config.repository = llm.get_repository_url(model=model, vuln_id=config.vuln_id)
 
     results, advisory_record = prospector(
         vulnerability_id=config.vuln_id,
@@ -99,6 +103,7 @@ def main(argv):  # noqa: C901
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
+        use_llm_repository_url=config.llm_service.use_llm_repository_url,
     )
 
     if config.preprocess_only:

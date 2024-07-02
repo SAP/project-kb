@@ -26,7 +26,7 @@ def commit():
 
 def test_find_tags(commit: RawCommit):
     tags = commit.find_tags()
-    assert len(tags) == 75
+    assert len(tags) == 106
     assert "10.2" in tags and "11.3" in tags and "9.4" in tags
 
 

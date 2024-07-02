@@ -181,6 +181,8 @@ class ReportConfig:
 class LLMServiceConfig:
     type: str
     model_name: str
+    use_llm_repository_url: bool
+    ai_core_sk: str
     temperature: float = 0.0
 
 
@@ -194,7 +196,6 @@ class ConfigSchema:
     use_nvd: bool = MISSING
     use_backend: str = MISSING
     backend: str = MISSING
-    use_llm_repository_url: bool = MISSING
     report: ReportConfig = MISSING
     log_level: str = MISSING
     git_cache: str = MISSING
@@ -226,7 +227,6 @@ class Config:
         fetch_references: bool,
         use_backend: str,
         backend: str,
-        use_llm_repository_url: bool,
         report: ReportConfig,
         report_filename: str,
         ping: bool,
@@ -237,7 +237,6 @@ class Config:
     ):
         self.vuln_id = vuln_id
         self.repository = repository
-        self.use_llm_repository_url = use_llm_repository_url
         self.llm_service = llm_service
         self.preprocess_only = preprocess_only
         self.pub_date = pub_date
@@ -267,11 +266,13 @@ def get_configuration(argv):
         sys.exit(
             "No configuration file found, or error in configuration file. Check logs."
         )
+    # --repository in CL overrides config.yaml settings for LLM usage
+    if args.repository:
+        conf.llm_service.use_llm_repository_url = False
     try:
         config = Config(
             vuln_id=args.vuln_id,
             repository=args.repository,
-            use_llm_repository_url=conf.use_llm_repository_url,
             llm_service=conf.llm_service,
             preprocess_only=args.preprocess_only or conf.preprocess_only,
             pub_date=args.pub_date,

@@ -5,7 +5,7 @@ import os
 import re
 import sys
 import time
-from typing import Dict, List, Set, Tuple
+from typing import DefaultDict, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -18,6 +18,7 @@ from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
+from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
 from rules.rules import apply_rules
 from stats.execution import (
@@ -51,7 +52,7 @@ core_statistics = execution_statistics.sub_collection("core")
 @measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
     vulnerability_id: str,
-    repository_url: str,
+    repository_url: str = None,
     publication_date: str = "",
     vuln_descr: str = "",
     version_interval: str = "",
@@ -68,6 +69,7 @@ def prospector(  # noqa: C901
     rules: List[str] = ["ALL"],
     tag_commits: bool = True,
     silent: bool = False,
+    use_llm_repository_url: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -89,7 +91,28 @@ def prospector(  # noqa: C901
     if advisory_record is None:
         return None, -1
 
-    fixing_commit = advisory_record.get_fixing_commit(repository_url)
+    if use_llm_repository_url:
+        with ConsoleWriter("LLM Usage (Repo URL)") as console:
+            try:
+                repository_url = LLMService().get_repository_url(
+                    advisory_record.description, advisory_record.references
+                )
+                console.print(
+                    f"\n  Repository URL: {repository_url}",
+                    status=MessageStatus.OK,
+                )
+            except Exception as e:
+                logger.error(
+                    e,
+                    exc_info=get_level() < logging.INFO,
+                )
+                console.print(
+                    e,
+                    status=MessageStatus.ERROR,
+                )
+                sys.exit(1)
+
+    fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)
     # obtain a repository object
     repository = Git(repository_url, git_cache)
@@ -140,9 +163,7 @@ def prospector(  # noqa: C901
     if len(candidates) > limit_candidates:
         logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
 
-        ConsoleWriter.print(
-            f"Candidates limit exceeded: {len(candidates)}.",
-        )
+        ConsoleWriter.print(f"Candidates limitlimit exceeded: {len(candidates)}.")
         return None, len(candidates)
 
     with ExecutionTimer(
@@ -177,7 +198,10 @@ def prospector(  # noqa: C901
                 # preprocessed_commits += preprocess_commits(missing, timer)
 
                 pbar = tqdm(
-                    missing, desc="Processing commits", unit="commit", disable=silent
+                    missing,
+                    desc="Processing commits",
+                    unit="commit",
+                    disable=silent,
                 )
                 start_time = time.time()
                 with Counter(
@@ -319,7 +343,7 @@ def retrieve_preprocessed_commits(
             )
         ]
 
-        logger.error(f"Missing {len(missing)} commits")
+        logger.info(f"{len(missing)} commits not found in backend")
     commits = [Commit.parse_obj(rc) for rc in retrieved_commits]
     # Sets the tags
     # for commit in commits:
