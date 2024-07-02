@@ -58,15 +58,29 @@ class Gemini(LLM):
             ],
         }
 
-        response = requests.post(endpoint, headers=headers, json=data)
-
-        if not response.status_code == 200:
+        try:
+            response = requests.post(endpoint, headers=headers, json=data)
+            return self.parse(response.json())
+        except requests.exceptions.HTTPError as http_error:
             logger.error(
-                f"Invalid response from AI Core API with error code {response.status_code}"
+                f"HTTP error occurred when sending a request through AI Core: {http_error}"
             )
-            raise Exception("Invalid response from AI Core API.")
-
-        return self.parse(response.json())
+            raise
+        except requests.exceptions.Timeout as timeout_err:
+            logger.error(
+                f"Timeout error occured when sending a request through AI Core: {timeout_err}"
+            )
+            raise
+        except requests.exceptions.ConnectionError as conn_err:
+            logger.error(
+                f"Connection error occurred when sending a request through AI Core: {conn_err}"
+            )
+            raise
+        except requests.exceptions.RequestException as req_err:
+            logger.error(
+                f"A request error occured when sending a request through AI Core: {req_err}"
+            )
+            raise
 
     def parse(self, message) -> str:
         """Parse the returned JSON object from OpenAI."""
