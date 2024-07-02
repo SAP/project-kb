@@ -2,8 +2,6 @@ import re
 from abc import abstractmethod
 from typing import List, Tuple
 
-import requests
-
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit, apply_ranking
 from llm.llm_service import LLMService
@@ -419,13 +417,9 @@ class CommitIsSecurityRelevant(Rule):
         self,
         candidate: Commit,
     ) -> bool:
-<<<<<<< HEAD
         return LLMService().classify_commit(
             candidate.diff, candidate.repository, candidate.message
         )
-=======
-        return LLMService().classify_commit(candidate.diff)
->>>>>>> 5924313 (adds function and rule for commit classification)
 
 
 RULES_PHASE_1: List[Rule] = [

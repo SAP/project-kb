@@ -104,11 +104,7 @@ def main(argv):  # noqa: C901
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
         use_llm_repository_url=config.llm_service.use_llm_repository_url,
-<<<<<<< HEAD
         enabled_rules=config.enabled_rules,
-=======
-        use_llm_rules=config.llm_service.use_llm_rules,
->>>>>>> 2c0b7be (marks working version)
     )
 
     if config.preprocess_only:

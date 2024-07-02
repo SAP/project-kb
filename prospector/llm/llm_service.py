@@ -3,6 +3,7 @@ import re
 import validators
 from langchain_core.language_models.llms import LLM
 from langchain_core.output_parsers import StrOutputParser
+from requests import HTTPError
 
 from datamodel.commit import Commit
 from llm.instantiation import create_model_instance
@@ -103,6 +104,12 @@ class LLMService(metaclass=Singleton):
             )
             logger.info(f"LLM returned is_relevant={is_relevant}")
 
+        except HTTPError as e:
+            # if the diff is too big, a 400 error is returned -> silently ignore by returning False for this commit
+            status_code = e.response.status_code
+            if status_code == 400:
+                return False
+            raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
         except Exception as e:
             raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
 
