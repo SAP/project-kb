@@ -1,3 +1,5 @@
+import re
+
 import validators
 from langchain_core.language_models.llms import LLM
 from langchain_core.output_parsers import StrOutputParser
@@ -58,6 +60,12 @@ class LLMService(metaclass=Singleton):
                 }
             )
             logger.info(f"LLM returned the following URL: {url}")
+
+            # delimiters are often returned by the LLM, remove them, if the case
+            pattern = r"<output>\s*(https?://[^\s]+)\s*</output>"
+            match = re.search(pattern, url)
+            if match:
+                return match.group(1)
 
             if not validators.url(url):
                 raise TypeError(f"LLM returned invalid URL: {url}")
