@@ -9,6 +9,7 @@ langchain
 langchain_openai
 langchain_google_vertexai
 langchain_mistralai
+langchain_anthropic
 langchain_community
 omegaconf
 pandas

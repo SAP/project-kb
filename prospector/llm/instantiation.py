@@ -4,6 +4,7 @@ from typing import Dict
 
 import requests
 from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.llms import LLM
 from langchain_google_vertexai import ChatVertexAI
 from langchain_mistralai import ChatMistralAI
@@ -39,6 +40,7 @@ THIRD_PARTY_MAPPING = {
     "gpt-3.5-turbo": (ChatOpenAI, "OPENAI_API_KEY"),
     "gemini-pro": (ChatVertexAI, "GOOGLE_API_KEY"),
     "mistral-large-latest": (ChatMistralAI, "MISTRAL_API_KEY"),
+    "claude-3-opus-20240229": (ChatAnthropic, "ANTHROPIC_API_KEY"),
 }
 
 
