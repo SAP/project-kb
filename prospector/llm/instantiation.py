@@ -9,6 +9,7 @@ from langchain_google_vertexai import ChatVertexAI
 from langchain_mistralai import ChatMistralAI
 from langchain_openai import ChatOpenAI
 
+from llm.models.anthropic import Anthropic
 from llm.models.gemini import Gemini
 from llm.models.mistral import Mistral
 from llm.models.openai import OpenAI
@@ -26,6 +27,7 @@ SAP_MAPPING = {
     # "gpt-4o": OpenAI,  # currently TBD
     "gemini-1.0-pro": Gemini,
     "mistral-large": Mistral,
+    "claude-3-opus": Anthropic,
 }
 
 
