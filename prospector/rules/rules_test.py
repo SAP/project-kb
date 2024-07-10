@@ -5,12 +5,31 @@ from requests_cache import Optional
 
 from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit
-from rules.rules import apply_rules
+from rules.rules import RULES_PHASE_1, apply_rules
 from util.lsh import get_encoded_minhash
 
 # from datamodel.commit_features import CommitWithFeatures
 
 MOCK_CVE_ID = "CVE-2020-26258"
+
+enabled_rules_from_config = [
+    "VULN_ID_IN_MESSAGE",
+    "XREF_BUG",
+    "XREF_GH",
+    "COMMIT_IN_REFERENCE",
+    "VULN_ID_IN_LINKED_ISSUE",
+    "CHANGES_RELEVANT_FILES",
+    "CHANGES_RELEVANT_CODE",
+    "RELEVANT_WORDS_IN_MESSAGE",
+    "ADV_KEYWORDS_IN_FILES",
+    "ADV_KEYWORDS_IN_MSG",
+    "SEC_KEYWORDS_IN_MESSAGE",
+    "SEC_KEYWORDS_IN_LINKED_GH",
+    "SEC_KEYWORDS_IN_LINKED_BUG",
+    "GITHUB_ISSUE_IN_MESSAGE",
+    "BUG_IN_MESSAGE",
+    "COMMIT_HAS_TWINS",
+]
 
 
 def get_msg(text, limit_length: Optional[int] = None) -> str:
@@ -91,7 +110,9 @@ def advisory_record():
 
 
 def test_apply_phase_1_rules(candidates: List[Commit], advisory_record: AdvisoryRecord):
-    annotated_candidates = apply_rules(candidates, advisory_record, rules=["phase_1"])
+    annotated_candidates = apply_rules(
+        candidates, advisory_record, enabled_rules=enabled_rules_from_config
+    )
 
     # Repo 5: Should match: AdvKeywordsInFiles, SecurityKeywordsInMsg, CommitMentionedInReference
     assert len(annotated_candidates[0].matched_rules) == 3
