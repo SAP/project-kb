@@ -52,6 +52,7 @@ class Commit(BaseModel):
         return self.relevance == other.relevance
 
     def add_match(self, rule: Dict[str, Any]):
+        """Adds a rule to the commit's matched rules. Makes sure that the rule is added in order of relevance."""
         for i, r in enumerate(self.matched_rules):
             if rule["relevance"] == r["relevance"]:
                 self.matched_rules.insert(i, rule)
