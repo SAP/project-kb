@@ -413,6 +413,18 @@ class RelevantWordsInMessage(Rule):
         return False
 
 
+class CommitIsSecurityRelevant(Rule):
+    """Matches commits that are deemed security relevant by the commit classification service."""
+
+    def apply(
+        self,
+        candidate: Commit,
+    ) -> bool:
+        return LLMService().classify_commit(
+            candidate.diff, candidate.repository, candidate.message
+        )
+
+
 RULES_PHASE_1: List[Rule] = [
     VulnIdInMessage("VULN_ID_IN_MESSAGE", 64),
     # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
@@ -433,4 +445,6 @@ RULES_PHASE_1: List[Rule] = [
     CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
 
-RULES_PHASE_2: List[Rule] = []
+RULES_PHASE_2: List[Rule] = [
+    CommitIsSecurityRelevant("COMMIT_IS_SECURITY_RELEVANT", 32)
+]
