@@ -2,10 +2,9 @@
 
 import logging
 import os
-import re
 import sys
 import time
-from typing import DefaultDict, Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -13,14 +12,14 @@ from tqdm import tqdm
 
 from cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
-from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
+from datamodel.commit import Commit, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.rules import apply_rules
+from rules.rules import RULES_PHASE_1, apply_rules
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -66,7 +65,7 @@ def prospector(  # noqa: C901
     use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    rules: List[str] = ["ALL"],
+    enabled_rules: List[str] = [rule.id for rule in RULES_PHASE_1],
     tag_commits: bool = True,
     silent: bool = False,
     use_llm_repository_url: bool = False,
@@ -231,7 +230,9 @@ def prospector(  # noqa: C901
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
 
-    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
+    ranked_candidates = evaluate_commits(
+        preprocessed_commits, advisory_record, enabled_rules
+    )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
     ranked_candidates = remove_twins(ranked_candidates)
@@ -267,11 +268,26 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 
 
 def evaluate_commits(
-    commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]
+    commits: List[Commit], advisory: AdvisoryRecord, enabled_rules: List[str]
 ) -> List[Commit]:
+    """This method applies the rule phases. Each phase is associated with a set of rules:
+        - Phase 1: Original rules
+        - Phase 2: Rules using the LLMService
+
+    Args:
+        commits: the list of candidate commits that rules hsould be applied to
+        advisory: the object contianing all information about the advisory
+        enabled_rules: a (sub)set of rules to run (to set in config.yaml)
+
+    Returns:
+        a list of commits ranked according to their relevance score
+
+    Raises:
+        MissingMandatoryValue: if there is an error in the LLM configuration object
+    """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
-            ranked_commits = apply_ranking(apply_rules(commits, advisory, rules=rules))
+            ranked_commits = apply_rules(commits, advisory, enabled_rules=enabled_rules)
 
     return ranked_commits
 
