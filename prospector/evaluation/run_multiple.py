@@ -983,11 +983,12 @@ def execute_prospector_wrapper(kwargs):
 
 
 def execute_prospector(filename: str, cve: str = ""):
-    dataset = load_dataset("empirical_study/datasets/" + filename + ".csv")
+    # dataset = load_dataset("empirical_study/datasets/" + filename + ".csv")
+    dataset = load_dataset(filename)
     if len(cve) != 0:
         dataset = [c for c in dataset if c[0] in cve]
 
-    for cve in dataset:
+    for cve in dataset[:10]:
         if os.path.exists(f"empirical_study/datasets/{filename}/{cve[0]}.json"):
             continue
         print(
@@ -998,7 +999,7 @@ def execute_prospector(filename: str, cve: str = ""):
             vulnerability_id=cve[0],
             repository_url=cve[1],
             version_interval=cve[2],
-            git_cache="/sapmnt/home/I586140/intern/gitcache",
+            # git_cache="/sapmnt/home/I586140/intern/gitcache",
             # git_cache="/users/sach/gitcache",
             limit_candidates=2000,
         )
