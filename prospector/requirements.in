@@ -6,6 +6,7 @@ fastapi
 google-cloud-aiplatform==1.49.0
 Jinja2
 langchain
+langchain_anthropic
 langchain_openai
 langchain_google_vertexai
 langchain_mistralai

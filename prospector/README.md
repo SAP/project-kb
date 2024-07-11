@@ -55,6 +55,7 @@ To quickly set up Prospector, follow these steps. This will run Prospector in it
     By default, Prospector saves the results in a HTML file named *prospector-report.html*.
     Open this file in a web browser to view what Prospector was able to find!
 
+
 ### 🤖 LLM Support
 
 To use Prospector with LLM support, you simply set required parameters for the API access to the LLM in *config.yaml*. These parameters can vary depending on your choice of provider, please follow what fits your needs (drop-downs below). If you do not want to use LLM support, keep the `llm_service` block in your *config.yaml* file commented out.
@@ -87,7 +88,7 @@ You also need to point the `ai_core_sk` parameter to a file contianing the secre
 
 <details><summary><b>Use personal third party provider</b></summary>
 
-Implemented third party providers are **OpenAI**, **Google** and **Mistral**.
+Implemented third party providers are **OpenAI**, **Google**, **Mistral**, and **Anthropic**.
 
 1. You will need the following parameters in *config.yaml*:
     ```yaml
@@ -101,14 +102,15 @@ Implemented third party providers are **OpenAI**, **Google** and **Mistral**.
    1. [OpenAI](https://platform.openai.com/docs/models)
    2. [Google](https://ai.google.dev/gemini-api/docs/models/gemini)
    3. [Mistral](https://docs.mistral.ai/getting-started/models/)
+   4. [Anthropic](https://docs.anthropic.com/en/docs/about-claude/models)
 
     The `temperature` parameter is optional. The default value is 0.0, but you can change it to something else.
 
-2. Make sure to add your OpenAI API key to your `.env` file as `[OPENAI|GOOGLE|MISTRAL]_API_KEY`.
+2. Make sure to add your OpenAI API key to your `.env` file as `[OPENAI|GOOGLE|MISTRAL|ANTHROPIC]_API_KEY`.
 
 </details>
 
-####
+#### How to use LLM Support for different things
 
 You can set the `use_llm_<...>` parameters in *config.yaml* for fine-grained control over LLM support in various aspects of Prospector's phases. Each `use_llm_<...>` parameter allows you to enable or disable LLM support for a specific aspect:
 
