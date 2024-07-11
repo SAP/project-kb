@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import logging
 import os
 import signal
 import sys
@@ -7,6 +6,7 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
+from llm.llm_service import LLMService
 from util.http import ping_backend
 
 path_root = os.getcwd()
@@ -32,10 +32,12 @@ def main(argv):  # noqa: C901
     with ConsoleWriter("Initialization") as console:
         config = get_configuration(argv)
         if not config:
-            logger.error("No configuration file found. Cannot proceed.")
+            logger.error(
+                "No configuration file found, or error in configuration file. Cannot proceed."
+            )
 
             console.print(
-                "No configuration file found.",
+                "No configuration file found, or error in configuration file. Check logs.",
                 status=MessageStatus.ERROR,
             )
             return
@@ -53,6 +55,29 @@ def main(argv):  # noqa: C901
 
         # if config.ping:
         #     return ping_backend(backend, get_level() < logging.INFO)
+
+        # Whether to use the LLMService
+        if config.llm_service:
+            if not config.repository and not config.llm_service.use_llm_repository_url:
+                logger.error(
+                    "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
+                )
+                console.print(
+                    "Please set the `--repository` parameter or enable LLM support to infer the repository URL.",
+                    status=MessageStatus.ERROR,
+                )
+                return
+
+            # Create the LLMService Singleton for later use
+            try:
+                LLMService(config.llm_service)
+            except Exception as e:
+                logger.error(f"Problem with LLMService instantiation: {e}")
+                console.print(
+                    "LLMService could not be created. Check logs.",
+                    status=MessageStatus.ERROR,
+                )
+                return
 
         config.pub_date = (
             config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
@@ -78,6 +103,8 @@ def main(argv):  # noqa: C901
         git_cache=config.git_cache,
         limit_candidates=config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
+        use_llm_repository_url=config.llm_service.use_llm_repository_url,
+        enabled_rules=config.enabled_rules,
     )
 
     if config.preprocess_only:
@@ -88,7 +115,7 @@ def main(argv):  # noqa: C901
     )
 
     execution_time = execution_statistics["core"]["execution time"][0]
-    ConsoleWriter.print(f"Execution time: {execution_time:.3f}s")
+    ConsoleWriter.print(f"Execution time: {execution_time:.3f}s\n")
 
     return
 

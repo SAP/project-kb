@@ -1,23 +1,25 @@
 # flake8: noqa
 
 import logging
-import re
+import os
 import sys
 import time
 from typing import Dict, List, Set, Tuple
+from urllib.parse import urlparse
 
 import requests
 from tqdm import tqdm
 
 from cli.console import ConsoleWriter, MessageStatus
 from datamodel.advisory import AdvisoryRecord, build_advisory_record
-from datamodel.commit import Commit, apply_ranking, make_from_raw_commit
+from datamodel.commit import Commit, make_from_raw_commit
 from filtering.filter import filter_commits
 from git.git import Git
 from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
+from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.rules import apply_rules
+from rules.rules import RULES_PHASE_1, apply_rules
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -37,6 +39,9 @@ ONE_YEAR = 365 * SECS_PER_DAY
 
 MAX_CANDIDATES = 2000
 DEFAULT_BACKEND = "http://localhost:8000"
+USE_BACKEND_ALWAYS = "always"
+USE_BACKEND_OPTIONAL = "optional"
+USE_BACKEND_NEVER = "never"
 
 
 core_statistics = execution_statistics.sub_collection("core")
@@ -46,7 +51,7 @@ core_statistics = execution_statistics.sub_collection("core")
 @measure_execution_time(execution_statistics, name="core")
 def prospector(  # noqa: C901
     vulnerability_id: str,
-    repository_url: str,
+    repository_url: str = None,
     publication_date: str = "",
     vuln_descr: str = "",
     version_interval: str = "",
@@ -57,12 +62,13 @@ def prospector(  # noqa: C901
     use_nvd: bool = True,
     nvd_rest_endpoint: str = "",
     backend_address: str = DEFAULT_BACKEND,
-    use_backend: str = "always",
+    use_backend: str = USE_BACKEND_ALWAYS,
     git_cache: str = "/tmp/git_cache",
     limit_candidates: int = MAX_CANDIDATES,
-    rules: List[str] = ["ALL"],
+    enabled_rules: List[str] = [rule.id for rule in RULES_PHASE_1],
     tag_commits: bool = True,
     silent: bool = False,
+    use_llm_repository_url: bool = False,
 ) -> Tuple[List[Commit], AdvisoryRecord] | Tuple[int, int]:
     if silent:
         logger.disabled = True
@@ -84,7 +90,28 @@ def prospector(  # noqa: C901
     if advisory_record is None:
         return None, -1
 
-    fixing_commit = advisory_record.get_fixing_commit(repository_url)
+    if use_llm_repository_url:
+        with ConsoleWriter("LLM Usage (Repo URL)") as console:
+            try:
+                repository_url = LLMService().get_repository_url(
+                    advisory_record.description, advisory_record.references
+                )
+                console.print(
+                    f"\n  Repository URL: {repository_url}",
+                    status=MessageStatus.OK,
+                )
+            except Exception as e:
+                logger.error(
+                    e,
+                    exc_info=get_level() < logging.INFO,
+                )
+                console.print(
+                    e,
+                    status=MessageStatus.ERROR,
+                )
+                sys.exit(1)
+
+    fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)
     # obtain a repository object
     repository = Git(repository_url, git_cache)
@@ -135,9 +162,7 @@ def prospector(  # noqa: C901
     if len(candidates) > limit_candidates:
         logger.error(f"Number of candidates exceeds {limit_candidates}, aborting.")
 
-        ConsoleWriter.print(
-            f"Candidates limit exceeded: {len(candidates)}.",
-        )
+        ConsoleWriter.print(f"Candidates limitlimit exceeded: {len(candidates)}.")
         return None, len(candidates)
 
     with ExecutionTimer(
@@ -145,7 +170,7 @@ def prospector(  # noqa: C901
     ) as timer:
         with ConsoleWriter("\nProcessing commits") as writer:
             try:
-                if use_backend != "never":
+                if use_backend != USE_BACKEND_NEVER:
                     missing, preprocessed_commits = retrieve_preprocessed_commits(
                         repository_url,
                         backend_address,
@@ -156,10 +181,13 @@ def prospector(  # noqa: C901
                     "Backend not reachable",
                     exc_info=get_level() < logging.WARNING,
                 )
-                if use_backend == "always":
-                    print("Backend not reachable: aborting")
+                if use_backend == USE_BACKEND_ALWAYS:
+                    if not is_correct_backend_url(backend_address):
+                        print(
+                            "The backend address should be 'backend:8000' when running the containerised version of Prospector, and 'localhost:8000' otherwise: Aborting."
+                        )
                     sys.exit(1)
-                print("Backend not reachable: continuing")
+                print("Backend not reachable: Continuing.")
 
             if "missing" not in locals():
                 missing = list(candidates.values())
@@ -169,7 +197,10 @@ def prospector(  # noqa: C901
                 # preprocessed_commits += preprocess_commits(missing, timer)
 
                 pbar = tqdm(
-                    missing, desc="Processing commits", unit="commit", disable=silent
+                    missing,
+                    desc="Processing commits",
+                    unit="commit",
+                    disable=silent,
                 )
                 start_time = time.time()
                 with Counter(
@@ -194,12 +225,14 @@ def prospector(  # noqa: C901
 
             payload = [c.to_dict() for c in preprocessed_commits]
 
-    if len(payload) > 0 and use_backend != "never" and len(missing) > 0:
+    if len(payload) > 0 and use_backend != USE_BACKEND_NEVER and len(missing) > 0:
         save_preprocessed_commits(backend_address, payload)
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
 
-    ranked_candidates = evaluate_commits(preprocessed_commits, advisory_record, rules)
+    ranked_candidates = evaluate_commits(
+        preprocessed_commits, advisory_record, enabled_rules
+    )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
     ranked_candidates = remove_twins(ranked_candidates)
@@ -227,7 +260,7 @@ def preprocess_commits(commits: List[RawCommit], timer: ExecutionTimer) -> List[
 
 
 def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
-    with ConsoleWriter("\nCandidate filtering\n") as console:
+    with ConsoleWriter("\nCandidate filtering") as console:
         commits, rejected = filter_commits(commits)
         if rejected > 0:
             console.print(f"Dropped {rejected} candidates")
@@ -235,11 +268,26 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 
 
 def evaluate_commits(
-    commits: List[Commit], advisory: AdvisoryRecord, rules: List[str]
+    commits: List[Commit], advisory: AdvisoryRecord, enabled_rules: List[str]
 ) -> List[Commit]:
+    """This method applies the rule phases. Each phase is associated with a set of rules:
+        - Phase 1: Original rules
+        - Phase 2: Rules using the LLMService
+
+    Args:
+        commits: the list of candidate commits that rules hsould be applied to
+        advisory: the object contianing all information about the advisory
+        enabled_rules: a (sub)set of rules to run (to set in config.yaml)
+
+    Returns:
+        a list of commits ranked according to their relevance score
+
+    Raises:
+        MissingMandatoryValue: if there is an error in the LLM configuration object
+    """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
-            ranked_commits = apply_ranking(apply_rules(commits, advisory, rules=rules))
+            ranked_commits = apply_rules(commits, advisory, enabled_rules=enabled_rules)
 
     return ranked_commits
 
@@ -311,7 +359,7 @@ def retrieve_preprocessed_commits(
             )
         ]
 
-        logger.error(f"Missing {len(missing)} commits")
+        logger.info(f"{len(missing)} commits not found in backend")
     commits = [Commit.parse_obj(rc) for rc in retrieved_commits]
     # Sets the tags
     # for commit in commits:
@@ -418,6 +466,29 @@ def get_commits_no_tags(repository: Git, commit_ids: List[str]):
         )
 
     return candidates
+
+
+def is_correct_backend_url(backend_url: str) -> bool:
+    """Returns True if the backend URL set in the config file matches the way prospector is run. Returns False if
+    - Prospector is run containerised and backend_url is not 'backend:8000'
+    - Prospector is run locally and backend_url is not 'localhost:8000'
+    """
+    parsed_config_url = urlparse(backend_url)
+    parsed_default_url = urlparse(DEFAULT_BACKEND)
+
+    if parsed_config_url.port != 8000:
+        return False
+
+    in_container = os.environ.get("IN_CONTAINER", "") == "1"
+
+    if in_container:
+        if parsed_config_url.hostname != "backend":
+            return False
+    else:
+        if parsed_config_url.hostname != parsed_default_url.hostname:
+            return False
+
+    return True
 
 
 # def prospector_find_twins(
