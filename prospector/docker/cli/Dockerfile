@@ -21,4 +21,7 @@ WORKDIR /clirun
 VOLUME ["/clirun"]
 ENV PYTHONPATH "${PYTHONPATH}:/clirun"
 
+# check if Prospector is running containerised
+ENV IN_CONTAINER=1
+
 ENTRYPOINT [ "python","cli/main.py" ]

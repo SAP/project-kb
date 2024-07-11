@@ -37,11 +37,7 @@ in early 2019. In June 2020, we made a further step releasing the `kaybee` tool 
 make the creation, aggregation, and consumption of vulnerability data much
 easier. In late 2020, we also released, as a proof-of-concept, the prototype
 `prospector`, whose goal is to automate the mapping of vulnerability advisories
-onto their fix-commits. A technical description of the approach we implemented in
-`prospector` can be found in this [preprint](https://arxiv.org/abs/2103.13375).
-As of April 2021, together with our partners in the EU-funded project AssureMOSS,
-we are reimplementing `prospector` to make it more robust, scalable, and user-friendly.
-The reimplementation is carried out in the dedicate branch `prospector-assuremoss`.
+onto their fix-commits. 
 
 We hope this will encourage more contributors to join our efforts to build a
 collaborative, comprehensive knowledge base where each party remains in control
