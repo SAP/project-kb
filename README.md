@@ -9,7 +9,22 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/sap/project-kb)](https://api.reuse.software/info/github.com/sap/project-kb)
 [![Pytest](https://github.com/SAP/project-kb/actions/workflows/python.yml/badge.svg)](https://github.com/SAP/project-kb/actions/workflows/python.yml)
 
-## Description
+# Table of contents 
+1. [Description](#desc)
+2. [Motivations](#motiv)
+3. [Kaybee](#kaybee)
+4. [Prospector](#prosp)
+5. [Vulnerability data](#vuldata)
+6. [Publications](#publi)
+7. [Star history](#starhist)
+8. [Credits](#credit)
+9. [EU funded research projects](#eu_funded)
+10. [Vulnerability data sources](#vul_data)
+11. [Limitations and known issues](#limit)
+12. [Support](#support)
+13. [Contributing](#contrib)
+
+## Description <a name="desc"></a>
 
 The goal of `Project KB` is to enable the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities affecting
@@ -19,7 +34,7 @@ open-source software.
 as well as set of tools to support the mining, curation and management of such data.
 
 
-### Motivations
+### Motivations <a name="motiv"></a>
 
 In order to feed [Eclipse Steady](https://github.com/eclipse/steady/) with fresh
 data, we have spent a considerable amount of time, in the past few years, mining
@@ -45,7 +60,7 @@ of the data they produce and of how they aggregate and consume data from the
 other sources.
 
 
-## Kaybee
+## Kaybee <a name="kaybee"></a>
 
 Kaybee is a vulnerability data management tool, it makes possible to fetch the vulnerability statements from this
 repository (or from any other repository) and export them to a number of
@@ -54,18 +69,18 @@ backend](https://github.com/eclipse/steady).
 
 For details and usage instructions check out the [kaybee README](https://github.com/SAP/project-kb/tree/main/kaybee).
 
-## Prospector
+## Prospector <a name="prosp"></a>
 
 Prospector is a vulnerability data mining tool that aims at reducing the effort needed to find security fixes for known vulnerabilities in open source software repositories.
 The tool takes a vulnerability description (in natural language) as input and produces a ranked list of commits, in decreasing order of relevance.
 
 For details and usage instructions check out the [prospector README](https://github.com/SAP/project-kb/tree/main/prospector).
 
-## Vulnerability data
+## Vulnerability data <a name="vuldata"></a>
 
 The vulnerability data of Project KB are stored in textual form as a set of YAML files, in the [vulnerability-data branch](https://github.com/SAP/project-kb/tree/vulnerability-data).
 
-## Publications
+## Publications <a name="publi"></a>
 
 In early 2019, a snapshot of the knowlege base from project "KB" was described in:
 
@@ -91,13 +106,13 @@ scripts described in that paper](MSR2019)
 
 > If you wrote a paper that uses the data or the tools from this repository, please let us know (through an issue) and we'll add it to this list.
 
-## Star History
+## Star History <a name="starhist"></a>
 
 [![Star History Chart](https://api.star-history.com/svg?repos=sap/project-kb&type=Date)](https://star-history.com/#sap/project-kb&Date)
 
-## Credits
+## Credits <a name="credit"></a>
 
-### EU-funded research projects
+### EU-funded research projects <a name="eu_funded"></a>
 
 The development of Project KB is partially supported by the following projects:
 
@@ -105,22 +120,22 @@ The development of Project KB is partially supported by the following projects:
 * [AssureMOSS](https://assuremoss.eu) (Grant No. 952647).
 * [Sparta](https://www.sparta.eu/) (Grant No. 830892).
 
-### Vulnerability data sources
+### Vulnerability data sources <a name="vul_data"></a>
 
 Vulnerability information from NVD and MITRE might have been used as input
 for building parts of this knowledge base. See MITRE's [CVE Usage license](http://cve.mitre.org/about/termsofuse.html) for more information.
 
-## Limitations and Known Issues
+## Limitations and Known Issues <a name="limit"></a>
 
 This project is **work-in-progress**, you can find the list of known issues [here](https://github.com/SAP/project-kb/issues). 
 
 Currently the vulnerability knowledge base only contains information about vulnerabilities in Java and Python open source components.
 
-## Support
+## Support <a name="support"></a>
 
 For the time being, please use [GitHub
 issues](https://github.com/SAP/project-kb/issues) to report bugs, request new features and ask for support. 
 
-## Contributing
+## Contributing  <a name="contrib"></a>
 
 See [How to contribute](CONTRIBUTING.md).
