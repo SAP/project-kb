@@ -10,8 +10,11 @@ from llm.instantiation import create_model_instance
 from llm.prompts.classify_commit import zero_shot as cc_zero_shot
 from llm.prompts.get_repository_url import prompt_best_guess
 from log.logger import logger
+from stats.execution import execution_statistics, measure_execution_time
 from util.config_parser import LLMServiceConfig
 from util.singleton import Singleton
+
+llm_statistics = execution_statistics.sub_collection("LLM")
 
 
 class LLMService(metaclass=Singleton):
@@ -81,6 +84,7 @@ class LLMService(metaclass=Singleton):
 
         return url
 
+    @measure_execution_time(execution_statistics.sub_collection("LLM"))
     def classify_commit(
         self, diff: str, repository_name: str, commit_message: str
     ) -> bool:
