@@ -14,12 +14,19 @@ from evaluation.utils import load_dataset
 
 
 def analyze_results_rules(dataset_path: str):
-    print(dataset_path)
+    """This function analyses Prospector's rule application. It calculates the
+    frequency of each rule being matched across the dataset in `dataset_path`.
+
+    It also generates a bar plot visualising the ferquency of each rule being
+    matched.
+    """
+    print(f"Retrieving data from: {dataset_path}")
     dataset_path = "empirical_study/datasets/" + dataset_path + ".csv"
     dataset = load_dataset(dataset_path)
-    rules = {}
-    table = {}
+
+    rules, table = {}, {}
     count = 0
+
     for itm in dataset:
         try:
             r, i, v, id = check_report_get_rules(dataset_path[:-4], itm[0], itm[4])
@@ -73,6 +80,7 @@ def analyze_results_rules(dataset_path: str):
 
 
 def analyze_prospector(filename: str):  # noqa: C901
+    """Analyses Prospector's reports."""
     # delete_missing_git(dataset_path)
     # return []
     filename = "empirical_study/datasets/" + filename + ".csv"
@@ -332,10 +340,26 @@ def analyze_prospector(filename: str):  # noqa: C901
 
 
 def sum_relevances(list_of_rules):
+    """Calculates the sum of relevance scores for a list of matched rules."""
     return sum([r["relevance"] for r in list_of_rules])
 
 
 def check_report_get_rules(dataset, cve, fixing_commits):
+    """Retrieves the matched rules and commit information for a given CVE and a list of
+    fixing commits.
+
+    Args:
+        dataset (str): The path to the dataset directory.
+        cve (str): The CVE identifier.
+        fixing_commits (list): A list of commit IDs that are fixing the vulnerability.
+
+    Returns:
+        tuple: A tuple containing the following elements:
+            - A list of matched rule IDs
+            - The position (index) of the fixing commit in the list of commits
+            - The sum of relevance scores for the matched rules
+            - The commit ID of the fixing commit
+    """
     with open(f"{dataset}/{cve}.json", "r") as file:
         data = json.load(file)
         # not_fixing = [
@@ -379,6 +403,7 @@ def check_report_get_rules(dataset, cve, fixing_commits):
 
 
 def has_certainty(rules: List[Dict]):
+    """Checks if a list of matched rules contains any strong (high-certainty) rules."""
     if any(rule["id"] == "COMMIT_IN_REFERENCE" for rule in rules):
         return "COMMIT_IN_REFERENCE"
     if any(rule["id"] == "CVE_ID_IN_MESSAGE" for rule in rules):
@@ -444,6 +469,23 @@ def get_non_fixing_commit_info(commit, index, score_first):
 
 
 def check_report(dataset, cve, fixing_commits):
+    """This function checks the report for a given CVE and list of fixing commits.
+
+    Args:
+        dataset (str): The path to the dataset directory.
+        cve (str): The CVE identifier.
+        fixing_commits (list): A list of commit IDs that are fixing the vulnerability.
+
+    Returns:
+        tuple: A tuple containing the following elements:
+        - A boolean indicating if the commit is a fixing commit
+        - The certainty level of the matched rules (a string or 0)
+        - The commit ID (or None if no commit is found)
+        - A boolean indicating if the commit exists
+        - The position (index) of the commit (-1 if no commit is found)
+        - A list containing the position, relevance score, score_first, and score_next (or None if no commit is found)
+        - A list of matched rule IDs
+    """
     try:
         with open(f"{dataset}/{cve}.json", "r") as file:
             data = json.load(file)
@@ -473,6 +515,24 @@ def check_report(dataset, cve, fixing_commits):
 
 
 def process_json_report(dataset, cve, commits):
+    """This function processes the JSON report for a given CVE and list of commits.
+
+    Args:
+        dataset (str): The path to the dataset directory.
+        cve (str): The CVE identifier.
+        commits (list): A list of commit IDs.
+
+    Returns:
+        tuple: A tuple containing the following elements:
+            - A boolean indicating if the commit exists
+            - A list containing the following elements:
+                - The CVE ID
+                - The position (index) of the commit
+                - The sum of relevance scores for the matched rules
+                - The number of commits with the same relevance score
+                - The sum of relevance scores for the first commit
+                - The sum of relevance scores for the next commit with a higher score
+    """
     out = []
     exists = True
     try:
@@ -484,6 +544,7 @@ def process_json_report(dataset, cve, commits):
                     sum_relevances(commit["matched_rules"]),
                     i + 1,
                 ]
+
                 if commit["commit_id"] in commits:
                     processed_commits.pop(commit["commit_id"])
                     current = [
@@ -514,6 +575,7 @@ def process_json_report(dataset, cve, commits):
 
 
 def analyze_rules_usage(dataset_path: str, cve: str = ""):
+    """This function analyzes the usage of rules across a dataset."""
     dataset = load_dataset(dataset_path)
     rules: Dict[str, int] = {}
     commit_count = 0
@@ -559,6 +621,7 @@ FIXED = [
 
 
 def get_version_spacy(text: str, nlp):
+    """This function extracts vulnerable and fixed version numbers from a given text using spaCy."""
     doc = nlp(text)
     # relevant_sentences = {}
     # relevant_sentence = ""
@@ -584,6 +647,7 @@ def get_version_spacy(text: str, nlp):
 
 
 def check_advisory(cve, repository=None, nlp=None):
+    """This function checks the advisory for a given CVE and attempts to extract version information."""
     advisory = build_advisory_record(
         cve, nvd_rest_endpoint="http://localhost:8000/nvd/vulnerabilities/"
     )
