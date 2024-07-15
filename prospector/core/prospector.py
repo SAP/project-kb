@@ -45,6 +45,7 @@ USE_BACKEND_NEVER = "never"
 
 
 core_statistics = execution_statistics.sub_collection("core")
+llm_statistics = execution_statistics.sub_collection("LLM")
 
 
 # @profile
@@ -91,25 +92,26 @@ def prospector(  # noqa: C901
         return None, -1
 
     if use_llm_repository_url:
-        with ConsoleWriter("LLM Usage (Repo URL)") as console:
-            try:
-                repository_url = LLMService().get_repository_url(
-                    advisory_record.description, advisory_record.references
-                )
-                console.print(
-                    f"\n  Repository URL: {repository_url}",
-                    status=MessageStatus.OK,
-                )
-            except Exception as e:
-                logger.error(
-                    e,
-                    exc_info=get_level() < logging.INFO,
-                )
-                console.print(
-                    e,
-                    status=MessageStatus.ERROR,
-                )
-                sys.exit(1)
+        with ExecutionTimer(llm_statistics.sub_collection("repository_url")):
+            with ConsoleWriter("LLM Usage (Repo URL)") as console:
+                try:
+                    repository_url = LLMService().get_repository_url(
+                        advisory_record.description, advisory_record.references
+                    )
+                    console.print(
+                        f"\n  Repository URL: {repository_url}",
+                        status=MessageStatus.OK,
+                    )
+                except Exception as e:
+                    logger.error(
+                        e,
+                        exc_info=get_level() < logging.INFO,
+                    )
+                    console.print(
+                        e,
+                        status=MessageStatus.ERROR,
+                    )
+                    sys.exit(1)
 
     fixing_commit = advisory_record.get_fixing_commit()
     # print(advisory_record.references)

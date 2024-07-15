@@ -78,6 +78,7 @@ class StatisticCollection(dict):
         unit: Optional[str] = None,
         overwrite=False,
     ):
+        """Adds a new statistic to the collection."""
         if isinstance(name, str):
             if not overwrite and name in self:
                 raise ForbiddenDuplication(f"{name} already added")
@@ -112,6 +113,9 @@ class StatisticCollection(dict):
         self,
         name: Optional[Union[str, Tuple[str, ...]]] = None,
     ) -> StatisticCollection:
+        """Creates a nested `StatisticCollection` as the value of `name`. Returns
+        and existing collection if there already exists one under `name`.
+        """
         if name is None:
             name = caller_name()
 
@@ -164,8 +168,12 @@ class StatisticCollection(dict):
             raise KeyError("only string ot tuple keys allowed")
 
     def collect(
-        self, name: Union[str, Tuple[str, ...]], value, unit: Optional[str] = None
+        self,
+        name: Union[str, Tuple[str, ...]],
+        value,
+        unit: Optional[str] = None,
     ):
+        """Adds a value to the list at key `name`."""
         if name not in self:
             self.record(name, [], unit=unit)
 
@@ -182,7 +190,10 @@ class StatisticCollection(dict):
             raise KeyError(f"can not collect into {name}, because it is not a list")
 
     def collect_unique(
-        self, name: Union[str, Tuple[str, ...]], value, ensure_uniqueness: bool = False
+        self,
+        name: Union[str, Tuple[str, ...]],
+        value,
+        ensure_uniqueness: bool = False,
     ):
         if name not in self:
             self.record(name, set())
@@ -205,6 +216,7 @@ class StatisticCollection(dict):
                 yield ascents + (child_key,), child, unit
 
     def generate_console_tree(self) -> str:
+        """Generate a visual representation of the collection."""
         descants = sorted(
             list(self.get_descants()), key=lambda e: LEVEL_DELIMITER.join(e[0])
         )
@@ -270,3 +282,7 @@ class StatisticCollection(dict):
                     ul += "</li>"
         ul += "</ul>"
         return ul
+
+    def as_json(self) -> dict:
+        for key, child in self.items():
+            print(f"key: {key}, child: {child}")

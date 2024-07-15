@@ -5,6 +5,7 @@ from typing import Optional, Tuple, Union
 
 from stats.collection import StatisticCollection, SubCollectionWrapper
 
+# Global execution  statistics to store all data in
 execution_statistics = StatisticCollection()
 
 
@@ -18,6 +19,8 @@ class TimerError(Exception):
 
 
 class Timer:
+    """A simple timer to measure elapsed time."""
+
     def __init__(self):
         self._start_time = None
 
@@ -36,8 +39,13 @@ class Timer:
 
 
 def measure_execution_time(
-    collection: StatisticCollection, name: Optional[Union[str, Tuple[str, ...]]] = None
+    collection: StatisticCollection,
+    name: Optional[Union[str, Tuple[str, ...]]] = None,
 ):
+    """A function decorator that measures and records the execution time of the
+    decorated function.
+    """
+
     def _measure(function):
         nonlocal name
         if name is None:
@@ -56,6 +64,8 @@ def measure_execution_time(
 
 
 class ExecutionTimer(SubCollectionWrapper):
+    """Allows measuring time within the context of a `StatisticCollection`."""
+
     def __init__(self, collection, name: Optional[Union[str, Tuple[str, ...]]] = None):
         super().__init__(collection)
         self.timer = Timer()
@@ -79,6 +89,8 @@ class ExecutionTimer(SubCollectionWrapper):
 
 
 class Counter(SubCollectionWrapper):
+    """Allows incrementing counts within the context of a `StatisticCollection`."""
+
     def __enter__(self) -> Counter:
         return self
 
@@ -98,7 +110,10 @@ class Counter(SubCollectionWrapper):
             ValueError(f"can not increment {name}")
 
     def initialize(
-        self, *keys: Union[str, Tuple[str, ...]], value=0, unit: Optional[str] = None
+        self,
+        *keys: Union[str, Tuple[str, ...]],
+        value=0,
+        unit: Optional[str] = None,
     ):
         for key in keys:
             self.collection.collect(key, value, unit=unit)

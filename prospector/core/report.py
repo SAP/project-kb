@@ -36,10 +36,8 @@ def json_(
     data = {
         "parameters": params,
         "advisory_record": advisory_record.__dict__,
-        "commits": [
-            r.as_dict(no_hash=True, no_rules=False, no_diff=no_diff)
-            for r in results
-        ],
+        "commits": [r.as_dict(no_hash=True, no_rules=False) for r in results],
+        "processing_statistics": execution_statistics,
     }
     logger.info(f"Writing results to {fn}")
     file = Path(fn)

@@ -8,7 +8,12 @@ from datamodel.advisory import AdvisoryRecord
 from datamodel.commit import Commit, apply_ranking
 from llm.llm_service import LLMService
 from rules.helpers import extract_security_keywords
-from stats.execution import Counter, execution_statistics
+from stats.execution import (
+    Counter,
+    ExecutionTimer,
+    execution_statistics,
+    measure_execution_time,
+)
 from util.lsh import build_lsh_index, decode_minhash
 
 NUM_COMMITS_PHASE_2 = (
@@ -17,6 +22,7 @@ NUM_COMMITS_PHASE_2 = (
 
 
 rule_statistics = execution_statistics.sub_collection("rules")
+llm_statistics = execution_statistics.sub_collection("LLM")
 
 
 class Rule:
@@ -57,8 +63,12 @@ def apply_rules(
 ) -> List[Commit]:
     """Applies the selected set of rules and returns the ranked list of commits."""
 
-    phase_1_rules = [rule for rule in RULES_PHASE_1 if rule.get_id() in enabled_rules]
-    phase_2_rules = [rule for rule in RULES_PHASE_2 if rule.get_id() in enabled_rules]
+    phase_1_rules = [
+        rule for rule in RULES_PHASE_1 if rule.get_id() in enabled_rules
+    ]
+    phase_2_rules = [
+        rule for rule in RULES_PHASE_2 if rule.get_id() in enabled_rules
+    ]
 
     if phase_2_rules:
         Rule.llm_service = LLMService()
@@ -69,7 +79,9 @@ def apply_rules(
 
     Rule.lsh_index = build_lsh_index()
     for candidate in candidates:
-        Rule.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
+        Rule.lsh_index.insert(
+            candidate.commit_id, decode_minhash(candidate.minhash)
+        )
 
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")
@@ -157,9 +169,7 @@ class ChangesRelevantFiles(Rule):
             ]
         )
         if len(relevant_files) > 0:
-            self.message = (
-                f"The commit changes some relevant files: {', '.join(relevant_files)}"
-            )
+            self.message = f"The commit changes some relevant files: {', '.join(relevant_files)}"
             return True
         return False
 
@@ -266,9 +276,7 @@ class TwinMentionedInAdv(Rule):
         for ref in advisory_record.references:
             for twin in candidate.twins:
                 if twin[1][:8] in ref:
-                    self.message = (
-                        "A twin of this commit is mentioned in the advisory page"
-                    )
+                    self.message = "A twin of this commit is mentioned in the advisory page"
                     return True
         return False
 
@@ -283,7 +291,9 @@ class VulnIdInLinkedIssue(Rule):
                 advisory_record.cve_id in content
                 and len(re.findall(r"CVE-\d{4}-\d{4,8}", content)) == 1
             ):
-                self.message = f"Issue {id} linked to the commit mentions the Vuln ID. "
+                self.message = (
+                    f"Issue {id} linked to the commit mentions the Vuln ID. "
+                )
                 return True
 
         for id, content in candidate.jira_refs.items():
@@ -366,7 +376,9 @@ class CommitMentionedInReference(Rule):
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord):
         for ref, n in advisory_record.references.items():
             if candidate.commit_id[:8] in ref:
-                self.message = f"This commit is mentioned {n} times in the references."
+                self.message = (
+                    f"This commit is mentioned {n} times in the references."
+                )
                 return True
         return False
 
@@ -379,7 +391,9 @@ class CommitHasTwins(Rule):
             twin_list = Rule.lsh_index.query(decode_minhash(candidate.minhash))
             # twin_list.remove(candidate.commit_id)
             candidate.twins = [
-                ["no-tag", twin] for twin in twin_list if twin != candidate.commit_id
+                ["no-tag", twin]
+                for twin in twin_list
+                if twin != candidate.commit_id
             ]
         # self.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
         if len(candidate.twins) > 0:
@@ -423,35 +437,40 @@ class CommitIsSecurityRelevant(Rule):
         backend_address: str,
     ) -> bool:
 
-        # Check if this commit is already in the database
-        try:
-            r = requests.get(
-                f"{backend_address}/commits/{candidate.repository}",
-                params={"commit_id": candidate.commit_id},
-                timeout=10
-            )
-            r.raise_for_status()
-            commit_data = r.json()[0]
+        with ExecutionTimer(
+            llm_statistics.sub_collection("commit_classification")
+        ):
+            # Check if this commit is already in the database
+            try:
+                r = requests.get(
+                    f"{backend_address}/commits/{candidate.repository}",
+                    params={"commit_id": candidate.commit_id},
+                    timeout=10,
+                )
+                r.raise_for_status()
+                commit_data = r.json()[0]
 
-            is_security_relevant = commit_data.get('security_relevant')
-            if is_security_relevant is not None:
-                candidate.security_relevant = is_security_relevant
-                return is_security_relevant
+                is_security_relevant = commit_data.get("security_relevant")
+                if is_security_relevant is not None:
+                    candidate.security_relevant = is_security_relevant
+                    return is_security_relevant
 
-            candidate.security_relevant = LLMService().classify_commit(
-                candidate.diff, candidate.repository, candidate.message
-            )
+                candidate.security_relevant = LLMService().classify_commit(
+                    candidate.diff, candidate.repository, candidate.message
+                )
 
-            update_response = requests.post(
-                backend_address + "/commits/",
-                json=[candidate.to_dict()],
-                headers={"content-type": "application/json"},
-            )
-            update_response.raise_for_status()
+                update_response = requests.post(
+                    backend_address + "/commits/",
+                    json=[candidate.to_dict()],
+                    headers={"content-type": "application/json"},
+                )
+                update_response.raise_for_status()
 
-        except requests.exceptions.RequestException as e:
-            error_type = type(e).__name__
-            print(f"Error communicating with backend: {error_type} - {str(e)}")
+            except requests.exceptions.RequestException as e:
+                error_type = type(e).__name__
+                print(
+                    f"Error communicating with backend: {error_type} - {str(e)}"
+                )
 
 
 RULES_PHASE_1: List[Rule] = [
