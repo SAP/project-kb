@@ -62,6 +62,15 @@ class LLMService(metaclass=Singleton):
         try:
             chain = prompt_best_guess | self.model | StrOutputParser()
 
+            # Shorten the dictionary of references to avoid exceeding the token limit
+            if len(advisory_references) >= 300:
+                sorted_references = dict(
+                    sorted(advisory_references.items(), key=lambda item: item[1])
+                )
+                advisory_references = dict(
+                    itertools.islice(sorted_references.items(), 200)
+                )
+
             url = chain.invoke(
                 {
                     "description": advisory_description,
