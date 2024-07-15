@@ -461,6 +461,13 @@ class CommitIsSecurityRelevant(Rule):
                     candidate.diff, candidate.repository, candidate.message
                 )
 
+                update_response = requests.post(
+                    backend_address + "/commits/",
+                    json=[candidate.to_dict()],
+                    headers={"content-type": "application/json"},
+                )
+                update_response.raise_for_status()
+
                 return candidate.security_relevant
 
             except requests.exceptions.RequestException as e:
