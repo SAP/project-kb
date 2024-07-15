@@ -9,7 +9,8 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 from datamodel.advisory import build_advisory_record
-from evaluation.dispatch_jobs import build_table_row, load_dataset
+from evaluation.dispatch_jobs import build_table_row
+from evaluation.utils import load_dataset
 
 
 def analyze_results_rules(dataset_path: str):

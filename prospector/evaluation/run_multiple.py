@@ -5,7 +5,7 @@ import signal
 import sys
 
 from evaluation.analyse import analyze_prospector, analyze_results_rules
-from evaluation.dispatch_jobs import execute_prospector, parallel_execution
+from evaluation.dispatch_jobs import dispatch_prospector_jobs, parallel_execution
 
 
 def is_missing(path: str):
@@ -79,7 +79,7 @@ def main(argv):
     if args.execute and not args.analyze and not args.parallel:
         # get_full_commit_ids(args.input)
         # return
-        execute_prospector(args.input, args.cve)
+        dispatch_prospector_jobs(args.input, args.cve)
     elif args.execute and not args.analyze and args.parallel:
         while not parallel_execution(args.input):
             pass

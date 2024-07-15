@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 from core.prospector import prospector
 from core.report import generate_report
+from evaluation.utils import load_dataset
 from git.git import Git
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
@@ -33,12 +34,6 @@ redis_url = "redis://localhost:6379/0"
 # def commit_distance_to_adv(dataset_path: str):
 #     dataset = load_dataset(dataset_path)
 #     for itm in dataset:
-
-
-def load_dataset(path: str):
-    with open(path, "r") as file:
-        reader = csv.reader(file, delimiter=";")
-        return [row for row in reader if "CVE" in row[0] and row[3] != "True"]
 
 
 def get_full_commit_ids(dataset_path: str):
@@ -279,7 +274,7 @@ def execute_prospector_wrapper(kwargs):
 
 def execute_prospector(filename: str, cve: str = ""):
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[:3]
+    dataset = dataset[:50]
     if len(cve) != 0:
         dataset = [c for c in dataset if c[0] in cve]
 
@@ -291,12 +286,12 @@ def execute_prospector(filename: str, cve: str = ""):
             f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
         )
 
-        dispatch_job_and_generate_report(
+        dispatch_prospector_jobs(
             cve[0], cve[2], f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"
         )
 
 
-def run_prospector(vuln_id, v_int, report_type: str, output_file):
+def run_prospector_and_generate_report(vuln_id, v_int, report_type: str, output_file):
     """Call the prospector() and generate_report() functions. This also creates the LLMService singleton
     so that it is available in the context of the job.
     """
@@ -322,27 +317,40 @@ def run_prospector(vuln_id, v_int, report_type: str, output_file):
     return results, advisory_record
 
 
-def dispatch_job_and_generate_report(
-    cve_id: str, version_interval: str, report_output_file: str
-):
-    """Dispatches a job to the queue."""
+def dispatch_prospector_jobs(filename: str, selected_cves: str):
+    """Dispatches jobs to the queue."""
 
-    # Send them to Prospector to run
-    with Connection(redis.from_url(redis_url)):
-        queue = Queue()
+    dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
+    dataset = dataset[:50]
 
-        job = Job.create(
-            run_prospector,
-            args=(
-                cve_id,
-                version_interval,
-                "json",
-                report_output_file,
-            ),
-            description="Prospector Job",
-            id=cve_id,
+    # Only run a subset of CVEs if the user supplied a selected set
+    if len(selected_cves) != 0:
+        dataset = [c for c in dataset if c[0] in selected_cves]
+
+    for cve in dataset:
+        if os.path.exists(f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"):
+            continue
+
+        print(
+            f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
         )
 
-        queue.enqueue_job(job)
+        # Send them to Prospector to run
+        with Connection(redis.from_url(redis_url)):
+            queue = Queue()
 
-    print(f"Dispatched job {cve_id} to queue.")
+            job = Job.create(
+                run_prospector_and_generate_report,
+                args=(
+                    cve[0],
+                    cve[2],
+                    "json",
+                    f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
+                ),
+                description="Prospector Job",
+                id=cve[0],
+            )
+
+            queue.enqueue_job(job)
+
+        print(f"Dispatched job {cve[0]} to queue.")
