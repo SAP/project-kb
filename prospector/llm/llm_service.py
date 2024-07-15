@@ -1,3 +1,4 @@
+import itertools
 import re
 
 import validators
@@ -39,7 +40,9 @@ class LLMService(metaclass=Singleton):
         except Exception:
             raise
 
-    def get_repository_url(self, advisory_description, advisory_references) -> str:
+    def get_repository_url(
+        self, advisory_description, advisory_references
+    ) -> str:
         """Ask an LLM to obtain the repository URL given the advisory description and references.
 
         Args:
@@ -52,6 +55,7 @@ class LLMService(metaclass=Singleton):
         Raises:
             ValueError if advisory information cannot be obtained or there is an error in the model invocation.
         """
+
         try:
             chain = prompt_best_guess | self.model | StrOutputParser()
 
@@ -125,4 +129,6 @@ class LLMService(metaclass=Singleton):
         ]:
             return False
         else:
-            raise RuntimeError(f"The model returned an invalid response: {is_relevant}")
+            raise RuntimeError(
+                f"The model returned an invalid response: {is_relevant}"
+            )
