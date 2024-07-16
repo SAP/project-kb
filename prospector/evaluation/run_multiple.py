@@ -4,7 +4,11 @@ import os
 import signal
 import sys
 
-from evaluation.analyse import analyze_prospector, analyze_results_rules
+from evaluation.analyse import (
+    analyse_statistics,
+    analyze_prospector,
+    analyze_results_rules,
+)
 from evaluation.dispatch_jobs import dispatch_prospector_jobs, parallel_execution
 
 
@@ -51,6 +55,13 @@ def parse_cli_args(args):
     )
 
     parser.add_argument(
+        "-s",
+        "--stats",
+        action="store_true",
+        help="Analyse the statistics field saved in each Prospector report.",
+    )
+
+    parser.add_argument(
         "-f",
         "--folder",
         type=str,
@@ -76,18 +87,31 @@ def parse_cli_args(args):
 
 def main(argv):
     args = parse_cli_args(argv)
+
+    # Run Prospector containerised
     if args.execute and not args.analyze and not args.parallel:
         # get_full_commit_ids(args.input)
         # return
         dispatch_prospector_jobs(args.input, args.cve)
+
+    # Run Prospector in parallel
     elif args.execute and not args.analyze and args.parallel:
         while not parallel_execution(args.input):
             pass
         # parallel_execution(args.input)
-    elif args.analyze and not args.rules and not args.execute:
+
+    # analysis of Prospector report
+    elif args.analyze and not args.rules and not args.execute and not args.stats:
         analyze_prospector(args.input)
+
+    elif args.analyze and args.stats and not args.rules and not args.execute:
+        analyse_statistics(args.input)
+
+    # analysis of rules
     elif args.analyze and args.rules and not args.execute:
         analyze_results_rules(args.input)
+
+    # Cannot choose both analyse and execute, stop here.
     elif args.analyze and args.execute:
         sys.exit("Choose either to execute or analyze")
 

@@ -21,6 +21,7 @@ from util.config_parser import parse_config_file
 INPUT_DATA_PATH = "evaluation/data/input/"
 PROSPECTOR_REPORT_PATH = "evaluation/data/reports/"
 
+
 # get the redis server url
 config = parse_config_file()
 # redis_url = config.redis_url
@@ -272,25 +273,6 @@ def execute_prospector_wrapper(kwargs):
         generate_report(r, a, "json", f"empirical_study/datasets/{filename}/{a.cve_id}")
 
 
-def execute_prospector(filename: str, cve: str = ""):
-    dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[:50]
-    if len(cve) != 0:
-        dataset = [c for c in dataset if c[0] in cve]
-
-    for cve in dataset:
-        if os.path.exists(f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"):
-            continue
-
-        print(
-            f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
-        )
-
-        dispatch_prospector_jobs(
-            cve[0], cve[2], f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"
-        )
-
-
 def run_prospector_and_generate_report(vuln_id, v_int, report_type: str, output_file):
     """Call the prospector() and generate_report() functions. This also creates the LLMService singleton
     so that it is available in the context of the job.
@@ -328,12 +310,13 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
         dataset = [c for c in dataset if c[0] in selected_cves]
 
     for cve in dataset:
+        # Skip already existing reports
         if os.path.exists(f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"):
             continue
 
-        print(
-            f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
-        )
+        # print(
+        #     f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
+        # )
 
         # Send them to Prospector to run
         with Connection(redis.from_url(redis_url)):
@@ -353,4 +336,6 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
 
             queue.enqueue_job(job)
 
-        print(f"Dispatched job {cve[0]} to queue.")
+        # print(f"Dispatched job {cve[0]} to queue.") # Sanity Check
+
+    print(f"Dispatched {len(dataset)} jobs.")
