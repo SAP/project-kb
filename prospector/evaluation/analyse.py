@@ -2,14 +2,18 @@ import csv
 import json
 import re
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from urllib.parse import urlparse
 
 import seaborn as sns
 from matplotlib import pyplot as plt
 
 from datamodel.advisory import build_advisory_record
-from evaluation.dispatch_jobs import build_table_row
+from evaluation.dispatch_jobs import (
+    INPUT_DATA_PATH,
+    PROSPECTOR_REPORT_PATH,
+    build_table_row,
+)
 from evaluation.utils import load_dataset
 
 
@@ -83,8 +87,8 @@ def analyze_prospector(filename: str):  # noqa: C901
     """Analyses Prospector's reports."""
     # delete_missing_git(dataset_path)
     # return []
-    filename = "empirical_study/datasets/" + filename + ".csv"
-    dataset = load_dataset(filename)
+    file = INPUT_DATA_PATH + filename + ".csv"
+    dataset = load_dataset(file)
     # res_ts = temp_load_reservation_dates(dataset_path[:-4] + "_timestamps.csv")
 
     missing = []
@@ -113,6 +117,7 @@ def analyze_prospector(filename: str):  # noqa: C901
     rulescount = defaultdict(lambda: 0)
     # references = list()
 
+    # For each CSV in the input dataset, check its report
     for itm in dataset:
         try:
             (
@@ -124,9 +129,10 @@ def analyze_prospector(filename: str):  # noqa: C901
                 ranks,
                 rules,
             ) = check_report(
-                filename[:-4], itm[0], itm[4]
+                PROSPECTOR_REPORT_PATH + filename, itm[0], itm[4]
             )  # ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
         except FileNotFoundError:
+            print(f"No report for {itm[0]}")
             continue
 
         # year = itm[0].split("-")[1]
@@ -682,3 +688,104 @@ def check_advisory(cve, repository=None, nlp=None):
         res.append("***************************************")
         print(advisory.cve_id)
         return res
+
+
+def analyse_statistics(filename: str):  # noqa: C901
+    """Analyses the Statistics field in each Prospector report of the CVEs contained in `filename`.
+
+    Args:
+        filename (str): The input CSV file containing CVE information with the following columns:
+        # ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
+        This file must be present in the INPUT_DATA_PATH folder.
+
+    Prints:
+        The average time taken for getting the repository URL, for applying the commit classification
+        one single time and for applying the commit classification for all X commits.
+    """
+    file = INPUT_DATA_PATH + filename + ".csv"
+    dataset = load_dataset(file)
+
+    missing = []
+    skipped = 0
+
+    repo_times, cc_times, total_cc_times = [], [], []
+
+    # For each CSV in the input dataset, check its report
+    for itm in dataset:
+        # Each itm has ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
+        filepath = PROSPECTOR_REPORT_PATH + filename + f"/{itm[0]}.json"
+        try:
+            repo_time, avg_cc_time, total_cc_time = process_llm_statistics(filepath)
+
+            repo_times.append(repo_time)
+            cc_times.append(avg_cc_time)
+            total_cc_times.append(total_cc_time)
+
+        except FileNotFoundError:
+            missing.append(itm[0])
+            skipped += 1
+            continue
+
+    avg_repo_time = sum(repo_times) / len(repo_times)
+    avg_cc_time = sum(cc_times) / len(cc_times)
+    avg_total_cc_time = sum(total_cc_times) / len(total_cc_times)
+
+    # How many commits was the commit classification rule applied to?
+    for itm in dataset:
+        filepath = PROSPECTOR_REPORT_PATH + filename + f"/{itm[0]}.json"
+        try:
+            cc_num_commits = get_cc_num_commits(filepath)
+            break
+
+        except FileNotFoundError:
+            continue
+
+    print(
+        # f"Found {len(dataset)} files in input dataset. \n{skipped} reports were missing: {missing}."
+        f"Found {len(dataset)} files in input dataset. \n{skipped} reports were missing."
+    )
+
+    print("\nIn these reports, the LLM invokation needed the following times:")
+    print(f"Average time to get repository URL: \t\t\t\t{avg_repo_time}")
+    print(
+        f"Average time to get commit classification (single request): \t{avg_cc_time}"
+    )
+    print(
+        f"Average time to get commit classification (all {cc_num_commits} requests): \t{avg_total_cc_time}"
+    )
+
+
+def process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
+    "Returns the LLM statistics saved in Prospector's JSON report."
+    with open(filepath, "r") as file:
+        data = json.load(file)
+
+        llm_stats = data["processing_statistics"]["LLM"]["llm"]["llm_service"][
+            "LLMService"
+        ]
+
+        total_cc_time = sum(llm_stats["classify_commit"]["execution time"])
+
+        avg_cc_time = total_cc_time / len(
+            llm_stats["classify_commit"]["execution time"]
+        )
+
+        return (
+            llm_stats["get_repository_url"]["execution time"][0],
+            avg_cc_time,
+            total_cc_time,
+        )
+
+
+def get_cc_num_commits(filepath):
+    """Returns how many commits the commit classification rule was applied to."""
+    with open(filepath, "r") as file:
+        data = json.load(file)
+
+        num = len(
+            data["processing_statistics"]["LLM"]["llm"]["llm_service"]["LLMService"][
+                "classify_commit"
+            ]["execution time"]
+        )
+
+        return num
