@@ -1,6 +1,7 @@
 import csv
 import json
 import re
+import sys
 from collections import defaultdict
 from typing import Dict, List, Tuple
 from urllib.parse import urlparse
@@ -33,7 +34,9 @@ def analyze_results_rules(dataset_path: str):
 
     for itm in dataset:
         try:
-            r, i, v, id = check_report_get_rules(dataset_path[:-4], itm[0], itm[4])
+            r, i, v, id = check_report_get_rules(
+                dataset_path[:-4], itm[0], itm[4]
+            )
             if r is not None:
                 count += 1
                 table[itm[0]] = [id, v, r, itm]
@@ -79,7 +82,9 @@ def analyze_results_rules(dataset_path: str):
     print(count)
     for k, v in table.items():
         if "CVE_ID_IN_LINKED_ISSUE" in v[2]:
-            print(f"{v[3][0]};{v[3][1]};{v[3][2]};{v[3][3]};{v[3][4]};{v[3][5]}")
+            print(
+                f"{v[3][0]};{v[3][1]};{v[3][2]};{v[3][3]};{v[3][4]};{v[3][5]}"
+            )
             # print(f"{k}: {v[3]}/commit/{v[0]}")
 
 
@@ -257,18 +262,18 @@ def analyze_prospector(filename: str):  # noqa: C901
             print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}")
         elif not is_fix and not exists and position < 0:
             skipped += 1
-    # print(
-    #     ",".join(
-    #         results["not_reported"]
-    #         | results["not_found"]
-    #         | results["false_positive"]
-    #         | results["low_confidence"]
-    #         | results["medium_confidence"]
-    #         | results["CVE_ID_IN_LINKED_ISSUE"]
-    #         | results["CROSS_REFERENCE"]
-    #         | results["CVE_ID_IN_MESSAGE"]
-    #     )
-    # )
+    print(
+        ",".join(
+            results["not_reported"]
+            | results["not_found"]
+            | results["false_positive"]
+            | results["low_confidence"]
+            | results["medium_confidence"]
+            | results["CVE_ID_IN_LINKED_ISSUE"]
+            | results["CROSS_REFERENCE"]
+            | results["CVE_ID_IN_MESSAGE"]
+        )
+    )
     total = len(dataset) - skipped
     rulescount = dict(sorted(rulescount.items()))
 
@@ -322,7 +327,9 @@ def analyze_prospector(filename: str):  # noqa: C901
         # )
 
         # total_check += len(value)
-    yearly_timestamps = {k: v for k, v in yearly_timestamps.items() if len(v) > 30}
+    yearly_timestamps = {
+        k: v for k, v in yearly_timestamps.items() if len(v) > 30
+    }
     # df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in timestamps.items()]))
 
     # ax = sns.violinplot(df, inner="box")
@@ -507,10 +514,14 @@ def check_report(dataset, cve, fixing_commits):
                 if is_fixing_commit(commit, fixing_commits):
                     if index == 0:
                         score_first = -1
-                    return get_commit_info(commit, index, score_first, score_next)
+                    return get_commit_info(
+                        commit, index, score_first, score_next
+                    )
 
             for index, commit in enumerate(data["commits"]):
-                commit_info = get_non_fixing_commit_info(commit, index, score_first)
+                commit_info = get_non_fixing_commit_info(
+                    commit, index, score_first
+                )
                 if commit_info:
                     return commit_info
 
@@ -562,13 +573,21 @@ def process_json_report(dataset, cve, commits):
                         None,
                     ]
                     current[3] = len(
-                        [k for k, v in processed_commits.items() if v[0] == current[2]]
+                        [
+                            k
+                            for k, v in processed_commits.items()
+                            if v[0] == current[2]
+                        ]
                     )
                     if i > 0:
-                        current[4] = sum_relevances(data["commits"][0]["matched_rules"])
+                        current[4] = sum_relevances(
+                            data["commits"][0]["matched_rules"]
+                        )
                         r_next = 0
                         for j in range(i, -1, -1):
-                            r_next = sum_relevances(data["commits"][j]["matched_rules"])
+                            r_next = sum_relevances(
+                                data["commits"][j]["matched_rules"]
+                            )
                             if r_next > current[2]:
                                 current[5] = r_next
                                 break
@@ -599,7 +618,10 @@ def analyze_rules_usage(dataset_path: str, cve: str = ""):
                         rules[rule["id"]] = 1
 
     sorted_rules = {
-        k: v for k, v in sorted(rules.items(), key=lambda item: item[1], reverse=True)
+        k: v
+        for k, v in sorted(
+            rules.items(), key=lambda item: item[1], reverse=True
+        )
     }
     print(f"\nTotal commits: {commit_count}")
     print(f"Total cves: {cve_count}\n")
@@ -705,7 +727,7 @@ def analyse_statistics(filename: str):  # noqa: C901
     file = INPUT_DATA_PATH + filename + ".csv"
     dataset = load_dataset(file)
 
-    missing = []
+    missing, files_with_no_commits = [], []
     skipped = 0
 
     repo_times, cc_times, total_cc_times = [], [], []
@@ -715,7 +737,9 @@ def analyse_statistics(filename: str):  # noqa: C901
         # Each itm has ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
         filepath = PROSPECTOR_REPORT_PATH + filename + f"/{itm[0]}.json"
         try:
-            repo_time, avg_cc_time, total_cc_time = process_llm_statistics(filepath)
+            repo_time, avg_cc_time, total_cc_time = process_llm_statistics(
+                filepath
+            )
 
             repo_times.append(repo_time)
             cc_times.append(avg_cc_time)
@@ -724,6 +748,12 @@ def analyse_statistics(filename: str):  # noqa: C901
         except FileNotFoundError:
             missing.append(itm[0])
             skipped += 1
+
+        except ValueError:
+            files_with_no_commits.append(itm[0])
+            skipped += 1
+
+        finally:
             continue
 
     avg_repo_time = sum(repo_times) / len(repo_times)
@@ -760,21 +790,26 @@ def process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
     with open(filepath, "r") as file:
         data = json.load(file)
 
-        llm_stats = data["processing_statistics"]["LLM"]["llm"]["llm_service"][
-            "LLMService"
-        ]
+        try:
+            llm_stats = data["processing_statistics"]["LLM"]["llm"][
+                "llm_service"
+            ]["LLMService"]
 
-        total_cc_time = sum(llm_stats["classify_commit"]["execution time"])
+            total_cc_time = sum(llm_stats["classify_commit"]["execution time"])
 
-        avg_cc_time = total_cc_time / len(
-            llm_stats["classify_commit"]["execution time"]
-        )
+            avg_cc_time = total_cc_time / len(
+                llm_stats["classify_commit"]["execution time"]
+            )
 
-        return (
-            llm_stats["get_repository_url"]["execution time"][0],
-            avg_cc_time,
-            total_cc_time,
-        )
+            return (
+                llm_stats["get_repository_url"]["execution time"][0],
+                avg_cc_time,
+                total_cc_time,
+            )
+
+        except Exception:
+            print(f"Did not have expected JSON fields: {filepath}.")
+            raise ValueError
 
 
 def get_cc_num_commits(filepath):
@@ -783,9 +818,9 @@ def get_cc_num_commits(filepath):
         data = json.load(file)
 
         num = len(
-            data["processing_statistics"]["LLM"]["llm"]["llm_service"]["LLMService"][
-                "classify_commit"
-            ]["execution time"]
+            data["processing_statistics"]["LLM"]["llm"]["llm_service"][
+                "LLMService"
+            ]["classify_commit"]["execution time"]
         )
 
         return num

@@ -47,7 +47,9 @@ def get_full_commit_ids(dataset_path: str):
             if commit_id is not None:
                 commits.append(commit_id)
 
-        print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{','.join(commits)};{itm[5]}")
+        print(
+            f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{','.join(commits)};{itm[5]}"
+        )
 
 
 def check_version_to_tag_matching(dataset_path: str):
@@ -247,7 +249,9 @@ def parallel_execution(filename: str):
             "silent": True,
         }
         for cve in dataset
-        if not os.path.exists(f"empirical_study/datasets/{filename}/{cve[0]}.json")
+        if not os.path.exists(
+            f"empirical_study/datasets/{filename}/{cve[0]}.json"
+        )
     ]
     if len(inputs) == 0:
         return True
@@ -270,10 +274,14 @@ def execute_prospector_wrapper(kwargs):
     del kwargs["filename"]
     r, a = prospector(**kwargs)
     if r is not None:
-        generate_report(r, a, "json", f"empirical_study/datasets/{filename}/{a.cve_id}")
+        generate_report(
+            r, a, "json", f"empirical_study/datasets/{filename}/{a.cve_id}"
+        )
 
 
-def run_prospector_and_generate_report(vuln_id, v_int, report_type: str, output_file):
+def run_prospector_and_generate_report(
+    vuln_id, v_int, report_type: str, output_file
+):
     """Call the prospector() and generate_report() functions. This also creates the LLMService singleton
     so that it is available in the context of the job.
     """
@@ -303,7 +311,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[:50]
+    # dataset = dataset[:50]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
