@@ -3,9 +3,11 @@ import re
 import validators
 from langchain_core.language_models.llms import LLM
 from langchain_core.output_parsers import StrOutputParser
+from requests import HTTPError
 
 from llm.instantiation import create_model_instance
-from llm.prompts import prompt_best_guess
+from llm.prompts.classify_commit import zero_shot as cc_zero_shot
+from llm.prompts.get_repository_url import prompt_best_guess
 from log.logger import logger
 from util.config_parser import LLMServiceConfig
 from util.singleton import Singleton
@@ -74,3 +76,53 @@ class LLMService(metaclass=Singleton):
             raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
 
         return url
+
+    def classify_commit(
+        self, diff: str, repository_name: str, commit_message: str
+    ) -> bool:
+        """Ask an LLM whether a commit is security relevant or not. The response will be either True or False.
+
+        Args:
+            candidate (Commit): The commit to input into the LLM
+
+        Returns:
+            True if the commit is deemed security relevant, False if not.
+
+        Raises:
+            ValueError if there is an error in the model invocation or the response was not valid.
+        """
+        try:
+            chain = cc_zero_shot | self.model | StrOutputParser()
+
+            is_relevant = chain.invoke(
+                {
+                    "diff": diff,
+                    "repository_name": repository_name,
+                    "commit_message": commit_message,
+                }
+            )
+            logger.info(f"LLM returned is_relevant={is_relevant}")
+
+        except HTTPError as e:
+            # if the diff is too big, a 400 error is returned -> silently ignore by returning False for this commit
+            status_code = e.response.status_code
+            if status_code == 400:
+                return False
+            raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
+
+        if is_relevant in [
+            "True",
+            "ANSWER:True",
+            "```ANSWER:True```",
+        ]:
+            return True
+        elif is_relevant in [
+            "False",
+            "ANSWER:False",
+            "```ANSWER:False```",
+        ]:
+            return False
+        else:
+            raise RuntimeError(f"The model returned an invalid response: {is_relevant}")

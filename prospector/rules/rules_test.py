@@ -89,7 +89,9 @@ def candidates():
             changed_files={
                 "core/src/main/java/org/apache/cxf/workqueue/AutomaticWorkQueueImpl.java"
             },
-            minhash=get_encoded_minhash(get_msg("Insecure deserialization", 50)),
+            minhash=get_encoded_minhash(
+                get_msg("Insecure deserialization", 50)
+            ),
         ),
         # TODO: Not matched by existing tests: GHSecurityAdvInMessage, ReferencesBug, ChangesRelevantCode, TwinMentionedInAdv, VulnIdInLinkedIssue, SecurityKeywordInLinkedGhIssue, SecurityKeywordInLinkedBug, CrossReferencedBug, CrossReferencedGh, CommitHasTwins, ChangesRelevantFiles, CommitMentionedInAdv, RelevantWordsInMessage
     ]
@@ -109,7 +111,9 @@ def advisory_record():
     )
 
 
-def test_apply_phase_1_rules(candidates: List[Commit], advisory_record: AdvisoryRecord):
+def test_apply_phase_1_rules(
+    candidates: List[Commit], advisory_record: AdvisoryRecord
+):
     annotated_candidates = apply_rules(
         candidates, advisory_record, enabled_rules=enabled_rules_from_config
     )
@@ -117,7 +121,9 @@ def test_apply_phase_1_rules(candidates: List[Commit], advisory_record: Advisory
     # Repo 5: Should match: AdvKeywordsInFiles, SecurityKeywordsInMsg, CommitMentionedInReference
     assert len(annotated_candidates[0].matched_rules) == 3
 
-    matched_rules_names = [item["id"] for item in annotated_candidates[0].matched_rules]
+    matched_rules_names = [
+        item["id"] for item in annotated_candidates[0].matched_rules
+    ]
     assert "ADV_KEYWORDS_IN_FILES" in matched_rules_names
     assert "COMMIT_IN_REFERENCE" in matched_rules_names
     assert "SEC_KEYWORDS_IN_MESSAGE" in matched_rules_names
@@ -125,21 +131,27 @@ def test_apply_phase_1_rules(candidates: List[Commit], advisory_record: Advisory
     # Repo 1: Should match: VulnIdInMessage, ReferencesGhIssue
     assert len(annotated_candidates[1].matched_rules) == 2
 
-    matched_rules_names = [item["id"] for item in annotated_candidates[1].matched_rules]
+    matched_rules_names = [
+        item["id"] for item in annotated_candidates[1].matched_rules
+    ]
     assert "VULN_ID_IN_MESSAGE" in matched_rules_names
     assert "GITHUB_ISSUE_IN_MESSAGE" in matched_rules_names
 
     # Repo 3: Should match: VulnIdInMessage, ReferencesGhIssue
     assert len(annotated_candidates[2].matched_rules) == 2
 
-    matched_rules_names = [item["id"] for item in annotated_candidates[2].matched_rules]
+    matched_rules_names = [
+        item["id"] for item in annotated_candidates[2].matched_rules
+    ]
     assert "VULN_ID_IN_MESSAGE" in matched_rules_names
     assert "GITHUB_ISSUE_IN_MESSAGE" in matched_rules_names
 
     # Repo 4: Should match: SecurityKeywordsInMsg
     assert len(annotated_candidates[3].matched_rules) == 1
 
-    matched_rules_names = [item["id"] for item in annotated_candidates[3].matched_rules]
+    matched_rules_names = [
+        item["id"] for item in annotated_candidates[3].matched_rules
+    ]
     assert "SEC_KEYWORDS_IN_MESSAGE" in matched_rules_names
 
     # Repo 2: Matches nothing
