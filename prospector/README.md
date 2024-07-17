@@ -41,6 +41,7 @@ To quickly set up Prospector, follow these steps. This will run Prospector in it
     ```
     mv config-sample.yaml config.yaml
     ```
+   Note: If you want to use the backend, make sure you set the `POSTGRES_DATA` variable in your `.env` to point to a local directory to save the backend data to. This ensures that the database can persist, even if the docker containers are stopped.
 
 4. Execute the bash script *run_prospector.sh* specifying the *-h* flag. <br> This will display a list of options that you can use to customize the execution of Prospector.
     ```
@@ -121,7 +122,11 @@ You can set the `use_llm_<...>` parameters in *config.yaml* for fine-grained con
 
 Following these steps allows you to run Prospector's components individually: [Backend database and worker containers](#starting-the-backend-database-and-the-job-workers), [RESTful Server](#starting-the-restful-server) for API endpoints, [Prospector CLI](#running-the-cli-version) and [Tests](#testing).
 
-Prerequisites:
+If you have issues with these steps, please open a Github issue and
+explain in detail what you did and what unexpected behaviour you observed
+(also indicate your operating system and Python version).
+
+**Prerequisites:**
 
 * Python 3.10
 * postgreSQL
@@ -146,12 +151,13 @@ set -a; source .env; set +a
 
 You can configure prospector from CLI or from the *config.yaml* file. The (recommended) API Keys for Github and the NVD can be configured from the `.env` file (which must then be sourced with `set -a; source .env; set +a`)
 
+#### Requirements
+
 If at any time you wish to use a different version of the python interpreter, beware that the `requirements.txt` file contains the exact versioning for `python 3.10.6`.
 
-If you have issues with these steps, please open a Github issue and
-explain in detail what you did and what unexpected behaviour you observed
-(also indicate your operating system and Python version).
+If you need to update the requirements, add the packages to `requirements.in`. Then recompile `requirements.txt` with `pip-cmpile --no-annotate --strip-extras` (You'll need to have pip-tools installed: `python3 -m pip install pip-tools`). If `requirements.txt` gets generated with `pip extra`'s at the top, remove these before you push (as this will make the build try to fetch them for hours).
 
+#### Code Formatting
 
 :exclamation: **IMPORTANT**: this project adopts `black` for code formatting. You may want to configure
 your editor so that autoformatting is enforced "on save". The pre-commit hook ensures that
@@ -177,7 +183,23 @@ You can then start the necessary containers with the following command:
 make docker-setup
 ```
 
-This also starts a convenient DB administration tool at http://localhost:8080
+This also starts a convenient DB administration tool at http://localhost:8080. Also, make sure you have set your `POSTGRES_DATA` environment
+variable in `.env`. It should point to a local folder to where the database data can be saved to, in order for the database to persist,
+even if the containers are stopped. If you want to delete the existing database (eg. because changes to the schema have been made), attach
+to the db docker container `db` in interactive mode by running:
+
+```bash
+docker exec -it db bash
+```
+
+Then navigate to the folder containing the database data: `/var/lib/postgresql/data/` and empty it with:
+
+```bash
+$/var/lib/postgresql/data/ rm -rf *
+```
+
+This needs to be done before stopping and restarting the containers: The `db` container will not execute any scripts if the `/var/lib/postgresql/data/` folder
+is not empty and therefore not create a new database, even if you cleanup docker with the command below.
 
 If you wish to cleanup docker to run a fresh version of the backend you can run:
 
