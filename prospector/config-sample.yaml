@@ -21,7 +21,7 @@ backend: http://localhost:8000
 database:
   user: postgres
   password: example
-  host: db
+  host: localhost # Database address; when in containerised version, use 'db', otherwise 'localhost'
   port: 5432
   dbname: postgres
 
