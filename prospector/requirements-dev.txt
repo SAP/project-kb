@@ -1,9 +1,11 @@
 autopep8
 black
+flake8
+matplotlib
 pylint
 pytest
 pytest-cov
 pycodestyle
-flake8
-requests-mock
 pre-commit
+requests-mock
+seaborn
