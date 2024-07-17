@@ -746,10 +746,12 @@ def analyse_statistics(filename: str):  # noqa: C901
             total_cc_times.append(total_cc_time)
 
         except FileNotFoundError:
+            print(f"Skipped {itm[0]}.json because file could not be found.")
             missing.append(itm[0])
             skipped += 1
 
         except ValueError:
+            print(f"Skipped {itm[0]}.json.")
             files_with_no_commits.append(itm[0])
             skipped += 1
 
@@ -786,7 +788,15 @@ def analyse_statistics(filename: str):  # noqa: C901
 
 
 def process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
-    "Returns the LLM statistics saved in Prospector's JSON report."
+    """Extracts the LLM statistics saved in Prospector's JSON report.
+
+    Params:
+        filepath (str): The filepath to the Prospector report in JSON format.
+
+    Returns:
+        Tuple[float, float, float]: (time for getting repository URL, avg.
+        time for one commit classification, sum of all commit classification times)
+    """
     with open(filepath, "r") as file:
         data = json.load(file)
 
