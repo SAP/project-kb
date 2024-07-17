@@ -21,7 +21,9 @@ class Commit(BaseModel):
     repository: str = ""
     timestamp: Optional[int] = 0
     message: Optional[str] = ""
-    hunks: Optional[int] = 0  # List[Tuple[int, int]] = Field(default_factory=list)
+    hunks: Optional[int] = (
+        0  # List[Tuple[int, int]] = Field(default_factory=list)
+    )
     diff: List[str] = Field(default_factory=list)
     changed_files: List[str] = Field(default_factory=list)
     message_reference_content: List[str] = Field(default_factory=list)
@@ -33,6 +35,7 @@ class Commit(BaseModel):
     matched_rules: List[Dict[str, str | int]] = Field(default_factory=list)
     minhash: Optional[str] = ""
     twins: List[List[str]] = Field(default_factory=list)
+    security_relevant: Optional[bool] = None
 
     def to_dict(self):
         d = dict(self.__dict__)
@@ -70,7 +73,9 @@ class Commit(BaseModel):
         return self.tags[0] if len(self.tags) else "no-tag"
 
     def compute_relevance(self):
-        self.relevance = sum([rule.get("relevance") for rule in self.matched_rules])
+        self.relevance = sum(
+            [rule.get("relevance") for rule in self.matched_rules]
+        )
 
     def get_relevance(self) -> int:
         return sum([rule.get("relevance") for rule in self.matched_rules])
@@ -148,7 +153,11 @@ def make_from_raw_commit(raw: RawCommit, get_tags: bool = False) -> Commit:
         commit.tags = raw.find_tags()
 
     commit.diff, commit.hunks = raw.get_diff()
-    commit.jira_refs = extract_jira_references(commit.repository, commit.message)
-    commit.ghissue_refs = extract_ghissue_references(commit.repository, commit.message)
+    commit.jira_refs = extract_jira_references(
+        commit.repository, commit.message
+    )
+    commit.ghissue_refs = extract_ghissue_references(
+        commit.repository, commit.message
+    )
     commit.cve_refs = extract_cve_references(commit.message)
     return commit

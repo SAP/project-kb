@@ -400,6 +400,9 @@ def save_preprocessed_commits(backend_address, payload):
         with ConsoleWriter("Saving processed commits to backend") as writer:
             logger.debug("Sending processing commits to backend...")
             try:
+                # logger.debug(
+                #     f"the address: {backend_address}, the payload: {payload}"
+                # ) # Sanity Check
                 r = requests.post(
                     backend_address + "/commits/",
                     json=payload,
