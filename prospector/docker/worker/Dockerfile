@@ -69,7 +69,7 @@ COPY docker/worker/etc_supervisor_confd_rqworker.conf.j2 /etc/supervisor.d/rqwor
 #VOLUME ["/pythonimports"]
 #ENV PYTHONPATH "${PYTHONPATH}:/pythonimports"
 
-VOLUME ["data_sources/nvd/reports"]
+VOLUME [ "/data_sources/reports" ]
 
 RUN chmod +x /usr/local/bin/start_rq_worker.sh
 #CMD tail -f /dev/null

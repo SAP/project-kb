@@ -2,9 +2,6 @@
 import os
 import signal
 import sys
-from typing import Any, Dict
-
-from dotenv import load_dotenv
 
 from llm.llm_service import LLMService
 from util.http import ping_backend
@@ -16,8 +13,6 @@ if path_root not in sys.path:
 
 import core.report as report  # noqa: E402
 from cli.console import ConsoleWriter, MessageStatus  # noqa: E402
-from core.prospector import TIME_LIMIT_AFTER  # noqa: E402
-from core.prospector import TIME_LIMIT_BEFORE  # noqa: E402
 from core.prospector import prospector  # noqa: E402; noqa: E402
 
 # Load logger before doing anything else
@@ -58,7 +53,10 @@ def main(argv):  # noqa: C901
 
         # Whether to use the LLMService
         if config.llm_service:
-            if not config.repository and not config.llm_service.use_llm_repository_url:
+            if (
+                not config.repository
+                and not config.llm_service.use_llm_repository_url
+            ):
                 logger.error(
                     "Repository URL was neither specified nor allowed to obtain with LLM support. One must be set."
                 )
@@ -80,7 +78,9 @@ def main(argv):  # noqa: C901
                 return
 
         config.pub_date = (
-            config.pub_date + "T00:00:00Z" if config.pub_date is not None else ""
+            config.pub_date + "T00:00:00Z"
+            if config.pub_date is not None
+            else ""
         )
 
         logger.debug("Using the following configuration:")
