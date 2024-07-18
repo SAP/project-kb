@@ -19,9 +19,18 @@ JSON_DATA_1 = {
             "nodes": [
                 {
                     "cpeMatch": [
-                        {"versionStartIncluding": "1.0", "versionEndIncluding": "2.0"},
-                        {"versionStartExcluding": "2.0", "versionEndExcluding": "3.0"},
-                        {"versionStartIncluding": "4.0", "versionEndIncluding": "5.0"},
+                        {
+                            "versionStartIncluding": "1.0",
+                            "versionEndIncluding": "2.0",
+                        },
+                        {
+                            "versionStartExcluding": "2.0",
+                            "versionEndExcluding": "3.0",
+                        },
+                        {
+                            "versionStartIncluding": "4.0",
+                            "versionEndIncluding": "5.0",
+                        },
                     ]
                 },
             ]
@@ -119,7 +128,7 @@ def test_extract_version_ranges_description():
     assert version_range == "None:8.0.4"
 
     version_range = extract_version_ranges_description(ADVISORY_TEXT_6)
-    assert version_range == "6.1.2:None"
+    assert version_range == "6.1.2.1:None"
 
 
 def test_extract_version_ranges_cpe():
@@ -145,4 +154,4 @@ def test_process_ranges():
 
 def test_extract_version_ranges():
     version_range = extract_version_range(JSON_DATA_4, ADVISORY_TEXT_6)
-    assert version_range == "6.1.2:None"
+    assert version_range == "6.1.2.1:None"

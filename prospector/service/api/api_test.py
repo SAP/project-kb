@@ -31,7 +31,9 @@ def test_post_preprocessed_commits():
 def test_get_specific_commit():
     repository = "https://github.com/apache/dubbo"
     commit_id = "yyy"
+    print(client)
     response = client.get("/commits/" + repository + "?commit_id=" + commit_id)
+    print(f"Response: {response}, {response.reason_phrase}")
     assert response.status_code == 200
     assert response.json()[0]["commit_id"] == commit_id
 
