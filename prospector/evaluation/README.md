@@ -16,7 +16,7 @@ Prospector can either be run containerised or not, set this with the `run_contai
 The evaluation code expects data input in the form of CSV files with the following columns: `(CSV: ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS)`.
 
 First, if you have your input data saved somewhere else than `/evaluation/data/input/`, please change the `input_data_path` accordingly.
-Do not put the datafile into `input/`, but rather in its own folder with a descriptive name, such as `steady-dataset/`. You can specify
+Give your dataset a descriptive name, such as `steady-dataset.csv`. You can specify
 which dataset you would want to use when running the CL command for evaluation [(List of Command Line Options)](#command-line-options).
 
 
@@ -39,3 +39,8 @@ python3 evaluation/run_multiple -i <name_of_dataset> -e
 * `-f` or `--folder`: Specify a folder to analyze
 * `-c` or `--cve`: Specify a particular CVE to analyze
 * `-p` or `--parallel`: Run in parallel on multiple CVEs
+
+
+## Exisiting Datasets
+
+1. `d63`: Dataset of CVEs and their fixing commits used in D6.3 of AssureMOSS. Formerly called `tracer_dataset_correct_full_unsupervised.csv`.
