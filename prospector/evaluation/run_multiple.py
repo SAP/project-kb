@@ -104,9 +104,7 @@ def main(argv):
         # parallel_execution(args.input)
 
     # analysis of Prospector report
-    elif (
-        args.analyze and not args.rules and not args.execute and not args.stats
-    ):
+    elif args.analyze and not args.rules and not args.execute and not args.stats:
         analyze_prospector(args.input)
 
     elif args.analyze and args.stats and not args.rules and not args.execute:

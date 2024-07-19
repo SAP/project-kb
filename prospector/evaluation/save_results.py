@@ -1,6 +1,3 @@
-from typing import List
-
-
 def save_to_json():
     pass
 
@@ -9,7 +6,7 @@ def save_to_csv():
     pass
 
 
-def update_latex_table(mode: str, data: List[List[str, str]], file_path: str) -> None:
+def update_summary_execution_table(mode: str, data, filepath: str) -> None:
     """Updates the latex table at {ANALYSIS_RESULTS_PATH}/`file_path`. For this to work, the table latex code from D6.3 for tracer_dataset_results table must be saved in the file.
 
     Params:
@@ -21,7 +18,7 @@ def update_latex_table(mode: str, data: List[List[str, str]], file_path: str) ->
     Disclaimer: Partly generated with Claude Opus 3.
     """
     # Read the existing LaTeX table from the file
-    with open(file_path, 'r') as file:
+    with open(filepath, 'r') as file:
         table_lines = file.readlines()
 
         # Find the line numbers to edit; CHANGE if table changes!
@@ -48,5 +45,8 @@ def update_latex_table(mode: str, data: List[List[str, str]], file_path: str) ->
             raise IndexError(f"Invalid data structure at row {line_number}, column {j}")
 
         # Write the updated table back to the file
-        with open(file_path, 'w') as file:
+        with open(filepath, 'w') as file:
             file.writelines(table_lines)
+
+    print(f"Updated latex table at {filepath}")
+

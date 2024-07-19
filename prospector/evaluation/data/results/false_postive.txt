@@ -1,0 +1,27 @@
+"CVE-2012-2098;https://github.com/apache/commons-compress;None:None;False;8f702469cbf4c451b6dea349290bc4af0f6f76c7,fdd7459bc5470e90024dbe762249166481cce769,0600296ab8f8a0bbdfedd483f51b38005eb8e34e;"
+CVE-2012-6708;https://github.com/jquery/jquery;None:None;False;05531fc4080ae24070930d15ae0cea7ae056457d;
+CVE-2014-0086;https://github.com/richfaces4/core;None:None;False;71687cef6a83f4f9b4430648e4bf06bb7653434b;
+"CVE-2014-4172;https://github.com/apereo/java-cas-client;None:None;False;ab6cbdc3daa451b4fef89c0bd0f4e6568f3aa9ef,9de2be91a2ed4f013900cb1facd4036c2f34d051,ae37092100c8eaec610dab6d83e5e05a8ee58814;"
+"CVE-2015-0286;https://github.com/openssl/openssl;None:None;False;e677e8d13595f7b3287f8feef7676feb301b0e8a,c3c7fb07dc975dc3c9de0eddb7d8fd79fc9c67c1,02758836731658381580e282ff403ba07d87b2f8,497d0b00dca876beb6c81f2ea6d7160897434c2e,c982285ab63adeb473197d54d246d120bf60778b; identified more twins"
+"CVE-2015-0290;https://github.com/openssl/openssl;None:None;False;1d2a18dc5a3b3363e17db5af8b6b0273856ac077,77c77f0a1b9f15b869ca3342186dfbedd1119d0e;"
+CVE-2015-3996;https://github.com/AFNetworking/AFNetworking;None:None;False;3e631b203dd95bb82dfbcc2c47a2d84b59d1eeb4;
+CVE-2015-7337;https://github.com/ipython/ipython;None:None;False;0a8096adf165e2465550bd5893d7e352544e5967;
+CVE-2015-9241;https://github.com/hapijs/hapi;None:None;False;aab2496e930dce5ee1ab28eecec94e0e45f03580;
+"CVE-2012-2098;https://github.com/apache/commons-compress;None:None;False;8f702469cbf4c451b6dea349290bc4af0f6f76c7,fdd7459bc5470e90024dbe762249166481cce769,0600296ab8f8a0bbdfedd483f51b38005eb8e34e;"
+CVE-2012-6708;https://github.com/jquery/jquery;None:None;False;05531fc4080ae24070930d15ae0cea7ae056457d;
+CVE-2014-0086;https://github.com/richfaces4/core;None:None;False;71687cef6a83f4f9b4430648e4bf06bb7653434b;
+"CVE-2014-4172;https://github.com/apereo/java-cas-client;None:None;False;ab6cbdc3daa451b4fef89c0bd0f4e6568f3aa9ef,9de2be91a2ed4f013900cb1facd4036c2f34d051,ae37092100c8eaec610dab6d83e5e05a8ee58814;"
+"CVE-2015-0286;https://github.com/openssl/openssl;None:None;False;e677e8d13595f7b3287f8feef7676feb301b0e8a,c3c7fb07dc975dc3c9de0eddb7d8fd79fc9c67c1,02758836731658381580e282ff403ba07d87b2f8,497d0b00dca876beb6c81f2ea6d7160897434c2e,c982285ab63adeb473197d54d246d120bf60778b; identified more twins"
+"CVE-2015-0290;https://github.com/openssl/openssl;None:None;False;1d2a18dc5a3b3363e17db5af8b6b0273856ac077,77c77f0a1b9f15b869ca3342186dfbedd1119d0e;"
+CVE-2015-3996;https://github.com/AFNetworking/AFNetworking;None:None;False;3e631b203dd95bb82dfbcc2c47a2d84b59d1eeb4;
+CVE-2015-7337;https://github.com/ipython/ipython;None:None;False;0a8096adf165e2465550bd5893d7e352544e5967;
+CVE-2015-9241;https://github.com/hapijs/hapi;None:None;False;aab2496e930dce5ee1ab28eecec94e0e45f03580;
+"CVE-2012-2098;https://github.com/apache/commons-compress;None:None;False;8f702469cbf4c451b6dea349290bc4af0f6f76c7,fdd7459bc5470e90024dbe762249166481cce769,0600296ab8f8a0bbdfedd483f51b38005eb8e34e;"
+CVE-2012-6708;https://github.com/jquery/jquery;None:None;False;05531fc4080ae24070930d15ae0cea7ae056457d;
+CVE-2014-0086;https://github.com/richfaces4/core;None:None;False;71687cef6a83f4f9b4430648e4bf06bb7653434b;
+"CVE-2014-4172;https://github.com/apereo/java-cas-client;None:None;False;ab6cbdc3daa451b4fef89c0bd0f4e6568f3aa9ef,9de2be91a2ed4f013900cb1facd4036c2f34d051,ae37092100c8eaec610dab6d83e5e05a8ee58814;"
+"CVE-2015-0286;https://github.com/openssl/openssl;None:None;False;e677e8d13595f7b3287f8feef7676feb301b0e8a,c3c7fb07dc975dc3c9de0eddb7d8fd79fc9c67c1,02758836731658381580e282ff403ba07d87b2f8,497d0b00dca876beb6c81f2ea6d7160897434c2e,c982285ab63adeb473197d54d246d120bf60778b; identified more twins"
+"CVE-2015-0290;https://github.com/openssl/openssl;None:None;False;1d2a18dc5a3b3363e17db5af8b6b0273856ac077,77c77f0a1b9f15b869ca3342186dfbedd1119d0e;"
+CVE-2015-3996;https://github.com/AFNetworking/AFNetworking;None:None;False;3e631b203dd95bb82dfbcc2c47a2d84b59d1eeb4;
+CVE-2015-7337;https://github.com/ipython/ipython;None:None;False;0a8096adf165e2465550bd5893d7e352544e5967;
+CVE-2015-9241;https://github.com/hapijs/hapi;None:None;False;aab2496e930dce5ee1ab28eecec94e0e45f03580;

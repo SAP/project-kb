@@ -16,7 +16,9 @@ from evaluation.dispatch_jobs import (
     ANALYSIS_RESULTS_PATH,
     build_table_row,
 )
-from evaluation.save_results import update_latex_table
+from evaluation.save_results import (
+    update_summary_execution_table,
+)
 from evaluation.utils import load_dataset
 
 
@@ -92,23 +94,13 @@ def analyze_results_rules(dataset_path: str):
 
 def analyze_prospector(filename: str):  # noqa: C901
     """Analyses Prospector's reports."""
-    # delete_missing_git(dataset_path)
-    # return []
+
     file = INPUT_DATA_PATH + filename + ".csv"
     dataset = load_dataset(file)
-    # res_ts = temp_load_reservation_dates(dataset_path[:-4] + "_timestamps.csv")
 
     missing = []
     skipped = 0
-    # timestamps = {
-    #     "COMMIT_IN_REFERENCE": list(),
-    #     "CVE_ID_IN_MESSAGE": list(),
-    #     "CVE_ID_IN_LINKED_ISSUE": list(),
-    #     "CROSS_REFERENCE": list(),
-    #     "medium_confidence": list(),
-    #     "low_confidence": list(),
-    # }
-    yearly_timestamps = {}
+
     results = {
         "COMMIT_IN_REFERENCE": set(),
         "CVE_ID_IN_MESSAGE": set(),
@@ -122,7 +114,6 @@ def analyze_prospector(filename: str):  # noqa: C901
         "real_false_positive": set(),
     }
     rulescount = defaultdict(lambda: 0)
-    # references = list()
 
     # For each CSV in the input dataset, check its report
     for itm in dataset:
@@ -138,148 +129,106 @@ def analyze_prospector(filename: str):  # noqa: C901
             ) = check_report(
                 PROSPECTOR_REPORT_PATH + filename, itm[0], itm[4]
             )  # ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
+
+            results, rulescount, skipped = write_matched_rules(
+                results, rulescount, skipped, itm, is_fix, has_certainty, commit_id, exists, position, ranks, rules
+            )
+
         except FileNotFoundError:
             print(f"No report for {itm[0]}")
             continue
 
-        # year = itm[0].split("-")[1]
-        # if is_fix and timestamp is not None:
-        #     res_timestamp = get_reservation_date(itm[0])
-        #     if res_timestamp is not None:
-        #         ts = timestamp - res_timestamp
-        #         # if int(ts / 86400) > -900:
-        #         year = itm[0].split("-")[1]
-        #         if year not in timestamps:
-        #             timestamps[year] = []
-        #         timestamps[year].append(int(ts / 86400))
-        #         # ts_analsis.append(int(ts / 86400))
-        #     else:
-        #         print(f"Missing reservation date for {itm[0]}")
-        #     time.sleep(0.05)
-        # if timestamp:
+    print("Saved results to matched_rules.tex")
 
-        #     # adv_ts = res_ts.get(itm[0])
-        #     timestamp = adv_ts - timestamp
-        #     yearly_timestamps.setdefault(year, list())
-        #     yearly_timestamps[year].append(int(timestamp / 86400))
-        # timestamp = abs(timestamp)
+    # print(
+    #     ",".join(
+    #         results["not_reported"]
+    #         | results["not_found"]
+    #         | results["false_positive"]
+    #         | results["low_confidence"]
+    #         | results["medium_confidence"]
+    #         | results["CVE_ID_IN_LINKED_ISSUE"]
+    #         | results["CROSS_REFERENCE"]
+    #         | results["CVE_ID_IN_MESSAGE"]
+    #     )
+    # )
 
-        # if is_fix and position < 10:
-        #     rules, _, _, _ = check_report_get_rules(filename[:-4], itm[0], itm[4])
-        #     print(itm[0], rules)
-        # else:
-        #     continue
-        # rules, _, _, _ = check_report_get_rules(filename[:-4], itm[0], itm[4])
-        # for rule in rules:
-        #     rulescount[rule] += 1
-        # continue
+    total = len(dataset) - skipped
+    rulescount = dict(sorted(rulescount.items()))
+
+    make_rules_plot(rulescount)
+
+
+    # Save the results to the Latex table
+    table_data = []
+    for key, value in results.items():
+        # print(f"{key}: {len(value)} ({(len(value)/1315)*100:.2f}%)") # Sanity Check
+        table_data.append([len(value), len(value) / len(dataset) * 100])
+
+    update_summary_execution_table(
+        "MVI",
+        table_data,
+        f"{ANALYSIS_RESULTS_PATH}summary_execution_results.tex",
+    )
+
+    total_check = sum([len(x) for x in results.values()])
+    print(f"\nAnalysed {total_check} reports") # Sanity Check
+
+    if total_check != total:
+        print("ERROR: Some CVEs are missing")
+
+    return missing
+
+
+def write_matched_rules(
+    results, rulescount, skipped, itm, is_fix, has_certainty, commit_id, exists, position, ranks, rules
+):
+    with open(ANALYSIS_RESULTS_PATH + 'matched_rules.tex', 'a+') as f:
         if is_fix and has_certainty:  # and 0 <= position < 10:
-            print(
-                itm[0],
-                "&",
-                " & ".join(build_table_row(rules)),
-                "&",
-                " & ".join([str(x) for x in ranks]).replace("-1", ""),
-                "\\\\ \\midrule",
-            )
+            f.write(f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n")
+
             results[has_certainty].add(itm[0])
-            # if "COMMIT_IN_REFERENCE" in has_certainty and all(
-            #    rule != "COMMIT_IN_REFERENCE"
-            #    for rule in has_certainty
-            #    if rule != "COMMIT_IN_REFERENCE"
-            # ):
-            #    with open("only_commit_in_reference2.csv", "a", newline="") as file:
-            #        writer = csv.writer(file)
-            #        writer.writerow(
-            #            [f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}"]
-            #        )
-            # elif all(rule != "COMMIT_IN_REFERENCE" for rule in has_certainty):
-            #    with open("only_other_strong_rules.csv", "a", newline="") as file:
-            #        writer = csv.writer(file)
-            #        writer.writerow(
-            #            [f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}"]
-            #        )
+
             for rule in rules:
                 rulescount[rule] += 1
-            # print(f"{filename[:-4]}/{itm[0]}.json")
-            # print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}")
-            # print(f"{filename[:-4]}/{itm[0]}.json")
-            # timestamps["false_positive"].append(timestamp)
-        # elif is_fix and has_certainty and position > 0:
-        #     results["real_false_positive"].add(itm[0])
-        # if int(timestamp / 86400) < 731:
-        #     timestamps[has_certainty].append(int(timestamp / 86400))
+
         elif is_fix and not has_certainty and position == 0:
-            print(
-                itm[0],
-                "&",
-                " & ".join(build_table_row(rules)),
-                "&",
-                " & ".join([str(x) for x in ranks]).replace("-1", ""),
-                "\\\\ \\midrule",
-            )
+            f.write(f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n")
             results["medium_confidence"].add(itm[0])
             for rule in rules:
                 rulescount[rule] += 1
-            # print(itm[0] + " - " + str(position + 1))
 
-            # if int(timestamp / 86400) < 731:
-            #     timestamps["medium_confidence"].append(int(timestamp / 86400))
         elif is_fix and not has_certainty and 0 < position < 10:
             results["low_confidence"].add(itm[0])
-            print(
-                itm[0],
-                "&",
-                " & ".join(build_table_row(rules)),
-                "&",
-                " & ".join([str(x) for x in ranks]).replace("-1", ""),
-                "\\\\ \\midrule",
-            )
+            f.write(f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n")
+
             for rule in rules:
                 rulescount[rule] += 1
-            # print(itm[0] + " - " + str(position + 1))
-            # print(
-            #     f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]} pos:{position}"
-            # )
-            # if int(timestamp / 86400) < 731:
-            #     timestamps["low_confidence"].append(int(timestamp / 86400))
-            # print(itm[0], position + 1)
+
         elif is_fix and not has_certainty and position >= 10:
             results["not_found"].add(itm[0])
             for rule in rules:
                 rulescount[rule] += 1
-            # timestamps["not_found"].append(int(timestamp / 86400))
-            # print(itm[0], position + 1)
-            # print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}")
+
         elif not is_fix and has_certainty:
             results["false_positive"].add(itm[0])
-            with open("false_postive", "a") as file:
+            with open(f"{ANALYSIS_RESULTS_PATH}false_postive.txt", "a") as file:
                 writer = csv.writer(file)
                 writer.writerow(
                     [f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}"]
                 )
-            print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}")
+
         elif not is_fix and not has_certainty and commit_id and position < 0:
             results["not_reported"].add(itm[0])
-            print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}")
+            # print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}")
+
         elif not is_fix and not exists and position < 0:
             skipped += 1
-    print(
-        ",".join(
-            results["not_reported"]
-            | results["not_found"]
-            | results["false_positive"]
-            | results["low_confidence"]
-            | results["medium_confidence"]
-            | results["CVE_ID_IN_LINKED_ISSUE"]
-            | results["CROSS_REFERENCE"]
-            | results["CVE_ID_IN_MESSAGE"]
-        )
-    )
-    print("I'm here")
-    total = len(dataset) - skipped
-    rulescount = dict(sorted(rulescount.items()))
 
+    return results, rulescount, skipped
+
+
+def make_rules_plot(rulescount):
     plt.rcParams["figure.autolayout"] = True
     plt.rcParams["savefig.dpi"] = 300
     sns.set_style("whitegrid")
@@ -301,8 +250,10 @@ def analyze_prospector(filename: str):  # noqa: C901
     ss = sns.barplot(
         x=list(rulescount.keys()),
         y=list(rulescount.values()),
+        hue=list(rulescount.keys()),
         palette=colors,
         width=0.6,
+        legend=False
     )
     plt.xticks(rotation="vertical")
     # ss.set_xscale("log", base=2)
@@ -312,48 +263,10 @@ def analyze_prospector(filename: str):  # noqa: C901
     # ss.set_xticks(range(0, 800, 100))
     ss.tick_params(axis="x", labelsize=8)
     # plt.show()
-    plt.savefig("project-kb.png")
+    plt.savefig(f"{ANALYSIS_RESULTS_PATH}plots/project-kb.png")
 
-    for rule, count in rulescount.items():
-        print(f"{rule}: {count}")
-    # missing_lookup_git(missing)
-
-    # print(YEAR)
-    print()
-    total_check = sum([len(x) for x in results.values()])
-    print(total_check)
-    # total_year = sum([len([x for x in y if YEAR in x]) for y in results.values()])
-    table_data = []
-    for key, value in results.items():
-        # print(f"{key}: {len(value)} ({(len(value)/1315)*100:.2f}%)") # Sanity Check
-        table_data.append([len(value), len(value) / len(dataset) * 100])
-
-    update_latex_table("MVI", table_data, f"{ANALYSIS_RESULTS_PATH}table.tex")
-
-    # total_check += len(value)
-    yearly_timestamps = {
-        k: v for k, v in yearly_timestamps.items() if len(v) > 30
-    }
-    # df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in timestamps.items()]))
-
-    # ax = sns.violinplot(df, inner="box")
-    # plt.ylabel("Days")
-    # plt.show()
-
-    # for key, value in timestamps.items():
-    #     print(
-    #         f"{key}: mean={int(statistics.mean(value))} stdDev={int(statistics.stdev(value))}"
-    #     )
-
-    # df = pd.DataFrame.from_dict(timestamps, orient="index")
-
-    # sns.set(style="whitegrid")
-    # sns.violinplot(data=df)
-
-    if total_check != total:
-        print("ERROR: Some CVEs are missing")
-
-    return missing
+    # for rule, count in rulescount.items():
+    #     print(f"{rule}: {count}") # Sanity Check
 
 
 def sum_relevances(list_of_rules):
