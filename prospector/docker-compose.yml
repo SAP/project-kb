@@ -28,8 +28,8 @@ services:
       context: .
       dockerfile: docker/worker/Dockerfile
     volumes:
-      - ./:/app
-      # - ./pipeline/reports:/app/pipeline/reports
+      - ./data_sources/reports:/app/data_sources/reports
+      - ./evaluation/data/reports/:/app/evaluation/data/reports
     depends_on:
       - redis
     environment:
