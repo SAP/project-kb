@@ -104,6 +104,7 @@ scripts described in that paper](MSR2019)
 ___
 
 **Our papers related to Project KB**
+* Sabetta, A., Ponta, S. E., Cabrera Lozoya, R., Bezzi, M., Sacchetti, T., Greco, M., … Massacci, F. (2024). [Known Vulnerabilities of Open Source Projects: Where Are the Fixes?](https://ieeexplore.ieee.org/document/10381645) IEEE Security & Privacy, 22(2), 49–59. 
 * Dann, A., Plate, H., Hermann, B., Ponta, S., & Bodden, E. (2022). [Identifying Challenges for OSS Vulnerability Scanners - A Study & Test Suite.](https://ris.uni-paderborn.de/record/31132) IEEE Transactions on Software Engineering, 48(09), 3613–3625. 
 * Cabrera Lozoya, R., Baumann, A., Sabetta, A., & Bezzi, M. (2021). [Commit2Vec: Learning Distributed Representations of Code Changes.](https://link.springer.com/article/10.1007/s42979-021-00566-z) SN Computer Science, 2(3).
 * Fehrer, T., Lozoya, R. C., Sabetta, A., Nucci, D. D., & Tamburri, D. A. (2021). [Detecting Security Fixes in Open-Source Repositories using Static Code Analyzers.](http://arxiv.org/abs/2105.03346) EASE '24: Proceedings of the 28th International Conference on Evaluation and Assessment in Software Engineering
