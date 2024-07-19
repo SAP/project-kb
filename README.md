@@ -10,21 +10,16 @@
 [![Pytest](https://github.com/SAP/project-kb/actions/workflows/python.yml/badge.svg)](https://github.com/SAP/project-kb/actions/workflows/python.yml)
 
 # Table of contents 
-1. [Description](#desc)
-2. [Motivations](#motiv)
-3. [Kaybee](#kaybee)
-4. [Prospector](#prosp)
-5. [Vulnerability data](#vuldata)
-6. [Publications](#publi)
-7. [Star history](#starhist)
-8. [Credits](#credit)
-9. [EU funded research projects](#eu_funded)
-10. [Vulnerability data sources](#vul_data)
-11. [Limitations and known issues](#limit)
-12. [Support](#support)
-13. [Contributing](#contrib)
+1. [Kaybee](#kaybee)
+2. [Prospector](#prosp)
+3. [Vulnerability data](#vuldata)
+4. [Publications](#publi)
+5. [Star history](#starhist)
+6. [Limitations and known issues](#limit)
+7. [Support](#support)
+8. [Contributing](#contrib)
 
-## Description <a name="desc"></a>
+## Description 
 
 The goal of `Project KB` is to enable the creation, management and aggregation of a
 distributed, collaborative knowledge base of vulnerabilities affecting
@@ -34,7 +29,7 @@ open-source software.
 as well as set of tools to support the mining, curation and management of such data.
 
 
-### Motivations <a name="motiv"></a>
+### Motivations 
 
 In order to feed [Eclipse Steady](https://github.com/eclipse/steady/) with fresh
 data, we have spent a considerable amount of time, in the past few years, mining
@@ -213,7 +208,7 @@ ___
 
 ## Credits <a name="credit"></a>
 
-### EU-funded research projects <a name="eu_funded"></a>
+### EU-funded research projects 
 
 The development of Project KB is partially supported by the following projects:
 
@@ -221,7 +216,7 @@ The development of Project KB is partially supported by the following projects:
 * [AssureMOSS](https://assuremoss.eu) (Grant No. 952647).
 * [Sparta](https://www.sparta.eu/) (Grant No. 830892).
 
-### Vulnerability data sources <a name="vul_data"></a>
+### Vulnerability data sources 
 
 Vulnerability information from NVD and MITRE might have been used as input
 for building parts of this knowledge base. See MITRE's [CVE Usage license](http://cve.mitre.org/about/termsofuse.html) for more information.
