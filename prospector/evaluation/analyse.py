@@ -13,8 +13,10 @@ from datamodel.advisory import build_advisory_record
 from evaluation.dispatch_jobs import (
     INPUT_DATA_PATH,
     PROSPECTOR_REPORT_PATH,
+    ANALYSIS_RESULTS_PATH,
     build_table_row,
 )
+from evaluation.save_results import update_latex_table
 from evaluation.utils import load_dataset
 
 
@@ -274,6 +276,7 @@ def analyze_prospector(filename: str):  # noqa: C901
             | results["CVE_ID_IN_MESSAGE"]
         )
     )
+    print("I'm here")
     total = len(dataset) - skipped
     rulescount = dict(sorted(rulescount.items()))
 
@@ -320,13 +323,14 @@ def analyze_prospector(filename: str):  # noqa: C901
     total_check = sum([len(x) for x in results.values()])
     print(total_check)
     # total_year = sum([len([x for x in y if YEAR in x]) for y in results.values()])
+    table_data = []
     for key, value in results.items():
-        print(f"{key}: {len(value)} ({(len(value)/1315)*100:.2f}%)")
-        # print(
-        #     f"{key}: {(len([x for x in value if YEAR in x]) / total_year) * 100:.2f}%"
-        # )
+        # print(f"{key}: {len(value)} ({(len(value)/1315)*100:.2f}%)") # Sanity Check
+        table_data.append([len(value), len(value) / len(dataset) * 100])
 
-        # total_check += len(value)
+    update_latex_table("MVI", table_data, f"{ANALYSIS_RESULTS_PATH}table.tex")
+
+    # total_check += len(value)
     yearly_timestamps = {
         k: v for k, v in yearly_timestamps.items() if len(v) > 30
     }

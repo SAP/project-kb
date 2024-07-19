@@ -9,7 +9,10 @@ from evaluation.analyse import (
     analyze_prospector,
     analyze_results_rules,
 )
-from evaluation.dispatch_jobs import dispatch_prospector_jobs, parallel_execution
+from evaluation.dispatch_jobs import (
+    dispatch_prospector_jobs,
+    parallel_execution,
+)
 
 
 def is_missing(path: str):
@@ -101,7 +104,9 @@ def main(argv):
         # parallel_execution(args.input)
 
     # analysis of Prospector report
-    elif args.analyze and not args.rules and not args.execute and not args.stats:
+    elif (
+        args.analyze and not args.rules and not args.execute and not args.stats
+    ):
         analyze_prospector(args.input)
 
     elif args.analyze and args.stats and not args.rules and not args.execute:

@@ -3,6 +3,7 @@ import multiprocessing
 import os
 from typing import List
 
+from omegaconf import OmegaConf
 import redis
 import requests
 from dateutil.parser import isoparse
@@ -18,9 +19,11 @@ from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from util.config_parser import parse_config_file
 
-INPUT_DATA_PATH = "evaluation/data/input/"
-PROSPECTOR_REPORT_PATH = "evaluation/data/reports/"
+evaluation_config = OmegaConf.load("evaluation/config.yaml")
 
+INPUT_DATA_PATH = evaluation_config.input_data_path
+PROSPECTOR_REPORT_PATH = evaluation_config.prospector_reports_path
+ANALYSIS_RESULTS_PATH = evaluation_config.analysis_results_path
 
 # get the redis server url
 config = parse_config_file()
@@ -311,7 +314,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    # dataset = dataset[:50]
+    # dataset = dataset[:5]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
