@@ -320,6 +320,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     if len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
 
+    dispatched_jobs = 0
     for cve in dataset:
         # Skip already existing reports
         if os.path.exists(f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"):
@@ -328,6 +329,8 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
         # print(
         #     f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
         # )
+
+        dispatched_jobs += 1
 
         # Send them to Prospector to run
         with Connection(redis.from_url(redis_url)):
@@ -349,4 +352,4 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
 
         # print(f"Dispatched job {cve[0]} to queue.") # Sanity Check
 
-    print(f"Dispatched {len(dataset)} jobs.")
+    print(f"Dispatched {dispatched_jobs} jobs.")
