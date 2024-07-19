@@ -28,10 +28,12 @@ def analyze_results_rules(dataset_path: str):
 
     It also generates a bar plot visualising the ferquency of each rule being
     matched.
+
+    Prints:
+        Precision of the rules table (D6.3 AssureMOSS)
     """
     print(f"Retrieving data from: {dataset_path}")
-    dataset_path = "empirical_study/datasets/" + dataset_path + ".csv"
-    dataset = load_dataset(dataset_path)
+    dataset = load_dataset(INPUT_DATA_PATH + dataset_path + ".csv")
 
     rules, table = {}, {}
     count = 0
@@ -39,7 +41,7 @@ def analyze_results_rules(dataset_path: str):
     for itm in dataset:
         try:
             r, i, v, id = check_report_get_rules(
-                dataset_path[:-4], itm[0], itm[4]
+                PROSPECTOR_REPORT_PATH + dataset_path + "/", itm[0], itm[4]
             )
             if r is not None:
                 count += 1
