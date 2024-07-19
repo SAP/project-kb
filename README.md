@@ -108,6 +108,16 @@ scripts described in that paper](MSR2019)
 
 ___
 
+**Our papers related to Project KB**
+* Cabrera Lozoya, R. et al. (March 2021). [Commit2Vec: Learning Distributed Representations of Code Changes](https://link.springer.com/article/10.1007/s42979-021-00566-z)
+* Fehrer, T. et al. (May 2021). [Detecting Security Fixes in Open-Source Repositories using Static Code Analyzers](https://dl.acm.org/doi/pdf/10.1145/3661167.3661217)
+* Ponta, S.E. et al. (June 2020). [Detection, assessment and mitigation of vulnerabilities in open source dependencies](https://www.semanticscholar.org/paper/Detection%2C-assessment-and-mitigation-of-in-open-Ponta-Plate/728eab7ac5ae7dd624d306ae5e1887f7b10447cc)
+* Dann, A. et al. (September 2022). [Identifying Challenges for OSS Vulnerability Scanners - A Study & Test Suite](https://www.computer.org/csdl/journal/ts/2022/09/09506931/1vNfNyyKDOo)
+* Ponta, S.E. et al. (August 2021). [The Used, the Bloated, and the Vulnerable: Reducing the Attack Surface of an Industrial Application](https://arxiv.org/abs/2108.05115)
+* Iannone, E. et al. (June 2021). [Toward Automated Exploit Generation for Known Vulnerabilities in Open-Source Libraries](https://ieeexplore.ieee.org/abstract/document/9462983)
+
+___
+
 <!-- format :                    Author last name, Initials. (Month Year). [Article title](URL)             -->
 
 **Papers citing our work**
@@ -200,17 +210,6 @@ ___
 * Piran, A. et al. (March 2022). [Vulnerability Analysis of Similar Code](https://ieeexplore.ieee.org/abstract/document/9724745)
 * Keller, P. et al. (February 2020). [What You See is What it Means! Semantic Representation Learning of Code based on Visualization and Transfer Learning](https://arxiv.org/abs/2002.02650)
 
-___
-
-**Our related papers**
-* Cabrera Lozoya, R. et al. (March 2021). [Commit2Vec: Learning Distributed Representations of Code Changes](https://link.springer.com/article/10.1007/s42979-021-00566-z)
-* Fehrer, T. et al. (May 2021). [Detecting Security Fixes in Open-Source Repositories using Static Code Analyzers](https://dl.acm.org/doi/pdf/10.1145/3661167.3661217)
-* Ponta, S.E. et al. (June 2020). [Detection, assessment and mitigation of vulnerabilities in open source dependencies](https://www.semanticscholar.org/paper/Detection%2C-assessment-and-mitigation-of-in-open-Ponta-Plate/728eab7ac5ae7dd624d306ae5e1887f7b10447cc)
-* Dann, A. et al. (September 2022). [Identifying Challenges for OSS Vulnerability Scanners - A Study & Test Suite](https://www.computer.org/csdl/journal/ts/2022/09/09506931/1vNfNyyKDOo)
-* Ponta, S.E. et al. (August 2021). [The Used, the Bloated, and the Vulnerable: Reducing the Attack Surface of an Industrial Application](https://arxiv.org/abs/2108.05115)
-* Iannone, E. et al. (June 2021). [Toward Automated Exploit Generation for Known Vulnerabilities in Open-Source Libraries](https://ieeexplore.ieee.org/abstract/document/9462983)
-
-  
 ## Star History <a name="starhist"></a>
 
 [![Star History Chart](https://api.star-history.com/svg?repos=sap/project-kb&type=Date)](https://star-history.com/#sap/project-kb&Date)
