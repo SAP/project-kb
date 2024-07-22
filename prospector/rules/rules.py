@@ -12,7 +12,6 @@ from stats.execution import (
     Counter,
     ExecutionTimer,
     execution_statistics,
-    measure_execution_time,
 )
 from util.lsh import build_lsh_index, decode_minhash
 
@@ -459,12 +458,7 @@ class CommitIsSecurityRelevant(Rule):
                     candidate.diff, candidate.repository, candidate.message
                 )
 
-                update_response = requests.post(
-                    backend_address + "/commits/",
-                    json=[candidate.to_dict()],
-                    headers={"content-type": "application/json"},
-                )
-                update_response.raise_for_status()
+                return candidate.security_relevant
 
             except requests.exceptions.RequestException as e:
                 error_type = type(e).__name__
