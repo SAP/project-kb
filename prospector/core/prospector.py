@@ -245,7 +245,7 @@ def prospector(  # noqa: C901
         logger.warning("Preprocessed commits are not being sent to backend")
 
     ranked_candidates = evaluate_commits(
-        preprocessed_commits, advisory_record, enabled_rules
+        preprocessed_commits, advisory_record, backend_address, enabled_rules
     )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
@@ -288,7 +288,10 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 
 
 def evaluate_commits(
-    commits: List[Commit], advisory: AdvisoryRecord, enabled_rules: List[str]
+    commits: List[Commit],
+    advisory: AdvisoryRecord,
+    backend_address: str,
+    enabled_rules: List[str],
 ) -> List[Commit]:
     """This method applies the rule phases. Each phase is associated with a set of rules:
         - Phase 1: Original rules
@@ -308,7 +311,7 @@ def evaluate_commits(
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
             ranked_commits = apply_rules(
-                commits, advisory, enabled_rules=enabled_rules
+                commits, advisory, backend_address, enabled_rules=enabled_rules
             )
 
     return ranked_commits
