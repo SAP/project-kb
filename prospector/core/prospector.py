@@ -19,7 +19,7 @@ from git.raw_commit import RawCommit
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
-from rules.rules import RULES_PHASE_1, apply_rules
+from rules.rules import NUM_COMMITS_PHASE_2, RULES_PHASE_1, apply_rules
 from stats.execution import (
     Counter,
     ExecutionTimer,
@@ -242,13 +242,17 @@ def prospector(  # noqa: C901
         and use_backend != USE_BACKEND_NEVER
         and len(missing) > 0
     ):
-        save_preprocessed_commits(backend_address, payload)
+        save_or_update_processed_commits(backend_address, payload)
     else:
         logger.warning("Preprocessed commits are not being sent to backend")
 
     ranked_candidates = evaluate_commits(
         preprocessed_commits, advisory_record, backend_address, enabled_rules
     )
+
+    # Save outcome of security relevance to DB (Phase 2 Rule)
+    payload = [c.to_dict() for c in ranked_candidates[:NUM_COMMITS_PHASE_2]]
+    save_or_update_processed_commits(backend_address, payload)
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
     ranked_candidates = remove_twins(ranked_candidates)
@@ -398,7 +402,7 @@ def retrieve_preprocessed_commits(
     return (missing, commits)
 
 
-def save_preprocessed_commits(backend_address, payload):
+def save_or_update_processed_commits(backend_address, payload):
     with ExecutionTimer(
         core_statistics.sub_collection(name="save commits to backend")
     ):
