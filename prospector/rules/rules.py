@@ -52,6 +52,7 @@ class Rule:
 def apply_rules(
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
+    backend_address: str,
     enabled_rules: List[str] = [],
 ) -> List[Commit]:
     """Applies the selected set of rules and returns the ranked list of commits."""
@@ -83,7 +84,7 @@ def apply_rules(
 
         for candidate in candidates[:NUM_COMMITS_PHASE_2]:
             for rule in phase_2_rules:
-                if rule.apply(candidate):
+                if rule.apply(candidate, backend_address):
                     counter.increment("matches")
                     candidate.add_match(rule.as_dict())
             candidate.compute_relevance()
@@ -419,10 +420,38 @@ class CommitIsSecurityRelevant(Rule):
     def apply(
         self,
         candidate: Commit,
+        backend_address: str,
     ) -> bool:
-        return LLMService().classify_commit(
-            candidate.diff, candidate.repository, candidate.message
-        )
+
+        # Check if this commit is already in the database
+        try:
+            r = requests.get(
+                f"{backend_address}/commits/{candidate.repository}",
+                params={"commit_id": candidate.commit_id},
+                timeout=10
+            )
+            r.raise_for_status()
+            commit_data = r.json()[0]
+
+            is_security_relevant = commit_data.get('security_relevant')
+            if is_security_relevant is not None:
+                candidate.security_relevant = is_security_relevant
+                return is_security_relevant
+
+            candidate.security_relevant = LLMService().classify_commit(
+                candidate.diff, candidate.repository, candidate.message
+            )
+
+            update_response = requests.post(
+                backend_address + "/commits/",
+                json=[candidate.to_dict()],
+                headers={"content-type": "application/json"},
+            )
+            update_response.raise_for_status()
+
+        except requests.exceptions.RequestException as e:
+            error_type = type(e).__name__
+            print(f"Error communicating with backend: {error_type} - {str(e)}")
 
 
 RULES_PHASE_1: List[Rule] = [
