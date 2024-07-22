@@ -4,12 +4,10 @@ import re
 import sys
 from collections import defaultdict
 from typing import Dict, List, Tuple
-from urllib.parse import urlparse
 
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from datamodel.advisory import build_advisory_record
 from evaluation.dispatch_jobs import (
     INPUT_DATA_PATH,
     PROSPECTOR_REPORT_PATH,
@@ -133,7 +131,17 @@ def analyze_prospector(filename: str):  # noqa: C901
             )  # ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
 
             results, rulescount, skipped = write_matched_rules(
-                results, rulescount, skipped, itm, is_fix, has_certainty, commit_id, exists, position, ranks, rules
+                results,
+                rulescount,
+                skipped,
+                itm,
+                is_fix,
+                has_certainty,
+                commit_id,
+                exists,
+                position,
+                ranks,
+                rules,
             )
 
         except FileNotFoundError:
@@ -160,7 +168,6 @@ def analyze_prospector(filename: str):  # noqa: C901
 
     make_rules_plot(rulescount)
 
-
     # Save the results to the Latex table
     table_data = []
     for key, value in results.items():
@@ -174,7 +181,7 @@ def analyze_prospector(filename: str):  # noqa: C901
     )
 
     total_check = sum([len(x) for x in results.values()])
-    print(f"\nAnalysed {total_check} reports") # Sanity Check
+    print(f"\nAnalysed {total_check} reports")  # Sanity Check
 
     if total_check != total:
         print("ERROR: Some CVEs are missing")
@@ -183,11 +190,23 @@ def analyze_prospector(filename: str):  # noqa: C901
 
 
 def write_matched_rules(
-    results, rulescount, skipped, itm, is_fix, has_certainty, commit_id, exists, position, ranks, rules
+    results,
+    rulescount,
+    skipped,
+    itm,
+    is_fix,
+    has_certainty,
+    commit_id,
+    exists,
+    position,
+    ranks,
+    rules,
 ):
-    with open(ANALYSIS_RESULTS_PATH + 'matched_rules.tex', 'a+') as f:
+    with open(ANALYSIS_RESULTS_PATH + "matched_rules.tex", "a+") as f:
         if is_fix and has_certainty:  # and 0 <= position < 10:
-            f.write(f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n")
+            f.write(
+                f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n"
+            )
 
             results[has_certainty].add(itm[0])
 
@@ -195,14 +214,18 @@ def write_matched_rules(
                 rulescount[rule] += 1
 
         elif is_fix and not has_certainty and position == 0:
-            f.write(f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n")
+            f.write(
+                f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n"
+            )
             results["medium_confidence"].add(itm[0])
             for rule in rules:
                 rulescount[rule] += 1
 
         elif is_fix and not has_certainty and 0 < position < 10:
             results["low_confidence"].add(itm[0])
-            f.write(f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n")
+            f.write(
+                f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n"
+            )
 
             for rule in rules:
                 rulescount[rule] += 1
@@ -255,7 +278,7 @@ def make_rules_plot(rulescount):
         hue=list(rulescount.keys()),
         palette=colors,
         width=0.6,
-        legend=False
+        legend=False,
     )
     plt.xticks(rotation="vertical")
     # ss.set_xscale("log", base=2)
@@ -277,8 +300,8 @@ def sum_relevances(list_of_rules):
 
 
 def check_report_get_rules(dataset, cve, fixing_commits):
-    """Retrieves the matched rules and commit information for a given CVE and a list of
-    fixing commits.
+    """Retrieves the matched rules and commit information for a given CVE and a
+    list of fixing commits.
 
     Args:
         dataset (str): The path to the dataset directory.
@@ -546,89 +569,6 @@ def analyze_rules_usage(dataset_path: str, cve: str = ""):
     print(f"Total cves: {cve_count}\n")
     for k, v in sorted_rules.items():
         print(f"{k}: {v}")
-
-
-def is_real_version(text: str):
-    return bool(re.match(r"\d+\.(?:\d+\.*)*\d", text))
-
-
-VULN = ["version", "through", "versions"]
-
-FIXED = [
-    "before",
-    "before release",
-    "before version",
-    "prior to",
-    "upgrade to",
-    "fixed in",
-    "fixed in version",
-    "fixed in release",
-    "to version",
-]
-
-
-def get_version_spacy(text: str, nlp):
-    """This function extracts vulnerable and fixed version numbers from a given text using spaCy."""
-    doc = nlp(text)
-    # relevant_sentences = {}
-    # relevant_sentence = ""
-    fixed_version = ""
-    vulnerable_version = ""
-    for i in range(len(doc))[1:]:
-        if is_real_version(doc[i].text):
-            if doc[i - 1].text in FIXED:
-                # relevant_sentence = doc[: i + 1]
-                fixed_version = doc[i].text
-            elif (doc[i - 2].text + " " + doc[i - 1].text) in FIXED:
-                # relevant_sentence = doc[: i + 1]
-                fixed_version = doc[i].text
-            elif (
-                doc[i - 3].text + " " + doc[i - 2].text + " " + doc[i - 1].text
-            ) in FIXED:
-                # relevant_sentence = doc[: i + 1]
-                fixed_version = doc[i].text
-            else:
-                # relevant_sentence = doc[: i + 1]
-                vulnerable_version = doc[i].text
-    return vulnerable_version, fixed_version
-
-
-def check_advisory(cve, repository=None, nlp=None):
-    """This function checks the advisory for a given CVE and attempts to extract version information."""
-    advisory = build_advisory_record(
-        cve, nvd_rest_endpoint="http://localhost:8000/nvd/vulnerabilities/"
-    )
-    references = [urlparse(r).netloc for r in advisory.references]
-    return references
-    vuln = "None"
-    if len(advisory.versions.get("affected")):
-        vuln = advisory.versions.get("affected")[-1]
-
-    fixed = "None"
-    if len(advisory.versions.get("fixed")):
-        fixed = advisory.versions.get("fixed")[-1]
-
-    vuln2, fixed2 = get_version_spacy(advisory.description, nlp)
-    res = [advisory.cve_id, advisory.description]
-    if fixed == fixed2 and vuln == vuln2:
-        res.append(f"{vuln}:{fixed}")
-    if fixed == "None" and fixed2 != "":
-        res.append(f"{vuln}:{fixed2}")
-    if vuln == "None" and vuln2 != "":
-        res.append(f"{vuln2}:{fixed}")
-    if fixed != fixed2 and fixed2 != "" and fixed != "None":
-        res.append(f"{vuln}:{fixed}")
-        res.append(f"{vuln}:{fixed2}")
-
-    if len(res) > 2:
-        res.append("***************************************")
-        print(advisory.cve_id)
-        return res
-    else:
-        res.append(f"{vuln}:{fixed}")
-        res.append("***************************************")
-        print(advisory.cve_id)
-        return res
 
 
 def analyse_statistics(filename: str):  # noqa: C901

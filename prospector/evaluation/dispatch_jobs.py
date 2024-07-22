@@ -22,8 +22,12 @@ from util.config_parser import parse_config_file
 evaluation_config = OmegaConf.load("evaluation/config.yaml")
 
 INPUT_DATA_PATH = evaluation_config.input_data_path
-PROSPECTOR_REPORT_LLM_PATH = evaluation_config.prospector_reports_llm_path
-PROSPECTOR_REPORT_NO_LLM_PATH = evaluation_config.prospector_reports_no_llm_path
+# Select the folder depending whether LLMs are used or not
+PROSPECTOR_REPORT_PATH = (
+    evaluation_config.prospector_reports_llm_path
+    if evaluation_config.prospector_settings.run_with_llm
+    else evaluation_config.prospector_reports_no_llm_path
+)
 ANALYSIS_RESULTS_PATH = evaluation_config.analysis_results_path
 
 # get the redis server url
@@ -331,17 +335,10 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     if len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
 
-    # Select the folder depending whether LLMs are used or not
-    folder_path = (
-        PROSPECTOR_REPORT_LLM_PATH
-        if evaluation_config.prospector_settings.run_with_llm
-        else PROSPECTOR_REPORT_NO_LLM_PATH
-    )
-
     dispatched_jobs = 0
     for cve in dataset:
         # Skip already existing reports
-        if os.path.exists(f"{folder_path}{filename}/{cve[0]}.json"):
+        if os.path.exists(f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"):
             continue
 
         dispatched_jobs += 1
@@ -356,7 +353,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
                     cve[0],
                     cve[2],
                     "json",
-                    f"{folder_path}{filename}/{cve[0]}.json",
+                    f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
                 ),
                 description="Prospector Job",
                 id=cve[0],
