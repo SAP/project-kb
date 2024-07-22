@@ -460,6 +460,8 @@ class CommitIsSecurityRelevant(Rule):
 
                 return candidate.security_relevant
 
+                return candidate.security_relevant
+
             except requests.exceptions.RequestException as e:
                 error_type = type(e).__name__
                 print(
