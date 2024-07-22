@@ -314,7 +314,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    # dataset = dataset[:5]
+    dataset = dataset[:5]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
@@ -353,3 +353,12 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
         # print(f"Dispatched job {cve[0]} to queue.") # Sanity Check
 
     print(f"Dispatched {dispatched_jobs} jobs.")
+
+
+def empty_queue():
+    with Connection(redis.from_url(redis_url)):
+        queue = Queue("default")
+
+        queue.empty()
+
+        print("Emptied the queue.")

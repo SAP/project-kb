@@ -11,6 +11,7 @@ from evaluation.analyse import (
 )
 from evaluation.dispatch_jobs import (
     dispatch_prospector_jobs,
+    empty_queue,
     parallel_execution,
 )
 
@@ -85,6 +86,13 @@ def parse_cli_args(args):
         help="Run in parallel on multiple CVEs",
         action="store_true",
     )
+
+    parser.add_argument(
+        "-eq",
+        "--empty-queue",
+        help="Empty the Redis Queue",
+        action="store_true",
+    )
     return parser.parse_args()
 
 
@@ -103,8 +111,19 @@ def main(argv):
             pass
         # parallel_execution(args.input)
 
+    # Remove all jobs from the queue
+    elif (
+        args.empty_queue
+        and not args.execute
+        and not args.parallel
+        and not args.stats
+    ):
+        empty_queue()
+
     # analysis of Prospector report
-    elif args.analyze and not args.rules and not args.execute and not args.stats:
+    elif (
+        args.analyze and not args.rules and not args.execute and not args.stats
+    ):
         analyze_prospector(args.input)
 
     elif args.analyze and args.stats and not args.rules and not args.execute:

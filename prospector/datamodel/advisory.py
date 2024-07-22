@@ -108,7 +108,7 @@ class AdvisoryRecord:
 
         # for k, v in self.references.items():
         #     print(k, v)
-        logger.debug("References: " + str(self.references))
+        # logger.debug("References: " + str(self.references))
 
         # TODO: I should extract interesting stuff from the references immediately ad maintain them just for a fast lookup
         logger.debug(f"Relevant references: {len(self.references)}")
