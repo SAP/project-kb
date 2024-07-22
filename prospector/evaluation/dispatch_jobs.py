@@ -22,7 +22,8 @@ from util.config_parser import parse_config_file
 evaluation_config = OmegaConf.load("evaluation/config.yaml")
 
 INPUT_DATA_PATH = evaluation_config.input_data_path
-PROSPECTOR_REPORT_PATH = evaluation_config.prospector_reports_path
+PROSPECTOR_REPORT_LLM_PATH = evaluation_config.prospector_reports_llm_path
+PROSPECTOR_REPORT_NO_LLM_PATH = evaluation_config.prospector_reports_no_llm_path
 ANALYSIS_RESULTS_PATH = evaluation_config.analysis_results_path
 
 # get the redis server url
@@ -291,15 +292,24 @@ def run_prospector_and_generate_report(
 
     # print(f"Enabled rules: {config.enabled_rules}")  # sanity check
 
+    prospector_settings = evaluation_config.prospector_settings
+    # Rules are taken from config.yaml (the overall one), except run_with_llm is false in the evaluation config, then the llm rule is removed
+    enabled_rules = (
+        config.enabled_rules
+        if prospector_settings.run_with_llm
+        else config.enabled_rules.remove("COMMIT_IS_SECURITY_RELEVANT")
+    )
+
     LLMService(config.llm_service)
 
     results, advisory_record = prospector(
         vulnerability_id=vuln_id,
         version_interval=v_int,
         backend_address=backend,
-        enabled_rules=config.enabled_rules,
-        use_llm_repository_url=True,
+        enabled_rules=enabled_rules,
+        use_llm_repository_url=prospector_settings.run_with_llm,
     )
+
     generate_report(
         results,
         advisory_record,
@@ -307,28 +317,32 @@ def run_prospector_and_generate_report(
         output_file,
     )
 
-    return results, advisory_record
+    # return results, advisory_record
+    return f"Ran Prospector on {vuln_id}"
 
 
 def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[:5]
+    dataset = dataset[:10]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
 
+    # Select the folder depending whether LLMs are used or not
+    folder_path = (
+        PROSPECTOR_REPORT_LLM_PATH
+        if evaluation_config.prospector_settings.run_with_llm
+        else PROSPECTOR_REPORT_NO_LLM_PATH
+    )
+
     dispatched_jobs = 0
     for cve in dataset:
         # Skip already existing reports
-        if os.path.exists(f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"):
+        if os.path.exists(f"{folder_path}{filename}/{cve[0]}.json"):
             continue
-
-        # print(
-        #     f"\n\n*********\n {cve[0]} ({dataset.index(cve)+1}/{len(dataset)})\n**********\n"
-        # )
 
         dispatched_jobs += 1
 
@@ -342,7 +356,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
                     cve[0],
                     cve[2],
                     "json",
-                    f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
+                    f"{folder_path}{filename}/{cve[0]}.json",
                 ),
                 description="Prospector Job",
                 id=cve[0],
