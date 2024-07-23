@@ -311,6 +311,7 @@ def run_prospector_and_generate_report(
         version_interval=v_int,
         backend_address=backend,
         enabled_rules=enabled_rules,
+        git_cache=config.git_cache,
         use_llm_repository_url=prospector_settings.run_with_llm,
     )
 
@@ -329,7 +330,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[:10]
+    # dataset = dataset[:10]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:

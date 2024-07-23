@@ -13,6 +13,8 @@ import sys
 from typing import Dict, List
 from urllib.parse import urlparse
 
+from tqdm import tqdm
+
 from git.exec import Exec
 from git.raw_commit import RawCommit
 from log.logger import logger
@@ -25,14 +27,32 @@ ONE_MONTH_TIME_DELTA = 30 * 24 * 60 * 60
 HALF_MONTH_TIME_DELTA = 15 * 24 * 60 * 60
 
 
-# def do_clone(url, output_folder, shallow=False, skip_existing=False):
-#     git = Git(url, cache_path=output_folder, shallow=shallow)
-#     git.clone(shallow=shallow, skip_existing=skip_existing)
-#     return str(len(git.get_commits()))
+def do_clone(url, output_folder, shallow=False, skip_existing=False):
+    """
+    This function clones a git repository from the given URL to the specified
+    output folder. It can perform a shallow clone and skip existing repositories if specified.
 
+    Args:
+        url (str): The URL of the git repository to clone.
+        output_folder (str): The path to the folder where the repository should
+        be cloned to.
+        shallow (bool, optional): If True, perform a shallow clone.
+        skip_existing (bool, optional): If True, skip cloning if the repository
+        already exists. Defaults to False.
 
-def do_clone():
-    pass
+    Returns:
+        str: The number of commits in the cloned repository as a string.
+
+    Raises:
+        GitError: If there's an error during the cloning process.
+
+    Example:
+        >>> commit_count = do_clone("https://github.com/example/repo.git", "/path/to/output", shallow=True)
+        >>> print(f"The repository has {commit_count} commits.")
+    """
+    git = Git(url, cache_path=output_folder, shallow=shallow)
+    git.clone(shallow=shallow, skip_existing=skip_existing)
+    return str(len(git.get_commits()))
 
 
 def clone_repo_multiple(
@@ -44,13 +64,23 @@ def clone_repo_multiple(
     concurrent=multiprocessing.cpu_count(),
 ):
     """
-    This is the parallelized version of clone_repo (works with a list of repositories).
+    This is the parallelized version of clone_repo (works with a list of
+    repositories). This uses a tqdm progress bar to show how many repos
+    have been cloned.
     """
     logger.debug(f"Using {concurrent} parallel workers")
-    with multiprocessing.Pool(concurrent) as pool:
-        args = ((url, output_folder, proxy, shallow, skip_existing) for url in url_list)
-        results = pool.starmap(do_clone, args)
 
+    with multiprocessing.Pool(concurrent) as pool:
+        args = (
+            (url, output_folder, shallow, skip_existing) for url in url_list
+        )
+        results = list(
+            tqdm(
+                pool.starmap(do_clone, args),
+                total=len(url_list),
+                desc="Cloning repositories",
+            )
+        )
     return results
 
 
@@ -159,7 +189,9 @@ class Git:
             if skip_existing:
                 logger.debug(f"Skipping fetch of {self.url} in {self.path}")
             else:
-                logger.debug(f"Found repo {self.url} in {self.path}.\nFetching....")
+                logger.debug(
+                    f"Found repo {self.url} in {self.path}.\nFetching...."
+                )
 
                 self.execute("git fetch --progress --all --tags --force")
             return
@@ -181,7 +213,9 @@ class Git:
                 silent=True,
             )
         except Exception as e:
-            logger.error(f"Could not update remote in {self.path}", exc_info=True)
+            logger.error(
+                f"Could not update remote in {self.path}", exc_info=True
+            )
             shutil.rmtree(self.path)
             raise e
 
@@ -226,7 +260,9 @@ class Git:
             return self.parse_git_output(out)
 
         except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
+            logger.error(
+                "Git command failed, cannot get commits", exc_info=True
+            )
             return dict()
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
@@ -266,7 +302,9 @@ class Git:
             return self.parse_git_output(out)
 
         except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
+            logger.error(
+                "Git command failed, cannot get commits", exc_info=True
+            )
             return dict()
 
     def create_commit(self, commit_id: str) -> RawCommit:
@@ -277,7 +315,9 @@ class Git:
             return self.parse_git_output(out)[commit_id]
 
         except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
+            logger.error(
+                "Git command failed, cannot get commits", exc_info=True
+            )
             return None
 
     def parse_git_output(self, raw: List[str]) -> Dict[str, RawCommit]:
@@ -357,7 +397,9 @@ class Git:
         best_match = ("", 0.0)
         for tag in tags:
             t_strip = re.sub("[^0-9]", "", tag)
-            match_score = difflib.SequenceMatcher(None, t_strip, version).ratio()
+            match_score = difflib.SequenceMatcher(
+                None, t_strip, version
+            ).ratio()
             # print(t, match_score)
             if match_score > best_match[1]:
                 best_match = (tag, match_score)
