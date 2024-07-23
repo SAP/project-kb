@@ -2,73 +2,80 @@
 # pip install bibtexparser --pre
 
 # to run on the CLI:
-# python bib2md.py -f reference_file.bib -ord desc|asc
+# python bib2md.py your_referenceFile.bib 
+# default order: desc. 
+# To change add at the end of your command: -ord "asc"
 
 import bibtexparser
 import sys
 import argparse
+import html
 
-def format_simple(entry_str, order):  
+def process_entry(entry):
+    try:
+        authors = entry['author'].split(' and ')
+        if len(authors) > 1:
+            authors[-1] = 'and ' + authors[-1]
+
+        authors_formatted = ', '.join([a.replace('\n', ' ').strip() for a in authors])
+        title = html.unescape(entry['title'])  
+        year = int(entry['year'])
+        venue = entry.get('journal') or entry.get('booktitle') or entry.get('archivePrefix')
+
+        if not venue:
+            id_unprocessed = "[" + entry.key + " - " + entry.entry_type + "]"
+            return None, id_unprocessed
+            
+        return (year, f"{authors_formatted}. {title}. {venue.value}. ({year})."), None
+
+    except KeyError as e:
+        print(f"One or more necessary fields {str(e)} not present in this BibTeX entry.")
+        return None, None
+
+def format_simple(entry_str, order='desc'):
     library = bibtexparser.parse_string(entry_str)
     formatted_entries = []
     unprocessed_entries = []
     
     for entry in library.entries:
-        try:
-            authors = entry['author'].split(' and ')
-            if len(authors) > 1:
-                authors[-1] = 'and ' + authors[-1]
-              
-            authors_formatted = ', '.join([a.replace('\n', ' ').strip() for a in authors])
-            title = entry['title']
-            year = int(entry['year'])
-            venue = entry.get('journal') or entry.get('booktitle') or entry.get('archivePrefix')
-            
-            if not venue:
-                id_unprocessed = "[" + entry.key + " - " + entry.entry_type + "]"
-                unprocessed_entries.append(id_unprocessed)
-                continue
-            
-            formatted_entries.append((year, f"{authors_formatted}. {title}. {venue.value}. ({year})."))
+        processed_entry, unprocessed_entry = process_entry(entry)
+        if processed_entry:
+            formatted_entries.append(processed_entry)
+        elif unprocessed_entry:
+            unprocessed_entries.append(unprocessed_entry)
 
-        except KeyError as e:
-            print(f"One or more necessary fields {str(e)} not present in this BibTeX entry.")
-            continue
-
-    if order=='asc':
+    if order == 'asc':
         formatted_entries.sort(key=lambda x: x[0])
-    elif order=='desc':
+    elif order == 'desc':
         formatted_entries.sort(key=lambda x: x[0], reverse=True)
         
     if len(unprocessed_entries) > 0:
-      print('Warning: Some entries were not processed due to unknown type', file=sys.stderr)
-      print("List of unprocessed entrie(s): ", unprocessed_entries)
+        print('Warning: Some entries were not processed due to unknown type', file=sys.stderr)
+        print("List of unprocessed entrie(s):", unprocessed_entries)
             
     return [entry[1] for entry in formatted_entries]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument('-f', '--file', type=str, 
-                        help='a .bib file as argument', required=True)
+
+    parser.add_argument('file', type=str, help='a .bib file as argument')
     parser.add_argument('-ord', '--order', type=str, 
                         choices=['asc', 'desc'],
                         help='here we set a sort order. We have the choice between "asc" and "desc"',
-                        required=True)
+                        default='desc', required=False)
     args = parser.parse_args()
 
-    with open(args.file, 'r') as bibtex_file:
+    with open(args.file, 'r', encoding='utf-8') as bibtex_file:
         bibtex_str = bibtex_file.read()
 
-    apa_citations = format_simple(bibtex_str, args.order)
-    for citation in apa_citations:
+    citations = format_simple(bibtex_str, args.order)
+    for cit in citations:
         print()
-        print(citation)
+        print(cit)
 
 if __name__ == "__main__":
     main()
-
 
 # bibtex_str = """
 # @comment{
