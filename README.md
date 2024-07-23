@@ -103,7 +103,7 @@ scripts described in that paper](MSR2019)
 
 ___
 
-**Our papers related to Project KB**
+###Our papers related to Project KB
 * Sabetta, A., Ponta, S. E., Cabrera Lozoya, R., Bezzi, M., Sacchetti, T., Greco, M., … Massacci, F. (2024). [Known Vulnerabilities of Open Source Projects: Where Are the Fixes?](https://ieeexplore.ieee.org/document/10381645) IEEE Security & Privacy, 22(2), 49–59.
 * Fehrer, T., Lozoya, R. C., Sabetta, A., Nucci, D. D., & Tamburri, D. A. (2024). [Detecting Security Fixes in Open-Source Repositories using Static Code Analyzers.](http://arxiv.org/abs/2105.03346) EASE '24: Proceedings of the 28th International Conference on Evaluation and Assessment in Software Engineering
 * Dann, A., Plate, H., Hermann, B., Ponta, S., & Bodden, E. (2022). [Identifying Challenges for OSS Vulnerability Scanners - A Study & Test Suite.](https://ris.uni-paderborn.de/record/31132) IEEE Transactions on Software Engineering, 48(09), 3613–3625. 
@@ -116,7 +116,7 @@ ___
 
 <!-- format used : APA -->
 
-**Papers citing our work**
+###Papers citing our work
 * Aladics, T., Hegedüs, P., & Ferenc, R. (2022). [A Vulnerability Introducing Commit Dataset for Java: An Improved SZZ based Approach.](https://api.semanticscholar.org/CorpusID:250566828) International Conference on Software and Data Technologies
 * Bui, Q.-C., Scandariato, R., & Ferreyra, N. E. D. (2022). [Vul4J: a dataset of reproducible Java vulnerabilities geared towards the study of program repair techniques.](https://dl.acm.org/doi/abs/10.1145/3524842.3528482) Proceedings of the 19th International Conference on Mining Software Repositories, 464–468.
 * S. R. Tate, M. Bollinadi, and J. Moore. (2020). [Characterizing Vulnerabilities in a Major Linux Distribution](https://home.uncg.edu/cmp/faculty/srtate/pubs/vulnerabilities/Vulnerabilities-SEKE2020.pdf) 32nd International Conference on Software Engineering \& Knowledge Engineering (SEKE), pp. 538-543.
