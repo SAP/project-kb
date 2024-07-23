@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime
 import json
 import re
 import sys
@@ -605,7 +606,7 @@ def analyse_statistics(filename: str):  # noqa: C901
             total_cc_times.append(total_cc_time)
 
         except FileNotFoundError:
-            print(f"Skipped {itm[0]}.json because file could not be found.")
+            # print(f"Skipped {itm[0]}.json because file could not be found.") # Sanity Check
             missing.append(itm[0])
             skipped += 1
 
@@ -631,19 +632,31 @@ def analyse_statistics(filename: str):  # noqa: C901
         except FileNotFoundError:
             continue
 
-    print(
-        # f"Found {len(dataset)} files in input dataset. \n{skipped} reports were missing: {missing}."
-        f"Found {len(dataset)} files in input dataset. \n{skipped} reports were missing."
-    )
+    execution_data = {
+        "timestamp": datetime.now().strftime("%H:%M:%S"),
+        "total_files_found": len(repo_times),
+        "missing_reports": len(missing),
+        "skipped_reports": skipped,
+        "timings": {
+            "avg_time_repo_url": avg_repo_time,
+            "avg_time_commit_classification_single": avg_cc_time,
+            "avg_time_commit_classification_all": avg_total_cc_time,
+        },
+    }
 
-    print("\nIn these reports, the LLM invokation needed the following times:")
-    print(f"Average time to get repository URL: \t\t\t\t{avg_repo_time}")
-    print(
-        f"Average time to get commit classification (single request): \t{avg_cc_time}"
-    )
-    print(
-        f"Average time to get commit classification (all {cc_num_commits} requests): \t{avg_total_cc_time}"
-    )
+    # Load existing data or create new structure
+    try:
+        with open(ANALYSIS_RESULTS_PATH + "llm_stats.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {"executions": []}
+
+    # Add the new execution data
+    data["executions"].append(execution_data)
+
+    # Save the updated data
+    with open(ANALYSIS_RESULTS_PATH + "llm_stats.json", "w") as f:
+        json.dump(data, f, indent=2)
 
 
 def process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
@@ -660,24 +673,24 @@ def process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
         data = json.load(file)
 
         try:
-            llm_stats = data["processing_statistics"]["LLM"]["llm"][
-                "llm_service"
-            ]["LLMService"]
+            llm_stats = data["processing_statistics"]["LLM"]
 
-            total_cc_time = sum(llm_stats["classify_commit"]["execution time"])
+            total_cc_time = sum(
+                llm_stats["commit_classification"]["execution time"]
+            )
 
             avg_cc_time = total_cc_time / len(
-                llm_stats["classify_commit"]["execution time"]
+                llm_stats["commit_classification"]["execution time"]
             )
 
             return (
-                llm_stats["get_repository_url"]["execution time"][0],
+                llm_stats["repository_url"]["execution time"][0],
                 avg_cc_time,
                 total_cc_time,
             )
 
-        except Exception:
-            print(f"Did not have expected JSON fields: {filepath}.")
+        except Exception as e:
+            print(f"Did not have expected JSON fields: {filepath}: {e}")
             raise ValueError
 
 
@@ -687,9 +700,9 @@ def get_cc_num_commits(filepath):
         data = json.load(file)
 
         num = len(
-            data["processing_statistics"]["LLM"]["llm"]["llm_service"][
-                "LLMService"
-            ]["classify_commit"]["execution time"]
+            data["processing_statistics"]["LLM"]["commit_classification"][
+                "execution time"
+            ]
         )
 
         return num
