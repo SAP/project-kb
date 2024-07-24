@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 
 from tqdm import tqdm
 
+import multiprocessing.pool as mpp
 from git.exec import Exec
 from git.raw_commit import RawCommit
 from log.logger import logger
@@ -27,6 +28,28 @@ ONE_MONTH_TIME_DELTA = 30 * 24 * 60 * 60
 HALF_MONTH_TIME_DELTA = 15 * 24 * 60 * 60
 
 
+def istarmap(self, func, iterable, chunksize=1):
+    """Credit: https://stackoverflow.com/questions/57354700/starmap-combined-with-tqdm"""
+    self._check_running()
+    if chunksize < 1:
+        raise ValueError("Chunksize must be 1+, not {0:n}".format(chunksize))
+
+    task_batches = mpp.Pool._get_tasks(func, iterable, chunksize)
+    result = mpp.IMapIterator(self)
+    self._taskqueue.put(
+        (
+            self._guarded_task_generation(
+                result._job, mpp.starmapstar, task_batches
+            ),
+            result._set_length,
+        )
+    )
+    return (item for chunk in result for item in chunk)
+
+
+mpp.Pool.istarmap = istarmap
+
+
 def do_clone(url, output_folder, shallow=False, skip_existing=False):
     """
     This function clones a git repository from the given URL to the specified
@@ -37,18 +60,10 @@ def do_clone(url, output_folder, shallow=False, skip_existing=False):
         output_folder (str): The path to the folder where the repository should
         be cloned to.
         shallow (bool, optional): If True, perform a shallow clone.
-        skip_existing (bool, optional): If True, skip cloning if the repository
-        already exists. Defaults to False.
+        skip_existing (bool, optional): If True skip cloning if already exists.
 
     Returns:
         str: The number of commits in the cloned repository as a string.
-
-    Raises:
-        GitError: If there's an error during the cloning process.
-
-    Example:
-        >>> commit_count = do_clone("https://github.com/example/repo.git", "/path/to/output", shallow=True)
-        >>> print(f"The repository has {commit_count} commits.")
     """
     git = Git(url, cache_path=output_folder, shallow=shallow)
     git.clone(shallow=shallow, skip_existing=skip_existing)
@@ -58,7 +73,6 @@ def do_clone(url, output_folder, shallow=False, skip_existing=False):
 def clone_repo_multiple(
     url_list,
     output_folder,
-    proxy="",
     shallow=False,
     skip_existing=False,
     concurrent=multiprocessing.cpu_count(),
@@ -68,15 +82,14 @@ def clone_repo_multiple(
     repositories). This uses a tqdm progress bar to show how many repos
     have been cloned.
     """
-    logger.debug(f"Using {concurrent} parallel workers")
-
+    print(f"Using {concurrent} parallel workers")
     with multiprocessing.Pool(concurrent) as pool:
-        args = (
+        args = [
             (url, output_folder, shallow, skip_existing) for url in url_list
-        )
+        ]
         results = list(
             tqdm(
-                pool.starmap(do_clone, args),
+                pool.istarmap(do_clone, args),
                 total=len(url_list),
                 desc="Cloning repositories",
             )
