@@ -1,0 +1,1218 @@
+@inproceedings{Aladics2022AVI,
+  title={A Vulnerability Introducing Commit Dataset for Java: An Improved SZZ based Approach},
+  author={Tam{\'a}s Aladics and P{\'e}ter Heged{\"u}s and Rudolf Ferenc},
+  booktitle={International Conference on Software and Data Technologies},
+  year={2022},
+  url={https://api.semanticscholar.org/CorpusID:250566828}
+}
+
+@inproceedings{10.1145/3524842.3528482,
+author = {Bui, Quang-Cuong and Scandariato, Riccardo and Ferreyra, Nicol\'{a}s E. D\'{\i}az},
+title = {Vul4J: a dataset of reproducible Java vulnerabilities geared towards the study of program repair techniques},
+year = {2022},
+isbn = {9781450393034},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3524842.3528482},
+doi = {10.1145/3524842.3528482},
+abstract = {In this work we present Vul4J, a Java vulnerability dataset where each vulnerability is associated to a patch and, most importantly, to a Proof of Vulnerability (PoV) test case. We analyzed 1803 fix commits from 912 real-world vulnerabilities in the Project KB knowledge base to extract the reproducible vulnerabilities, i.e., vulnerabilities that can be triggered by one or more PoV test cases. To this aim, we ran the test suite of the application in both, the vulnerable and secure versions, to identify the corresponding PoVs. Furthermore, if no PoV test case was spotted, then we wrote it ourselves. As a result, Vul4J includes 79 reproducible vulnerabilities from 51 open-source projects, spanning 25 different Common Weakness Enumeration (CWE) types. To the extent of our knowledge, this is the first dataset of its kind created for Java. Particularly, it targets the study of Automated Program Repair (APR) tools, where PoVs are often necessary in order to identify plausible patches. We made our dataset and related tools publically available on GitHub.},
+booktitle = {Proceedings of the 19th International Conference on Mining Software Repositories},
+pages = {464–468},
+numpages = {5},
+keywords = {java, program repair, vulnerability},
+location = {Pittsburgh, Pennsylvania},
+series = {MSR '22}
+}
+
+@misc{sharma2022surveymachinelearningtechniques,
+      title={A Survey on Machine Learning Techniques for Source Code Analysis},
+      author={Tushar Sharma and Maria Kechagia and Stefanos Georgiou and Rohit Tiwari and Indira Vats and Hadi Moazen and Federica Sarro},
+      year={2022},
+      eprint={2110.09610},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2110.09610},
+}
+
+@article{10.1145/3649590,
+author = {Hommersom, Daan and Sabetta, Antonino and Coppola, Bonaventura and Nucci, Dario Di and Tamburri, Damian A.},
+title = {Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories},
+year = {2024},
+issue_date = {June 2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {33},
+number = {5},
+issn = {1049-331X},
+url = {https://doi.org/10.1145/3649590},
+doi = {10.1145/3649590},
+abstract = {The lack of comprehensive sources of accurate vulnerability data represents a critical obstacle to studying and understanding software vulnerabilities (and their corrections). In this article, we present an approach that combines heuristics stemming from practical experience and machine-learning (ML)—specifically, natural language processing (NLP)—to address this problem. Our method consists of three phases. First, we construct an advisory record object containing key information about a vulnerability that is extracted from an advisory, such as those found in the National Vulnerability Database (NVD). These advisories are expressed in natural language. Second, using heuristics, a subset of candidate fix commits is obtained from the source code repository of the affected project, by filtering out commits that can be identified as unrelated to the vulnerability at hand. Finally, for each of the remaining candidate commits, our method builds a numerical feature vector reflecting the characteristics of the commit that are relevant to predicting its match with the advisory at hand. Based on the values of these feature vectors, our method produces a ranked list of candidate fixing commits. The score attributed by the ML model to each feature is kept visible to the users, allowing them to easily interpret the predictions.We implemented our approach and we evaluated it on an open data set, built by manual curation, that comprises 2,391 known fix commits corresponding to 1,248 public vulnerability advisories. When considering the top-10 commits in the ranked results, our implementation could successfully identify at least one fix commit for up to 84.03\% of the vulnerabilities (with a fix commit on the first position for 65.06\% of the vulnerabilities). Our evaluation shows that our method can reduce considerably the manual effort needed to search open-source software (OSS) repositories for the commits that fix known vulnerabilities.},
+journal = {ACM Trans. Softw. Eng. Methodol.},
+month = {jun},
+articleno = {134},
+numpages = {28},
+keywords = {Open source software, software security, common vulnerabilities and exposures (CVE), National Vulnerability Database (NVD), mining software repositories, code-level vulnerability data, machine learning applied to software security}
+}
+
+@inproceedings{10.1145/3387940.3392200,
+author = {Marchand-Melsom, Alexander and Nguyen Mai, Duong Bao},
+title = {Automatic repair of OWASP Top 10 security vulnerabilities: A survey},
+year = {2020},
+isbn = {9781450379632},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3387940.3392200},
+doi = {10.1145/3387940.3392200},
+abstract = {Current work on automatic program repair has not focused on actually prevalent vulnerabilities in web applications, such as described in the OWASP Top 10 categories, leading to a scarcely explored field, which in turn leads to a gap between industry needs and research efforts. In order to assess the extent of this gap, we have surveyed and analyzed the literature on fully automatic source-code manipulating program repair of OWASP Top 10 vulnerabilities, as well as their corresponding test suites. We find that there is a significant gap in the coverage of the OWASP Top 10 vulnerabilities, and that the test suites used to test the analyzed approaches are highly inadequate. Few approaches cover multiple OWASP Top 10 vulnerabilities, and there is no combination of existing test suites that achieves a total coverage of OWASP Top 10.},
+booktitle = {Proceedings of the IEEE/ACM 42nd International Conference on Software Engineering Workshops},
+pages = {23–30},
+numpages = {8},
+keywords = {OWASP Top 10, automatic program repair, survey},
+location = {Seoul, Republic of Korea},
+series = {ICSEW'20}
+}
+
+@misc{sawadogo2021earlydetectionsecurityrelevantbug,
+      title={Early Detection of Security-Relevant Bug Reports using Machine Learning: How Far Are We?},
+      author={Arthur D. Sawadogo and Quentin Guimard and Tegawendé F. Bissyandé and Abdoul Kader Kaboré and Jacques Klein and Naouel Moha},
+      year={2021},
+      eprint={2112.10123},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2112.10123},
+}
+
+@misc{sun2023exploringsecuritycommitspython,
+      title={Exploring Security Commits in Python},
+      author={Shiyu Sun and Shu Wang and Xinda Wang and Yunlong Xing and Elisa Zhang and Kun Sun},
+      year={2023},
+      eprint={2307.11853},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2307.11853},
+}
+
+@misc{reis2021fixingvulnerabilitiespotentiallyhinders,
+      title={Fixing Vulnerabilities Potentially Hinders Maintainability},
+      author={Sofia Reis and Rui Abreu and Luis Cruz},
+      year={2021},
+      eprint={2106.03271},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2106.03271},
+}
+
+@inproceedings{vem,
+ author = {Rodrigo Andrade and Vinícius Santos},
+ title = { Investigating vulnerability datasets},
+ booktitle = {Anais do IX Workshop de Visualização, Evolução e Manutenção de Software},
+ location = {Joinville},
+ year = {2021},
+ keywords = {},
+ issn = {0000-0000},
+ pages = {26--30},
+ publisher = {SBC},
+ address = {Porto Alegre, RS, Brasil},
+ doi = {10.5753/vem.2021.17213},
+ url = {https://sol.sbc.org.br/index.php/vem/article/view/17213}
+}
+
+@misc{nguyen2023multigranularitydetectorvulnerabilityfixes,
+      title={Multi-Granularity Detector for Vulnerability Fixes},
+      author={Truong Giang Nguyen and Thanh Le-Cong and Hong Jin Kang and Ratnadira Widyasari and Chengran Yang and Zhipeng Zhao and Bowen Xu and Jiayuan Zhou and Xin Xia and Ahmed E. Hassan and Xuan-Bach D. Le and David Lo},
+      year={2023},
+      eprint={2305.13884},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2305.13884},
+}
+
+@inproceedings{10.1145/3549035.3561184,
+author = {Siddiq, Mohammed Latif and Santos, Joanna C. S.},
+title = {SecurityEval dataset: mining vulnerability examples to evaluate machine learning-based code generation techniques},
+year = {2022},
+isbn = {9781450394574},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3549035.3561184},
+doi = {10.1145/3549035.3561184},
+abstract = {Automated source code generation is currently a popular machine-learning-based task. It can be helpful for software developers to write functionally correct code from a given context. However, just like human developers, a code generation model can produce vulnerable code, which the developers can mistakenly use. For this reason, evaluating the security of a code generation model is a must. In this paper, we describe SecurityEval, an evaluation dataset to fulfill this purpose. It contains 130 samples for 75 vulnerability types, which are mapped to the Common Weakness Enumeration (CWE). We also demonstrate using our dataset to evaluate one open-source (i.e., InCoder) and one closed-source code generation model (i.e., GitHub Copilot).},
+booktitle = {Proceedings of the 1st International Workshop on Mining Software Repositories Applications for Privacy and Security},
+pages = {29–33},
+numpages = {5},
+keywords = {security, dataset, common weakness enumeration, code generation},
+location = {Singapore, Singapore},
+series = {MSR4P&S 2022}
+}
+
+@misc{sawadogo2020learningcatchsecuritypatches,
+      title={Learning to Catch Security Patches},
+      author={Arthur D. Sawadogo and Tegawendé F. Bissyandé and Naouel Moha and Kevin Allix and Jacques Klein and Li Li and Yves Le Traon},
+      year={2020},
+      eprint={2001.09148},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2001.09148},
+}
+
+@misc{dunlap2023vfcfinderseamlesslypairingsecurity,
+      title={VFCFinder: Seamlessly Pairing Security Advisories and Patches},
+      author={Trevor Dunlap and Elizabeth Lin and William Enck and Bradley Reaves},
+      year={2023},
+      eprint={2311.01532},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2311.01532},
+}
+
+@misc{dunlap2023vfcfinderseamlesslypairingsecurity,
+      title={VFCFinder: Seamlessly Pairing Security Advisories and Patches},
+      author={Trevor Dunlap and Elizabeth Lin and William Enck and Bradley Reaves},
+      year={2023},
+      eprint={2311.01532},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2311.01532},
+}
+
+@inproceedings{10.1145/3510003.3510113,
+author = {Bao, Lingfeng and Xia, Xin and Hassan, Ahmed E. and Yang, Xiaohu},
+title = {V-SZZ: automatic identification of version ranges affected by CVE vulnerabilities},
+year = {2022},
+isbn = {9781450392211},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3510003.3510113},
+doi = {10.1145/3510003.3510113},
+abstract = {Vulnerabilities publicly disclosed in the National Vulnerability Database (NVD) are assigned with CVE (Common Vulnerabilities and Exposures) IDs and associated with specific software versions. Many organizations, including IT companies and government, heavily rely on the disclosed vulnerabilities in NVD to mitigate their security risks. Once a software is claimed as vulnerable by NVD, these organizations would examine the presence of the vulnerable versions of the software and assess the impact on themselves. However, the version information about vulnerable software in NVD is not always reliable. Nguyen et al. find that the version information of many CVE vulnerabilities is spurious and propose an approach based on the original SZZ algorithm (i.e., an approach to identify bug-introducing commits) to assess the software versions affected by CVE vulnerabilities.However, SZZ algorithms are designed for common bugs, while vulnerabilities and bugs are different. Many bugs are introduced by a recent bug-fixing commit, but vulnerabilities are usually introduced in their initial versions. Thus, the current SZZ algorithms often fail to identify the inducing commits for vulnerabilities. Therefore, in this study, we propose an approach based on an improved SZZ algorithm to refine software versions affected by CVE vulnerabilities. Our proposed SZZ algorithm leverages the line mapping algorithms to identify the earliest commit that modified the vulnerable lines, and then considers these commits to be the vulnerability-inducing commits, as opposed to the previous SZZ algorithms that assume the commits that last modified the buggy lines as the inducing commits. To evaluate our proposed approach, we manually annotate the true inducing commits and verify the vulnerable versions for 172 CVE vulnerabilities with fixing commits from two publicly available datasets with five C/C++ and 41 Java projects, respectively. We find that 99 out of 172 vulnerabilities whose version information is spurious. The experiment results show that our proposed approach can identify more vulnerabilities with the true inducing commits and correct vulnerable versions than the previous SZZ algorithms. Our approach outperforms the previous SZZ algorithms in terms of F1-score for identifying vulnerability-inducing commits on both C/C++ and Java projects (0.736 and 0.630, respectively). For refining vulnerable versions, our approach also achieves the best performance on the two datasets in terms of F1-score (0.928 and 0.952).},
+booktitle = {Proceedings of the 44th International Conference on Software Engineering},
+pages = {2352–2364},
+numpages = {13},
+keywords = {CVE, SZZ, vulnerability},
+location = {Pittsburgh, Pennsylvania},
+series = {ICSE '22}
+}
+
+@inproceedings{10.1145/3379597.3387501,
+author = {Fan, Jiahao and Li, Yi and Wang, Shaohua and Nguyen, Tien N.},
+title = {A C/C++ Code Vulnerability Dataset with Code Changes and CVE Summaries},
+year = {2020},
+isbn = {9781450375177},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3379597.3387501},
+doi = {10.1145/3379597.3387501},
+abstract = {We collected a large C/C++ code vulnerability dataset from open-source Github projects, namely Big-Vul. We crawled the public Common Vulnerabilities and Exposures (CVE) database and CVE-related source code repositories. Specifically, we collected the descriptive information of the vulnerabilities from the CVE database, e.g., CVE IDs, CVE severity scores, and CVE summaries. With the CVE information and its related published Github code repository links, we downloaded all of the code repositories and extracted vulnerability related code changes. In total, Big-Vul contains 3,754 code vulnerabilities spanning 91 different vulnerability types. All these code vulnerabilities are extracted from 348 Github projects. All information is stored in the CSV format. We linked the code changes with the CVE descriptive information. Thus, our Big-Vul can be used for various research topics, e.g., detecting and fixing vulnerabilities, analyzing the vulnerability related code changes. Big-Vul is publicly available on Github.},
+booktitle = {Proceedings of the 17th International Conference on Mining Software Repositories},
+pages = {508–512},
+numpages = {5},
+keywords = {C/C++ Code, Code Changes, Common Vulnerabilities and Exposures},
+location = {Seoul, Republic of Korea},
+series = {MSR '20}
+}
+
+@misc{zhang2023surveylearningbasedautomatedprogram,
+      title={A Survey of Learning-based Automated Program Repair},
+      author={Quanjun Zhang and Chunrong Fang and Yuxiang Ma and Weisong Sun and Zhenyu Chen},
+      year={2023},
+      eprint={2301.03270},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2301.03270},
+}
+
+@article{Alzubaidi2023ASO,
+  title={A survey on deep learning tools dealing with data scarcity: definitions, challenges, solutions, tips, and applications},
+  author={Laith Alzubaidi and Jinshuai Bai and Aiman Al-Sabaawi and Jos{\'e} I. Santamar{\'i}a and Ahmed Shihab Albahri and Bashar Sami Nayyef Al-dabbagh and Mohammed Abdulraheem Fadhel and Mohamed Manoufali and Jinglan Zhang and Ali H. Al-timemy and Ye Duan and Amjed Abdullah and Laith Farhan and Yi Lu and Ashish Gupta and Felix Albu and Amin Abbosh and Yuantong Gu},
+  journal={Journal of Big Data},
+  year={2023},
+  volume={10},
+  pages={1-82},
+  url={https://api.semanticscholar.org/CorpusID:258137181}
+}
+
+@article{SHARMA2024111934,
+title = {A survey on machine learning techniques applied to source code},
+journal = {Journal of Systems and Software},
+volume = {209},
+pages = {111934},
+year = {2024},
+issn = {0164-1212},
+doi = {https://doi.org/10.1016/j.jss.2023.111934},
+url = {https://www.sciencedirect.com/science/article/pii/S0164121223003291},
+author = {Tushar Sharma and Maria Kechagia and Stefanos Georgiou and Rohit Tiwari and Indira Vats and Hadi Moazen and Federica Sarro},
+keywords = {Machine learning for software engineering, Source code analysis, Deep learning, Datasets, Tools},
+abstract = {The advancements in machine learning techniques have encouraged researchers to apply these techniques to a myriad of software engineering tasks that use source code analysis, such as testing and vulnerability detection. Such a large number of studies hinders the community from understanding the current research landscape. This paper aims to summarize the current knowledge in applied machine learning for source code analysis. We review studies belonging to twelve categories of software engineering tasks and corresponding machine learning techniques, tools, and datasets that have been applied to solve them. To do so, we conducted an extensive literature search and identified 494 studies. We summarize our observations and findings with the help of the identified studies. Our findings suggest that the use of machine learning techniques for source code analysis tasks is consistently increasing. We synthesize commonly used steps and the overall workflow for each task and summarize machine learning techniques employed. We identify a comprehensive list of available datasets and tools useable in this context. Finally, the paper discusses perceived challenges in this area, including the availability of standard datasets, reproducibility and replicability, and hardware resources. Editor’s note: Open Science material was validated by the Journal of Systems and Software Open Science Board.}
+}
+
+@article{10.1145/3648610,
+author = {Elder, Sarah and Rahman, Md Rayhanur and Fringer, Gage and Kapoor, Kunal and Williams, Laurie},
+title = {A Survey on Software Vulnerability Exploitability Assessment},
+year = {2024},
+issue_date = {August 2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {56},
+number = {8},
+issn = {0360-0300},
+url = {https://doi.org/10.1145/3648610},
+doi = {10.1145/3648610},
+abstract = {Knowing the exploitability and severity of software vulnerabilities helps practitioners prioritize vulnerability mitigation efforts. Researchers have proposed and evaluated many different exploitability assessment methods. The goal of this research is to assist practitioners and researchers in understanding existing methods for assessing vulnerability exploitability through a survey of exploitability assessment literature. We identify three exploitability assessment approaches: assessments based on original, manual Common Vulnerability Scoring System, automated Deterministic assessments, and automated Probabilistic assessments. Other than the original Common Vulnerability Scoring System, the two most common sub-categories are Deterministic, Program State based, and Probabilistic learning model assessments.},
+journal = {ACM Comput. Surv.},
+month = {apr},
+articleno = {205},
+numpages = {41},
+keywords = {Exploitability, software vulnerability}
+}
+
+@misc{aladics2023astbasedcodechangerepresentation,
+      title={An AST-based Code Change Representation and its Performance in Just-in-time Vulnerability Prediction},
+      author={Tamás Aladics and Péter Hegedűs and Rudolf Ferenc},
+      year={2023},
+      eprint={2303.16591},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2303.16591},
+}
+
+@INPROCEEDINGS{10428519,
+  author={Singhal, Amit and Goel, Pawan Kumar},
+  booktitle={2023 3rd International Conference on Advancement in Electronics & Communication Engineering (AECE)},
+  title={Analysis and Identification of Malicious Mobile Applications},
+  year={2023},
+  volume={},
+  number={},
+  pages={1045-1050},
+  keywords={Ecosystems;Mobile security;Threat assessment;Mobile applications;Software reliability;Security;Smart phones;Mobile Applications;digital landscape;malicious software;mobile threats},
+  doi={10.1109/AECE59614.2023.10428519}}
+
+@Article{electronics10131606,
+AUTHOR = {Senanayake, Janaka and Kalutarage, Harsha and Al-Kadri, Mhd Omar},
+TITLE = {Android Mobile Malware Detection Using Machine Learning: A Systematic Review},
+JOURNAL = {Electronics},
+VOLUME = {10},
+YEAR = {2021},
+NUMBER = {13},
+ARTICLE-NUMBER = {1606},
+URL = {https://www.mdpi.com/2079-9292/10/13/1606},
+ISSN = {2079-9292},
+ABSTRACT = {With the increasing use of mobile devices, malware attacks are rising, especially on Android phones, which account for 72.2% of the total market share. Hackers try to attack smartphones with various methods such as credential theft, surveillance, and malicious advertising. Among numerous countermeasures, machine learning (ML)-based methods have proven to be an effective means of detecting these attacks, as they are able to derive a classifier from a set of training examples, thus eliminating the need for an explicit definition of the signatures when developing malware detectors. This paper provides a systematic review of ML-based Android malware detection techniques. It critically evaluates 106 carefully selected articles and highlights their strengths and weaknesses as well as potential improvements. Finally, the ML-based methods for detecting source code vulnerabilities are discussed, because it might be more difficult to add security after the app is deployed. Therefore, this paper aims to enable researchers to acquire in-depth knowledge in the field and to identify potential future research and development directions.},
+DOI = {10.3390/electronics10131606}
+}
+
+@article{article,
+author = {Bui, Quang-Cuong and Paramitha, Ranindya and Vu, Duc-Ly and Massacci, Fabio and Scandariato, Riccardo},
+year = {2023},
+month = {12},
+pages = {},
+title = {APR4Vul: an empirical study of automatic program repair techniques on real-world Java vulnerabilities},
+volume = {29},
+journal = {Empirical Software Engineering},
+doi = {10.1007/s10664-023-10415-7}
+}
+
+@article{10.1145/3556974,
+author = {Senanayake, Janaka and Kalutarage, Harsha and Al-Kadri, Mhd Omar and Petrovski, Andrei and Piras, Luca},
+title = {Android Source Code Vulnerability Detection: A Systematic Literature Review},
+year = {2023},
+issue_date = {September 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {55},
+number = {9},
+issn = {0360-0300},
+url = {https://doi.org/10.1145/3556974},
+doi = {10.1145/3556974},
+abstract = {The use of mobile devices is rising daily in this technological era. A continuous and increasing number of mobile applications are constantly offered on mobile marketplaces to fulfil the needs of smartphone users. Many Android applications do not address the security aspects appropriately. This is often due to a lack of automated mechanisms to identify, test, and fix source code vulnerabilities at the early stages of design and development. Therefore, the need to fix such issues at the initial stages rather than providing updates and patches to the published applications is widely recognized. Researchers have proposed several methods to improve the security of applications by detecting source code vulnerabilities and malicious codes. This Systematic Literature Review (SLR) focuses on Android application analysis and source code vulnerability detection methods and tools by critically evaluating 118 carefully selected technical studies published between 2016 and 2022. It highlights the advantages, disadvantages, applicability of the proposed techniques, and potential improvements of those studies. Both Machine Learning (ML)-based methods and conventional methods related to vulnerability detection are discussed while focusing more on ML-based methods, since many recent studies conducted experiments with ML. Therefore, this article aims to enable researchers to acquire in-depth knowledge in secure mobile application development while minimizing the vulnerabilities by applying ML methods. Furthermore, researchers can use the discussions and findings of this SLR to identify potential future research and development directions.},
+journal = {ACM Comput. Surv.},
+month = {jan},
+articleno = {187},
+numpages = {37},
+keywords = {machine learning, Android security, software security, vulnerability detection, Source code vulnerability}
+}
+
+@inproceedings{10.1145/3593434.3593481,
+author = {Reis, Sofia and Abreu, Rui and Pasareanu, Corina},
+title = {Are security commit messages informative? Not enough!},
+year = {2023},
+isbn = {9798400700446},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3593434.3593481},
+doi = {10.1145/3593434.3593481},
+abstract = {The fast distribution and deployment of security patches are important to protect users against cyberattacks. These fixes can be detected automatically by patch management triage systems. However, previous work has shown that automating the task is not easy, in some cases, because of poor documentation or lack of information in security fixes. For many years, standard practices in the security community have steered engineers to provide cryptic commit messages (i.e., patch software vulnerabilities silently) to avoid potential attacks and reputation damage. However, not providing enough documentation on vulnerability fixes can hinder trust between vendors and users. Current efforts in the security community aim to increase the level of transparency during patch and disclosing times to help build trust in the development community and make patch management processes faster. In this paper, we evaluate how informative security commit messages (i.e., messages attached to security fixes) are and how different levels of information can affect different tasks in automated patch triage systems. We observed that security engineers, in general, do not provide enough detail to enable the three automated triage systems at the same time. In addition, results show that security commit messages need to be more informative—56.7\% of the messages analyzed were documented poorly. Best practices to write informative and well-structured security commit messages (such as SECOM) should become a standard practice in the security community.},
+booktitle = {Proceedings of the 27th International Conference on Evaluation and Assessment in Software Engineering},
+pages = {196–199},
+numpages = {4},
+keywords = {Security, Patch Management Process, Convention, Commit Messages, Best Practices},
+location = {Oulu, Finland},
+series = {EASE '23}
+}
+
+@inproceedings{2022BES,
+  title={B EYOND SYNTAX TREES : LEARNING EMBEDDINGS OF CODE EDITS BY COMBINING MULTIPLE SOURCE REP - RESENTATIONS},
+  author={},
+  year={2022},
+  url={https://api.semanticscholar.org/CorpusID:249038879}
+}
+
+@inproceedings{10.1145/3508398.3511495,
+author = {Challande, Alexis and David, Robin and Renault, Gu\'{e}na\"{e}l},
+title = {Building a Commit-level Dataset of Real-world Vulnerabilities},
+year = {2022},
+isbn = {9781450392204},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3508398.3511495},
+doi = {10.1145/3508398.3511495},
+abstract = {While CVE have become a de facto standard for publishing advisories on vulnerabilities, the state of current CVE databases is lackluster. Yet, CVE advisories are insufficient to bridge the gap with the vulnerability artifacts in the impacted program. Therefore, the community is lacking a public real-world vulnerabilities dataset providing such association. In this paper, we present a method restoring this missing link by analyzing the vulnerabilities from the AOSP, an aggregate of more than 1,800 projects. It is the perfect target for building a representative dataset of vulnerabilities, as it covers the full spectrum that may be encountered in a modern system where a variety of low-level and higher-level components interact. More specifically, our main contribution is a dataset of more than 1,900 vulnerabilities, associating generic metadata (e.g. vulnerability type, impact level) with their respective patches at the commit granularity (e.g. fix commit-id, affected files, source code language). Finally, we also augment this dataset by providing precompiled binaries for a subset of the vulnerabilities. These binaries open various data usage, both for binary only analysis and at the interface between source and binary. In addition of providing a common baseline benchmark, our dataset release supports the community for data-driven software security research.},
+booktitle = {Proceedings of the Twelfth ACM Conference on Data and Application Security and Privacy},
+pages = {101–106},
+numpages = {6},
+keywords = {binary matching, dataset, patch detection, security vulnerabilities, vulnerability research},
+location = {Baltimore, MD, USA},
+series = {CODASPY '22}
+}
+
+@misc{wang2019characterizingunderstandingsoftwaredeveloper,
+      title={Characterizing and Understanding Software Developer Networks in Security Development},
+      author={Song Wang and Nachi Nagappan},
+      year={2019},
+      eprint={1907.12141},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/1907.12141},
+}
+
+@misc{harzevili2022characterizingunderstandingsoftwaresecurity,
+      title={Characterizing and Understanding Software Security Vulnerabilities in Machine Learning Libraries},
+      author={Nima Shiri Harzevili and Jiho Shin and Junjie Wang and Song Wang},
+      year={2022},
+      eprint={2203.06502},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2203.06502},
+}
+
+@misc{zhang2023compatibleremediationvulnerabilitiesthirdparty,
+      title={Compatible Remediation on Vulnerabilities from Third-Party Libraries for Java Projects},
+      author={Lyuye Zhang and Chengwei Liu and Zhengzi Xu and Sen Chen and Lingling Fan and Lida Zhao and Jiahui Wu and Yang Liu},
+      year={2023},
+      eprint={2301.08434},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2301.08434},
+}
+
+@inproceedings{lee-chieu-2021-co,
+    title = "Co-training for Commit Classification",
+    author = "Lee, Jian Yi David  and
+      Chieu, Hai Leong",
+    editor = "Xu, Wei  and
+      Ritter, Alan  and
+      Baldwin, Tim  and
+      Rahimi, Afshin",
+    booktitle = "Proceedings of the Seventh Workshop on Noisy User-generated Text (W-NUT 2021)",
+    month = nov,
+    year = "2021",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.wnut-1.43",
+    doi = "10.18653/v1/2021.wnut-1.43",
+    pages = "389--395",
+    abstract = "Commits in version control systems (e.g. Git) track changes in a software project. Commits comprise noisy user-generated natural language and code patches. Automatic commit classification (CC) has been used to determine the type of code maintenance activities performed, as well as to detect bug fixes in code repositories. Much prior work occurs in the fully-supervised setting {--} a setting that can be a stretch in resource-scarce situations presenting difficulties in labeling commits. In this paper, we apply co-training, a semi-supervised learning method, to take advantage of the two views available {--} the commit message (natural language) and the code changes (programming language) {--} to improve commit classification.",
+}
+
+@inproceedings{10.1145/3468264.3473122,
+author = {Nikitopoulos, Georgios and Dritsa, Konstantina and Louridas, Panos and Mitropoulos, Dimitris},
+title = {CrossVul: a cross-language vulnerability dataset with commit data},
+year = {2021},
+isbn = {9781450385626},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3468264.3473122},
+doi = {10.1145/3468264.3473122},
+abstract = {Examining the characteristics of software vulnerabilities and the code that contains them can lead to the development of more secure software. We present a dataset (∼1.4 GB) containing vulnerable source code files together with the corresponding, patched versions. Contrary to other existing vulnerability datasets, ours includes vulnerable files written in more than 40 programming languages. Each file is associated to (1) a Common Vulnerability Exposures identifier (CVE ID) and (2) the repository it came from. Further, our dataset can be the basis for machine learning applications that identify defects, as we show in specific examples. We also present a supporting dataset that contains commit messages derived from Git commits that serve as security patches. This dataset can be used to train ML models that in turn, can be used to detect security patch commits as we highlight in a specific use case.},
+booktitle = {Proceedings of the 29th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+pages = {1565–1569},
+numpages = {5},
+keywords = {vulnerabilities, security patches, commit messages, Dataset},
+location = {Athens, Greece},
+series = {ESEC/FSE 2021}
+}
+
+@inproceedings{Bhandari_2021, series={PROMISE ’21},
+   title={CVEfixes: automated collection of vulnerabilities and their fixes from open-source software},
+   url={http://dx.doi.org/10.1145/3475960.3475985},
+   DOI={10.1145/3475960.3475985},
+   booktitle={Proceedings of the 17th International Conference on Predictive Models and Data Analytics in Software Engineering},
+   publisher={ACM},
+   author={Bhandari, Guru and Naseer, Amara and Moonen, Leon},
+   year={2021},
+   month=aug, collection={PROMISE ’21} }
+
+@article{10.1007/s10664-021-10029-x,
+author = {Sonnekalb, Tim and Heinze, Thomas S. and M\"{a}der, Patrick},
+title = {Deep security analysis of program code: A systematic literature review},
+year = {2022},
+issue_date = {Jan 2022},
+publisher = {Kluwer Academic Publishers},
+address = {USA},
+volume = {27},
+number = {1},
+issn = {1382-3256},
+url = {https://doi.org/10.1007/s10664-021-10029-x},
+doi = {10.1007/s10664-021-10029-x},
+abstract = {Due to the continuous digitalization of our society, distributed and web-based applications become omnipresent and making them more secure gains paramount relevance. Deep learning (DL) and its representation learning approach are increasingly been proposed for program code analysis potentially providing a powerful means in making software systems less vulnerable. This systematic literature review (SLR) is aiming for a thorough analysis and comparison of 32 primary studies on DL-based vulnerability analysis of program code. We found a rich variety of proposed analysis approaches, code embeddings and network topologies. We discuss these techniques and alternatives in detail. By compiling commonalities and differences in the approaches, we identify the current state of research in this area and discuss future directions. We also provide an overview of publicly available datasets in order to foster a stronger benchmarking of approaches. This SLR provides an overview and starting point for researchers interested in deep vulnerability analysis on program code.},
+journal = {Empirical Softw. Engg.},
+month = {jan},
+numpages = {39},
+keywords = {Code inspection, Software security, Vulnerability detection, Deep learning, Supervised learning}
+}
+
+@misc{le2021deepcvaautomatedcommitlevelvulnerability,
+      title={DeepCVA: Automated Commit-level Vulnerability Assessment with Deep Multi-task Learning},
+      author={Triet H. M. Le and David Hin and Roland Croft and M. Ali Babar},
+      year={2021},
+      eprint={2108.08041},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2108.08041},
+}
+
+@article{SENANAYAKE2024103741,
+title = {Defendroid: Real-time Android code vulnerability detection via blockchain federated neural network with XAI},
+journal = {Journal of Information Security and Applications},
+volume = {82},
+pages = {103741},
+year = {2024},
+issn = {2214-2126},
+doi = {https://doi.org/10.1016/j.jisa.2024.103741},
+url = {https://www.sciencedirect.com/science/article/pii/S2214212624000449},
+author = {Janaka Senanayake and Harsha Kalutarage and Andrei Petrovski and Luca Piras and Mhd Omar Al-Kadri},
+keywords = {Android application protection, Code vulnerability, Neural network, Federated learning, Source code privacy, Explainable AI, Blockchain},
+abstract = {Ensuring strict adherence to security during the phases of Android app development is essential, primarily due to the prevalent issue of apps being released without adequate security measures in place. While a few automated tools are employed to reduce potential vulnerabilities during development, their effectiveness in detecting vulnerabilities may fall short. To address this, “Defendroid”, a blockchain-based federated neural network enhanced with Explainable Artificial Intelligence (XAI) is introduced in this work. Trained on the LVDAndro dataset, the vanilla neural network model achieves a 96% accuracy and 0.96 F1-Score in binary classification for vulnerability detection. Additionally, in multi-class classification, the model accurately identifies Common Weakness Enumeration (CWE) categories with a 93% accuracy and 0.91 F1-Score. In a move to foster collaboration and model improvement, the model has been deployed within a blockchain-based federated environment. This environment enables community-driven collaborative training and enhancements in partnership with other clients. The extended model demonstrates improved accuracy of 96% and F1-Score of 0.96 in both binary and multi-class classifications. The use of XAI plays a pivotal role in presenting vulnerability detection results to developers, offering prediction probabilities for each word within the code. This model has been integrated into an Application Programming Interface (API) as the backend and further incorporated into Android Studio as a plugin, facilitating real-time vulnerability detection. Notably, Defendroid exhibits high efficiency, delivering prediction probabilities for a single code line in an average processing time of a mere 300 ms. The weight-sharing transparency in the blockchain-driven federated model enhances trust and traceability, fostering community engagement while preserving source code privacy and contributing to accuracy improvement.}
+}
+
+@inproceedings{Stefanoni2022DetectingSP,
+  title={Detecting Security Patches in Java Projects Using NLP Technology},
+  author={Andrea Stefanoni and Sarunas Girdzijauskas and Christina Jenkins and Zekarias T. Kefato and Licia Sbattella and Vincenzo Scotti and Emil W{\aa}reus},
+  booktitle={International Conference on Natural Language and Speech Processing},
+  year={2022},
+  url={https://api.semanticscholar.org/CorpusID:256739262}
+}
+
+@ARTICLE{10056768,
+  author={Okutan, Ahmet and Mell, Peter and Mirakhorli, Mehdi and Khokhlov, Igor and Santos, Joanna C. S. and Gonzalez, Danielle and Simmons, Steven},
+  journal={IEEE Transactions on Software Engineering},
+  title={Empirical Validation of Automated Vulnerability Curation and Characterization},
+  year={2023},
+  volume={49},
+  number={5},
+  pages={3241-3260},
+  keywords={Security;NIST;Databases;Virtual machine monitors;Software;Feature extraction;Codes;CVE;NIST vulnerability description ontology;software vulnerability;vulnerability characterization},
+  doi={10.1109/TSE.2023.3250479}}
+
+@misc{wang2023enhancinglargelanguagemodels,
+      title={Enhancing Large Language Models for Secure Code Generation: A Dataset-driven Study on Vulnerability Mitigation},
+      author={Jiexin Wang and Liuwen Cao and Xitong Luo and Zhiping Zhou and Jiayuan Xie and Adam Jatowt and Yi Cai},
+      year={2023},
+      eprint={2310.16263},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2310.16263},
+}
+
+@inproceedings{10.1145/3631204.3631862,
+author = {Bottner, Laura and Hermann, Artur and Eppler, Jeremias and Th\"{u}m, Thomas and Kargl, Frank},
+title = {Evaluation of Free and Open Source Tools for Automated Software Composition Analysis},
+year = {2023},
+isbn = {9798400704543},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3631204.3631862},
+doi = {10.1145/3631204.3631862},
+abstract = {Vulnerable or malicious third-party components introduce vulnerabilities into the software supply chain. Software Composition Analysis (SCA) is a method to identify direct and transitive dependencies in software projects and assess their security risks and vulnerabilities. In this paper, we investigate two open source SCA tools, Eclipse Steady (ES) and OWASP Dependency Check (ODC), with respect to vulnerability detection in Java projects. Both tools use different vulnerability detection methods. ES implements a code-centric and ODC a metadata-based approach. Our study reveals that both tools suffer from false positives. Furthermore, we discover that the success of the vulnerability detection depends on the underlying vulnerability database. Especially ES suffered from false negatives because of the insufficient vulnerability information in the database. While code-centric and metadata-based approaches offer significant potential, they also come with their respective downsides. We propose a hybrid approach assuming that combining both detection methods will lead to less false negatives and false positives.},
+booktitle = {Proceedings of the 7th ACM Computer Science in Cars Symposium},
+articleno = {3},
+numpages = {11},
+keywords = {Vulnerable Dependency Identification, Software Supply Chain Security, Software Composition Analysis, Secure Software Development Life Cycle},
+location = {Darmstadt, Germany},
+series = {CSCS '23}
+}
+
+@inproceedings{10.1145/3474369.3486866,
+author = {Ganz, Tom and H\"{a}rterich, Martin and Warnecke, Alexander and Rieck, Konrad},
+title = {Explaining Graph Neural Networks for Vulnerability Discovery},
+year = {2021},
+isbn = {9781450386579},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3474369.3486866},
+doi = {10.1145/3474369.3486866},
+abstract = {Graph neural networks (GNNs) have proven to be an effective tool for vulnerability discovery that outperforms learning-based methods working directly on source code. Unfortunately, these neural networks are uninterpretable models, whose decision process is completely opaque to security experts, which obstructs their practical adoption. Recently, several methods have been proposed for explaining models of machine learning. However, it is unclear whether these methods are suitable for GNNs and support the task of vulnerability discovery. In this paper we present a framework for evaluating explanation methods on GNNs. We develop a set of criteria for comparing graph explanations and linking them to properties of source code. Based on these criteria, we conduct an experimental study of nine regular and three graph-specific explanation methods. Our study demonstrates that explaining GNNs is a non-trivial task and all evaluation criteria play a role in assessing their efficacy. We further show that graph-specific explanations relate better to code semantics and provide more information to a security expert than regular methods.},
+booktitle = {Proceedings of the 14th ACM Workshop on Artificial Intelligence and Security},
+pages = {145–156},
+numpages = {12},
+keywords = {machine learning, software security},
+location = {Virtual Event, Republic of Korea},
+series = {AISec '21}
+}
+
+@misc{ram2019exploitingtokenpathbasedrepresentations,
+      title={Exploiting Token and Path-based Representations of Code for Identifying Security-Relevant Commits},
+      author={Achyudh Ram and Ji Xin and Meiyappan Nagappan and Yaoliang Yu and Rocío Cabrera Lozoya and Antonino Sabetta and Jimmy Lin},
+      year={2019},
+      eprint={1911.07620},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/1911.07620},
+}
+
+@misc{rahman2023exploringautomatedcodeevaluation,
+      title={Exploring Automated Code Evaluation Systems and Resources for Code Analysis: A Comprehensive Survey},
+      author={Md. Mostafizer Rahman and Yutaka Watanobe and Atsushi Shirafuji and Mohamed Hamada},
+      year={2023},
+      eprint={2307.08705},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2307.08705},
+}
+
+@misc{zhang2023doesllmgeneratesecurity,
+      title={How well does LLM generate security tests?},
+      author={Ying Zhang and Wenjia Song and Zhengjie Ji and Danfeng and Yao and Na Meng},
+      year={2023},
+      eprint={2310.00710},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2310.00710},
+}
+
+@article{Jing_2022,
+doi = {10.1088/1742-6596/2363/1/012010},
+url = {https://dx.doi.org/10.1088/1742-6596/2363/1/012010},
+year = {2022},
+month = {nov},
+publisher = {IOP Publishing},
+volume = {2363},
+number = {1},
+pages = {012010},
+author = {Dejiang Jing},
+title = {Improvement of Vulnerable Code Dataset Based on Program Equivalence Transformation},
+journal = {Journal of Physics: Conference Series},
+abstract = {Code vulnerability dataset plays an important role in the development and evaluation of vulnerability detection tools. Aiming at the problem that programs in existing vulnerability datasets usually have simple structures and small scales, which is not satisfying for testing, we proposed a generator of complex code vulnerability dataset based on program equivalence transformation in this paper. It improves the complexity of program structure and code size while preserving the labels of the original case. Based on the PHP vulnerability test suite in Software Assurance Reference Dataset (SARD), a large number of complex cases were constructed and tested using two open-source PHP vulnerability detection tools RIPS and WAP. Experimental results show that the cyclomatic complexity and code size of the generated cases increase by about five times after transformation. The detection accuracy of the tools on the generated dataset decreases significantly compared with the results on the original dataset. The false positive rate increases by about 30%, and the false negative rate increases by about 10%.}
+}
+
+@inproceedings{Wu_2023, series={ISSTA ’23},
+   title={How Effective Are Neural Networks for Fixing Security Vulnerabilities},
+   url={http://dx.doi.org/10.1145/3597926.3598135},
+   DOI={10.1145/3597926.3598135},
+   booktitle={Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis},
+   publisher={ACM},
+   author={Wu, Yi and Jiang, Nan and Pham, Hung Viet and Lutellier, Thibaud and Davis, Jordan and Tan, Lin and Babkin, Petr and Shah, Sameena},
+   year={2023},
+   month=jul, collection={ISSTA ’23} }
+
+@misc{yang2021fewsamplenamedentityrecognition,
+      title={Few-Sample Named Entity Recognition for Security Vulnerability Reports by Fine-Tuning Pre-Trained Language Models},
+      author={Guanqun Yang and Shay Dineen and Zhipeng Lin and Xueqing Liu},
+      year={2021},
+      eprint={2108.06590},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2108.06590},
+}
+
+@INPROCEEDINGS{9678720,
+  author={Zhou, Jiayuan and Pacheco, Michael and Wan, Zhiyuan and Xia, Xin and Lo, David and Wang, Yuan and Hassan, Ahmed E.},
+  booktitle={2021 36th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  title={Finding A Needle in a Haystack: Automated Mining of Silent Vulnerability Fixes},
+  year={2021},
+  volume={},
+  number={},
+  pages={705-716},
+  keywords={Measurement;Codes;Semantics;Transformers;Needles;Security;Probes;Software Security;Vulnerability Fix;Open Source Software;Deep Learning},
+  doi={10.1109/ASE51524.2021.9678720}}
+
+@INPROCEEDINGS{10190493,
+  author={Dunlap, Trevor and Thorn, Seaver and Enck, William and Reaves, Bradley},
+  booktitle={2023 IEEE 8th European Symposium on Security and Privacy (EuroS&P)},
+  title={Finding Fixed Vulnerabilities with Off-the-Shelf Static Analysis},
+  year={2023},
+  volume={},
+  number={},
+  pages={489-505},
+  keywords={Java;Codes;Databases;Ecosystems;Static analysis;Security;Noise measurement},
+  doi={10.1109/EuroSP57164.2023.00036}}
+
+@misc{shestov2024finetuninglargelanguagemodels,
+      title={Finetuning Large Language Models for Vulnerability Detection},
+      author={Alexey Shestov and Rodion Levichev and Ravil Mussabayev and Evgeny Maslov and Anton Cheshkov and Pavel Zadorozhny},
+      year={2024},
+      eprint={2401.17010},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2401.17010},
+}
+
+@inproceedings{10.1145/3643991.3644871,
+author = {Scalco, Simone and Paramitha, Ranindya},
+title = {Hash4Patch: A Lightweight Low False Positive Tool for Finding Vulnerability Patch Commits},
+year = {2024},
+isbn = {9798400705878},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3643991.3644871},
+doi = {10.1145/3643991.3644871},
+abstract = {[Context:] Patch commits are useful to complete vulnerability datasets for training ML models and for developers to find a safe version for their dependencies. [Objective:] However, there is a gap in the state-of-the-art (SOTA) for a lightweight low False Positive patch commit finder. [Method:] We implemented Hash4Patch, a new tool to be used along with a current SOTA patch finder. We then validated it with a dataset of 160 CVEs. [Results:] Our approach significantly reduced the False Positives produced by a state-of-the-art tool with only 1 minute of additional running time on average. [Conclusions:] Our tool is able to effectively and efficiently reduce the number of alerts found by other patch commit finders, thus minimizing the manual effort needed by developers.},
+booktitle = {Proceedings of the 21st International Conference on Mining Software Repositories},
+pages = {733–737},
+numpages = {5},
+keywords = {vulnerability, patch commit, lightweight, hash search},
+location = {Lisbon, Portugal},
+series = {MSR '24}
+}
+
+@INPROCEEDINGS{9825835,
+  author={Nguyen-Truong, Giang and Kang, Hong Jin and Lo, David and Sharma, Abhishek and Santosa, Andrew E. and Sharma, Asankhaya and Ang, Ming Yi},
+  booktitle={2022 IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)},
+  title={HERMES: Using Commit-Issue Linking to Detect Vulnerability-Fixing Commits},
+  year={2022},
+  volume={},
+  number={},
+  pages={51-62},
+  keywords={Conferences;Computer bugs;Machine learning;Libraries;Software;Security;vulnerability curation;silent fixes;commit classification;commit-issue link recovery},
+  doi={10.1109/SANER53432.2022.00018}}
+
+@misc{wang2024aigeneratedcodereallysafe,
+      title={Is Your AI-Generated Code Really Safe? Evaluating Large Language Models on Secure Code Generation with CodeSecEval},
+      author={Jiexin Wang and Xitong Luo and Liuwen Cao and Hongkui He and Hailin Huang and Jiayuan Xie and Adam Jatowt and Yi Cai},
+      year={2024},
+      eprint={2407.02395},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2407.02395},
+}
+
+@misc{sawadogo2020learningcatchsecuritypatches,
+      title={Learning to Catch Security Patches},
+      author={Arthur D. Sawadogo and Tegawendé F. Bissyandé and Naouel Moha and Kevin Allix and Jacques Klein and Li Li and Yves Le Traon},
+      year={2020},
+      eprint={2001.09148},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2001.09148},
+}
+
+@misc{tony2023llmsecevaldatasetnaturallanguage,
+      title={LLMSecEval: A Dataset of Natural Language Prompts for Security Evaluations},
+      author={Catherine Tony and Markus Mutas and Nicolás E. Díaz Ferreyra and Riccardo Scandariato},
+      year={2023},
+      eprint={2303.09384},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2303.09384},
+}
+
+@misc{wang2019characterizingunderstandingsoftwaredeveloper,
+      title={Characterizing and Understanding Software Developer Networks in Security Development},
+      author={Song Wang and Nachi Nagappan},
+      year={2019},
+      eprint={1907.12141},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/1907.12141},
+}
+
+@article{Chen_2023,
+   title={Neural Transfer Learning for Repairing Security Vulnerabilities in C Code},
+   volume={49},
+   ISSN={2326-3881},
+   url={http://dx.doi.org/10.1109/TSE.2022.3147265},
+   DOI={10.1109/tse.2022.3147265},
+   number={1},
+   journal={IEEE Transactions on Software Engineering},
+   publisher={Institute of Electrical and Electronics Engineers (IEEE)},
+   author={Chen, Zimin and Kommrusch, Steve and Monperrus, Martin},
+   year={2023},
+   month=jan, pages={147–165} }
+
+@misc{papotti2022acceptancecodereviewerscandidate,
+      title={On the acceptance by code reviewers of candidate security patches suggested by Automated Program Repair tools},
+      author={Aurora Papotti and Ranindya Paramitha and Fabio Massacci},
+      year={2022},
+      eprint={2209.07211},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2209.07211},
+}
+
+@misc{mir2024effectivenessmachinelearningbasedgraph,
+      title={On the Effectiveness of Machine Learning-based Call Graph Pruning: An Empirical Study},
+      author={Amir M. Mir and Mehdi Keshani and Sebastian Proksch},
+      year={2024},
+      eprint={2402.07294},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2402.07294},
+}
+
+@misc{dietrich2023securityblindspotssoftware,
+      title={On the Security Blind Spots of Software Composition Analysis},
+      author={Jens Dietrich and Shawn Rasheed and Alexander Jordan and Tim White},
+      year={2023},
+      eprint={2306.05534},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2306.05534},
+}
+
+@misc{le2022usefinegrainedvulnerablecode,
+      title={On the Use of Fine-grained Vulnerable Code Statements for Software Vulnerability Assessment Models},
+      author={Triet H. M. Le and M. Ali Babar},
+      year={2022},
+      eprint={2203.08417},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2203.08417},
+}
+
+@INPROCEEDINGS{10000561,
+  author={Chapman, Jon and Venugopalan, Hari},
+  booktitle={2022 IEEE 17th International Conference on Computer Sciences and Information Technologies (CSIT)},
+  title={Open Source Software Computed Risk Framework},
+  year={2022},
+  volume={},
+  number={},
+  pages={172-175},
+  keywords={Measurement;Correlation;Codes;Force;Ecosystems;Information technology;Computer security;Big Data;Computer Security;Prediction Methods;Data Analysis},
+  doi={10.1109/CSIT56902.2022.10000561}}
+
+@article{CANFORA2022106745,
+title = {Patchworking: Exploring the code changes induced by vulnerability fixing activities},
+journal = {Information and Software Technology},
+volume = {142},
+pages = {106745},
+year = {2022},
+issn = {0950-5849},
+doi = {https://doi.org/10.1016/j.infsof.2021.106745},
+url = {https://www.sciencedirect.com/science/article/pii/S0950584921001932},
+author = {Gerardo Canfora and Andrea {Di Sorbo} and Sara Forootani and Matias Martinez and Corrado A. Visaggio},
+keywords = {Software vulnerabilities, Software maintenance, Empirical study},
+abstract = {Context:
+Identifying and repairing vulnerable code is a critical software maintenance task. Change impact analysis plays an important role during software maintenance, as it helps software maintainers to figure out the potential effects of a change before it is applied. However, while the software engineering community has extensively studied techniques and tools for performing impact analysis of change requests, there are no approaches for estimating the impact when the change involves the resolution of a vulnerability bug.
+Objective:
+We hypothesize that similar vulnerabilities may present similar strategies for patching. More specifically, our work aims at understanding whether the class of the vulnerability to fix may determine the type of impact on the system to repair.
+Method:
+To verify our conjecture, in this paper, we examine 524 security patches applied to vulnerabilities belonging to ten different weakness categories and extracted from 98 different open-source projects written in Java.
+Results:
+We obtain empirical evidence that vulnerabilities of the same types are often resolved by applying similar code transformations, and, thus, produce almost the same impact on the codebase.
+Conclusion:
+On the one hand, our findings open the way to better management of software maintenance activities when dealing with software vulnerabilities. Indeed, vulnerability class information could be exploited to better predict how much code will be affected by the fixing, how the structural properties of the code (i.e., complexity, coupling, cohesion, size) will change, and the effort required for the fix. On the other hand, our results can be leveraged for improving automated strategies supporting developers when they have to deal with security flaws.}
+}
+
+@inproceedings{10.1145/3460946.3464318,
+author = {Garg, Spandan and Moghaddam, Roshanak Zilouchian and Sundaresan, Neel and Wu, Chen},
+title = {PerfLens: a data-driven performance bug detection and fix platform},
+year = {2021},
+isbn = {9781450384681},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3460946.3464318},
+doi = {10.1145/3460946.3464318},
+abstract = {The wealth of open-source software development artifacts available online creates a great opportunity to learn the patterns of performance improvements from data. In this paper, we present a data-driven approach to software performance improvement in C#. We first compile a large dataset of hundreds of performance improvements made in open source projects. We then leverage this data to build a tool called PerfLens for performance improvement recommendations via code search. PerfLens indexes the performance improvements, takes a codebase as an input and searches a pool of performance improvements for similar code. We show that when our system is further augmented with profiler data information our recommendations are more accurate. Our experiments show that PerfLens can suggest performance improvements with 90\% accuracy when profiler data is available and 55\% accuracy when it analyzes source code only.},
+booktitle = {Proceedings of the 10th ACM SIGPLAN International Workshop on the State Of the Art in Program Analysis},
+pages = {19–24},
+numpages = {6},
+keywords = {Machine Learning, Software Performance},
+location = {Virtual, Canada},
+series = {SOAP 2021}
+}
+
+@inproceedings{10.1145/3558489.3559069,
+author = {Coskun, Tugce and Halepmollasi, Rusen and Hanifi, Khadija and Fouladi, Ramin Fadaei and De Cnudde, Pinar Comak and Tosun, Ayse},
+title = {Profiling developers to predict vulnerable code changes},
+year = {2022},
+isbn = {9781450398602},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3558489.3559069},
+doi = {10.1145/3558489.3559069},
+abstract = {Software vulnerability prediction and management have caught the interest of researchers and practitioners, recently. Various techniques that are usually based on characteristics of the code artefacts are also offered to predict software vulnerabilities. While other studies achieve promising results, the role of developers in inducing vulnerabilities has not been studied yet. We aim to profile the vulnerability inducing and vulnerability fixing behaviors of developers in software projects using Heterogeneous Information Network (HIN) analysis. We also investigate the impact of developer profiles in predicting vulnerability inducing commits, and compare the findings against the approach based on the code metrics. We adopt Random Walk with Restart (RWR) algorithm on HIN and the aggregation of code metrics for extracting all the input features. We utilize traditional machine learning algorithms namely, Naive Bayes (NB), Support Vector Machine (SVM), Random Forest (RF) and eXtreme Gradient Boosting (XGBoost) to build the prediction models.We report our empirical analysis to predict vulnerability inducing commits of four Apache projects. The technique based on code metrics achieves 90\% success for the recall measure, whereas the technique based on profiling developer behavior achieves 71\% success. When we use the feature sets obtained with the two techniques together, we achieve 89\% success.},
+booktitle = {Proceedings of the 18th International Conference on Predictive Models and Data Analytics in Software Engineering},
+pages = {32–41},
+numpages = {10},
+keywords = {profiling developers, technical debt, vulnerability, vulnerability prediction},
+location = {Singapore, Singapore},
+series = {PROMISE 2022}
+}
+
+@INPROCEEDINGS{10172577,
+  author={Bhuiyan, Masudul Hasan Masud and Parthasarathy, Adithya Srinivas and Vasilakis, Nikos and Pradel, Michael and Staicu, Cristian-Alexandru},
+  booktitle={2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)},
+  title={SecBench.js: An Executable Security Benchmark Suite for Server-Side JavaScript},
+  year={2023},
+  volume={},
+  number={},
+  pages={1059-1070},
+  keywords={Fault diagnosis;Codes;Benchmark testing;Software;Safety;Security;Public policy},
+  doi={10.1109/ICSE48619.2023.00096}}
+
+@inproceedings{10.1145/3524842.3528513,
+author = {Reis, Sofia and Abreu, Rui and Erdogmus, Hakan and P\u{a}s\u{a}reanu, Corina},
+title = {SECOM: towards a convention for security commit messages},
+year = {2022},
+isbn = {9781450393034},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3524842.3528513},
+doi = {10.1145/3524842.3528513},
+abstract = {One way to detect and assess software vulnerabilities is by extracting security-related information from commit messages. Automating the detection and assessment of vulnerabilities upon security commit messages is still challenging due to the lack of structured and clear messages. We created a convention, called SECOM, for security commit messages that structure and include bits of security-related information that are essential for detecting and assessing vulnerabilities for both humans and tools. The full convention and details are available here: https://tqrg.github.io/secom/.},
+booktitle = {Proceedings of the 19th International Conference on Mining Software Repositories},
+pages = {764–765},
+numpages = {2},
+keywords = {standard, security commit messages, convention, best practices},
+location = {Pittsburgh, Pennsylvania},
+series = {MSR '22}
+}
+
+@inproceedings{10.1145/3661167.3661262,
+author = {Bennett, Gareth and Hall, Tracy and Winter, Emily and Counsell, Steve},
+title = {Semgrep*: Improving the Limited Performance of Static Application Security Testing (SAST) Tools},
+year = {2024},
+isbn = {9798400717017},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3661167.3661262},
+doi = {10.1145/3661167.3661262},
+abstract = {Vulnerabilities in code should be detected and patched quickly to reduce the time in which they can be exploited. There are many automated approaches to assist developers in detecting vulnerabilities, most notably Static Application Security Testing (SAST) tools. However, no single tool detects all vulnerabilities and so relying on any one tool may leave vulnerabilities dormant in code. In this study, we use a manually curated dataset to evaluate four SAST tools on production code with known vulnerabilities. Our results show that the vulnerability detection rates of individual tools range from 11.2\% to 26.5\%, but combining these four tools can detect 38.8\% of vulnerabilities. We investigate why SAST tools are unable to detect 61.2\% of vulnerabilities and identify missing vulnerable code patterns from tool rule sets. Based on our findings, we create new rules for Semgrep, a popular configurable SAST tool. Our newly configured Semgrep tool detects 44.7\% of vulnerabilities, more than using a combination of tools, and a 181\% improvement in Semgrep’s detection rate.},
+booktitle = {Proceedings of the 28th International Conference on Evaluation and Assessment in Software Engineering},
+pages = {614–623},
+numpages = {10},
+location = {Salerno, Italy},
+series = {EASE '24}
+}
+
+@misc{chi2022seqtransautomaticvulnerabilityfix,
+      title={SeqTrans: Automatic Vulnerability Fix via Sequence to Sequence Learning},
+      author={Jianlei Chi and Yu Qu and Ting Liu and Qinghua Zheng and Heng Yin},
+      year={2022},
+      eprint={2010.10805},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2010.10805},
+}
+
+@misc{ahmed2023sequentialgraphneuralnetworks,
+      title={Sequential Graph Neural Networks for Source Code Vulnerability Identification},
+      author={Ammar Ahmed and Anwar Said and Mudassir Shabbir and Xenofon Koutsoukos},
+      year={2023},
+      eprint={2306.05375},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2306.05375},
+}
+
+@misc{sun2023silentvulnerabledependencyalert,
+      title={Silent Vulnerable Dependency Alert Prediction with Vulnerability Key Aspect Explanation},
+      author={Jiamou Sun and Zhenchang Xing and Qinghua Lu and Xiwei Xu and Liming Zhu and Thong Hoang and Dehai Zhao},
+      year={2023},
+      eprint={2302.07445},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2302.07445},
+}
+
+@inproceedings{10.1145/3611643.3616299,
+author = {Zhao, Lida and Chen, Sen and Xu, Zhengzi and Liu, Chengwei and Zhang, Lyuye and Wu, Jiahui and Sun, Jun and Liu, Yang},
+title = {Software Composition Analysis for Vulnerability Detection: An Empirical Study on Java Projects},
+year = {2023},
+isbn = {9798400703270},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3611643.3616299},
+doi = {10.1145/3611643.3616299},
+abstract = {Software composition analysis (SCA) tools are proposed to detect potential vulnerabilities introduced by open-source software (OSS) imported as third-party libraries (TPL). With the increasing complexity of software functionality, SCA tools may encounter various scenarios during the dependency resolution process, such as diverse formats of artifacts, diverse dependency imports, and diverse dependency specifications. However, there still lacks a comprehensive evaluation of SCA tools for Java that takes into account the above scenarios. This could lead to a confined interpretation of comparisons, improper use of tools, and hinder further improvements of the tools. To fill this gap, we proposed an Evaluation Model which consists of Scan Modes, Scan Methods, and SCA Scope for Maven (SSM), for comprehensive assessments of the dependency resolving capabilities and effectiveness of SCA tools. Based on the Evaluation Model, we first qualitatively examined 6 SCA tools’ capabilities. Next, the accuracy of dependency and vulnerability is quantitatively evaluated with a large-scale dataset (21,130 Maven modules with 73,499 unique dependencies) under two Scan Modes (i.e., build scan and pre-build scan). The results show that most tools do not fully support SSM, which leads to compromised accuracy. For dependency detection, the average F1-score is 0.890 and 0.692 for build and pre-build respectively, and for vulnerability accuracy, the average F1-score is 0.475. However, proper support for SSM reduces dependency detection false positives by 34.24\% and false negatives by 6.91\%. This further leads to a reduction of 18.28\% in false positives and 8.72\% in false negatives in vulnerability reports.},
+booktitle = {Proceedings of the 31st ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+pages = {960–972},
+numpages = {13},
+keywords = {Package manager, SCA, Vulnerability detection},
+location = {San Francisco, CA, USA},
+series = {ESEC/FSE 2023}
+}
+
+@Article{202419,
+title = {Survey on Vulnerability Awareness of Open Source Software},
+author = {ZHAN Qi, PAN Sheng-Yi, HU Xing, BAO Ling-Feng, XIA Xin},
+ journal = {Journal of Software},
+ volume = {35},
+ number = {1},
+ pages = {19},
+ numpages = {19.0000},
+ year = {2024},
+ month = {01},
+ doi = {10.13328/j.cnki.jos.006935},
+ publisher = {}
+}
+
+@article{LI2023111679,
+title = {The anatomy of a vulnerability database: A systematic mapping study},
+journal = {Journal of Systems and Software},
+volume = {201},
+pages = {111679},
+year = {2023},
+issn = {0164-1212},
+doi = {https://doi.org/10.1016/j.jss.2023.111679},
+url = {https://www.sciencedirect.com/science/article/pii/S0164121223000742},
+author = {Xiaozhou Li and Sergio Moreschini and Zheying Zhang and Fabio Palomba and Davide Taibi},
+keywords = {Software security, Vulnerability databases, Systematic mapping studies, Software evolution},
+abstract = {Software vulnerabilities play a major role, as there are multiple risks associated, including loss and manipulation of private data. The software engineering research community has been contributing to the body of knowledge by proposing several empirical studies on vulnerabilities and automated techniques to detect and remove them from source code. The reliability and generalizability of the findings heavily depend on the quality of the information mineable from publicly available datasets of vulnerabilities as well as on the availability and suitability of those databases. In this paper, we seek to understand the anatomy of the currently available vulnerability databases through a systematic mapping study where we analyze (1) what are the popular vulnerability databases adopted; (2) what are the goals for adoption; (3) what are the other sources of information adopted; (4) what are the methods and techniques; (5) which tools are proposed. An improved understanding of these aspects might not only allow researchers to take informed decisions on the databases to consider when doing research but also practitioners to establish reliable sources of information to inform their security policies and standards.}
+}
+
+@article{ALDEBEYAN2024112003,
+title = {The impact of hard and easy negative training data on vulnerability prediction performance},
+journal = {Journal of Systems and Software},
+volume = {211},
+pages = {112003},
+year = {2024},
+issn = {0164-1212},
+doi = {https://doi.org/10.1016/j.jss.2024.112003},
+url = {https://www.sciencedirect.com/science/article/pii/S0164121224000463},
+author = {Fahad {Al Debeyan} and Lech Madeyski and Tracy Hall and David Bowes},
+keywords = {Software vulnerability prediction, Vulnerability datasets, Machine learning},
+abstract = {Vulnerability prediction models have been shown to perform poorly in the real world. We examine how the composition of negative training data influences vulnerability prediction model performance. Inspired by other disciplines (e.g. image processing), we focus on whether distinguishing between negative training data that is ‘easy’ to recognise from positive data (very different from positive data) and negative training data that is ‘hard’ to recognise from positive data (very similar to positive data) impacts on vulnerability prediction performance. We use a range of popular machine learning algorithms, including deep learning, to build models based on vulnerability patch data curated by Reis and Abreu, as well as the MSR dataset. Our results suggest that models trained on higher ratios of easy negatives perform better, plateauing at 15 easy negatives per positive instance. We also report that different ML algorithms work better based on the negative sample used. Overall, we found that the negative sampling approach used significantly impacts model performance, potentially leading to overly optimistic results. The ratio of ‘easy’ versus ‘hard’ negative training data should be explicitly considered when building vulnerability prediction models for the real world.}
+}
+
+@misc{xu2023trackingpatchesopensource,
+      title={Tracking Patches for Open Source Software Vulnerabilities},
+      author={Congying Xu and Bihuan Chen and Chenhao Lu and Kaifeng Huang and Xin Peng and Yang Liu},
+      year={2023},
+      eprint={2112.02240},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2112.02240},
+}
+
+@misc{risse2024uncoveringlimitsmachinelearning,
+      title={Uncovering the Limits of Machine Learning for Automatic Vulnerability Detection},
+      author={Niklas Risse and Marcel Böhme},
+      year={2024},
+      eprint={2306.17193},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2306.17193},
+}
+
+@inproceedings{10.1145/3597926.3598037,
+author = {Nie, Xu and Li, Ningke and Wang, Kailong and Wang, Shangguang and Luo, Xiapu and Wang, Haoyu},
+title = {Understanding and Tackling Label Errors in Deep Learning-Based Vulnerability Detection (Experience Paper)},
+year = {2023},
+isbn = {9798400702211},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3597926.3598037},
+doi = {10.1145/3597926.3598037},
+abstract = {Software system complexity and security vulnerability diversity are plausible sources of the persistent challenges in software vulnerability research. Applying deep learning methods for automatic vulnerability detection has been proven an effective means to complement traditional detection approaches. Unfortunately, lacking well-qualified benchmark datasets could critically restrict the effectiveness of deep learning-based vulnerability detection techniques. Specifically, the long-term existence of erroneous labels in the existing vulnerability datasets may lead to inaccurate, biased, and even flawed results. In this paper, we aim to obtain an in-depth understanding and explanation of the label error causes. To this end, we systematically analyze the diversified datasets used by state-of-the-art learning-based vulnerability detection approaches, and examine their techniques for collecting vulnerable source code datasets. We find that label errors heavily impact the mainstream vulnerability detection models, with a worst-case average F1 drop of 20.7\%. As mitigation, we introduce two approaches to dataset denoising, which will enhance the model performance by an average of 10.4\%. Leveraging dataset denoising methods, we provide a feasible solution to obtain high-quality labeled datasets.},
+booktitle = {Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis},
+pages = {52–63},
+numpages = {12},
+keywords = {vulnerability detection, denoising, deep learning},
+location = {Seattle, WA, USA},
+series = {ISSTA 2023}
+}
+
+@INPROCEEDINGS{10172868,
+  author={Wu, Yulun and Yu, Zeliang and Wen, Ming and Li, Qiang and Zou, Deqing and Jin, Hai},
+  booktitle={2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)},
+  title={Understanding the Threats of Upstream Vulnerabilities to Downstream Projects in the Maven Ecosystem},
+  year={2023},
+  volume={},
+  number={},
+  pages={1046-1058},
+  keywords={Codes;Databases;Source coding;Ecosystems;Estimation;Software systems;Libraries;Maven;Ecosystem Security;Vulnerability},
+  doi={10.1109/ICSE48619.2023.00095}}
+
+@article{ESPOSITO2024107448,
+title = {VALIDATE: A deep dive into vulnerability prediction datasets},
+journal = {Information and Software Technology},
+volume = {170},
+pages = {107448},
+year = {2024},
+issn = {0950-5849},
+doi = {https://doi.org/10.1016/j.infsof.2024.107448},
+url = {https://www.sciencedirect.com/science/article/pii/S0950584924000533},
+author = {Matteo Esposito and Davide Falessi},
+keywords = {Security, Replicability, Vulnerability, Machine learning, Repository, Dataset},
+abstract = {Context:
+Vulnerabilities are an essential issue today, as they cause economic damage to the industry and endanger our daily life by threatening critical national security infrastructures. Vulnerability prediction supports software engineers in preventing the use of vulnerabilities by malicious attackers, thus improving the security and reliability of software. Datasets are vital to vulnerability prediction studies, as machine learning models require a dataset. Dataset creation is time-consuming, error-prone, and difficult to validate.
+Objectives:
+This study aims to characterise the datasets of prediction studies in terms of availability and features. Moreover, to support researchers in finding and sharing datasets, we provide the first VulnerAbiLty predIction DatAseT rEpository (VALIDATE).
+Methods:
+We perform a systematic literature review of the datasets of vulnerability prediction studies.
+Results:
+Our results show that out of 50 primary studies, only 22 studies (i.e., 38%) provide a reachable dataset. Of these 22 studies, only one study provides a dataset in a stable repository.
+Conclusions:
+Our repository of 31 datasets, 22 reachable plus nine datasets provided by authors via email, supports researchers in finding datasets of interest, hence avoiding reinventing the wheel; this translates into less effort, more reliability, and more reproducibility in dataset creation and use.}
+}
+
+@INPROCEEDINGS{9825908,
+  author={Wang, Shichao and Zhang, Yun and Bao, Liagfeng and Xia, Xin and Wu, Minghui},
+  booktitle={2022 IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)},
+  title={VCMatch: A Ranking-based Approach for Automatic Security Patches Localization for OSS Vulnerabilities},
+  year={2022},
+  volume={},
+  number={},
+  pages={589-600},
+  keywords={Location awareness;Conferences;Semantics;Manuals;Feature extraction;Application security;Security;Security Patches;Vulnerability Analysis;Mining Software Repository},
+  doi={10.1109/SANER53432.2022.00076}}
+
+@INPROCEEDINGS{9978189,
+  author={Sun, Qing and Xu, Lili and Xiao, Yang and Li, Feng and Su, He and Liu, Yiming and Huang, Hongyun and Huo, Wei},
+  booktitle={2022 IEEE International Conference on Software Maintenance and Evolution (ICSME)},
+  title={VERJava: Vulnerable Version Identification for Java OSS with a Two-Stage Analysis},
+  year={2022},
+  volume={},
+  number={},
+  pages={329-339},
+  keywords={Java;Software maintenance;Codes;Databases;Software algorithms;Manuals;Maintenance engineering;patch analysis;vulnerability;Java OSS;vulnerable version identification;code similarity},
+  doi={10.1109/ICSME55016.2022.00037}}
+
+@misc{nguyen2023vffindergraphbasedapproachautomated,
+      title={VFFINDER: A Graph-based Approach for Automated Silent Vulnerability-Fix Identification},
+      author={Son Nguyen and Thanh Trong Vu and Hieu Dinh Vo},
+      year={2023},
+      eprint={2309.01971},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2309.01971},
+}
+
+@INPROCEEDINGS{9724745,
+  author={Piran, Azin and Chang, Che-Pin and Fard, Amin Milani},
+  booktitle={2021 IEEE 21st International Conference on Software Quality, Reliability and Security (QRS)},
+  title={Vulnerability Analysis of Similar Code},
+  year={2021},
+  volume={},
+  number={},
+  pages={664-671},
+  keywords={Access control;Codes;Cross-site scripting;Conferences;Cloning;Software quality;Libraries;Code vulnerability;static analysis;CWE;CVE},
+  doi={10.1109/QRS54544.2021.00076}}
+
+@misc{keller2020meanssemanticrepresentationlearning,
+      title={What You See is What it Means! Semantic Representation Learning of Code based on Visualization and Transfer Learning},
+      author={Patrick Keller and Laura Plein and Tegawendé F. Bissyandé and Jacques Klein and Yves Le Traon},
+      year={2020},
+      eprint={2002.02650},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2002.02650},
+}
+
+@inproceedings{10.1145/3663533.3664036,
+author = {Akhoundali, Jafar and Nouri, Sajad Rahim and Rietveld, Kristian and Gadyatskaya, Olga},
+title = {MoreFixes: A Large-Scale Dataset of CVE Fix Commits Mined through Enhanced Repository Discovery},
+year = {2024},
+isbn = {9798400706752},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3663533.3664036},
+doi = {10.1145/3663533.3664036},
+abstract = {Vulnerability datasets have become an important instrument in software security research, being used to develop automated, machine learning-based vulnerability detection and patching approaches. Yet, any limitations of these datasets may translate into inadequate performance of the developed solutions. For example, the limited size of a vulnerability dataset may restrict the applicability of deep learning techniques.
+
+ In our work, we have designed and implemented a novel workflow with several heuristic methods to combine state-of-the-art methods related to CVE fix commits gathering. As a consequence of our improvements, we have been able to gather the largest programming language-independent real-world dataset of CVE vulnerabilities with the associated fix commits.
+
+
+ Our dataset containing 26,617 unique CVEs coming from 6,945 unique GitHub projects is, to the best of our knowledge, by far the biggest CVE vulnerability dataset with fix commits available today. These CVEs are associated with 31,883 unique commits that fixed those vulnerabilities. Compared to prior work, our dataset brings about a 397\% increase in CVEs, a 295\% increase in covered open-source projects, and a 480\% increase in commit fixes.
+
+ Our larger dataset thus substantially improves over the current real-world vulnerability datasets and enables further progress in research on vulnerability detection and software security.
+
+ We release to the community a 14GB PostgreSQL database that contains information on CVEs up to January 24, 2024, CWEs of each CVE, files and methods changed by each commit, and repository metadata.
+
+ Additionally, patch files related to the fix commits are available as a separate package. Furthermore, we make our dataset collection tool also available to the community.},
+booktitle = {Proceedings of the 20th International Conference on Predictive Models and Data Analytics in Software Engineering},
+pages = {42–51},
+numpages = {10},
+keywords = {CVE, Vulnerability dataset, dataset, open-source, real-world vulnerability dataset, software repository mining},
+location = {Porto de Galinhas, Brazil},
+series = {PROMISE 2024}
+}
+
+
+@article{Cabrera_Lozoya_2021,
+   title={Commit2Vec: Learning Distributed Representations of Code Changes},
+   volume={2},
+   ISSN={2661-8907},
+   url={http://dx.doi.org/10.1007/s42979-021-00566-z},
+   DOI={10.1007/s42979-021-00566-z},
+   number={3},
+   journal={SN Computer Science},
+   publisher={Springer Science and Business Media LLC},
+   author={Cabrera Lozoya, Rocío and Baumann, Arnaud and Sabetta, Antonino and Bezzi, Michele},
+   year={2021},
+   month=mar }
+
+@misc{fehrer2021detectingsecurityfixesopensource,
+      title={Detecting Security Fixes in Open-Source Repositories using Static Code Analyzers},
+      author={Therese Fehrer and Rocío Cabrera Lozoya and Antonino Sabetta and Dario Di Nucci and Damian A. Tamburri},
+      year={2021},
+      eprint={2105.03346},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2105.03346},
+}
+
+@article{Ponta2020DetectionAA,
+  title={Detection, assessment and mitigation of vulnerabilities in open source dependencies},
+  author={Serena Elisa Ponta and Henrik Plate and Antonino Sabetta},
+  journal={Empirical Software Engineering},
+  year={2020},
+  volume={25},
+  pages={3175 - 3215},
+  url={https://api.semanticscholar.org/CorpusID:220259876}
+}
+
+@ARTICLE {9506931,
+author = {A. Dann and H. Plate and B. Hermann and S. Ponta and E. Bodden},
+journal = {IEEE Transactions on Software Engineering},
+title = {Identifying Challenges for OSS Vulnerability Scanners - A Study &amp; Test Suite},
+year = {2022},
+volume = {48},
+number = {09},
+issn = {1939-3520},
+pages = {3613-3625},
+abstract = {The use of vulnerable open-source dependencies is a known problem in today&#x27;s software development. Several vulnerability scanners to detect known-vulnerable dependencies appeared in the last decade, however, there exists no case study investigating the impact of development practices, e.g., forking, patching, re-bundling, on their performance. This paper studies (i) types of modifications that may affect vulnerable open-source dependencies and (ii) their impact on the performance of vulnerability scanners. Through an empirical study on 7,024 Java projects developed at SAP, we identified four types of modifications: re-compilation, re-bundling, metadata-removal and re-packaging. In particular, we found that more than 87 percent (56 percent, resp.) of the vulnerable Java classes considered occur in Maven Central in re-bundled (re-packaged, resp.) form. We assessed the impact of these modifications on the performance of the open-source vulnerability scanners OWASP Dependency-Check (OWASP) and Eclipse Steady, GitHub Security Alerts, and three commercial scanners. The results show that none of the scanners is able to handle all the types of modifications identified. Finally, we present Achilles, a novel test suite with 2,505 test cases that allow replicating the modifications on open-source dependencies.},
+keywords = {open source software;databases;java;benchmark testing;tools;security;software},
+doi = {10.1109/TSE.2021.3101739},
+publisher = {IEEE Computer Society},
+address = {Los Alamitos, CA, USA},
+month = {sep}
+}
+
+@misc{ponta2021usedbloatedvulnerablereducing,
+      title={The Used, the Bloated, and the Vulnerable: Reducing the Attack Surface of an Industrial Application},
+      author={Serena Elisa Ponta and Wolfram Fischer and Henrik Plate and Antonino Sabetta},
+      year={2021},
+      eprint={2108.05115},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2108.05115},
+}
+
+@INPROCEEDINGS{9462983,
+  author={Iannone, Emanuele and Nucci, Dario Di and Sabetta, Antonino and De Lucia, Andrea},
+  booktitle={2021 IEEE/ACM 29th International Conference on Program Comprehension (ICPC)},
+  title={Toward Automated Exploit Generation for Known Vulnerabilities in Open-Source Libraries},
+  year={2021},
+  volume={},
+  number={},
+  pages={396-400},
+  keywords={Java;Tools;Libraries;Security;Reachability analysis;Open source software;Genetic algorithms;Exploit Generation;Security Testing;Software Vulnerabilities},
+  doi={10.1109/ICPC52881.2021.00046}}
+
+
+
+
+
+
+
