@@ -121,9 +121,6 @@ def prospector(  # noqa: C901
     repository = Git(repository_url, cache_path=git_cache)
 
     with ConsoleWriter("Git repository cloning") as console:
-        logger.debug(
-            f"Downloading repository {repository.url} in {repository.path}"
-        )
         repository.clone()
 
         tags = repository.get_tags()

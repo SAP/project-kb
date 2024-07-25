@@ -18,6 +18,7 @@ from tqdm import tqdm
 import multiprocessing.pool as mpp
 from git.exec import Exec
 from git.raw_commit import RawCommit
+from git.version_to_tag import get_possible_tags
 from log.logger import logger
 from stats.execution import execution_statistics, measure_execution_time
 
@@ -50,7 +51,7 @@ def istarmap(self, func, iterable, chunksize=1):
 mpp.Pool.istarmap = istarmap
 
 
-def do_clone(url, output_folder, shallow=False, skip_existing=False):
+def do_clone(url: str, output_folder, shallow=False, skip_existing=False):
     """
     This function clones a git repository from the given URL to the specified
     output folder. It can perform a shallow clone and skip existing repositories if specified.
@@ -67,7 +68,8 @@ def do_clone(url, output_folder, shallow=False, skip_existing=False):
     """
     git = Git(url, cache_path=output_folder, shallow=shallow)
     git.clone(shallow=shallow, skip_existing=skip_existing)
-    return str(len(git.get_commits()))
+
+    return
 
 
 def clone_repo_multiple(
@@ -82,7 +84,11 @@ def clone_repo_multiple(
     repositories). This uses a tqdm progress bar to show how many repos
     have been cloned.
     """
-    print(f"Using {concurrent} parallel workers")
+    logger.setLevel(
+        "DEBUG"
+    )  # Need to manually set as this method is called without using `main.py`
+    logger.debug(f"Using {concurrent} parallel workers")
+
     with multiprocessing.Pool(concurrent) as pool:
         args = [
             (url, output_folder, shallow, skip_existing) for url in url_list
@@ -203,7 +209,7 @@ class Git:
                 logger.debug(f"Skipping fetch of {self.url} in {self.path}")
             else:
                 logger.debug(
-                    f"Found repo {self.url} in {self.path}.\nFetching...."
+                    f"Found repo {self.url} in {self.path}.\nFetching with `git fetch --progress --all --tags --force`."
                 )
 
                 self.execute("git fetch --progress --all --tags --force")
@@ -215,7 +221,9 @@ class Git:
 
         os.makedirs(self.path)
 
-        logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
+        logger.debug(
+            f"Cloning {self.url} (shallow={self.shallow_clone}) in folder {self.path}"
+        )
 
         if not self.execute("git init", silent=False):
             logger.error(f"Failed to initialize repository in {self.path}")
@@ -253,23 +261,39 @@ class Git:
         until=None,
         filter_extension=None,
     ) -> Dict[str, RawCommit]:
+        """Retrieves git commits: executes `git log` and parses the output to
+        return a dictionary of commits.
+
+        Args:
+            next_tag (str, optional): The later tag to bound the commit range.
+            prev_tag (str, optional): The earlier tag to bound the commit range.
+            since (str, optional): The start date for filtering commits.
+            until (str, optional): The end date for filtering commits.
+            filter_extension (list, optional): List of file extensions to filter commits by.
+
+        Returns:
+            Dict[str, RawCommit]: A dictionary where keys are commit hashes and values are
+            RawCommit objects containing commit details.
+        """
         cmd = f"git log --all --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+
         if next_tag and prev_tag:
-            cmd += f"{prev_tag}..{next_tag}"
+            cmd += f" {prev_tag}..{next_tag}"
         elif next_tag and not prev_tag:
             ts = self.get_timestamp(next_tag, "c")
-            cmd += f"--until={ts}"
+            cmd += f" --until={ts}"
         elif not next_tag and prev_tag:
             ts = self.get_timestamp(prev_tag, "a")
-            cmd += f"--since={ts}"
+            cmd += f" --since={ts}"
         else:
-            cmd += f"--since={since} --until={until}"
+            cmd += f" --since={since} --until={until}"
 
         if filter_extension:
             cmd += " *." + " *.".join(filter_extension)
         try:
-            logger.debug(cmd)
+            logger.debug(f"Retrieving commits with: {cmd}")
             out = self.execute(cmd)
+            logger.debug(f"Commit Logs (truncated): {out[:50]}")
             return self.parse_git_output(out)
 
         except Exception:
@@ -422,12 +446,19 @@ class Git:
     def get_timestamp(self, item: str, ts_format: str) -> int:
         # ct is committer date, it is the default for the research using --until and --since
         out = self.execute(f"git log -1 --format=%{ts_format}t {item}")
+        logger.debug(
+            f"Got timestampe with `git log -1 --format=%{ts_format}t {item}`."
+        )
         return int(out[0])
 
     def get_tags(self):
         try:
             # Committer date to have the proper tag ordering
-            return self.execute("git tag --sort=committerdate")
+            results = self.execute("git tag --sort=committerdate")
+            logger.debug(
+                "Git command `git tag --sort=committerdate` successfully executed."
+            )
+            return results
         except subprocess.CalledProcessError as exc:
             logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []
