@@ -1,29 +1,20 @@
 import csv
 from datetime import datetime
 import json
-import re
-import sys
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from evaluation.dispatch_jobs import (
+from evaluation.utils import (
+    load_dataset,
+    update_summary_execution_table,
+    logger,
     INPUT_DATA_PATH,
     PROSPECTOR_REPORT_PATH,
     ANALYSIS_RESULTS_PATH,
-    build_table_row,
 )
-from evaluation.save_results import (
-    update_summary_execution_table,
-)
-from evaluation.utils import load_dataset
-from log.logger import create_logger
-
-
-logger = create_logger("evaluation.log")
-logger.setLevel("DEBUG")
 
 
 def analyze_results_rules(dataset_path: str):
@@ -122,6 +113,7 @@ def analyze_prospector(filename: str):  # noqa: C901
     rulescount = defaultdict(lambda: 0)
 
     # For each CSV in the input dataset, check its report
+    logger.info("Checking reports")
     for itm in dataset:
         try:
             (
@@ -170,22 +162,42 @@ def analyze_prospector(filename: str):  # noqa: C901
     # )
 
     total = len(dataset) - skipped
+    logger.debug(f"Analysed {total} reports.")
     rulescount = dict(sorted(rulescount.items()))
 
     make_rules_plot(rulescount)
 
     # Save the results to the Latex table
-    table_data = []
+    table_data_categories = []
+    # Calculate the sum of high confidence results: COMMIT_IN_REFERENCE + CVE_ID_IN_MESSAGE + CVE_ID_IN_LINKED_ISSUE + CROSS_REFERENCE
+    num_high_confidence = sum(
+        [
+            len(v)
+            for k, v in results.items()
+            if k
+            in [
+                "CVE_ID_IN_MESSAGE",
+                "CVE_ID_IN_LINKED_ISSUE",
+                "CROSS_REFERENCE",
+                "COMMIT_IN_REFERENCE",
+            ]
+        ]
+    )
+    table_data_categories.append(
+        [num_high_confidence, round(num_high_confidence / total * 100, 2)]
+    )
     for key, value in results.items():
-        # print(f"{key}: {len(value)} ({(len(value)/1315)*100:.2f}%)") # Sanity Check
-        logger.debug(f"Length of results: {len(results)}")
-        table_data.append(
-            [len(value), round(len(value) / len(results) * 100, 2)]
+        logger.debug(
+            f"Key: {key}, Length of value: {len(value)}"
+        )  # Sanity Check
+        table_data_categories.append(
+            [len(value), round(len(value) / total * 100, 2)]
         )
 
     update_summary_execution_table(
         "MVI",
-        table_data,
+        table_data_categories,
+        str(total),
         f"{ANALYSIS_RESULTS_PATH}summary_execution_results.tex",
     )
 
@@ -196,6 +208,34 @@ def analyze_prospector(filename: str):  # noqa: C901
         print("ERROR: Some CVEs are missing")
 
     return missing
+
+
+def build_table_row(matched_rules):
+    rules_list = [
+        "COMMIT_IN_REFERENCE",
+        "CVE_ID_IN_MESSAGE",
+        "CVE_ID_IN_LINKED_ISSUE",
+        "CROSS_REFERENCED_JIRA_LINK",
+        "CROSS_REFERENCED_GH_LINK",
+        "CHANGES_RELEVANT_FILES",
+        "CHANGES_RELEVANT_CODE",
+        "RELEVANT_WORDS_IN_MESSAGE",
+        "ADV_KEYWORDS_IN_FILES",
+        "ADV_KEYWORDS_IN_MSG",
+        "SEC_KEYWORDS_IN_MESSAGE",
+        "SEC_KEYWORDS_IN_LINKED_GH",
+        "SEC_KEYWORDS_IN_LINKED_JIRA",
+        "GITHUB_ISSUE_IN_MESSAGE",
+        "JIRA_ISSUE_IN_MESSAGE",
+        "COMMIT_HAS_TWINS",
+    ]
+    out = []
+    for id in rules_list:
+        if id in matched_rules:
+            out.append("/checkmark")
+        else:
+            out.append("")
+    return out
 
 
 def write_matched_rules(
@@ -454,6 +494,8 @@ def check_report(dataset, cve, fixing_commits):
         with open(f"{dataset}/{cve}.json", "r") as file:
             data = json.load(file)
             score_first = get_first_commit_score(data)
+            logger.debug(f"\n{cve}")
+            logger.debug(f"\tScore first: {score_first}")
 
             for index, commit in enumerate(data["commits"]):
                 score_next = -1
@@ -465,15 +507,19 @@ def check_report(dataset, cve, fixing_commits):
                 if is_fixing_commit(commit, fixing_commits):
                     if index == 0:
                         score_first = -1
-                    return get_commit_info(
+                    result = get_commit_info(
                         commit, index, score_first, score_next
                     )
+                    logger.debug(f"\tFixing Commit Info: {result}")
+
+                    return result
 
             for index, commit in enumerate(data["commits"]):
                 commit_info = get_non_fixing_commit_info(
                     commit, index, score_first
                 )
                 if commit_info:
+                    logger.debug(f"Non-fixing Commit Info: {commit_info}")
                     return commit_info
 
         return (False, 0, True, True, -1, None, [])

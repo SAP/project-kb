@@ -1,9 +1,8 @@
 import csv
 import multiprocessing
 import os
-from typing import List
+from typing import Optional
 
-from omegaconf import OmegaConf
 import redis
 import requests
 from dateutil.parser import isoparse
@@ -13,22 +12,17 @@ from tqdm import tqdm
 
 from core.prospector import prospector
 from core.report import generate_report
-from evaluation.utils import load_dataset
+from evaluation.utils import (
+    INPUT_DATA_PATH,
+    PROSPECTOR_REPORT_PATH,
+    load_dataset,
+    logger,
+    evaluation_config,
+)
 from git.git import Git
 from git.version_to_tag import get_possible_tags
 from llm.llm_service import LLMService
 from util.config_parser import parse_config_file
-
-evaluation_config = OmegaConf.load("evaluation/config.yaml")
-
-INPUT_DATA_PATH = evaluation_config.input_data_path
-# Select the folder depending whether LLMs are used or not
-PROSPECTOR_REPORT_PATH = (
-    evaluation_config.prospector_reports_llm_path
-    if evaluation_config.prospector_settings.run_with_llm
-    else evaluation_config.prospector_reports_no_llm_path
-)
-ANALYSIS_RESULTS_PATH = evaluation_config.analysis_results_path
 
 # get the redis server url
 config = parse_config_file()
@@ -111,34 +105,6 @@ def temp_load_reservation_dates(dataset_path: str):
     with open(dataset_path, "r") as file:
         reader = csv.reader(file, delimiter=";")
         return {itm[0]: int(itm[1]) for itm in reader}
-
-
-def build_table_row(matched_rules):
-    rules_list = [
-        "COMMIT_IN_REFERENCE",
-        "CVE_ID_IN_MESSAGE",
-        "CVE_ID_IN_LINKED_ISSUE",
-        "CROSS_REFERENCED_JIRA_LINK",
-        "CROSS_REFERENCED_GH_LINK",
-        "CHANGES_RELEVANT_FILES",
-        "CHANGES_RELEVANT_CODE",
-        "RELEVANT_WORDS_IN_MESSAGE",
-        "ADV_KEYWORDS_IN_FILES",
-        "ADV_KEYWORDS_IN_MSG",
-        "SEC_KEYWORDS_IN_MESSAGE",
-        "SEC_KEYWORDS_IN_LINKED_GH",
-        "SEC_KEYWORDS_IN_LINKED_JIRA",
-        "GITHUB_ISSUE_IN_MESSAGE",
-        "JIRA_ISSUE_IN_MESSAGE",
-        "COMMIT_HAS_TWINS",
-    ]
-    out = []
-    for id in rules_list:
-        if id in matched_rules:
-            out.append("/checkmark")
-        else:
-            out.append("")
-    return out
 
 
 def delete_missing_git(dataset_path):
@@ -288,12 +254,11 @@ def execute_prospector_wrapper(kwargs):
 
 
 def run_prospector_and_generate_report(
-    vuln_id, v_int, report_type: str, output_file
+    vuln_id, v_int, report_type: str, output_file, repository_url: str
 ):
     """Call the prospector() and generate_report() functions. This also creates the LLMService singleton
     so that it is available in the context of the job.
     """
-
     # print(f"Enabled rules: {config.enabled_rules}")  # sanity check
 
     prospector_settings = evaluation_config.prospector_settings
@@ -304,16 +269,24 @@ def run_prospector_and_generate_report(
         else config.enabled_rules.remove("COMMIT_IS_SECURITY_RELEVANT")
     )
 
+    logger.info(f"Invoking prospector() function for {vuln_id}")
     LLMService(config.llm_service)
+
+    logger.debug(
+        f"Settings prospector() is invoked with: gitcache: {config.git_cache}, LLM usage: {prospector_settings.run_with_llm}."
+    )
 
     results, advisory_record = prospector(
         vulnerability_id=vuln_id,
+        repository_url=repository_url,
         version_interval=v_int,
         backend_address=backend,
         enabled_rules=enabled_rules,
         git_cache=config.git_cache,
         use_llm_repository_url=prospector_settings.run_with_llm,
     )
+
+    logger.debug(f"prospector() returned. Generating report now.")
 
     generate_report(
         results,
@@ -330,7 +303,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    # dataset = dataset[:10]
+    dataset = dataset[:3]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
@@ -350,12 +323,13 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
 
             job = Job.create(
                 run_prospector_and_generate_report,
-                args=(
-                    cve[0],
-                    cve[2],
-                    "json",
-                    f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
-                ),
+                kwargs={
+                    "vuln_id": cve[0],
+                    "v_int": cve[2],
+                    "report_type": "json",
+                    "output_file": f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
+                    "repository_url": cve[1],
+                },
                 description="Prospector Job",
                 id=cve[0],
             )

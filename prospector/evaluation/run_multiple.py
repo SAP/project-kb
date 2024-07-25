@@ -14,6 +14,7 @@ from evaluation.dispatch_jobs import (
     empty_queue,
     parallel_execution,
 )
+from evaluation.utils import logger
 
 
 def is_missing(path: str):
@@ -101,8 +102,7 @@ def main(argv):
 
     # Run Prospector containerised
     if args.execute and not args.analyze and not args.parallel:
-        # get_full_commit_ids(args.input)
-        # return
+        logger.info("Dispatching jobs.")
         dispatch_prospector_jobs(args.input, args.cve)
 
     # Run Prospector in parallel
