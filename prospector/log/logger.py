@@ -18,7 +18,9 @@ def get_level(string: bool = False):
     return logger.level
 
 
-def create_logger(name: str = LOGGER_NAME) -> logging.Logger:
+def create_logger(
+    log_file: str = "prospector.log", name: str = LOGGER_NAME
+) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -26,7 +28,7 @@ def create_logger(name: str = LOGGER_NAME) -> logging.Logger:
         "%m-%d %H:%M:%S",
     )
     log_file = logging.handlers.RotatingFileHandler(
-        "prospector.log", maxBytes=2 * (10**6), backupCount=3
+        log_file, maxBytes=2 * (10**6), backupCount=3
     )
     log_file.setFormatter(formatter)
     logger.addHandler(log_file)

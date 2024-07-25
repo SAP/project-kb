@@ -19,6 +19,11 @@ from evaluation.save_results import (
     update_summary_execution_table,
 )
 from evaluation.utils import load_dataset
+from log.logger import create_logger
+
+
+logger = create_logger("evaluation.log")
+logger.setLevel("DEBUG")
 
 
 def analyze_results_rules(dataset_path: str):
@@ -173,7 +178,10 @@ def analyze_prospector(filename: str):  # noqa: C901
     table_data = []
     for key, value in results.items():
         # print(f"{key}: {len(value)} ({(len(value)/1315)*100:.2f}%)") # Sanity Check
-        table_data.append([len(value), len(value) / len(dataset) * 100])
+        logger.debug(f"Length of results: {len(results)}")
+        table_data.append(
+            [len(value), round(len(value) / len(results) * 100, 2)]
+        )
 
     update_summary_execution_table(
         "MVI",
