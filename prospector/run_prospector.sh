@@ -36,4 +36,9 @@ fi
 # echo  $(pwd)/$OUTPUT_DIR # Sanity Check
 
 # run the docker container
-docker run --network=prospector_default --rm -t -v $(pwd)/$OUTPUT_DIR:/app/$OUTPUT_DIR $IMAGE_NAME "$@"
+docker run --network=prospector_default --rm -t \
+  --user $(id -u):$(id -g) \
+  -v $(pwd)/$OUTPUT_DIR:/app/$OUTPUT_DIR \
+  -v ${GIT_CACHE_HOST}:/tmp/gitcache \
+  $IMAGE_NAME \
+  "$@"
