@@ -73,7 +73,7 @@ def format_simple(entry_str, order="desc"):
             "Warning: Some entries were not processed due to unknown type",
             file=sys.stderr,
         )
-        print("List of unprocessed entrie(s):", unprocessed_entries)
+        print("List of unprocessed entrie(s):", [e for e in unprocessed_entries])
 
     return [entry[1] for entry in formatted_entries]
 
