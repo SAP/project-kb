@@ -34,25 +34,6 @@ series = {MSR '22}
       url={https://arxiv.org/abs/2110.09610},
 }
 
-@article{10.1145/3649590,
-author = {Hommersom, Daan and Sabetta, Antonino and Coppola, Bonaventura and Nucci, Dario Di and Tamburri, Damian A.},
-title = {Automated Mapping of Vulnerability Advisories onto their Fix Commits in Open Source Repositories},
-year = {2024},
-issue_date = {June 2024},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {33},
-number = {5},
-issn = {1049-331X},
-url = {https://doi.org/10.1145/3649590},
-doi = {10.1145/3649590},
-abstract = {The lack of comprehensive sources of accurate vulnerability data represents a critical obstacle to studying and understanding software vulnerabilities (and their corrections). In this article, we present an approach that combines heuristics stemming from practical experience and machine-learning (ML)—specifically, natural language processing (NLP)—to address this problem. Our method consists of three phases. First, we construct an advisory record object containing key information about a vulnerability that is extracted from an advisory, such as those found in the National Vulnerability Database (NVD). These advisories are expressed in natural language. Second, using heuristics, a subset of candidate fix commits is obtained from the source code repository of the affected project, by filtering out commits that can be identified as unrelated to the vulnerability at hand. Finally, for each of the remaining candidate commits, our method builds a numerical feature vector reflecting the characteristics of the commit that are relevant to predicting its match with the advisory at hand. Based on the values of these feature vectors, our method produces a ranked list of candidate fixing commits. The score attributed by the ML model to each feature is kept visible to the users, allowing them to easily interpret the predictions.We implemented our approach and we evaluated it on an open data set, built by manual curation, that comprises 2,391 known fix commits corresponding to 1,248 public vulnerability advisories. When considering the top-10 commits in the ranked results, our implementation could successfully identify at least one fix commit for up to 84.03\% of the vulnerabilities (with a fix commit on the first position for 65.06\% of the vulnerabilities). Our evaluation shows that our method can reduce considerably the manual effort needed to search open-source software (OSS) repositories for the commits that fix known vulnerabilities.},
-journal = {ACM Trans. Softw. Eng. Methodol.},
-month = {jun},
-articleno = {134},
-numpages = {28},
-keywords = {Open source software, software security, common vulnerabilities and exposures (CVE), National Vulnerability Database (NVD), mining software repositories, code-level vulnerability data, machine learning applied to software security}
-}
 
 @inproceedings{10.1145/3387940.3392200,
 author = {Marchand-Melsom, Alexander and Nguyen Mai, Duong Bao},
@@ -1132,76 +1113,3 @@ keywords = {CVE, Vulnerability dataset, dataset, open-source, real-world vulnera
 location = {Porto de Galinhas, Brazil},
 series = {PROMISE 2024}
 }
-
-
-@article{Cabrera_Lozoya_2021,
-   title={Commit2Vec: Learning Distributed Representations of Code Changes},
-   volume={2},
-   ISSN={2661-8907},
-   url={http://dx.doi.org/10.1007/s42979-021-00566-z},
-   DOI={10.1007/s42979-021-00566-z},
-   number={3},
-   journal={SN Computer Science},
-   publisher={Springer Science and Business Media LLC},
-   author={Cabrera Lozoya, Rocío and Baumann, Arnaud and Sabetta, Antonino and Bezzi, Michele},
-   year={2021},
-   month=mar }
-
-@misc{fehrer2021detectingsecurityfixesopensource,
-      title={Detecting Security Fixes in Open-Source Repositories using Static Code Analyzers},
-      author={Therese Fehrer and Rocío Cabrera Lozoya and Antonino Sabetta and Dario Di Nucci and Damian A. Tamburri},
-      year={2021},
-      eprint={2105.03346},
-      archivePrefix={arXiv},
-      primaryClass={cs.SE},
-      url={https://arxiv.org/abs/2105.03346},
-}
-
-@article{Ponta2020DetectionAA,
-  title={Detection, assessment and mitigation of vulnerabilities in open source dependencies},
-  author={Serena Elisa Ponta and Henrik Plate and Antonino Sabetta},
-  journal={Empirical Software Engineering},
-  year={2020},
-  volume={25},
-  pages={3175 - 3215},
-  url={https://link.springer.com/article/10.1007/s10664-020-09830-x}
-}
-
-@ARTICLE {9506931,
-author = {A. Dann and H. Plate and B. Hermann and S. Ponta and E. Bodden},
-journal = {IEEE Transactions on Software Engineering},
-title = {Identifying Challenges for OSS Vulnerability Scanners - A Study &amp; Test Suite},
-year = {2022},
-volume = {48},
-number = {09},
-issn = {1939-3520},
-pages = {3613-3625},
-abstract = {The use of vulnerable open-source dependencies is a known problem in today&#x27;s software development. Several vulnerability scanners to detect known-vulnerable dependencies appeared in the last decade, however, there exists no case study investigating the impact of development practices, e.g., forking, patching, re-bundling, on their performance. This paper studies (i) types of modifications that may affect vulnerable open-source dependencies and (ii) their impact on the performance of vulnerability scanners. Through an empirical study on 7,024 Java projects developed at SAP, we identified four types of modifications: re-compilation, re-bundling, metadata-removal and re-packaging. In particular, we found that more than 87 percent (56 percent, resp.) of the vulnerable Java classes considered occur in Maven Central in re-bundled (re-packaged, resp.) form. We assessed the impact of these modifications on the performance of the open-source vulnerability scanners OWASP Dependency-Check (OWASP) and Eclipse Steady, GitHub Security Alerts, and three commercial scanners. The results show that none of the scanners is able to handle all the types of modifications identified. Finally, we present Achilles, a novel test suite with 2,505 test cases that allow replicating the modifications on open-source dependencies.},
-keywords = {open source software;databases;java;benchmark testing;tools;security;software},
-doi = {10.1109/TSE.2021.3101739},
-url = {https://ieeexplore.ieee.org/document/9506931},
-publisher = {IEEE Computer Society},
-address = {Los Alamitos, CA, USA},
-month = {sep}
-}
-
-@misc{ponta2021usedbloatedvulnerablereducing,
-      title={The Used, the Bloated, and the Vulnerable: Reducing the Attack Surface of an Industrial Application},
-      author={Serena Elisa Ponta and Wolfram Fischer and Henrik Plate and Antonino Sabetta},
-      year={2021},
-      eprint={2108.05115},
-      archivePrefix={arXiv},
-      primaryClass={cs.SE},
-      url={https://arxiv.org/abs/2108.05115},
-}
-
-@INPROCEEDINGS{9462983,
-  author={Iannone, Emanuele and Nucci, Dario Di and Sabetta, Antonino and De Lucia, Andrea},
-  booktitle={2021 IEEE/ACM 29th International Conference on Program Comprehension (ICPC)},
-  title={Toward Automated Exploit Generation for Known Vulnerabilities in Open-Source Libraries},
-  year={2021},
-  volume={},
-  number={},
-  pages={396-400},
-  keywords={Java;Tools;Libraries;Security;Reachability analysis;Open source software;Genetic algorithms;Exploit Generation;Security Testing;Software Vulnerabilities},
-  doi={10.1109/ICPC52881.2021.00046}}
