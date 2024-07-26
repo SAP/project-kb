@@ -4,7 +4,6 @@
 [![Go](https://github.com/sap/project-kb/workflows/Go/badge.svg)](https://github.com/SAP/project-kb/actions?query=workflow%3AGo)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/SAP/project-kb/blob/master/LICENSE.txt)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sap/project-kb/#contributing)
-[![Join the chat at https://gitter.im/project-kb/general](https://badges.gitter.im/project-kb/general.svg)](https://gitter.im/project-kb/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![GitHub All Releases](https://img.shields.io/github/downloads/SAP/PROJECT-KB/total)
 [![REUSE status](https://api.reuse.software/badge/github.com/sap/project-kb)](https://api.reuse.software/info/github.com/sap/project-kb)
 [![Pytest](https://github.com/SAP/project-kb/actions/workflows/python.yml/badge.svg)](https://github.com/SAP/project-kb/actions/workflows/python.yml)
