@@ -9,11 +9,11 @@
 import argparse
 import html
 import sys
-
 import bibtexparser
 
 
 def process_entry(entry):
+    
     try:
         authors = entry["author"].split(" and ")
         if len(authors) > 1:
@@ -46,7 +46,7 @@ def process_entry(entry):
 
     except KeyError as e:
         print(
-            f"One or more necessary fields {str(e)} not present in this BibTeX entry."
+            f"One or more necessary fields {str(e)} not present in this BibTeX entry.", file=sys.stderr,
         )
         return None, None
 
@@ -73,7 +73,7 @@ def format_simple(entry_str, order="desc"):
             "Warning: Some entries were not processed due to unknown type",
             file=sys.stderr,
         )
-        print("List of unprocessed entrie(s):", [e for e in unprocessed_entries])
+        print("List of unprocessed entrie(s):", [e for e in unprocessed_entries], file=sys.stderr)
 
     return [entry[1] for entry in formatted_entries]
 
