@@ -6,15 +6,40 @@ from typing import Dict, List, Tuple
 
 import seaborn as sns
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 from evaluation.utils import (
     load_dataset,
+    update_false_positives,
     update_summary_execution_table,
     logger,
     INPUT_DATA_PATH,
     PROSPECTOR_REPORT_PATH,
     ANALYSIS_RESULTS_PATH,
 )
+
+
+STRONG_RULES = [
+    "COMMIT_IN_REFERENCE",
+    "VULN_ID_IN_MESSAGE",
+    "VULN_ID_IN_LINKED_ISSUE",
+    # "XREF_BUG", # LASCHA: fix this, these two XREF ones should be combined
+    "XREF_GH",
+]
+
+WEAK_RULES = [
+    "CHANGES_RELEVANT_FILES",
+    "CHANGES_RELEVANT_CODE",
+    "RELEVANT_WORDS_IN_MESSAGE",
+    "ADV_KEYWORDS_IN_FILES",
+    "ADV_KEYWORDS_IN_MSG",
+    "SEC_KEYWORDS_IN_MESSAGE",
+    "SEC_KEYWORDS_IN_LINKED_GH",
+    "SEC_KEYWORDS_IN_LINKED_BUG",
+    "GITHUB_ISSUE_IN_MESSAGE",
+    "BUG_IN_MESSAGE",
+    "COMMIT_HAS_TWINS",
+]
 
 
 def analyze_results_rules(dataset_path: str):
@@ -89,6 +114,211 @@ def analyze_results_rules(dataset_path: str):
             # print(f"{k}: {v[3]}/commit/{v[0]}")
 
 
+def analyse_prospector_reports(filename: str):
+    """Analyses Prospector reports. Creates the summary_execution_results table."""
+    file = INPUT_DATA_PATH + filename + ".csv"
+    dataset = load_dataset(file)
+    # dataset = dataset[10:15]
+
+    fixing_commit_found = 0
+    fixing_commit_not_among_10 = 0
+    fixing_commit_not_found = 0
+
+    # Confidence
+    confidence = {
+        "high": [],
+        "medium": [],
+        "low": [],
+    }
+
+    strong_rules_count = dict(zip(STRONG_RULES, [0] * len(STRONG_RULES)))
+
+    # Analysis statistics
+    # Keep track of how many reports were attempted to be analysed
+    attempted_report_analysis = 0
+    # Keep track of how many reports were analysed
+    num_analysed_reports = 0
+    # Keep track of the CVEs where there is no report file
+    reports_not_found = []
+
+    for record in tqdm(dataset, total=len(dataset), desc="Analysing Records"):
+        # ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
+        cve_id = record[0]
+        fixing_commits = record[4].split(",")
+
+        attempted_report_analysis += 1
+
+        try:
+            with open(
+                f"{PROSPECTOR_REPORT_PATH}{filename}/{cve_id}.json"
+            ) as file:
+                # Get all commit IDs present in the report
+                report_data = json.load(file)
+
+        except FileNotFoundError:
+            reports_not_found.append(cve_id)
+            logger.debug(f"Couldn't find report for {cve_id}")
+            continue
+
+        num_analysed_reports += 1
+
+        true_fixing_commits_in_report = get_true_fixing_commits_in_report(
+            report_data=report_data,
+            fixing_commits=fixing_commits,
+        )
+
+        # Fixing commit is not among the ranked commits of the report
+        if len(true_fixing_commits_in_report) == 0:
+            fixing_commit_not_found += 1
+            logger.debug(
+                f"Report for {cve_id} does not contain fixing commit at all."
+            )
+            continue
+
+        if len(true_fixing_commits_in_report) > 0:
+            fixing_commit_found += 1
+
+        #### Find the confidence & count strong rules
+        for i, commit in enumerate(report_data["commits"]):
+            logger.debug(
+                f"index: {i}, number of commits: {len(report_data['commits'])}"
+            )
+            # First commit is fixing commit
+            if i == 0:
+                matched_rules = [rule["id"] for rule in commit["matched_rules"]]
+                # logger.debug(f"Matched rules: {matched_rules}") # Sanity Check
+                for matched_rule in matched_rules:
+                    if matched_rule in STRONG_RULES:
+                        strong_rules_count[matched_rule] += 1
+                        confidence["high"].append((cve_id, matched_rule))
+                        break
+
+                    if matched_rule in WEAK_RULES:
+                        confidence["medium"].append((cve_id, matched_rule))
+                        break
+                break
+
+            # Fixing commit among the first 10
+            if i > 0 and i < 10 and commit["commit_id"] in fixing_commits:
+                confidence["low"].append(cve_id)
+                break
+
+            # Commit not among the first 10
+            if i >= 10:
+                fixing_commit_not_among_10 += 1
+                break
+
+    #### Table Data (write to table)
+    logger.info(f"strong rules count: {strong_rules_count}")
+    table_data = []
+    # Add first row of high confidence
+    table_data.append(
+        [
+            len(confidence["high"]),
+            round(len(confidence["high"]) / num_analysed_reports * 100, 2),
+        ]
+    )
+    for _, v in strong_rules_count.items():
+        table_data.append([v, round(v / num_analysed_reports * 100, 2)])
+    table_data.append(
+        [
+            len(confidence["medium"]),
+            round(len(confidence["medium"]) / num_analysed_reports * 100, 2),
+        ]
+    )
+    table_data.append(
+        [
+            len(confidence["low"]),
+            round(len(confidence["low"]) / num_analysed_reports * 100, 2),
+        ]
+    )
+    table_data.append(
+        [
+            fixing_commit_not_among_10,
+            round(fixing_commit_not_among_10 / num_analysed_reports * 100, 2),
+        ]
+    )
+    table_data.append(
+        [
+            fixing_commit_not_found,
+            round(fixing_commit_not_found / num_analysed_reports * 100, 2),
+        ]
+    )
+    table_data.append([0, 0.0])
+
+    update_summary_execution_table(
+        "MVI",
+        table_data,
+        str(num_analysed_reports),
+        f"{ANALYSIS_RESULTS_PATH}summary_execution_results.tex",
+    )
+
+    logger.info(
+        f"Analysed {num_analysed_reports}, couldn't find reports for {len(reports_not_found)} out of {attempted_report_analysis} analysis attempts."
+    )
+    logger.info(
+        f"Fixing commit among ranked commits in report: {fixing_commit_found}"
+    )
+    logger.info(
+        f"Fixing commit not among ranked commits in report: {fixing_commit_not_found}"
+    )
+    logger.info(
+        f"Found {len(confidence['high'])} commits with high confidence, {len(confidence['medium'])} commits with medium confidence and {len(confidence['low'])} commits with low confidence."
+    )
+    logger.debug(f"Strong rules matching: {confidence['high']}")
+    logger.debug(f"Weak rules matching: {confidence['medium']}")
+    logger.debug(
+        f"Fixing commit among first 10 (low conf): {confidence['low']}"
+    )
+
+
+def get_true_fixing_commits_in_report(
+    report_data,
+    fixing_commits: List[str],
+):
+    """Return the list of true fixing commits mentioned in the Prospector
+    report.
+    """
+    ranked_candidates = [
+        commit["commit_id"] for commit in report_data["commits"]
+    ]
+
+    true_fixing_commits_in_report = [
+        commit for commit in ranked_candidates if commit in fixing_commits
+    ]
+
+    return true_fixing_commits_in_report
+
+
+def update_confidence_and_strong_rules(
+    i: int,
+    commit,
+    cve_id,
+    fixing_commits: List,
+    confidence: dict[List],
+    strong_rules_count,
+):
+    matched_rules = [rule["id"] for rule in commit["matched_rules"]]
+    # logger.debug(f"Matched rules: {matched_rules}") # Sanity Check
+
+    # Fixing commit among the first 10
+    if i > 0 and commit["commit_id"] in fixing_commits:
+        confidence["low"].append(cve_id)
+        return confidence, strong_rules_count
+
+    # First commit is fixing commit
+    if i == 0:
+        for matched_rule in matched_rules:
+            if matched_rule in STRONG_RULES:
+                strong_rules_count[matched_rule] += 1
+                confidence["high"].append((cve_id, matched_rule))
+                return confidence, strong_rules_count
+
+            if matched_rule in WEAK_RULES:
+                confidence["medium"].append((cve_id, matched_rule))
+                return confidence, strong_rules_count
+
+
 def analyze_prospector(filename: str):  # noqa: C901
     """Analyses Prospector's reports."""
 
@@ -106,7 +336,7 @@ def analyze_prospector(filename: str):  # noqa: C901
         "medium_confidence": set(),
         "low_confidence": set(),
         "not_found": set(),
-        "not_reported": set(),
+        "not_reported": set(),  # Commit does not appear in the report
         "false_positive": set(),
         "real_false_positive": set(),
     }
@@ -147,7 +377,7 @@ def analyze_prospector(filename: str):  # noqa: C901
             continue
 
     print("Saved results to matched_rules.tex")
-
+    logger.debug(f"Count for each rule: {rulescount}")
     # print(
     #     ",".join(
     #         results["not_reported"]
@@ -183,9 +413,11 @@ def analyze_prospector(filename: str):  # noqa: C901
             ]
         ]
     )
+    # First row
     table_data_categories.append(
         [num_high_confidence, round(num_high_confidence / total * 100, 2)]
     )
+    # Middle rows
     for key, value in results.items():
         logger.debug(
             f"Key: {key}, Length of value: {len(value)}"
@@ -239,7 +471,7 @@ def build_table_row(matched_rules):
 
 
 def write_matched_rules(
-    results,
+    results: dict,
     rulescount,
     skipped,
     itm,
@@ -252,6 +484,31 @@ def write_matched_rules(
     rules,
 ):
     with open(ANALYSIS_RESULTS_PATH + "matched_rules.tex", "a+") as f:
+        # if the commit doesn't exist?
+        if not is_fix and not exists and position < 0:
+            skipped += 1
+            return results, rulescount, skipped
+
+        # Commit is not reported (in the whole report, the fixing commit doesn't show up)
+        if not is_fix and not has_certainty and commit_id and position < 0:
+            results["not_reported"].add(itm[0])
+            logger.debug(f"Commit was not reported: {itm[0]}")
+            return results, rulescount, skipped
+
+        # False positives
+        if not is_fix and has_certainty:
+            results["false_positive"].add(itm[0])
+            update_false_positives(itm)
+            logger.debug(
+                f"Commit {itm[0]} was a false positive (high confidence but not fixing commit)."
+            )
+            return results, rulescount, skipped
+
+        # Commit not found (commit was not in the first 10 ranked candidates of the report)
+        if is_fix and not has_certainty and position >= 10:
+            results["not_found"].add(itm[0])
+
+        # Commit is fixing commit and has certainty
         if is_fix and has_certainty:  # and 0 <= position < 10:
             f.write(
                 f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n"
@@ -259,16 +516,11 @@ def write_matched_rules(
 
             results[has_certainty].add(itm[0])
 
-            for rule in rules:
-                rulescount[rule] += 1
-
         elif is_fix and not has_certainty and position == 0:
             f.write(
                 f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n"
             )
             results["medium_confidence"].add(itm[0])
-            for rule in rules:
-                rulescount[rule] += 1
 
         elif is_fix and not has_certainty and 0 < position < 10:
             results["low_confidence"].add(itm[0])
@@ -276,28 +528,10 @@ def write_matched_rules(
                 f"{itm[0]} & {' & '.join(build_table_row(rules))} & {' & '.join([str(x) for x in ranks]).replace('-1', '')} \\\\ \\midrule\n"
             )
 
-            for rule in rules:
-                rulescount[rule] += 1
-
-        elif is_fix and not has_certainty and position >= 10:
-            results["not_found"].add(itm[0])
-            for rule in rules:
-                rulescount[rule] += 1
-
-        elif not is_fix and has_certainty:
-            results["false_positive"].add(itm[0])
-            with open(f"{ANALYSIS_RESULTS_PATH}false_postive.txt", "a") as file:
-                writer = csv.writer(file)
-                writer.writerow(
-                    [f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}"]
-                )
-
-        elif not is_fix and not has_certainty and commit_id and position < 0:
-            results["not_reported"].add(itm[0])
-            # print(f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}")
-
-        elif not is_fix and not exists and position < 0:
-            skipped += 1
+        for rule in rules:
+            rulescount[rule] += 1
+            if results.get(rule, None):
+                results[rule].add(commit_id)
 
     return results, rulescount, skipped
 
@@ -410,20 +644,17 @@ def has_certainty(rules: List[Dict]):
     """Checks if a list of matched rules contains any strong (high-certainty) rules."""
     if any(rule["id"] == "COMMIT_IN_REFERENCE" for rule in rules):
         return "COMMIT_IN_REFERENCE"
-    if any(rule["id"] == "CVE_ID_IN_MESSAGE" for rule in rules):
+    if any(rule["id"] == "VULN_ID_IN_MESSAGE" for rule in rules):
         return "CVE_ID_IN_MESSAGE"
-    if any(
-        rule["id"] in ("CROSS_REFERENCED_JIRA_LINK", "CROSS_REFERENCED_GH_LINK")
-        for rule in rules
-    ):
+    if any(rule["id"] in ("XREF_BUG", "XREF_GH") for rule in rules):
         return "CROSS_REFERENCE"
-    if any(rule["id"] == "CVE_ID_IN_LINKED_ISSUE" for rule in rules):
+    if any(rule["id"] == "VULN_ID_IN_LINKED_ISSUE" for rule in rules):
         return "CVE_ID_IN_LINKED_ISSUE"
 
     return False
 
 
-def get_first_commit_score(data):
+def get_first_commit_relevance(data):
     if len(data["commits"]) == 0:
         return -1
     else:
@@ -431,12 +662,13 @@ def get_first_commit_score(data):
 
 
 def is_fixing_commit(commit, fixing_commits):
+    """Returns whether a commit is in a list of true fixing commits."""
     return commit["commit_id"] in fixing_commits or any(
         twin[1] in fixing_commits for twin in commit.get("twins", [])
     )
 
 
-def get_commit_info(commit, index, score_first, score_next):
+def get_commit_info(commit, index, relevance_first_commit, relevance_next):
     return (
         True,
         has_certainty(commit["matched_rules"]),
@@ -446,8 +678,8 @@ def get_commit_info(commit, index, score_first, score_next):
         [
             index + 1,
             sum_relevances(commit["matched_rules"]),
-            score_first,
-            score_next,
+            relevance_first_commit,
+            relevance_next,
         ],
         [r["id"] for r in commit["matched_rules"]],
     )
@@ -487,36 +719,37 @@ def check_report(dataset, cve, fixing_commits):
         - The commit ID (or None if no commit is found)
         - A boolean indicating if the commit exists
         - The position (index) of the commit (-1 if no commit is found)
-        - A list containing the position, relevance score, score_first, and score_next (or None if no commit is found)
+        - A list containing the position, relevance score, score_first, and relevance_next (or None if no commit is found)
         - A list of matched rule IDs
     """
     try:
         with open(f"{dataset}/{cve}.json", "r") as file:
             data = json.load(file)
-            score_first = get_first_commit_score(data)
-            logger.debug(f"\n{cve}")
-            logger.debug(f"\tScore first: {score_first}")
+
+            relevance_first_commit = get_first_commit_relevance(data)
+            logger.debug(f"{cve}")
+            logger.debug(f"Score first: {relevance_first_commit}")
 
             for index, commit in enumerate(data["commits"]):
-                score_next = -1
+                relevance_next = -1
                 if index > 0:
-                    score_next = sum_relevances(
+                    relevance_next = sum_relevances(
                         data["commits"][index - 1]["matched_rules"]
                     )
 
                 if is_fixing_commit(commit, fixing_commits):
                     if index == 0:
-                        score_first = -1
-                    result = get_commit_info(
-                        commit, index, score_first, score_next
+                        relevance_first_commit = -1
+                    commit_info = get_commit_info(
+                        commit, index, relevance_first_commit, relevance_next
                     )
-                    logger.debug(f"\tFixing Commit Info: {result}")
+                    logger.debug(f"Fixing Commit Info: {commit_info}")
 
-                    return result
+                    return commit_info
 
             for index, commit in enumerate(data["commits"]):
                 commit_info = get_non_fixing_commit_info(
-                    commit, index, score_first
+                    commit, index, relevance_first_commit
                 )
                 if commit_info:
                     logger.debug(f"Non-fixing Commit Info: {commit_info}")

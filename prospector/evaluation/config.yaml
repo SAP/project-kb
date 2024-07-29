@@ -1,3 +1,6 @@
+# Debug Level
+debug_level: INFO
+
 # Input Data
 input_data_path: evaluation/data/input/ # datasets to run prospector on (CSV: ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS)
 
@@ -12,3 +15,23 @@ analysis_results_path: evaluation/data/results/
 prospector_settings:
   run_containerised: True
   run_with_llm: False
+  enabled_rules:
+    # Phase 1 Rules
+    - VULN_ID_IN_MESSAGE # CVE ID in Message (high confidence)
+    - XREF_BUG # Cross Reference?
+    - XREF_GH # Cross Reference?
+    - COMMIT_IN_REFERENCE # Commit in Reference (high confidence)
+    - VULN_ID_IN_LINKED_ISSUE # CVE ID in Issue (high confidence)
+    - CHANGES_RELEVANT_FILES
+    - CHANGES_RELEVANT_CODE
+    - RELEVANT_WORDS_IN_MESSAGE
+    - ADV_KEYWORDS_IN_FILES
+    - ADV_KEYWORDS_IN_MSG
+    - SEC_KEYWORDS_IN_MESSAGE
+    - SEC_KEYWORDS_IN_LINKED_GH
+    - SEC_KEYWORDS_IN_LINKED_BUG
+    - GITHUB_ISSUE_IN_MESSAGE
+    - BUG_IN_MESSAGE
+    - COMMIT_HAS_TWINS
+    # Phase 2 Rules (llm_service required!):
+    - COMMIT_IS_SECURITY_RELEVANT

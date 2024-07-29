@@ -1,7 +1,7 @@
 import csv
 import multiprocessing
 import os
-from typing import Optional
+from typing import List, Optional
 
 import redis
 import requests
@@ -254,27 +254,19 @@ def execute_prospector_wrapper(kwargs):
 
 
 def run_prospector_and_generate_report(
-    vuln_id, v_int, report_type: str, output_file, repository_url: str
+    vuln_id,
+    v_int,
+    report_type: str,
+    output_file,
+    repository_url: str,
+    enabled_rules: List[str],
+    run_with_llm: bool,
 ):
     """Call the prospector() and generate_report() functions. This also creates the LLMService singleton
     so that it is available in the context of the job.
     """
     # print(f"Enabled rules: {config.enabled_rules}")  # sanity check
-
-    prospector_settings = evaluation_config.prospector_settings
-    # Rules are taken from config.yaml (the overall one), except run_with_llm is false in the evaluation config, then the llm rule is removed
-    enabled_rules = (
-        config.enabled_rules
-        if prospector_settings.run_with_llm
-        else config.enabled_rules.remove("COMMIT_IS_SECURITY_RELEVANT")
-    )
-
-    logger.info(f"Invoking prospector() function for {vuln_id}")
     LLMService(config.llm_service)
-
-    logger.debug(
-        f"Settings prospector() is invoked with: gitcache: {config.git_cache}, LLM usage: {prospector_settings.run_with_llm}."
-    )
 
     results, advisory_record = prospector(
         vulnerability_id=vuln_id,
@@ -283,7 +275,7 @@ def run_prospector_and_generate_report(
         backend_address=backend,
         enabled_rules=enabled_rules,
         git_cache=config.git_cache,
-        use_llm_repository_url=prospector_settings.run_with_llm,
+        use_llm_repository_url=run_with_llm,
     )
 
     logger.debug(f"prospector() returned. Generating report now.")
@@ -303,11 +295,14 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[:3]
+    # dataset = dataset[20:25]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
+
+    prospector_settings = evaluation_config.prospector_settings
+    logger.debug(f"Enabled rules: {prospector_settings.enabled_rules}")
 
     dispatched_jobs = 0
     for cve in dataset:
@@ -328,7 +323,11 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
                     "v_int": cve[2],
                     "report_type": "json",
                     "output_file": f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
-                    "repository_url": cve[1],
+                    "repository_url": (
+                        cve[1] if prospector_settings.run_with_llm else None
+                    ),
+                    "enabled_rules": prospector_settings.enabled_rules,
+                    "run_with_llm": prospector_settings.run_with_llm,
                 },
                 description="Prospector Job",
                 id=cve[0],

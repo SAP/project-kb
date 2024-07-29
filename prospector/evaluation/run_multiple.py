@@ -5,6 +5,7 @@ import signal
 import sys
 
 from evaluation.analyse import (
+    analyse_prospector_reports,
     analyse_statistics,
     analyze_prospector,
     analyze_results_rules,
@@ -124,7 +125,8 @@ def main(argv):
     elif (
         args.analyze and not args.rules and not args.execute and not args.stats
     ):
-        analyze_prospector(args.input)
+        analyse_prospector_reports(args.input)
+        # analyze_prospector(args.input)
 
     elif args.analyze and args.stats and not args.rules and not args.execute:
         analyse_statistics(args.input)

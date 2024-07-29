@@ -6,11 +6,10 @@ from datamodel.advisory import build_advisory_record
 from urllib.parse import urlparse
 from log.logger import create_logger
 
+evaluation_config = OmegaConf.load("evaluation/config.yaml")
 
 logger = create_logger("evaluation.log")
-logger.setLevel("DEBUG")
-
-evaluation_config = OmegaConf.load("evaluation/config.yaml")
+logger.setLevel(evaluation_config.debug_level)
 
 INPUT_DATA_PATH = evaluation_config.input_data_path
 # Select the folder depending whether LLMs are used or not
@@ -40,6 +39,7 @@ def load_dataset(path: str):
     with open(path, "r") as file:
         reader = csv.reader(file, delimiter=";")
         logger.debug(f"Loaded Dataset at {path}")
+        print(f"Loaded Dataset at {path}")
         return [row for row in reader if "CVE" in row[0] and row[3] != "True"]
 
 
@@ -166,3 +166,11 @@ def update_summary_execution_table(
             file.writelines(table_lines)
 
     print(f"Updated latex table at {filepath}")
+
+
+def update_false_positives(itm):
+    with open(f"{ANALYSIS_RESULTS_PATH}false_postive.txt", "a") as file:
+        writer = csv.writer(file)
+        writer.writerow(
+            [f"{itm[0]};{itm[1]};{itm[2]};{itm[3]};{itm[4]};{itm[5]}"]
+        )
