@@ -41,6 +41,7 @@ prospector/install_fastext.sh
 prospector/nvd.ipynb
 prospector/data/nvd.pkl
 prospector/data/nvd.csv
+prospector/data_sources/reports
 .vscode/settings.json
 prospector/cov_html/*
 prospector/client/cli/cov_html/*
@@ -51,6 +52,7 @@ prospector/.coverage
 **/cov_html
 prospector/cov_html
 .coverage
+prospector/.venv
 prospector/prospector.code-workspace
 prospector/requests-cache.sqlite
 prospector/prospector-report.html

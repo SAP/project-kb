@@ -16,9 +16,12 @@
 
 FROM prospector-base:1.0
 
-WORKDIR /clirun
+#WORKDIR /clirun
+#
+#VOLUME ["/clirun"]
+#ENV PYTHONPATH "${PYTHONPATH}:/clirun"
+#WORKDIR /app
+#ENV PYTHONPATH "${PYTHONPATH}:/app"
 
-VOLUME ["/clirun"]
-ENV PYTHONPATH "${PYTHONPATH}:/clirun"
-
+#VOLUME [ "/results" ]
 ENTRYPOINT [ "python","cli/main.py" ]

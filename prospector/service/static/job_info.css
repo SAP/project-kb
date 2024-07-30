@@ -1,0 +1,37 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+.job-details {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.job-details h3 {
+    color: #333;
+    margin-top: 0;
+}
+
+.job-details p {
+    margin: 0;
+    color: #666;
+}
+
+.job-details .field {
+    margin-top: 20px;
+}
+
+.job-details .field label {
+    font-weight: bold;
+    display: block;
+}
+
+.job-details .field span {
+    color: #888;
+    margin-left: 5px;
+}

@@ -10,6 +10,7 @@ import requests
 import validators
 from dateutil.parser import isoparse
 
+from llm.llm_service import LLMService
 from log.logger import get_level, logger, pretty_log
 from util.http import extract_from_webpage, fetch_url, get_urls
 
@@ -69,6 +70,7 @@ class AdvisoryRecord:
         reserved_timestamp: int = 0,
         published_timestamp: int = 0,
         updated_timestamp: int = 0,
+        repository_url: str = None,
         references: DefaultDict[str, int] = None,
         affected_products: List[str] = None,
         versions: Dict[str, List[str]] = None,
@@ -81,6 +83,7 @@ class AdvisoryRecord:
         self.reserved_timestamp = reserved_timestamp
         self.published_timestamp = published_timestamp
         self.updated_timestamp = updated_timestamp
+        self.repository_url = repository_url
         self.references = references or defaultdict(lambda: 0)
         self.affected_products = affected_products or list()
         self.versions = versions or dict()
@@ -133,6 +136,7 @@ class AdvisoryRecord:
             self.references[self.extract_hashes(ref)] += 2
 
     def get_advisory(self):
+        """Fills the advisory record with information obtained from an advisory API."""
         details, metadata = get_from_mitre(self.cve_id)
         if metadata is None:
             raise Exception("MITRE API Error")
@@ -176,7 +180,7 @@ class AdvisoryRecord:
         ]
         self.versions["fixed"] = [v for v in self.versions["fixed"] if v is not None]
 
-    def get_fixing_commit(self, repository) -> List[str]:
+    def get_fixing_commit(self) -> List[str]:
         self.references = dict(
             sorted(self.references.items(), key=lambda item: item[1], reverse=True)
         )
@@ -245,9 +249,17 @@ class AdvisoryRecord:
     def parse_advisory_2(self, details, metadata):
         self.affected_products = [details["affected"][0]["product"]]
         self.versions = dict(details["affected"][0]["versions"][0])
-        self.published_timestamp = int(isoparse(metadata["datePublished"]).timestamp())
-        self.updated_timestamp = int(isoparse(metadata["dateUpdated"]).timestamp())
-        self.reserved_timestamp = int(isoparse(metadata["dateReserved"]).timestamp())
+        timestamp_fields = {
+            "published_timestamp": "datePublished",
+            "updated_timestamp": "dateUpdated",
+            "reserved_timestamp": "dateReserved",
+        }
+
+        for field, key in timestamp_fields.items():
+            timestamp = metadata.get(key)
+            setattr(
+                self, field, int(isoparse(timestamp).timestamp()) if timestamp else None
+            )
         if not self.description:
             self.description = details["descriptions"][0]["value"]
         self.references = defaultdict(

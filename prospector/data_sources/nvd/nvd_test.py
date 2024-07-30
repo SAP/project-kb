@@ -1,28 +1,23 @@
-from filter_entries import find_matching_entries_test, get_cves
-from job_creation import create_prospector_job
+from data_sources.nvd.filter_entries import process_entries, retrieve_vulns
+from data_sources.nvd.job_creation import enqueue_jobs
 
-# request new cves entries through NVD API
-cves = get_cves(5)
-
-# filter out undesired cves based on mathcing rules
-filtered_cves = find_matching_entries_test(cves)
+# request new cves entries through NVD API and save to db
+cves = retrieve_vulns(7)
 
 """with open("filtered_cves.json", "w") as outfile:
     json.dump(filtered_cves, outfile)"""
 
-print("matched cves")
-print(filtered_cves)
+print("retrieved cves")
+# print(cves)
 
+# get entry from db and process
+processed_vulns = process_entries()
+print("ready to be enqueued: ")
+print(processed_vulns)
 
-# test entry for job creation
-# entry = """
-#        {
-#        "id": "CVE-2014-0050",
-#        "repository": "https://github.com/apache/commons-fileupload",
-#        "version": "1.3:1.3.1"
-#        }
-#    """
+# if processed_vulns:
+#    for entry in processed_vulns:
+#        job_info = create_prospector_job(entry)
+#        save_job_to_db(job_info)
 
-if filtered_cves:
-    for entry in filtered_cves:
-        create_prospector_job(entry)
+enqueue_jobs()

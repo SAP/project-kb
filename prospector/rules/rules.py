@@ -2,23 +2,31 @@ import re
 from abc import abstractmethod
 from typing import List, Tuple
 
+import requests
+
 from datamodel.advisory import AdvisoryRecord
-from datamodel.commit import Commit
-from datamodel.nlp import clean_string, find_similar_words
+from datamodel.commit import Commit, apply_ranking
+from llm.llm_service import LLMService
 from rules.helpers import extract_security_keywords
 from stats.execution import Counter, execution_statistics
 from util.lsh import build_lsh_index, decode_minhash
+
+NUM_COMMITS_PHASE_2 = (
+    10  # Determines how many candidates the second rule phase is applied to
+)
+
 
 rule_statistics = execution_statistics.sub_collection("rules")
 
 
 class Rule:
     lsh_index = None
+    llm_service: LLMService = None
 
     def __init__(self, id: str, relevance: int):
         self.id = id
-        self.message = ""
         self.relevance = relevance
+        self.message = ""
 
     @abstractmethod
     def apply(self, candidate: Commit, advisory_record: AdvisoryRecord) -> bool:
@@ -37,54 +45,50 @@ class Rule:
     def get_rule_as_tuple(self) -> Tuple[str, str, int]:
         return (self.id, self.message, self.relevance)
 
+    def get_id(self):
+        return self.id
+
 
 def apply_rules(
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
-    rules=["ALL"],
+    enabled_rules: List[str] = [],
 ) -> List[Commit]:
-    enabled_rules = get_enabled_rules(rules)
+    """Applies the selected set of rules and returns the ranked list of commits."""
 
-    rule_statistics.collect("active", len(enabled_rules), unit="rules")
+    phase_1_rules = [rule for rule in RULES_PHASE_1 if rule.get_id() in enabled_rules]
+    phase_2_rules = [rule for rule in RULES_PHASE_2 if rule.get_id() in enabled_rules]
+
+    if phase_2_rules:
+        Rule.llm_service = LLMService()
+
+    rule_statistics.collect(
+        "active", len(phase_1_rules) + len(phase_2_rules), unit="rules"
+    )
 
     Rule.lsh_index = build_lsh_index()
-
     for candidate in candidates:
         Rule.lsh_index.insert(candidate.commit_id, decode_minhash(candidate.minhash))
 
     with Counter(rule_statistics) as counter:
         counter.initialize("matches", unit="matches")
         for candidate in candidates:
-            for rule in enabled_rules:
+            for rule in phase_1_rules:
                 if rule.apply(candidate, advisory_record):
                     counter.increment("matches")
                     candidate.add_match(rule.as_dict())
             candidate.compute_relevance()
 
-    # for candidate in candidates:
-    #     if candidate.has_twin():
-    #         for twin in candidate.twins:
-    #             for other_candidate in candidates:
-    #                 if (
-    #                     other_candidate.commit_id == twin[1]
-    #                     and other_candidate.relevance > candidate.relevance
-    #                 ):
-    #                     candidate.relevance = other_candidate.relevance
-    #                     # Add a reason on why we are doing this.
+        candidates = apply_ranking(candidates)
 
-    return candidates
+        for candidate in candidates[:NUM_COMMITS_PHASE_2]:
+            for rule in phase_2_rules:
+                if rule.apply(candidate):
+                    counter.increment("matches")
+                    candidate.add_match(rule.as_dict())
+            candidate.compute_relevance()
 
-
-def get_enabled_rules(rules: List[str]) -> List[Rule]:
-    if "ALL" in rules:
-        return RULES
-
-    enabled_rules = []
-    for r in RULES:
-        if r.id in rules:
-            enabled_rules.append(r)
-
-    return enabled_rules
+    return apply_ranking(candidates)
 
 
 # TODO: This could include issues, PRs, etc.
@@ -409,7 +413,19 @@ class RelevantWordsInMessage(Rule):
         return False
 
 
-RULES: List[Rule] = [
+class CommitIsSecurityRelevant(Rule):
+    """Matches commits that are deemed security relevant by the commit classification service."""
+
+    def apply(
+        self,
+        candidate: Commit,
+    ) -> bool:
+        return LLMService().classify_commit(
+            candidate.diff, candidate.repository, candidate.message
+        )
+
+
+RULES_PHASE_1: List[Rule] = [
     VulnIdInMessage("VULN_ID_IN_MESSAGE", 64),
     # CommitMentionedInAdv("COMMIT_IN_ADVISORY", 64),
     CrossReferencedBug("XREF_BUG", 32),
@@ -429,23 +445,6 @@ RULES: List[Rule] = [
     CommitHasTwins("COMMIT_HAS_TWINS", 2),
 ]
 
-rules_list = [
-    "COMMIT_IN_REFERENCE",
-    "VULN_ID_IN_MESSAGE",
-    "VULN_ID_IN_LINKED_ISSUE",
-    "XREF_BUG",
-    "XREF_GH",
-    "CHANGES_RELEVANT_FILES",
-    "CHANGES_RELEVANT_CODE",
-    "RELEVANT_WORDS_IN_MESSAGE",
-    "ADV_KEYWORDS_IN_FILES",
-    "ADV_KEYWORDS_IN_MSG",
-    "SEC_KEYWORDS_IN_MESSAGE",
-    "SEC_KEYWORDS_IN_LINKED_GH",
-    "SEC_KEYWORDS_IN_LINKED_BUG",
-    "GITHUB_ISSUE_IN_MESSAGE",
-    "BUG_IN_MESSAGE",
-    "COMMIT_HAS_TWINS",
+RULES_PHASE_2: List[Rule] = [
+    CommitIsSecurityRelevant("COMMIT_IS_SECURITY_RELEVANT", 32)
 ]
-
-# print(" & ".join([f"\\rot{{{x}}}" for x in rules_list]))
