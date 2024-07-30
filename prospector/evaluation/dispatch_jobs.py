@@ -324,7 +324,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
                     "report_type": "json",
                     "output_file": f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
                     "repository_url": (
-                        cve[1] if prospector_settings.run_with_llm else None
+                        cve[1] if not prospector_settings.run_with_llm else None
                     ),
                     "enabled_rules": prospector_settings.enabled_rules,
                     "run_with_llm": prospector_settings.run_with_llm,
