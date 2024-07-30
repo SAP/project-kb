@@ -9,6 +9,7 @@ from evaluation.analyse import (
     analyse_statistics,
     analyze_prospector,
     analyze_results_rules,
+    count_existing_reports,
 )
 from evaluation.dispatch_jobs import (
     dispatch_prospector_jobs,
@@ -95,6 +96,14 @@ def parse_cli_args(args):
         help="Empty the Redis Queue",
         action="store_true",
     )
+
+    parser.add_argument(
+        "-co",
+        "--count",
+        help="Count which CVEs from the input data have a corresponding Prospector report.",
+        action="store_true",
+    )
+
     return parser.parse_args()
 
 
@@ -134,6 +143,10 @@ def main(argv):
     # analysis of rules
     elif args.analyze and args.rules and not args.execute:
         analyze_results_rules(args.input)
+
+    # Count how many report there are or there are missing
+    elif not args.analyze and not args.execute and args.count:
+        count_existing_reports(args.input)
 
     # Cannot choose both analyse and execute, stop here.
     elif args.analyze and args.execute:
