@@ -73,4 +73,11 @@ VOLUME [ "/data_sources/reports" ]
 
 RUN chmod +x /usr/local/bin/start_rq_worker.sh
 #CMD tail -f /dev/null
+
+# Create directory for gitcache and run git config command to avoid 'dubious ownership' error
+RUN mkdir -p /tmp/gitcache && \
+    cd /tmp/gitcache && \
+    git config --global --add safe.directory '*'
+
+
 ENTRYPOINT ["/usr/local/bin/start_rq_worker.sh"]
