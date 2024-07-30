@@ -116,17 +116,9 @@ class LLMService(metaclass=Singleton):
         except Exception as e:
             raise RuntimeError(f"Prompt-model chain could not be invoked: {e}")
 
-        if is_relevant in [
-            "True",
-            "ANSWER:True",
-            "```ANSWER:True```",
-        ]:
+        if "True" in is_relevant:
             return True
-        elif is_relevant in [
-            "False",
-            "ANSWER:False",
-            "```ANSWER:False```",
-        ]:
+        elif "False" in is_relevant:
             return False
         else:
             raise RuntimeError(
