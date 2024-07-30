@@ -14,7 +14,7 @@ analysis_results_path: evaluation/data/results/
 # Prospector settings
 prospector_settings:
   run_containerised: True
-  run_with_llm: False
+  run_with_llm: True
   enabled_rules:
     # Phase 1 Rules
     - VULN_ID_IN_MESSAGE # CVE ID in Message (high confidence)
