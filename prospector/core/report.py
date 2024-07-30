@@ -30,11 +30,15 @@ def json_(
 ):
     fn = filename if filename.endswith(".json") else f"{filename}.json"
 
+    params["enabled_rules"] = list(
+        params["enabled_rules"]
+    )  # Fix for OmegaConf not being JSON serializable
     data = {
         "parameters": params,
         "advisory_record": advisory_record.__dict__,
         "commits": [
-            r.as_dict(no_hash=True, no_rules=False, no_diff=no_diff) for r in results
+            r.as_dict(no_hash=True, no_rules=False, no_diff=no_diff)
+            for r in results
         ],
     }
     logger.info(f"Writing results to {fn}")
@@ -81,7 +85,9 @@ def html_(
     return fn
 
 
-def console_(results: List[Commit], advisory_record: AdvisoryRecord, verbose=False):
+def console_(
+    results: List[Commit], advisory_record: AdvisoryRecord, verbose=False
+):
     def format_annotations(commit: Commit) -> str:
         out = ""
         if verbose:

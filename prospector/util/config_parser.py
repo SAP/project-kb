@@ -184,6 +184,7 @@ class DatabaseConfig:
 class ReportConfig:
     format: str
     name: str
+    no_diff: bool
 
 
 # Schema class for "llm_service" configuration
