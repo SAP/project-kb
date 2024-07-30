@@ -1,13 +1,8 @@
-import csv
-import multiprocessing
 import os
 
 import redis
-import requests
-from dateutil.parser import isoparse
 from rq import Connection, Queue
 from rq.job import Job
-from tqdm import tqdm
 
 from core.prospector import prospector
 from core.report import generate_report
@@ -112,7 +107,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
 
         # Send them to Prospector to run
         with Connection(redis.from_url(prospector_config.redis_url)):
-            queue = Queue()
+            queue = Queue(default_timeout=3600)
 
             job = Job.create(
                 run_prospector_and_generate_report,
