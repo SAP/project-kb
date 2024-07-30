@@ -12,6 +12,7 @@ from evaluation.analyse import (
 )
 from evaluation.dispatch_jobs import (
     dispatch_prospector_jobs,
+    empty_queue,
 )
 
 
@@ -80,6 +81,13 @@ def parse_cli_args(args):
     )
 
     parser.add_argument(
+        "-eq",
+        "--empty-queue",
+        help="Empty the Redis Queue",
+        action="store_true",
+    )
+
+    parser.add_argument(
         "-co",
         "--count",
         help="Count which CVEs from the input data have a corresponding Prospector report.",
@@ -106,6 +114,10 @@ def main(argv):
 
     elif args.analyze and args.stats and not args.rules and not args.execute:
         analyse_statistics(args.input)
+
+    # Remove all jobs from the queue
+    elif args.empty_queue and not args.execute and not args.stats:
+        empty_queue()
 
     # analysis of rules
     elif args.analyze and args.rules and not args.execute:

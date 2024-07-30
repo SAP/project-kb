@@ -1,15 +1,27 @@
 # Evaluate Prospector
 
-This folder contains code to run the evaluation of Prospector.
+This folder contains code to run the evaluation of Prospector using Redis Queue. This means that the `prospector()` function will be packaged as a job and executed by the `prospector_worker` container.
+
+To see what's going on, visualise the output of the worker container with:
+
+```bash
+docker attach prospector_worker_1
+```
+
+To interact with the worker container (or any other container), run:
+```bash
+docker exec -it prospector_worker_1 bash
+```
+
 
 ## Settings
 
-Just like when running Prospector, there is also a configuration file for the evaluation code in this folder: `evaluation/config.yaml`.
-This allows you to select data and set Prospector up in a certain way in one central place.
+Just like when running Prospector, there is also a configuration file for the evaluation code in this folder: `evaluation/config.yaml`. It contains the same fields as `config.yaml`, bundled in the `prospector_settings` field, so you can set everything as usual in one central place.
+All other settings (outside of the `prospector_settings`) are for setting up evaluation specific parameters.
 
-### How should Prospector be run?
+## Enqueuing Jobs
 
-Prospector can either be run containerised or not, set this with the `run_containerised` variable in `config.yaml`.
+
 
 ### Which CVEs should Prospector be run on?
 
