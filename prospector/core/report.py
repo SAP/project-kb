@@ -24,13 +24,22 @@ class SetEncoder(json.JSONEncoder):
 def json_(
     results: List[Commit],
     advisory_record: AdvisoryRecord,
+    params,
     filename: str = "prospector-report.json",
+    no_diff: bool = False,
 ):
     fn = filename if filename.endswith(".json") else f"{filename}.json"
 
+    params["enabled_rules"] = list(
+        params["enabled_rules"]
+    )  # Fix for OmegaConf not being JSON serializable
     data = {
+        "parameters": params,
         "advisory_record": advisory_record.__dict__,
-        "commits": [r.as_dict(no_hash=True, no_rules=False) for r in results],
+        "commits": [
+            r.as_dict(no_hash=True, no_rules=False, no_diff=no_diff)
+            for r in results
+        ],
     }
     logger.info(f"Writing results to {fn}")
     file = Path(fn)
@@ -76,7 +85,9 @@ def html_(
     return fn
 
 
-def console_(results: List[Commit], advisory_record: AdvisoryRecord, verbose=False):
+def console_(
+    results: List[Commit], advisory_record: AdvisoryRecord, verbose=False
+):
     def format_annotations(commit: Commit) -> str:
         out = ""
         if verbose:
@@ -102,17 +113,36 @@ def console_(results: List[Commit], advisory_record: AdvisoryRecord, verbose=Fal
     print(f"Found {count} candidates\nAdvisory record\n{advisory_record}")
 
 
-def generate_report(results, advisory_record, report_type, report_filename):
+def generate_report(
+    results,
+    advisory_record,
+    report_type,
+    report_filename,
+    prospector_params,
+    report_diff=False,
+):
     with ConsoleWriter("Generating report\n") as console:
         match report_type:
             case "console":
                 console_(results, advisory_record, get_level() < logging.INFO)
             case "json":
-                json_(results, advisory_record, report_filename)
+                json_(
+                    results,
+                    advisory_record,
+                    prospector_params,
+                    report_filename,
+                    report_diff,
+                )
             case "html":
                 html_(results, advisory_record, report_filename)
             case "all":
-                json_(results, advisory_record, report_filename)
+                json_(
+                    results,
+                    advisory_record,
+                    prospector_params,
+                    report_filename,
+                    report_diff,
+                )
                 html_(results, advisory_record, report_filename)
             case _:
                 logger.warning("Invalid report type specified, using 'console'")

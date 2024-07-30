@@ -88,30 +88,37 @@ def main(argv):  # noqa: C901
 
         logger.debug("Vulnerability ID: " + config.vuln_id)
 
-    results, advisory_record = prospector(
-        vulnerability_id=config.vuln_id,
-        repository_url=config.repository,
-        publication_date=config.pub_date,
-        vuln_descr=config.description,
-        version_interval=config.version_interval,
-        modified_files=config.modified_files,
-        advisory_keywords=config.keywords,
-        use_nvd=config.use_nvd,
+    params = {
+        "vulnerability_id": config.vuln_id,
+        "repository_url": config.repository,
+        "publication_date": config.pub_date,
+        "vuln_descr": config.description,
+        "version_interval": config.version_interval,
+        "modified_files": config.modified_files,
+        "advisory_keywords": config.keywords,
+        "use_nvd": config.use_nvd,
         # fetch_references=config.fetch_references,
-        backend_address=config.backend,
-        use_backend=config.use_backend,
-        git_cache=config.git_cache,
-        limit_candidates=config.max_candidates,
+        "backend_address": config.backend,
+        "use_backend": config.use_backend,
+        "git_cache": config.git_cache,
+        "limit_candidates": config.max_candidates,
         # ignore_adv_refs=config.ignore_refs,
-        use_llm_repository_url=config.llm_service.use_llm_repository_url,
-        enabled_rules=config.enabled_rules,
-    )
+        "use_llm_repository_url": config.llm_service.use_llm_repository_url,
+        "enabled_rules": config.enabled_rules,
+    }
+
+    results, advisory_record = prospector(**params)
 
     if config.preprocess_only:
         return
 
     report.generate_report(
-        results, advisory_record, config.report, config.report_filename
+        results,
+        advisory_record,
+        config.report,
+        config.report_filename,
+        params,
+        config.report_diff,
     )
 
     execution_time = execution_statistics["core"]["execution time"][0]
