@@ -11,17 +11,51 @@ prospector_reports_no_llm_path: evaluation/data/reports_without_llm/ # reports g
 # Analysis Results
 analysis_results_path: evaluation/data/results/
 
-# Prospector settings
+# Prospector settings (1:1 from the Prospector config.yaml)
 prospector_settings:
-  run_containerised: True
-  run_with_llm: True
+  # Whether to preprocess only the repository's commits or fully run prospector
+  preprocess_only: False
+
+  # Maximum number of commits to process
+  max_candidates: 2000
+
+  fetch_references: False
+
+  # Whether to use the NVD database or not
+  use_nvd: True
+
+  # Whether to use a backend or not: "always", "never", "optional"
+  use_backend: always
+
+  backend: http://backend:8000
+
+  database:
+    user: postgres
+    password: example
+    host: db # Database address; when in containerised version, use 'db', otherwise 'localhost'
+    port: 5432
+    dbname: postgres
+
+  redis_url: redis://localhost:6379/0
+  # LASCHA: change to same format as database
+
+  # LLM Usage (check README for help)
+  llm_service:
+    type: sap # sap or third_party
+    model_name: gpt-4 # gpt-4 or mistral-large-latest
+    temperature: 0.0 # optional, default is 0.0
+    ai_core_sk: sk.json
+
+    # LLM support options (check README for help)
+    use_llm_repository_url: True
+
   enabled_rules:
     # Phase 1 Rules
-    - VULN_ID_IN_MESSAGE # CVE ID in Message (high confidence)
-    - XREF_BUG # Cross Reference?
-    - XREF_GH # Cross Reference?
-    - COMMIT_IN_REFERENCE # Commit in Reference (high confidence)
-    - VULN_ID_IN_LINKED_ISSUE # CVE ID in Issue (high confidence)
+    - VULN_ID_IN_MESSAGE
+    - XREF_BUG
+    - XREF_GH
+    - COMMIT_IN_REFERENCE
+    - VULN_ID_IN_LINKED_ISSUE
     - CHANGES_RELEVANT_FILES
     - CHANGES_RELEVANT_CODE
     - RELEVANT_WORDS_IN_MESSAGE
@@ -35,3 +69,14 @@ prospector_settings:
     - COMMIT_HAS_TWINS
     # Phase 2 Rules (llm_service required!):
     - COMMIT_IS_SECURITY_RELEVANT
+
+  # Report file format: "html", "json", "console" or "all"
+  # and the file name
+  report:
+    format: all
+    name: prospector-report
+    no_diff: False
+
+  git_cache: /tmp/gitcache # When running Prospector containerised
+
+  github_token: <your_api_token>

@@ -6,19 +6,19 @@ from datamodel.advisory import build_advisory_record
 from urllib.parse import urlparse
 from log.logger import create_logger
 
-evaluation_config = OmegaConf.load("evaluation/config.yaml")
+config = OmegaConf.load("evaluation/config.yaml")
 
 logger = create_logger("evaluation.log")
-logger.setLevel(evaluation_config.debug_level)
+logger.setLevel(config.debug_level)
 
-INPUT_DATA_PATH = evaluation_config.input_data_path
+INPUT_DATA_PATH = config.input_data_path
 # Select the folder depending whether LLMs are used or not
 PROSPECTOR_REPORT_PATH = (
-    evaluation_config.prospector_reports_llm_path
-    if evaluation_config.prospector_settings.run_with_llm
-    else evaluation_config.prospector_reports_no_llm_path
+    config.prospector_reports_llm_path
+    if config.prospector_settings.llm_service.use_llm_repository_url
+    else config.prospector_reports_no_llm_path
 )
-ANALYSIS_RESULTS_PATH = evaluation_config.analysis_results_path
+ANALYSIS_RESULTS_PATH = config.analysis_results_path
 
 VULN = ["version", "through", "versions"]
 

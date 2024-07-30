@@ -5,7 +5,6 @@ import signal
 import sys
 
 from evaluation.analyse import (
-    analyse_prospector_reports,
     analyse_statistics,
     analyze_prospector,
     analyze_results_rules,
@@ -13,10 +12,7 @@ from evaluation.analyse import (
 )
 from evaluation.dispatch_jobs import (
     dispatch_prospector_jobs,
-    empty_queue,
-    parallel_execution,
 )
-from evaluation.utils import logger
 
 
 def is_missing(path: str):
@@ -84,20 +80,6 @@ def parse_cli_args(args):
     )
 
     parser.add_argument(
-        "-p",
-        "--parallel",
-        help="Run in parallel on multiple CVEs",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "-eq",
-        "--empty-queue",
-        help="Empty the Redis Queue",
-        action="store_true",
-    )
-
-    parser.add_argument(
         "-co",
         "--count",
         help="Count which CVEs from the input data have a corresponding Prospector report.",
@@ -111,31 +93,16 @@ def main(argv):
     args = parse_cli_args(argv)
 
     # Run Prospector containerised
-    if args.execute and not args.analyze and not args.parallel:
-        logger.info("Dispatching jobs.")
+    if args.execute and not args.analyze:
+        # get_full_commit_ids(args.input)
+        # return
         dispatch_prospector_jobs(args.input, args.cve)
-
-    # Run Prospector in parallel
-    elif args.execute and not args.analyze and args.parallel:
-        while not parallel_execution(args.input):
-            pass
-        # parallel_execution(args.input)
-
-    # Remove all jobs from the queue
-    elif (
-        args.empty_queue
-        and not args.execute
-        and not args.parallel
-        and not args.stats
-    ):
-        empty_queue()
 
     # analysis of Prospector report
     elif (
         args.analyze and not args.rules and not args.execute and not args.stats
     ):
-        analyse_prospector_reports(args.input)
-        # analyze_prospector(args.input)
+        analyze_prospector(args.input)
 
     elif args.analyze and args.stats and not args.rules and not args.execute:
         analyse_statistics(args.input)
