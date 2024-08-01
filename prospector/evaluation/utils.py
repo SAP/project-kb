@@ -1,4 +1,5 @@
 import csv
+import json
 import re
 
 from omegaconf import OmegaConf
@@ -41,6 +42,11 @@ def load_dataset(path: str):
         logger.debug(f"Loaded Dataset at {path}")
         print(f"Loaded Dataset at {path}")
         return [row for row in reader if "CVE" in row[0] and row[3] != "True"]
+
+
+def load_json_file(path: str) -> dict:
+    with open(path, "r") as f:
+        return json.load(f)
 
 
 def is_real_version(text: str):

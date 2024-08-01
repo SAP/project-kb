@@ -50,21 +50,13 @@ def run_prospector_and_generate_report(
         try:
             LLMService(prospector_config.llm_service)
         except Exception as e:
-            logger.debug(f"LLM Service could not be instantiated: {e}")
+            logger.error(f"LLM Service could not be instantiated: {e}")
             raise e
 
     try:
-        results, advisory_record = prospector(
-            vulnerability_id=cve_id,
-            repository_url=repository_url,
-            version_interval=version_interval,
-            backend_address=prospector_config.backend,
-            enabled_rules=prospector_config.enabled_rules,
-            git_cache=prospector_config.git_cache,
-            use_llm_repository_url=prospector_config.llm_service.use_llm_repository_url,
-        )
+        results, advisory_record = prospector(**params)
     except Exception as e:
-        logger.debug(f"prospector() crashed: {e}")
+        logger.error(f"prospector() crashed at {cve_id}: {e}")
         raise e
 
     logger.info(f"prospector() returned. Generating report now.")
@@ -78,7 +70,7 @@ def run_prospector_and_generate_report(
             prospector_params=params,
         )
     except Exception as e:
-        logger.debug(f"Could not create report: {e}")
+        logger.error(f"Could not create report: {e}")
         raise e
 
     # return results, advisory_record
@@ -89,13 +81,14 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    # dataset = dataset[20:25]
+    dataset = dataset[100:]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
 
     logger.debug(f"Enabled rules: {prospector_config.enabled_rules}")
+    logger.info(f"Prospector settings: {prospector_config.enabled_rules}")
 
     dispatched_jobs = 0
     for cve in dataset:
@@ -128,8 +121,14 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
 
             queue.enqueue_job(job)
 
+            registry = queue.failed_job_registry
+            for job_id in registry.get_job_ids():
+                job = Job.fetch(job_id)
+                print(job_id, job.exc_info)
+
         # print(f"Dispatched job {cve[0]} to queue.") # Sanity Check
 
+    logger.info(f"Dispatched {dispatched_jobs} jobs.")
     print(f"Dispatched {dispatched_jobs} jobs.")
 
 
