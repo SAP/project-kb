@@ -6,9 +6,9 @@ import sys
 
 from evaluation.analyse import (
     analyse_prospector_reports,
-    analyse_statistics,
     count_existing_reports,
 )
+from evaluation.analyse_statistics import analyse_statistics
 from evaluation.dispatch_jobs import (
     dispatch_prospector_jobs,
     empty_queue,

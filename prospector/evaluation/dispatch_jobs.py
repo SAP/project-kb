@@ -28,7 +28,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[:100]
+    # dataset = dataset[100:200]
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
@@ -55,12 +55,8 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
                     "cve_id": cve[0],
                     "version_interval": cve[2],
                     "report_type": "json",
-                    "output_file": f"{PROSPECTOR_REPORT_PATH}/{cve[0]}.json",
-                    "repository_url": (
-                        cve[1]
-                        if not prospector_config.llm_service.use_llm_repository_url
-                        else None
-                    ),
+                    "output_file": f"{PROSPECTOR_REPORT_PATH}{cve[0]}.json",
+                    "repository_url": cve[1],
                 },
                 description="Prospector Job",
                 id=cve[0],
