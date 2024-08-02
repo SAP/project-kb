@@ -14,11 +14,7 @@ logger.setLevel(config.debug_level)
 
 INPUT_DATA_PATH = config.input_data_path
 # Select the folder depending whether LLMs are used or not
-PROSPECTOR_REPORT_PATH = (
-    config.prospector_reports_llm_path
-    if config.prospector_settings.llm_service.use_llm_repository_url
-    else config.prospector_reports_no_llm_path
-)
+PROSPECTOR_REPORT_PATH = config.prospector_reports_path
 ANALYSIS_RESULTS_PATH = config.analysis_results_path
 
 VULN = ["version", "through", "versions"]
@@ -118,7 +114,7 @@ def check_advisory(cve, repository=None, nlp=None):
 
 
 def update_summary_execution_table(
-    mode: str, data, data_total: str, filepath: str
+    mode: str, data, total: str, filepath: str
 ) -> None:
     """Updates the latex table at {ANALYSIS_RESULTS_PATH}/`file_path`. For this to work, the table latex code from D6.3 for tracer_dataset_results table must be saved in the file.
 
@@ -164,7 +160,7 @@ def update_summary_execution_table(
 
         # Add the last row showing the total count
         last_row_data = table_lines[23].split("&")
-        last_row_data[col_indices[0]] = f"\\textbf{data_total}"
+        last_row_data[col_indices[0]] = f"\\textbf{total}"
         table_lines[23] = " & ".join(last_row_data)
 
         # Write the updated table back to the file
