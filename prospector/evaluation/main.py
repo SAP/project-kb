@@ -7,18 +7,12 @@ import sys
 from evaluation.analyse import (
     analyse_prospector_reports,
     analyse_statistics,
-    analyze_prospector,
-    analyze_results_rules,
     count_existing_reports,
 )
 from evaluation.dispatch_jobs import (
     dispatch_prospector_jobs,
     empty_queue,
 )
-
-
-def is_missing(path: str):
-    return not os.path.exists(path)
 
 
 def parse_cli_args(args):
@@ -105,13 +99,13 @@ def main(argv):
     if args.execute and not args.analyze:
         dispatch_prospector_jobs(args.input, args.cve)
 
-    # analysis of Prospector report
+    # analysis of Prospector reports
     elif (
         args.analyze and not args.rules and not args.execute and not args.stats
     ):
-        # analyze_prospector(args.input)
         analyse_prospector_reports(args.input)
 
+    # analysis of execution statistics in report
     elif args.analyze and args.stats and not args.rules and not args.execute:
         analyse_statistics(args.input)
 
@@ -119,11 +113,7 @@ def main(argv):
     elif args.empty_queue and not args.execute and not args.stats:
         empty_queue()
 
-    # analysis of rules
-    elif args.analyze and args.rules and not args.execute:
-        analyze_results_rules(args.input)
-
-    # Count how many report there are or there are missing
+    # Count how many reports there are or there are missing
     elif not args.analyze and not args.execute and args.count:
         count_existing_reports(args.input)
 
