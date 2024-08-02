@@ -24,7 +24,55 @@ def to_latex_table():
         print(f"{e[0]} & {e[1][19:]} & {e[5]} \\\\  \hline")  # noqa: W605
 
 
-def run_prospector_and_generate_report(
+def dispatch_prospector_jobs(filename: str, selected_cves: str):
+    """Dispatches jobs to the queue."""
+
+    dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
+    dataset = dataset[:100]
+
+    # Only run a subset of CVEs if the user supplied a selected set
+    if len(selected_cves) != 0:
+        dataset = [c for c in dataset if c[0] in selected_cves]
+
+    logger.debug(f"Enabled rules: {prospector_config.enabled_rules}")
+    logger.info(f"Prospector settings: {prospector_config.enabled_rules}")
+
+    dispatched_jobs = 0
+    for cve in dataset:
+        # Skip already existing reports
+        if os.path.exists(f"{PROSPECTOR_REPORT_PATH}/{cve[0]}.json"):
+            continue
+
+        dispatched_jobs += 1
+
+        # Send them to Prospector to run
+        with Connection(redis.from_url(prospector_config.redis_url)):
+            queue = Queue(default_timeout=3600)
+
+            job = Job.create(
+                _run_prospector_and_generate_report,
+                kwargs={
+                    "cve_id": cve[0],
+                    "version_interval": cve[2],
+                    "report_type": "json",
+                    "output_file": f"{PROSPECTOR_REPORT_PATH}/{cve[0]}.json",
+                    "repository_url": (
+                        cve[1]
+                        if not prospector_config.llm_service.use_llm_repository_url
+                        else None
+                    ),
+                },
+                description="Prospector Job",
+                id=cve[0],
+            )
+
+            queue.enqueue_job(job)
+
+    logger.info(f"Dispatched {dispatched_jobs} jobs.")
+    print(f"Dispatched {dispatched_jobs} jobs.")
+
+
+def _run_prospector_and_generate_report(
     cve_id,
     version_interval,
     report_type: str,
@@ -42,7 +90,7 @@ def run_prospector_and_generate_report(
         "backend_address": prospector_config.backend,
         "git_cache": prospector_config.git_cache,
         "limit_candidates": prospector_config.max_candidates,
-        "use_llm_repository_url": prospector_config.llm_service.use_llm_repository_url,
+        "use_llm_repository_url": False,
         "enabled_rules": prospector_config.enabled_rules,
     }
 
@@ -77,62 +125,9 @@ def run_prospector_and_generate_report(
     return f"Ran Prospector on {cve_id}"
 
 
-def dispatch_prospector_jobs(filename: str, selected_cves: str):
-    """Dispatches jobs to the queue."""
-
-    dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[100:]
-
-    # Only run a subset of CVEs if the user supplied a selected set
-    if len(selected_cves) != 0:
-        dataset = [c for c in dataset if c[0] in selected_cves]
-
-    logger.debug(f"Enabled rules: {prospector_config.enabled_rules}")
-    logger.info(f"Prospector settings: {prospector_config.enabled_rules}")
-
-    dispatched_jobs = 0
-    for cve in dataset:
-        # Skip already existing reports
-        if os.path.exists(f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json"):
-            continue
-
-        dispatched_jobs += 1
-
-        # Send them to Prospector to run
-        with Connection(redis.from_url(prospector_config.redis_url)):
-            queue = Queue(default_timeout=3600)
-
-            job = Job.create(
-                run_prospector_and_generate_report,
-                kwargs={
-                    "cve_id": cve[0],
-                    "version_interval": cve[2],
-                    "report_type": "json",
-                    "output_file": f"{PROSPECTOR_REPORT_PATH}{filename}/{cve[0]}.json",
-                    "repository_url": (
-                        cve[1]
-                        if not prospector_config.llm_service.use_llm_repository_url
-                        else None
-                    ),
-                },
-                description="Prospector Job",
-                id=cve[0],
-            )
-
-            queue.enqueue_job(job)
-
-            registry = queue.failed_job_registry
-            for job_id in registry.get_job_ids():
-                job = Job.fetch(job_id)
-                print(job_id, job.exc_info)
-
-        # print(f"Dispatched job {cve[0]} to queue.") # Sanity Check
-
-    logger.info(f"Dispatched {dispatched_jobs} jobs.")
-    print(f"Dispatched {dispatched_jobs} jobs.")
-
-
 def empty_queue():
+    """Remove all jobs from the queue. Attention: this does not stop jobs that
+    are currently executing."""
     with Connection(redis.from_url(prospector_config.redis_url)):
         queue = Queue("default")
 
