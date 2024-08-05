@@ -18,7 +18,9 @@ b219fd6219ed   adminer              "entrypoint.sh php -…"   47 minutes ago   
 7c540450ab76   redis:alpine         "docker-entrypoint.s…"   47 minutes ago   Up 47 minutes   0.0.0.0:6379->6379/tcp, :::6379->6379/tcp   prospector_redis_1
 ```
 
-[`dispatch_jobs.py`](#running-prospector-on-multiple-cves-dispatch_jobspy) creates jobs with the `prospector()` function in them and enqueues them in a Redis Queue, from which the `prospector_worker` container fetches jobs and executes them. To visualise what is going on, run `docker attach prospector_worker_1` to see the usual console output. In order to change something inside the container, run `docker exec -it prospector_worker_1 bash` to open an interactive bash shell.
+[`dispatch_jobs.py`](#running-prospector-on-multiple-cves-dispatch_jobspy) creates jobs with the `prospector()` function in them and enqueues
+them in a Redis Queue, from which the `prospector_worker` container fetches jobs and executes them. To visualise what is going on, run
+`docker attach prospector_worker_1` to see the usual console output. In order to change something inside the container, run `docker exec -it prospector_worker_1 bash` to open an interactive bash shell.
 
 ## Command Line Options
 
@@ -38,7 +40,7 @@ The configuration file has two parts to it: a main part and a Prospector setting
 
 The main part at the top allows you to set the path to where the input data can be found, where Prospector reports should be saved to and where analysis results should be saved to.
 
-The Prospector part allows you to set the settings for Prospector (independent from the Prospector settings used when running Prospector with `./run_prospector`). **Watch out**: Since the `prospector_worker` container is created in the beginning with the current state of the `config.yaml`, simply saving any changes in `config.yaml` and dispatching new jobs will still run them with the old configuration. For new configuration parameters to take effect, destroy the containers with `make docker-clean` and rebuild them with `make docker-setup`.
+The Prospector part allows you to set the settings for Prospector (independent from the Prospector settings used when running Prospector with `./run_prospector`). **Watch out**: Since the `prospector_worker` container is created in the beginning with the current state of the `config.yaml`, simply saving any changes in `config.yaml` and dispatching new jobs will still run them with the old configuration. For new configuration parameters to take effect, either destroy the containers with `make docker-clean` and rebuild them with `make docker-setup` or open an interactive shell to the container and make your changes to `config.yaml` in there.
 
 ## Script Files explained
 
