@@ -1,58 +1,47 @@
 # Evaluate Prospector
 
-This folder contains code to run the evaluation of Prospector using Redis Queue. This means that the `prospector()` function will be packaged as a job and executed by the `prospector_worker` container.
+This folder contains the scripts used for evaluating Prospector's reports (created and used in Summer 2024). The folder is structured as follows:
 
-To see what's going on, visualise the output of the worker container with:
+1. **Data** folder: contains input data, Prospector reports and results of the analysis of the Prospector reports.
+2. **Scripts**: The scripts used for running Prospector on a batch of CVEs, and for analysing the created reports.
 
-```bash
-docker attach prospector_worker_1
-```
+Prospector is run in the following way in this evaluation:
 
-To interact with the worker container (or any other container), run:
-```bash
-docker exec -it prospector_worker_1 bash
-```
-
-
-## Settings
-
-Just like when running Prospector, there is also a configuration file for the evaluation code in this folder: `evaluation/config.yaml`. It contains the same fields as `config.yaml`, bundled in the `prospector_settings` field, so you can set everything as usual in one central place.
-All other settings (outside of the `prospector_settings`) are for setting up evaluation specific parameters.
-
-## Enqueuing Jobs
-
-
-
-### Which CVEs should Prospector be run on?
-
-The evaluation code expects data input in the form of CSV files with the following columns: `(CSV: ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS)`.
-
-First, if you have your input data saved somewhere else than `/evaluation/data/input/`, please change the `input_data_path` accordingly.
-Give your dataset a descriptive name, such as `steady-dataset.csv`. You can specify
-which dataset you would want to use when running the CL command for evaluation [(List of Command Line Options)](#command-line-options).
-
-
-## Run Evaluation
-
-### Dispatch Prospector Jobs
-To dispatch several Prospector jobs to the queue, use:
+First, the five docker containers must be started with `make docker-setup` or manually with `docker` commands. Once they are running, `docker ps` should show the following:
 
 ```bash
-python3 evaluation/run_multiple -i <name_of_dataset> -e
+CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS          PORTS                                       NAMES
+c73aed108475   prospector_backend   "python ./service/ma…"   47 minutes ago   Up 47 minutes   0.0.0.0:8000->8000/tcp, :::8000->8000/tcp   prospector_backend_1
+2e9da86b09a8   prospector_worker    "/usr/local/bin/star…"   47 minutes ago   Up 47 minutes                                               prospector_worker_1
+b219fd6219ed   adminer              "entrypoint.sh php -…"   47 minutes ago   Up 47 minutes   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp   prospector_adminer_1
+9aacdc04f7c5   postgres             "docker-entrypoint.s…"   47 minutes ago   Up 47 minutes   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp   db
+7c540450ab76   redis:alpine         "docker-entrypoint.s…"   47 minutes ago   Up 47 minutes   0.0.0.0:6379->6379/tcp, :::6379->6379/tcp   prospector_redis_1
 ```
 
-### List of Command Line Options
+[`dispatch_jobs.py`](#running-prospector-on-multiple-cves-dispatch_jobspy) creates jobs with the `prospector()` function in them and enqueues them in a Redis Queue, from which the `prospector_worker` container fetches jobs and executes them. To visualise what is going on, run `docker attach prospector_worker_1` to see the usual console output. In order to change something inside the container, run `docker exec -it prospector_worker_1 bash` to open an interactive bash shell.
 
-* `-i` or `--input`: Specify the input file (likely a CSV with vulnerability data)
-* `-e` or `--execute`: Run Prospector on the input data
-* `-a` or `--analyze`: Analyze the results of previous Prospector runs
-* `-o` or `--output`: Specify an output file (for certain operations)
-* `-r` or `--rules`: Perform rules analysis
-* `-f` or `--folder`: Specify a folder to analyze
-* `-c` or `--cve`: Specify a particular CVE to analyze
-* `-p` or `--parallel`: Run in parallel on multiple CVEs
+## Command Line Options
 
+All scripts are called from `main.py`, depending on the CL flags that are set. The following flags can be set:
 
-## Exisiting Datasets
+1. `-i`: Sets the filename of the file in the input data path.
+2. `-c`: Allows you to select a subset of CVEs, instead of all CVEs from the input data (eg. `-c CVE-2020-1925, CVE-2018-1234`)
+3. `-e`: For *execute*, dispatched jobs for all CVEs from the input data (or the subset if `-c` is set) to the Redis Queue (`dispatch_jobs.py`).
+4. `-a`: Analyses the reports created by Propsector (`analysis.py`)
+5. `-s`: Analyses the statistics part of the Prospector reports (eg. to analyse execution times, `analyse_statistics.py`)
+6. `-eq`: For *empty queue*, to empty the jobs left on the queue.
+7. `-co`: For *count*, to count how many of the CVEs in the input data have a corresponding report.
 
-1. `d63`: Dataset of CVEs and their fixing commits used in D6.3 of AssureMOSS. Formerly called `tracer_dataset_correct_full_unsupervised.csv`.
+## Configuration File
+
+The configuration file has two parts to it: a main part and a Prospector settings part, which is a copy of a part of the original Prospector `config.yaml` file.
+
+The main part at the top allows you to set the path to where the input data can be found, where Prospector reports should be saved to and where analysis results should be saved to.
+
+The Prospector part allows you to set the settings for Prospector (independent from the Prospector settings used when running Prospector with `./run_prospector`). **Watch out**: Since the `prospector_worker` container is created in the beginning with the current state of the `config.yaml`, simply saving any changes in `config.yaml` and dispatching new jobs will still run them with the old configuration. For new configuration parameters to take effect, destroy the containers with `make docker-clean` and rebuild them with `make docker-setup`.
+
+## Script Files explained
+
+### Running Prospector on multiple CVEs (`dispatch_jobs.py`)
+
+The code for running Prospector is in `dispatch_jobs.py`. It exctracts CVE IDs from the data given in the path constructed as: `input_data_path` + the `-i` CL parameter. It then dispatches a job for each CVE ID to the queue, from where these jobs get executed.

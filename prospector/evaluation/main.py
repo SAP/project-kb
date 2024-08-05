@@ -40,20 +40,6 @@ def parse_cli_args(args):
     )
 
     parser.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        help="Output file",
-    )
-
-    parser.add_argument(
-        "-r",
-        "--rules",
-        action="store_true",
-        help="Rules analysis option",
-    )
-
-    parser.add_argument(
         "-s",
         "--stats",
         action="store_true",
