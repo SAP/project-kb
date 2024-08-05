@@ -5,6 +5,7 @@ import signal
 import sys
 
 from evaluation.analyse import (
+    analyse_category_flows,
     analyse_prospector_reports,
     count_existing_reports,
 )
@@ -78,6 +79,13 @@ def parse_cli_args(args):
         action="store_true",
     )
 
+    parser.add_argument(
+        "-sa",
+        "--sankey",
+        help="Create a Sankey Diagram with detailed summary execution JSON files.",
+        action="store_true",
+    )
+
     return parser.parse_args()
 
 
@@ -88,14 +96,16 @@ def main(argv):
     if args.execute and not args.analyze:
         dispatch_prospector_jobs(args.input, args.cve)
 
-    # analysis of Prospector reports
-    elif args.analyze and not args.execute and not args.stats:
-        analyse_prospector_reports(args.input)
-
-    # analysis of execution statistics in report
-    elif args.analyze and args.stats and not args.execute:
-        # analyse_statistics(args.input)
-        overall_execution_time(args.input)
+    elif args.analyze and not args.execute:
+        # analysis of execution statistics in report
+        if args.stats:
+            # analyse_statistics(args.input)
+            overall_execution_time(args.input)
+        elif args.sankey:
+            analyse_category_flows()
+        # analysis of Prospector reports
+        else:
+            analyse_prospector_reports(args.input)
 
     # Remove all jobs from the queue
     elif args.empty_queue and not args.execute and not args.stats:

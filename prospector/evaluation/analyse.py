@@ -1,3 +1,5 @@
+from collections import defaultdict
+from datetime import datetime
 import json
 import os
 from typing import List
@@ -5,7 +7,11 @@ from typing import List
 from tqdm import tqdm
 
 from evaluation.utils import (
+    COMPARE_DIRECTORY_1,
+    COMPARE_DIRECTORY_2,
     load_dataset,
+    load_json_file,
+    save_dict_to_json,
     update_summary_execution_table,
     logger,
     INPUT_DATA_PATH,
@@ -14,21 +20,21 @@ from evaluation.utils import (
 )
 
 
-STRONG_RULES = [
-    "COMMIT_IN_REFERENCE",
-    "VULN_ID_IN_MESSAGE",
-    "XREF_BUG",
-    "XREF_GH",
-    "VULN_ID_IN_LINKED_ISSUE",
-]
-# Analyse old reports before rule names changed
 # STRONG_RULES = [
 #     "COMMIT_IN_REFERENCE",
-#     "CVE_ID_IN_MESSAGE",
-#     "CROSS_REFERENCED_JIRA_LINK",
-#     "CROSS_REFERENCED_GH_LINK",
-#     "CVE_ID_IN_LINKED_ISSUE",
+#     "VULN_ID_IN_MESSAGE",
+#     "XREF_BUG",
+#     "XREF_GH",
+#     "VULN_ID_IN_LINKED_ISSUE",
 # ]
+# Analyse old reports before rule names changed
+STRONG_RULES = [
+    "COMMIT_IN_REFERENCE",
+    "CVE_ID_IN_MESSAGE",
+    "CROSS_REFERENCED_JIRA_LINK",
+    "CROSS_REFERENCED_GH_LINK",
+    "CVE_ID_IN_LINKED_ISSUE",
+]
 
 WEAK_RULES = [
     "CHANGES_RELEVANT_FILES",
@@ -73,19 +79,19 @@ def analyse_prospector_reports(filename: str):
         "false_positive": [],
     }
     # Analyse old reports before rule names changed
-    # results = {
-    #     "high": [],
-    #     "COMMIT_IN_REFERENCE": [],
-    #     "CVE_ID_IN_MESSAGE": [],
-    #     "CVE_ID_IN_LINKED_ISSUE": [],
-    #     "CROSS_REFERENCED_JIRA_LINK": [],
-    #     "CROSS_REFERENCED_GH_LINK": [],
-    #     "medium": [],
-    #     "low": [],
-    #     "not_found": [],
-    #     "not_reported": [],
-    #     "false_positive": [],
-    # }
+    results = {
+        "high": [],
+        "COMMIT_IN_REFERENCE": [],
+        "CVE_ID_IN_MESSAGE": [],
+        "CVE_ID_IN_LINKED_ISSUE": [],
+        "CROSS_REFERENCED_JIRA_LINK": [],
+        "CROSS_REFERENCED_GH_LINK": [],
+        "medium": [],
+        "low": [],
+        "not_found": [],
+        "not_reported": [],
+        "false_positive": [],
+    }
 
     print(f"Analysing reports in {PROSPECTOR_REPORT_PATH}")
     logger.info(f"Attempting to analyse {len(dataset)} CVEs.")
@@ -120,11 +126,11 @@ def analyse_prospector_reports(filename: str):
     table_data = []
 
     # Combine the two Cross Reference rules into one count
-    results["XREF_BUG"] += results["XREF_GH"]
-    results.pop("XREF_GH")
+    # results["XREF_BUG"] += results["XREF_GH"]
+    # results.pop("XREF_GH")
     # Analyse old reports before rule names changed
-    # results["CROSS_REFERENCED_JIRA_LINK"] += results["CROSS_REFERENCED_GH_LINK"]
-    # results.pop("CROSS_REFERENCED_GH_LINK")
+    results["CROSS_REFERENCED_JIRA_LINK"] += results["CROSS_REFERENCED_GH_LINK"]
+    results.pop("CROSS_REFERENCED_GH_LINK")
 
     logger.info(f"Ran analysis on {PROSPECTOR_REPORT_PATH}.")
 
@@ -138,20 +144,32 @@ def analyse_prospector_reports(filename: str):
         mode="MVI",
         data=table_data,
         total=str(analysed_reports_count),
-        filepath=f"{ANALYSIS_RESULTS_PATH}summary_execution_results.tex",
+        filepath=f"{ANALYSIS_RESULTS_PATH}summary_execution/table.tex",
     )
 
     logger.info(
         f"Analysed {analysed_reports_count}, couldn't find reports for {len(reports_not_found)} out of {attempted_count} analysis attempts."
     )
-    logger.debug(f"Strong rules matching: {results['high']}")
-    logger.debug(
-        f"CVEs matching Commit in reference: {[item[0] for item in results['high'] if item[1] == 'COMMIT_IN_REFERENCE']}"
-    )
-    logger.debug(f"Weak rules matching: {results['medium']}")
 
-    logger.debug(f"False positive reports: {results['false_positive']}")
-    logger.debug(f"Not found reports: {results['not_found']}")
+    # Save detailed results in a json file (instead of cluttering logs)
+    batch_name = os.path.basename(os.path.normpath(PROSPECTOR_REPORT_PATH))
+    detailed_results_output_path = (
+        f"{ANALYSIS_RESULTS_PATH}summary_execution/{batch_name}.json"
+    )
+    printout = {
+        "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),
+        "results": results,
+        "missing": reports_not_found,
+    }
+    try:
+        with open(detailed_results_output_path, "r") as f:
+            existing_data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing_data = {"summary_execution_details": []}
+
+    existing_data["summary_execution_details"].append(printout)
+
+    save_dict_to_json(existing_data, detailed_results_output_path)
 
 
 def _analyse_report(
@@ -289,3 +307,82 @@ def count_existing_reports(data_filepath):
     print(
         f"There are {len(dataset) - len(missing_reports)} reports. Reports are missing for {len(missing_reports)} CVEs: {missing_reports}"
     )
+
+
+def analyse_category_flows():
+    """Analyse which CVEs changed category in different executions."""
+    data1 = load_json_file(COMPARE_DIRECTORY_1)
+    data2 = load_json_file(COMPARE_DIRECTORY_2)
+
+    transitions = defaultdict(lambda: defaultdict(list))
+
+    results1 = _create_cve_to_category_mapping(
+        data1["summary_execution_details"][-1]["results"]
+    )
+    results2 = _create_cve_to_category_mapping(
+        data2["summary_execution_details"][-1]["results"]
+    )
+
+    for cve, category in results1.items():
+        new_category = results2.get(cve, None)
+        if not new_category:
+            print(f"No report for {cve} in second batch.")
+            continue
+
+        if results2.get(cve, "") != category:
+            transitions[category][new_category].append(cve)
+
+    save_dict_to_json(
+        transitions,
+        f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json",
+    )
+
+    # Create a sankey diagram
+    # source = transitions.keys()
+    # _create_sankey_diagram(source, target, value)
+
+
+def _create_cve_to_category_mapping(results: dict) -> dict:
+    res = {}
+    for category in results.keys():
+        for cve in results[category]:
+            res[cve] = category
+
+    return res
+
+
+# Create Sankey Diagram to see how the reports change category
+def _create_sankey_diagram(source: list, target: list, value: list):
+    """Creates a sankey diagram between two files containing summary execution
+    details, ie. a json file with a `results` field containing:
+        - high
+        - commit in reference
+        - vuln id in message
+        - vuln id in linked issue
+        - xref bug
+        - medium
+        - low
+        - not_found
+        - not_reported
+        - false_positive
+
+    Attention: Not finished!
+    """
+    data = load_json_file(
+        f"{ANALYSIS_RESULTS_PATH}summary_execution/{filename1}.json"
+    )
+    details = data.get("summary_execution_details", [])
+    results = details[-1].get("results", {})
+
+    # Initialize a dictionary to hold transitions
+    transitions = defaultdict(lambda: defaultdict(int))
+
+    # Create a list of categories and CVEs
+    cve_categories = [
+        (category, cve) for category, cves in results.items() for cve in cves
+    ]
+    for i, (cat1, cve1) in enumerate(cve_categories):
+        for cat2, cve2 in cve_categories[i + 1 :]:
+            if cve1 == cve2:
+                transitions[cat1][cat2] += 1
+    print(transitions)
