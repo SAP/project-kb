@@ -9,6 +9,7 @@ from evaluation.utils import (
     INPUT_DATA_PATH,
     PROSPECTOR_REPORT_PATH,
     load_dataset,
+    load_json_file,
 )
 
 
@@ -189,3 +190,79 @@ def overall_execution_time(input_file: str):
     plt.ylabel("Execution Time (s)")
 
     plt.savefig(f"{ANALYSIS_RESULTS_PATH}plots/boxplot-execution-time.png")
+
+
+def commit_classification_time(input_file: str):
+    """Create a boxplot to compare the time used for commit classification
+    across both categories of reports with LLM usage."""
+    data = []
+
+    file = f"{INPUT_DATA_PATH}{input_file}.csv"
+    dataset = load_dataset(file)
+    dataset = dataset[:100]
+
+    directories = {
+        "NVI": "evaluation/data/reports_with_llm",
+        "MVI": "evaluation/data/reports_with_llm_mvi",
+    }
+
+    for batch, path in directories.items():
+        for record in dataset:
+            try:
+                report = load_json_file(f"{path}/{record[0]}.json")
+                if (
+                    "commit_classification"
+                    not in report["processing_statistics"]["LLM"]
+                ):
+                    print(f"No cc stats for {path}/{record[0]}.json")
+                    continue
+                cc_times = report["processing_statistics"]["LLM"][
+                    "commit_classification"
+                ]["execution time"]
+                data.append(
+                    {
+                        "set": batch,
+                        "core_execution_time": sum(cc_times),
+                    }
+                )
+            except FileNotFoundError:
+                continue
+
+    df = pd.DataFrame(data)
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+
+    # Create boxplot with logarithmic scale
+    sns.boxplot(x="set", y="core_execution_time", data=df, showfliers=False)
+
+    # Add individual points
+    sns.stripplot(
+        x="set",
+        y="core_execution_time",
+        data=df,
+        color=".3",
+        size=4,
+        jitter=True,
+        alpha=0.5,
+    )
+
+    # Set logarithmic scale for y-axis
+    plt.yscale("log")
+
+    # Customize the plot
+    plt.title("Overall Execution Time Comparison (Log Scale)")
+    plt.xlabel("Report Set")
+    plt.ylabel("Execution Time (s)")
+
+    # Add grid for better readability
+    plt.grid(True, which="both", ls="-", alpha=0.2)
+
+    # Tight layout to prevent cutting off labels
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(
+        f"{ANALYSIS_RESULTS_PATH}plots/commit-classification-time.png", dpi=300
+    )
+    plt.close()

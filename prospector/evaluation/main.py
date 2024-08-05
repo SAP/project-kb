@@ -11,6 +11,7 @@ from evaluation.analyse import (
 )
 from evaluation.analyse_statistics import (
     analyse_statistics,
+    commit_classification_time,
     overall_execution_time,
 )
 from evaluation.dispatch_jobs import (
@@ -100,7 +101,8 @@ def main(argv):
         # analysis of execution statistics in report
         if args.stats:
             # analyse_statistics(args.input)
-            overall_execution_time(args.input)
+            # overall_execution_time(args.input)
+            commit_classification_time(args.input)
         elif args.sankey:
             analyse_category_flows()
         # analysis of Prospector reports

@@ -27,8 +27,13 @@ def load_dataset(path: str):
 
 
 def load_json_file(path: str) -> dict:
-    with open(path, "r") as f:
-        return json.load(f)
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise
+    except Exception:
+        raise
 
 
 def save_dict_to_json(dictionary: dict, path: str):
