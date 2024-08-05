@@ -8,7 +8,10 @@ from evaluation.analyse import (
     analyse_prospector_reports,
     count_existing_reports,
 )
-from evaluation.analyse_statistics import analyse_statistics
+from evaluation.analyse_statistics import (
+    analyse_statistics,
+    overall_execution_time,
+)
 from evaluation.dispatch_jobs import (
     dispatch_prospector_jobs,
     empty_queue,
@@ -86,14 +89,13 @@ def main(argv):
         dispatch_prospector_jobs(args.input, args.cve)
 
     # analysis of Prospector reports
-    elif (
-        args.analyze and not args.rules and not args.execute and not args.stats
-    ):
+    elif args.analyze and not args.execute and not args.stats:
         analyse_prospector_reports(args.input)
 
     # analysis of execution statistics in report
-    elif args.analyze and args.stats and not args.rules and not args.execute:
-        analyse_statistics(args.input)
+    elif args.analyze and args.stats and not args.execute:
+        # analyse_statistics(args.input)
+        overall_execution_time(args.input)
 
     # Remove all jobs from the queue
     elif args.empty_queue and not args.execute and not args.stats:

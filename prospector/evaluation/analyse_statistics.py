@@ -148,32 +148,44 @@ def _get_cc_num_commits(filepath):
         return num
 
 
-# def overall_execution_time():
-#     """Create a boxplot to compare the overall execution time across four
-#     categories of reports."""
-#     data = []
+def overall_execution_time(input_file: str):
+    """Create a boxplot to compare the overall execution time across four
+    categories of reports."""
+    data = []
 
-#     file = f"{INPUT_DATA_PATH}d63.csv"
-#     dataset = load_dataset(file)
+    file = f"{INPUT_DATA_PATH}{input_file}.csv"
+    dataset = load_dataset(file)
+    dataset = dataset[:100]
 
-#     for record in dataset:
-#         try:
-#             with open(f"{PROSPECTOR_REPORT_PATH}{record[0]}", "r") as file:
-#                 report = json.load(file)
-#                 core_execution_time = report["processing_statistics"]["core"][
-#                     "execution time"
-#                 ][0]
-#                 data.append(
-#                     {"set": "hello", "core_execution_time": core_execution_time}
-#                 )
-#         except FileNotFoundError:
-#             continue
+    directories = {
+        "without LLM NVI": "evaluation/data/reports_without_llm",
+        "with LLM NVI": "evaluation/data/reports_with_llm",
+        "without LLM MVI": "evaluation/data/reports_without_llm_mvi",
+        "with LLM MVI": "evaluation/data/reports_with_llm_mvi",
+    }
 
-#     df = pd.DataFrame(data)
+    for batch, path in directories.items():
+        for record in dataset:
+            try:
+                with open(f"{path}/{record[0]}.json", "r") as file:
+                    report = json.load(file)
+                    core_execution_time = report["processing_statistics"][
+                        "core"
+                    ]["execution time"][0]
+                    data.append(
+                        {
+                            "set": batch,
+                            "core_execution_time": core_execution_time,
+                        }
+                    )
+            except FileNotFoundError:
+                continue
 
-#     sns.boxplot(x="set", y="core_execution_time", data=df)
-#     plt.title("Overall Execution Time Comparison")
-#     plt.xlabel("Report Set")
-#     plt.ylabel("Execution Time (s)")
+    df = pd.DataFrame(data)
 
-#     plt.show()
+    sns.boxplot(x="set", y="core_execution_time", data=df)
+    plt.title("Overall Execution Time Comparison")
+    plt.xlabel("Report Set")
+    plt.ylabel("Execution Time (s)")
+
+    plt.savefig(f"{ANALYSIS_RESULTS_PATH}plots/boxplot-execution-time.png")
