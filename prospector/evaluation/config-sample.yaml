@@ -1,0 +1,61 @@
+# Debug Level
+debug_level: INFO
+
+# Input Data
+input_data_path: evaluation/data/input/ # datasets to run prospector on (CSV: ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS)
+
+# Prospector Reports
+prospector_reports_path: evaluation/data/reports_without_llm/
+
+# Analysis Results
+analysis_results_path: evaluation/data/results/
+
+# Report Comparison directories
+compare_directory1: evaluation/data/matteo_reports/d63/
+compare_directory2: evaluation/data/reports_without_llm_mvi/d63_correct_us/
+
+# Prospector settings (from Prospector config.yaml)
+prospector_settings:
+  use_backend: always
+
+  backend: http://backend:8000
+
+  database:
+    user: postgres
+    password: example
+    host: db
+    port: 5432
+    dbname: postgres
+
+  redis_url: redis://localhost:6379/0
+
+  # LLM Usage
+  llm_service:
+    type: sap
+    model_name: gpt-4
+    temperature: 0.0
+    ai_core_sk: sk.json
+
+    # LLM support options
+    use_llm_repository_url: True
+
+  enabled_rules:
+    # Phase 1 Rules
+    - VULN_ID_IN_MESSAGE
+    - XREF_BUG
+    - XREF_GH
+    - COMMIT_IN_REFERENCE
+    - VULN_ID_IN_LINKED_ISSUE
+    - CHANGES_RELEVANT_FILES
+    - CHANGES_RELEVANT_CODE
+    - RELEVANT_WORDS_IN_MESSAGE
+    - ADV_KEYWORDS_IN_FILES
+    - ADV_KEYWORDS_IN_MSG
+    - SEC_KEYWORDS_IN_MESSAGE
+    - SEC_KEYWORDS_IN_LINKED_GH
+    - SEC_KEYWORDS_IN_LINKED_BUG
+    - GITHUB_ISSUE_IN_MESSAGE
+    - BUG_IN_MESSAGE
+    - COMMIT_HAS_TWINS
+    # Phase 2 Rules (llm_service required!):
+    # - COMMIT_IS_SECURITY_RELEVANT
