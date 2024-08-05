@@ -174,10 +174,8 @@ def prospector(  # noqa: C901
             f"Number of candidates exceeds {limit_candidates}, aborting."
         )
 
-        ConsoleWriter.print(
-            f"Candidates limitlimit exceeded: {len(candidates)}."
-        )
-        return None, len(candidates)
+        ConsoleWriter.print(f"Candidates limit exceeded: {len(candidates)}.")
+        raise Exception(f"Candidate limit exceeded: {len(candidates)}.")
 
     with ExecutionTimer(
         core_statistics.sub_collection("commit preprocessing")
@@ -232,7 +230,7 @@ def prospector(  # noqa: C901
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 1800:
                     logger.error("Processing timeout")
-                    return None, len(candidates)
+                    raise Exception("Processing timeout")
 
             else:
                 writer.print("\nAll commits found in the backend")

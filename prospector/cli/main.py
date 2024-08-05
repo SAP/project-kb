@@ -107,7 +107,13 @@ def main(argv):  # noqa: C901
         "enabled_rules": config.enabled_rules,
     }
 
-    results, advisory_record = prospector(**params)
+    try:
+        results, advisory_record = prospector(**params)
+    except Exception as e:
+        ConsoleWriter.print(
+            f"Prospector function couldn't return successfully with {config.vuln_id}: {e}\n"
+        )
+        return
 
     if config.preprocess_only:
         return
