@@ -1,5 +1,8 @@
 from datetime import datetime
 import json
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from typing import Tuple
 from evaluation.utils import (
     ANALYSIS_RESULTS_PATH,
@@ -34,7 +37,7 @@ def analyse_statistics(filename: str):  # noqa: C901
         # Each itm has ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
         filepath = PROSPECTOR_REPORT_PATH + filename + f"/{itm[0]}.json"
         try:
-            repo_time, avg_cc_time, total_cc_time = process_llm_statistics(
+            repo_time, avg_cc_time, total_cc_time = _process_llm_statistics(
                 filepath
             )
 
@@ -63,7 +66,7 @@ def analyse_statistics(filename: str):  # noqa: C901
     for itm in dataset:
         filepath = PROSPECTOR_REPORT_PATH + filename + f"/{itm[0]}.json"
         try:
-            cc_num_commits = get_cc_num_commits(filepath)
+            cc_num_commits = _get_cc_num_commits(filepath)
             break
 
         except FileNotFoundError:
@@ -96,7 +99,7 @@ def analyse_statistics(filename: str):  # noqa: C901
         json.dump(data, f, indent=2)
 
 
-def process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
+def _process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
     """Extracts the LLM statistics saved in Prospector's JSON report.
 
     Params:
@@ -131,7 +134,7 @@ def process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
             raise ValueError
 
 
-def get_cc_num_commits(filepath):
+def _get_cc_num_commits(filepath):
     """Returns how many commits the commit classification rule was applied to."""
     with open(filepath, "r") as file:
         data = json.load(file)
@@ -143,3 +146,34 @@ def get_cc_num_commits(filepath):
         )
 
         return num
+
+
+# def overall_execution_time():
+#     """Create a boxplot to compare the overall execution time across four
+#     categories of reports."""
+#     data = []
+
+#     file = f"{INPUT_DATA_PATH}d63.csv"
+#     dataset = load_dataset(file)
+
+#     for record in dataset:
+#         try:
+#             with open(f"{PROSPECTOR_REPORT_PATH}{record[0]}", "r") as file:
+#                 report = json.load(file)
+#                 core_execution_time = report["processing_statistics"]["core"][
+#                     "execution time"
+#                 ][0]
+#                 data.append(
+#                     {"set": "hello", "core_execution_time": core_execution_time}
+#                 )
+#         except FileNotFoundError:
+#             continue
+
+#     df = pd.DataFrame(data)
+
+#     sns.boxplot(x="set", y="core_execution_time", data=df)
+#     plt.title("Overall Execution Time Comparison")
+#     plt.xlabel("Report Set")
+#     plt.ylabel("Execution Time (s)")
+
+#     plt.show()

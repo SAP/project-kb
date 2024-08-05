@@ -287,5 +287,5 @@ def count_existing_reports(data_filepath):
             missing_reports.append(cve_id)
 
     print(
-        f"There is no report for {len(missing_reports)} CVEs: {missing_reports}"
+        f"There are {len(dataset) - len(missing_reports)} reports. Reports are missing for {len(missing_reports)} CVEs: {missing_reports}"
     )
