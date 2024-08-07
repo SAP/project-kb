@@ -266,3 +266,64 @@ def commit_classification_time(input_file: str):
         f"{ANALYSIS_RESULTS_PATH}plots/commit-classification-time.png", dpi=300
     )
     plt.close()
+
+
+def candidates_execution_time(input_file: str):
+    """Creates a plot to see the relationship between number of candidates and
+    time needed for the execution."""
+    data = {
+        "cve_id": [],
+        "execution_times": [],
+        "num_candidates": [],
+    }
+
+    file = f"{INPUT_DATA_PATH}{input_file}.csv"
+    dataset = load_dataset(file)
+    # dataset = dataset[:100]
+
+    directories = {
+        "NVI": "evaluation/data/reports_without_llm_mvi",
+        # "MVI": "evaluation/data/reports_with_llm_mvi",
+    }
+
+    for batch, path in directories.items():
+        for record in dataset:
+            try:
+                if record[0] == "CVE-2020-8134":
+                    continue
+                report = load_json_file(f"{path}/{record[0]}.json")
+                exec_time = report["processing_statistics"]["core"][
+                    "execution time"
+                ][0]
+                cands = report["processing_statistics"]["core"]["candidates"]
+
+            except Exception as e:
+                print(f"Did not process {record[0]} because of {e}")
+                continue
+
+            data["cve_id"].append(record[0])
+            data["execution_times"].append(exec_time)
+            data["num_candidates"].append(cands)
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+
+    df = pd.DataFrame.from_dict(data)
+    print(df)
+    sns.jointplot(x="execution_times", y="num_candidates", data=df, kind="reg")
+
+    # Save the figure
+    plt.savefig(
+        f"{ANALYSIS_RESULTS_PATH}plots/correlation-time-num-candidates.png",
+        dpi=300,
+    )
+    plt.close()
+
+    # Histogram for the number of candidates
+    plt.figure(figsize=(10, 6))
+    plt.hist(df["num_candidates"], bins=30, edgecolor="black")
+    plt.title("Distribution of Number of Candidates")
+    plt.xlabel("Number of Candidates")
+    plt.ylabel("Frequency")
+    plt.savefig(f"{ANALYSIS_RESULTS_PATH}plots/candidates-distribution.png")
+    plt.close()
