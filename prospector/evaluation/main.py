@@ -8,9 +8,11 @@ from evaluation.analyse import (
     analyse_category_flows,
     analyse_prospector_reports,
     count_existing_reports,
+    difference_ground_truth_datasets,
 )
 from evaluation.analyse_statistics import (
     analyse_statistics,
+    candidates_execution_time,
     commit_classification_time,
     overall_execution_time,
 )
@@ -81,9 +83,16 @@ def parse_cli_args(args):
     )
 
     parser.add_argument(
-        "-sa",
-        "--sankey",
-        help="Create a Sankey Diagram with detailed summary execution JSON files.",
+        "-fl",
+        "--flow",
+        help="Analyse which CVEs changed from one category to another given two detailed summary execution JSON files.",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "-t",
+        "--temporary",
+        help="Run whichever temporary function is set to temporary. This allows you to write use-once function and run it easily.",
         action="store_true",
     )
 
@@ -102,8 +111,10 @@ def main(argv):
         if args.stats:
             # analyse_statistics(args.input)
             # overall_execution_time(args.input)
-            commit_classification_time(args.input)
-        elif args.sankey:
+            # commit_classification_time(args.input)
+            candidates_execution_time(args.input)
+
+        elif args.flow:
             analyse_category_flows()
         # analysis of Prospector reports
         else:
@@ -116,6 +127,9 @@ def main(argv):
     # Count how many reports there are or there are missing
     elif not args.analyze and not args.execute and args.count:
         count_existing_reports(args.input)
+
+    elif not args.analyze and not args.execute and args.temporary:
+        difference_ground_truth_datasets()
 
     # Cannot choose both analyse and execute, stop here.
     elif args.analyze and args.execute:

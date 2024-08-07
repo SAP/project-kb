@@ -1,4 +1,5 @@
 from collections import defaultdict
+import csv
 from datetime import datetime
 import json
 import os
@@ -19,22 +20,41 @@ from evaluation.utils import (
     ANALYSIS_RESULTS_PATH,
 )
 
+# The number of top commits to consider for 'high confidence' classification
+NUM_TOP_COMMITS = 10
 
-# STRONG_RULES = [
-#     "COMMIT_IN_REFERENCE",
-#     "VULN_ID_IN_MESSAGE",
-#     "XREF_BUG",
-#     "XREF_GH",
-#     "VULN_ID_IN_LINKED_ISSUE",
-# ]
-# Analyse old reports before rule names changed
-STRONG_RULES = [
-    "COMMIT_IN_REFERENCE",
-    "CVE_ID_IN_MESSAGE",
-    "CROSS_REFERENCED_JIRA_LINK",
-    "CROSS_REFERENCED_GH_LINK",
-    "CVE_ID_IN_LINKED_ISSUE",
-]
+cc_rule_as_strong_rule = True
+# Whether to use the old rule names (old: COMMIT_IN_REFERENCE,
+# CVE_ID_IN_MESSAGE, CVE_ID_IN_LINKED_ISSUE, CROSS_REFERENCED_JIRA_LINK,
+# CROSS_REFERENCED_GH_LINK)
+use_old_rule_names = True if "matteo" in PROSPECTOR_REPORT_PATH else False
+
+
+if cc_rule_as_strong_rule and not use_old_rule_names:
+    STRONG_RULES = [
+        "COMMIT_IN_REFERENCE",
+        "VULN_ID_IN_MESSAGE",
+        "XREF_BUG",
+        "XREF_GH",
+        "VULN_ID_IN_LINKED_ISSUE",
+        "COMMIT_IS_SECURITY_RELEVANT",
+    ]
+elif use_old_rule_names:
+    STRONG_RULES = [
+        "COMMIT_IN_REFERENCE",
+        "CVE_ID_IN_MESSAGE",
+        "CROSS_REFERENCED_JIRA_LINK",
+        "CROSS_REFERENCED_GH_LINK",
+        "CVE_ID_IN_LINKED_ISSUE",
+    ]
+else:
+    STRONG_RULES = [
+        "COMMIT_IN_REFERENCE",
+        "VULN_ID_IN_MESSAGE",
+        "XREF_BUG",
+        "XREF_GH",
+        "VULN_ID_IN_LINKED_ISSUE",
+    ]
 
 WEAK_RULES = [
     "CHANGES_RELEVANT_FILES",
@@ -55,7 +75,8 @@ def analyse_prospector_reports(filename: str):
     """Analyses Prospector reports. Creates the summary_execution_results table."""
     file = INPUT_DATA_PATH + filename + ".csv"
     dataset = load_dataset(file)
-    # dataset = dataset[746:747]  # Actual line number in D53.csv -2
+    # dataset = dataset[:100]  # Actual line number in D53.csv -2
+    # dataset = dataset[198:199]  # Actual line number in D53.csv -2
 
     # Keep track of how many reports were attempted to be analysed
     attempted_count = 0
@@ -65,33 +86,35 @@ def analyse_prospector_reports(filename: str):
     reports_not_found = []
 
     #### Data to insert into table
-    results = {
-        "high": [],
-        "COMMIT_IN_REFERENCE": [],
-        "VULN_ID_IN_MESSAGE": [],
-        "VULN_ID_IN_LINKED_ISSUE": [],
-        "XREF_BUG": [],
-        "XREF_GH": [],
-        "medium": [],
-        "low": [],
-        "not_found": [],
-        "not_reported": [],
-        "false_positive": [],
-    }
-    # Analyse old reports before rule names changed
-    results = {
-        "high": [],
-        "COMMIT_IN_REFERENCE": [],
-        "CVE_ID_IN_MESSAGE": [],
-        "CVE_ID_IN_LINKED_ISSUE": [],
-        "CROSS_REFERENCED_JIRA_LINK": [],
-        "CROSS_REFERENCED_GH_LINK": [],
-        "medium": [],
-        "low": [],
-        "not_found": [],
-        "not_reported": [],
-        "false_positive": [],
-    }
+    if use_old_rule_names:
+        results = {
+            "high": [],
+            "COMMIT_IN_REFERENCE": [],
+            "CVE_ID_IN_MESSAGE": [],
+            "CVE_ID_IN_LINKED_ISSUE": [],
+            "CROSS_REFERENCED_JIRA_LINK": [],
+            "CROSS_REFERENCED_GH_LINK": [],
+            "medium": [],
+            "low": [],
+            "not_found": [],
+            "not_reported": [],
+            "false_positive": [],
+        }
+    else:
+        results = {
+            "high": [],
+            "COMMIT_IN_REFERENCE": [],
+            "VULN_ID_IN_MESSAGE": [],
+            "VULN_ID_IN_LINKED_ISSUE": [],
+            "XREF_BUG": [],
+            "XREF_GH": [],
+            "COMMIT_IS_SECURITY_RELEVANT": [],
+            "medium": [],
+            "low": [],
+            "not_found": [],
+            "not_reported": [],
+            "false_positive": [],
+        }
 
     print(f"Analysing reports in {PROSPECTOR_REPORT_PATH}")
     logger.info(f"Attempting to analyse {len(dataset)} CVEs.")
@@ -126,11 +149,21 @@ def analyse_prospector_reports(filename: str):
     table_data = []
 
     # Combine the two Cross Reference rules into one count
-    # results["XREF_BUG"] += results["XREF_GH"]
-    # results.pop("XREF_GH")
-    # Analyse old reports before rule names changed
-    results["CROSS_REFERENCED_JIRA_LINK"] += results["CROSS_REFERENCED_GH_LINK"]
-    results.pop("CROSS_REFERENCED_GH_LINK")
+    if use_old_rule_names:
+        results["CROSS_REFERENCED_JIRA_LINK"] += results[
+            "CROSS_REFERENCED_GH_LINK"
+        ]
+        results.pop("CROSS_REFERENCED_GH_LINK")
+    # Remove the cc rule count before writing to the table as the table doesn't include it
+    else:
+        if cc_rule_as_strong_rule:
+            logger.info(
+                f"CC Rule matched for {len(results['COMMIT_IS_SECURITY_RELEVANT'])}: {results['COMMIT_IS_SECURITY_RELEVANT']}"
+            )
+            results.pop("COMMIT_IS_SECURITY_RELEVANT")
+
+        results["XREF_BUG"] += results["XREF_GH"]
+        results.pop("XREF_GH")
 
     logger.info(f"Ran analysis on {PROSPECTOR_REPORT_PATH}.")
 
@@ -140,6 +173,7 @@ def analyse_prospector_reports(filename: str):
         logger.info(f"\t{v}\t{key}")
         table_data.append([v, round(v / analysed_reports_count * 100, 2)])
 
+    # Generate the Latex table
     update_summary_execution_table(
         mode="MVI",
         data=table_data,
@@ -152,29 +186,12 @@ def analyse_prospector_reports(filename: str):
     )
 
     # Save detailed results in a json file (instead of cluttering logs)
-    batch_name = os.path.basename(os.path.normpath(PROSPECTOR_REPORT_PATH))
-    detailed_results_output_path = (
-        f"{ANALYSIS_RESULTS_PATH}summary_execution/{batch_name}.json"
-    )
-    printout = {
-        "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),
-        "results": results,
-        "missing": reports_not_found,
-    }
-    try:
-        with open(detailed_results_output_path, "r") as f:
-            existing_data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        existing_data = {"summary_execution_details": []}
-
-    existing_data["summary_execution_details"].append(printout)
-
-    save_dict_to_json(existing_data, detailed_results_output_path)
+    _save_summary_execution_details(results, reports_not_found)
 
 
 def _analyse_report(
     results: dict, cve_id: str, report_data, true_fixing_commits: list
-) -> dict:
+):
     """Analyzes a single Prospector report for a given CVE and updates the
     results dictionary.
 
@@ -192,18 +209,11 @@ def _analyse_report(
         fixing_commits=true_fixing_commits,
     )
 
-    # Fixing commit is not among the candidates of the report
     if len(true_fixing_commits_in_report) == 0:
-        # check if there are any candidates at all
-        ranked_candidates = report_data["commits"]
-        if not ranked_candidates:
-            logger.info(f"Report for {cve_id} does not contain any commits.")
-        # else the report does not contain the fixing commit at all
-        else:
-            logger.debug(
-                f"Report for {cve_id} does not contain fixing commit at all."
-            )
-            # Check if it's a false positive
+        # If there are no candidates at all -> not reported
+        existing_candidates = report_data["commits"]
+        if existing_candidates:
+            # check if it's a false positive (it matched a strong rule)
             strong_matched_rules = [
                 rule["id"]
                 for rule in report_data["commits"][0]["matched_rules"]
@@ -211,45 +221,49 @@ def _analyse_report(
             ]
             if strong_matched_rules:
                 results["false_positive"].append(cve_id)
-                return results
-
+                return
+        # otherwise, there are no candidates or it's not a false positive
         results["not_reported"].append(cve_id)
-        return results
+        return
 
-    #### Find the confidence & count strong rules
-    for i, commit in enumerate(report_data["commits"]):
-        # Get candidate id and also twins ids
-        candidate_and_twins = _get_candidate_and_twins_ids(commit)
-        candidates_in_fixing_commits = _list_intersection(
-            candidate_and_twins, true_fixing_commits
-        )
+    # Fixing commit is among the candidates of the report
+    if len(true_fixing_commits_in_report) >= 0:
+        for i, commit in enumerate(report_data["commits"]):
+            # Get candidates and twins that are fixing commits
+            candidate_and_twins = _get_candidate_and_twins_ids(commit)
+            candidates_in_fixing_commits = _list_intersection(
+                candidate_and_twins, true_fixing_commits
+            )
 
-        # First candidate is one of the fixing commits
-        if i == 0 and candidates_in_fixing_commits:
-            matched_rules = {rule["id"] for rule in commit["matched_rules"]}
+            # First candidate is one of the fixing commits
+            if i <= NUM_TOP_COMMITS and candidates_in_fixing_commits:
+                matched_rules = [rule["id"] for rule in commit["matched_rules"]]
 
-            # check for strong rules
-            for rule in STRONG_RULES:
-                if rule in matched_rules:
-                    results[rule].append(cve_id)
-                    results["high"].append(cve_id)
-                    return results
+                # check for strong rules
+                for rule in STRONG_RULES:
+                    if rule in matched_rules:
+                        results[rule].append(cve_id)
+                        results["high"].append(cve_id)
+                        return
 
-            # check for weak rules
-            weak_matched_rules = matched_rules.intersection(WEAK_RULES)
-            if weak_matched_rules:
-                results["medium"].append(cve_id)
-                return results
+            if i <= 0 and candidates_in_fixing_commits:
+                # check for weak rules
+                weak_matched_rules = set(matched_rules).intersection(WEAK_RULES)
+                if weak_matched_rules:
+                    results["medium"].append(cve_id)
+                    return
 
-        # Fixing commit among the first 10 (low confidence)
-        if i > 0 and i < 10 and candidates_in_fixing_commits:
-            results["low"].append(cve_id)
-            return results
+            # Fixing commit among the first 10 (low confidence)
+            if i > 0 and i < 10 and candidates_in_fixing_commits:
+                results["low"].append(cve_id)
+                return
 
-        # Commit not among the first 10 (not found)
-        if i >= 10:
-            results["not_found"].append(cve_id)
-            return results
+            # Commit not among the first 10 (not found)
+            if i >= 10:
+                results["not_found"].append(cve_id)
+                return
+
+        logger.info(f"This shouldn't happen {cve_id}")
 
 
 def _get_true_fixing_commits_in_report(
@@ -287,6 +301,29 @@ def _list_intersection(list1, list2):
     return list(set(list1) & set(list2))
 
 
+def _save_summary_execution_details(results: dict, reports_not_found: list):
+    """Saves the detailed content (including the list of CVEs for each category
+    of the summary execution table to a JSON file."""
+    batch_name = os.path.basename(os.path.normpath(PROSPECTOR_REPORT_PATH))
+    detailed_results_output_path = (
+        f"{ANALYSIS_RESULTS_PATH}summary_execution/{batch_name}.json"
+    )
+    printout = {
+        "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),
+        "results": results,
+        "missing": reports_not_found,
+    }
+    try:
+        with open(detailed_results_output_path, "r") as f:
+            existing_data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing_data = {"summary_execution_details": []}
+
+    existing_data["summary_execution_details"].append(printout)
+
+    save_dict_to_json(existing_data, detailed_results_output_path)
+
+
 def count_existing_reports(data_filepath):
     """Prints which CVEs reports are missing for to the console."""
     file = INPUT_DATA_PATH + data_filepath + ".csv"
@@ -310,7 +347,14 @@ def count_existing_reports(data_filepath):
 
 
 def analyse_category_flows():
-    """Analyse which CVEs changed category in different executions."""
+    """Analyse which CVEs changed category in different executions given two
+    JSON files with the detailed summary execution results.
+
+    The detailed summary execution results are created when executing
+    `analyse_prospector_reports`.
+
+    Saves the output to `summary_execution/flow-analysis.json`.
+    """
     data1 = load_json_file(COMPARE_DIRECTORY_1)
     data2 = load_json_file(COMPARE_DIRECTORY_2)
 
@@ -386,3 +430,29 @@ def _create_sankey_diagram(source: list, target: list, value: list):
             if cve1 == cve2:
                 transitions[cat1][cat2] += 1
     print(transitions)
+
+
+def difference_ground_truth_datasets():
+    """To find out if two ground truth datasets contain the same CVEs."""
+    filepath1 = "evaluation/data/input/d63.csv"
+    filepath2 = "evaluation/data/input/d63_mvi.csv"
+
+    ids_file1 = _read_first_column(filepath1)
+    ids_file2 = _read_first_column(filepath2)
+
+    unique_to_file1 = ids_file1 - ids_file2
+    unique_to_file2 = ids_file2 - ids_file1
+
+    print(f"IDs in {filepath1} but not in {filepath2}:")
+    for id in sorted(unique_to_file1):
+        print(id)
+
+    print(f"\nIDs in {filepath2} but not in {filepath1}:")
+    for id in sorted(unique_to_file2):
+        print(id)
+
+
+def _read_first_column(file_path):
+    with open(file_path, "r") as file:
+        reader = csv.reader(file, delimiter=";")
+        return set(row[0] for row in reader)
