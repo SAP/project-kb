@@ -30,45 +30,71 @@ cc_rule_as_strong_rule = True
 use_old_rule_names = True if "matteo" in PROSPECTOR_REPORT_PATH else False
 
 
-if cc_rule_as_strong_rule and not use_old_rule_names:
-    STRONG_RULES = [
-        "COMMIT_IN_REFERENCE",
-        "VULN_ID_IN_MESSAGE",
-        "XREF_BUG",
-        "XREF_GH",
-        "VULN_ID_IN_LINKED_ISSUE",
+def _choose_strong_rules(
+    cc_rule_as_strong_rule: bool, use_old_rule_names: bool
+) -> List[str]:
+    """Return the list of strong rules, given the settings."""
+    if cc_rule_as_strong_rule and not use_old_rule_names:
+        STRONG_RULES = [
+            "COMMIT_IN_REFERENCE",
+            "VULN_ID_IN_MESSAGE",
+            "XREF_BUG",
+            "XREF_GH",
+            "VULN_ID_IN_LINKED_ISSUE",
+            "COMMIT_IS_SECURITY_RELEVANT",
+        ]
+    elif use_old_rule_names and not cc_rule_as_strong_rule:
+        STRONG_RULES = [
+            "COMMIT_IN_REFERENCE",
+            "CVE_ID_IN_MESSAGE",
+            "CROSS_REFERENCED_JIRA_LINK",
+            "CROSS_REFERENCED_GH_LINK",
+            "CVE_ID_IN_LINKED_ISSUE",
+        ]
+    else:
+        STRONG_RULES = [
+            "COMMIT_IN_REFERENCE",
+            "VULN_ID_IN_MESSAGE",
+            "XREF_BUG",
+            "XREF_GH",
+            "VULN_ID_IN_LINKED_ISSUE",
+        ]
+
+    return STRONG_RULES
+
+
+STRONG_RULES = _choose_strong_rules(cc_rule_as_strong_rule, use_old_rule_names)
+
+
+if not cc_rule_as_strong_rule and not use_old_rule_names:
+    WEAK_RULES = [
+        "CHANGES_RELEVANT_FILES",
         "COMMIT_IS_SECURITY_RELEVANT",
-    ]
-elif use_old_rule_names:
-    STRONG_RULES = [
-        "COMMIT_IN_REFERENCE",
-        "CVE_ID_IN_MESSAGE",
-        "CROSS_REFERENCED_JIRA_LINK",
-        "CROSS_REFERENCED_GH_LINK",
-        "CVE_ID_IN_LINKED_ISSUE",
+        "CHANGES_RELEVANT_CODE",
+        "RELEVANT_WORDS_IN_MESSAGE",
+        "ADV_KEYWORDS_IN_FILES",
+        "ADV_KEYWORDS_IN_MSG",
+        "SEC_KEYWORDS_IN_MESSAGE",
+        "SEC_KEYWORDS_IN_LINKED_GH",
+        "SEC_KEYWORDS_IN_LINKED_BUG",
+        "GITHUB_ISSUE_IN_MESSAGE",
+        "BUG_IN_MESSAGE",
+        "COMMIT_HAS_TWINS",
     ]
 else:
-    STRONG_RULES = [
-        "COMMIT_IN_REFERENCE",
-        "VULN_ID_IN_MESSAGE",
-        "XREF_BUG",
-        "XREF_GH",
-        "VULN_ID_IN_LINKED_ISSUE",
+    WEAK_RULES = [
+        "CHANGES_RELEVANT_FILES",
+        "CHANGES_RELEVANT_CODE",
+        "RELEVANT_WORDS_IN_MESSAGE",
+        "ADV_KEYWORDS_IN_FILES",
+        "ADV_KEYWORDS_IN_MSG",
+        "SEC_KEYWORDS_IN_MESSAGE",
+        "SEC_KEYWORDS_IN_LINKED_GH",
+        "SEC_KEYWORDS_IN_LINKED_BUG",
+        "GITHUB_ISSUE_IN_MESSAGE",
+        "BUG_IN_MESSAGE",
+        "COMMIT_HAS_TWINS",
     ]
-
-WEAK_RULES = [
-    "CHANGES_RELEVANT_FILES",
-    "CHANGES_RELEVANT_CODE",
-    "RELEVANT_WORDS_IN_MESSAGE",
-    "ADV_KEYWORDS_IN_FILES",
-    "ADV_KEYWORDS_IN_MSG",
-    "SEC_KEYWORDS_IN_MESSAGE",
-    "SEC_KEYWORDS_IN_LINKED_GH",
-    "SEC_KEYWORDS_IN_LINKED_BUG",
-    "GITHUB_ISSUE_IN_MESSAGE",
-    "BUG_IN_MESSAGE",
-    "COMMIT_HAS_TWINS",
-]
 
 
 def analyse_prospector_reports(filename: str):
@@ -186,7 +212,10 @@ def analyse_prospector_reports(filename: str):
     )
 
     # Save detailed results in a json file (instead of cluttering logs)
-    _save_summary_execution_details(results, reports_not_found)
+    path = _save_summary_execution_details(results, reports_not_found)
+    logger.info(
+        f"Saved summary execution details (lists of CVEs for each category) to {path}."
+    )
 
 
 def _analyse_report(
@@ -238,13 +267,24 @@ def _analyse_report(
             # First candidate is one of the fixing commits
             if i <= NUM_TOP_COMMITS and candidates_in_fixing_commits:
                 matched_rules = [rule["id"] for rule in commit["matched_rules"]]
+                strong_matched_rules = list(
+                    set(STRONG_RULES).intersection(set(matched_rules))
+                )
+                # increase count at high, but only count once here
+                if len(strong_matched_rules) > 0:
+                    results["high"].append(cve_id)
 
-                # check for strong rules
-                for rule in STRONG_RULES:
-                    if rule in matched_rules:
-                        results[rule].append(cve_id)
-                        results["high"].append(cve_id)
-                        return
+                    for strong_matched_rule in strong_matched_rules:
+                        results[strong_matched_rule].append(cve_id)
+                    return
+
+                # # check for strong rules
+                # for rule in STRONG_RULES:
+                # mutually exclusive
+                # if rule in matched_rules:
+                #     results[rule].append(cve_id)
+                #     results["high"].append(cve_id)
+                #     return
 
             if i <= 0 and candidates_in_fixing_commits:
                 # check for weak rules
@@ -301,9 +341,15 @@ def _list_intersection(list1, list2):
     return list(set(list1) & set(list2))
 
 
-def _save_summary_execution_details(results: dict, reports_not_found: list):
+def _save_summary_execution_details(
+    results: dict, reports_not_found: list
+) -> str:
     """Saves the detailed content (including the list of CVEs for each category
-    of the summary execution table to a JSON file."""
+    of the summary execution table to a JSON file.
+
+    Returns:
+        The filepath where the details were saved to.
+    """
     batch_name = os.path.basename(os.path.normpath(PROSPECTOR_REPORT_PATH))
     detailed_results_output_path = (
         f"{ANALYSIS_RESULTS_PATH}summary_execution/{batch_name}.json"
@@ -322,6 +368,7 @@ def _save_summary_execution_details(results: dict, reports_not_found: list):
     existing_data["summary_execution_details"].append(printout)
 
     save_dict_to_json(existing_data, detailed_results_output_path)
+    return detailed_results_output_path
 
 
 def count_existing_reports(data_filepath):
@@ -351,7 +398,7 @@ def analyse_category_flows():
     JSON files with the detailed summary execution results.
 
     The detailed summary execution results are created when executing
-    `analyse_prospector_reports`.
+    `analyse_prospector_reports`. Uses the last entry in these files.
 
     Saves the output to `summary_execution/flow-analysis.json`.
     """
@@ -395,41 +442,66 @@ def _create_cve_to_category_mapping(results: dict) -> dict:
     return res
 
 
-# Create Sankey Diagram to see how the reports change category
-def _create_sankey_diagram(source: list, target: list, value: list):
-    """Creates a sankey diagram between two files containing summary execution
-    details, ie. a json file with a `results` field containing:
-        - high
-        - commit in reference
-        - vuln id in message
-        - vuln id in linked issue
-        - xref bug
-        - medium
-        - low
-        - not_found
-        - not_reported
-        - false_positive
+def analyse_category_flows_no_mutual_exclusion():
+    """Analyse which CVEs changed category in different executions given two
+    JSON files with the detailed summary execution results.
 
-    Attention: Not finished!
+    The detailed summary execution results are created when executing
+    `analyse_prospector_reports`. Uses the last entry in these files.
+
+    Saves the output to `summary_execution/flow-analysis.json`.
     """
-    data = load_json_file(
-        f"{ANALYSIS_RESULTS_PATH}summary_execution/{filename1}.json"
-    )
-    details = data.get("summary_execution_details", [])
-    results = details[-1].get("results", {})
+    data1 = load_json_file(COMPARE_DIRECTORY_1)["summary_execution_details"][-1]
+    data2 = load_json_file(COMPARE_DIRECTORY_2)["summary_execution_details"][-1]
 
-    # Initialize a dictionary to hold transitions
-    transitions = defaultdict(lambda: defaultdict(int))
-
-    # Create a list of categories and CVEs
-    cve_categories = [
-        (category, cve) for category, cves in results.items() for cve in cves
+    # Skip the `high` category
+    categories = [
+        "COMMIT_IN_REFERENCE",
+        "VULN_ID_IN_MESSAGE",
+        "VULN_ID_IN_LINKED_ISSUE",
+        "XREF_BUG",
+        "medium",
+        "low",
+        "not_found",
+        "not_reported",
+        "false_positive",
+        "missing",
     ]
-    for i, (cat1, cve1) in enumerate(cve_categories):
-        for cat2, cve2 in cve_categories[i + 1 :]:
-            if cve1 == cve2:
-                transitions[cat1][cat2] += 1
-    print(transitions)
+
+    # Create the dictionary structure
+    transitions = {}
+
+    for category in categories:
+        transitions[category] = {"data1": [], "data2": []}
+
+    # Whichever ones do not have a report in both sets (Matteo and me), do not consider them and just list them as missing.
+    transitions["missing"]["data1"] = data1["missing"]
+    transitions["missing"]["data2"] = data2["missing"]
+
+    missing = data1["missing"] + data2["missing"]
+
+    categories.remove("missing")
+    # For each category, get which ones are in first, but not in second and in second but not in first
+    for category in categories:
+        d1, d2 = _get_symmetric_difference(
+            data1["results"][category], data2["results"][category], missing
+        )
+        transitions[category]["data1"] = d1
+        transitions[category]["data2"] = d2
+
+    save_dict_to_json(
+        transitions,
+        f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json",
+    )
+
+
+def _get_symmetric_difference(list1: list, list2: list, ignore: list):
+    """Returns two lists: the first containing elements that are only in list1
+    but not in list2 and the second one vice versa.
+    """
+    return list(set(list1) - set(list2) - set(ignore)), list(
+        set(list2) - set(list1) - set(ignore)
+    )
 
 
 def difference_ground_truth_datasets():
@@ -437,11 +509,14 @@ def difference_ground_truth_datasets():
     filepath1 = "evaluation/data/input/d63.csv"
     filepath2 = "evaluation/data/input/d63_mvi.csv"
 
-    ids_file1 = _read_first_column(filepath1)
-    ids_file2 = _read_first_column(filepath2)
+    dataset1 = load_dataset(filepath1)
+    dataset2 = load_dataset(filepath2)
 
-    unique_to_file1 = ids_file1 - ids_file2
-    unique_to_file2 = ids_file2 - ids_file1
+    ids_dataset1 = set(record[0] for record in dataset1)
+    ids_dataset2 = set(record[0] for record in dataset2)
+
+    unique_to_file1 = ids_dataset1 - ids_dataset2
+    unique_to_file2 = ids_dataset2 - ids_dataset1
 
     print(f"IDs in {filepath1} but not in {filepath2}:")
     for id in sorted(unique_to_file1):
@@ -451,8 +526,19 @@ def difference_ground_truth_datasets():
     for id in sorted(unique_to_file2):
         print(id)
 
+    # Find differences in fixing commits
+    different_fixing_commits = []
 
-def _read_first_column(file_path):
-    with open(file_path, "r") as file:
-        reader = csv.reader(file, delimiter=";")
-        return set(row[0] for row in reader)
+    ids_and_fixing1 = {}
+    for record in dataset1:
+        ids_and_fixing1[record[0]] = record[4]
+
+    ids_and_fixing2 = {}
+    for record in dataset2:
+        ids_and_fixing2[record[0]] = record[4]
+
+    for k, v in ids_and_fixing1.items():
+        if v != ids_and_fixing2.get(k, ""):
+            different_fixing_commits.append((k, v))
+
+    print(f"\nDifferent fixing commits: {len(different_fixing_commits)}")
