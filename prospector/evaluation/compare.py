@@ -5,6 +5,7 @@ import json
 import os
 from evaluation.utils import (
     ANALYSIS_RESULTS_PATH,
+    load_dataset,
     logger,
     config,
     load_json_file,
@@ -87,10 +88,16 @@ def main():
 
     logger.info(f"Comparing reports in {directory1} and {directory2}.")
 
+    file = "evaluation/data/input/d63.csv"
+    dataset = load_dataset(file)
+
     ## Things to measure
     counterpart_exists = []
     missing_in_directory1 = []
     missing_in_directory2 = []
+
+    missing_in_1_compared_to_gt = []
+    missing_in_2_compared_to_gt = []
 
     entirely_same = []
     same_references = []
@@ -110,6 +117,14 @@ def main():
     reports1 = [f for f in os.listdir(directory1)]
     # get reports from second directory
     reports2 = [f for f in os.listdir(directory2)]
+
+    # Get how many reports are missing compared to the ground truth
+    for report in dataset:
+        if f"{report[0]}.json" not in reports1:
+            missing_in_1_compared_to_gt.append(report[0])
+
+        if f"{report[0]}.json" not in reports2:
+            missing_in_2_compared_to_gt.append(report[0])
 
     for report in reports1:
         if report not in reports2:
@@ -169,9 +184,23 @@ def main():
         "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),
         "directory1": directory1,
         "directory2": directory2,
+        "directory1_vs_gt": {
+            "count": len(missing_in_1_compared_to_gt),
+            "reports": missing_in_1_compared_to_gt,
+        },
+        "directory2_vs_gt": {
+            "count": len(missing_in_2_compared_to_gt),
+            "reports": missing_in_2_compared_to_gt,
+        },
         "counterparts_exist": len(counterpart_exists),
-        "missing_in_directory1": len(missing_in_directory1),
-        "missing_in_directory2": len(missing_in_directory2),
+        "missing_in_directory1": {
+            "count": len(missing_in_directory1),
+            "reports": missing_in_directory1,
+        },
+        "missing_in_directory2": {
+            "count": len(missing_in_directory2),
+            "reports": missing_in_directory2,
+        },
         "reports_comparison": {
             "entirely_same": len(entirely_same),
             "same_first_candidate": {

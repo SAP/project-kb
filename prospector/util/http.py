@@ -8,7 +8,9 @@ from bs4 import BeautifulSoup
 from log.logger import logger
 
 
-def fetch_url(url: str, params=None, extract_text=True) -> Union[str, BeautifulSoup]:
+def fetch_url(
+    url: str, params=None, extract_text=True
+) -> Union[str, BeautifulSoup]:
     """
     Fetches the content of a web page located at the specified URL and optionally extracts text from it.
 
@@ -23,8 +25,11 @@ def fetch_url(url: str, params=None, extract_text=True) -> Union[str, BeautifulS
 
     If an exception occurs during the HTTP request, an empty string ("") is returned.
     """
+
     try:
-        session = requests_cache.CachedSession("requests-cache", expire_after=604800)
+        session = requests_cache.CachedSession(
+            "requests-cache", expire_after=604800
+        )
         if params is None:
             content = session.get(url).content
         else:
@@ -75,13 +80,18 @@ def get_urls(url: str) -> List[str]:
 
 
 # TODO: properly scrape github issues
-def extract_from_webpage(url: str, attr_name: str, attr_value: List[str]) -> str:
+def extract_from_webpage(
+    url: str, attr_name: str, attr_value: List[str]
+) -> str:
     content = fetch_url(url, None, False)
     if not content:
         return ""
     print(content.get_text())
     print(
-        [result.group(0) for result in re.finditer(r"[A-Z]+-\d+", content.get_text())]
+        [
+            result.group(0)
+            for result in re.finditer(r"[A-Z]+-\d+", content.get_text())
+        ]
     )
     return [
         link.get("href")
@@ -115,10 +125,13 @@ def get_from_xml(id: str):
         if item is None or item == -1:
             return ""
         relevant_data = [
-            itm.text for itm in item.findAll(["description", "summary", "comments"])
+            itm.text
+            for itm in item.findAll(["description", "summary", "comments"])
         ]
 
-        relevant_data = BeautifulSoup("\n".join(relevant_data), features="html.parser")
+        relevant_data = BeautifulSoup(
+            "\n".join(relevant_data), features="html.parser"
+        )
 
         return " ".join(relevant_data.stripped_strings)
     except Exception:
