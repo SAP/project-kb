@@ -29,11 +29,8 @@ services:
       dockerfile: docker/worker/Dockerfile
     volumes:
       - ./data_sources/reports:/app/data_sources/reports
-      - ./evaluation/data/reports_with_llm/:/app/evaluation/data/reports_with_llm # Only relevant for evaluation data
-      - ./evaluation/data/reports_without_llm/:/app/evaluation/data/reports_without_llm # Only relevant for evaluation data
-      - ./evaluation/data/reports_without_llm_mvi/:/app/evaluation/data/reports_without_llm_mvi # Only relevant for evaluation data
-      - ./evaluation/data/reports_with_llm_mvi/:/app/evaluation/data/reports_with_llm_mvi # Only relevant for evaluation data
-      - ./../../../data/gitcache:/tmp/gitcache # LASCHA: check that this is correct
+      - ./evaluation/data/reports/:/app/evaluation/data/reports
+      - ./../../../data/gitcache:/tmp/gitcache
     depends_on:
       - redis
     environment:

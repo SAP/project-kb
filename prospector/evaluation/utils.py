@@ -12,6 +12,7 @@ logger.setLevel(config.debug_level)
 INPUT_DATA_PATH = config.input_data_path
 # Select the folder depending whether LLMs are used or not
 PROSPECTOR_REPORT_PATH = config.prospector_reports_path
+PROSPECTOR_REPORT_PATH_CONTAINER = config.prospector_reports_path_container
 ANALYSIS_RESULTS_PATH = config.analysis_results_path
 # Comparison dirs
 COMPARE_DIRECTORY_1 = config.compare_directory1
