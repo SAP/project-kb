@@ -334,7 +334,7 @@ class Git:
             cmd += " *." + " *.".join(filter_extension)
 
         try:
-            logger.debug(cmd)
+            logger.debug(f"Executing git command: {cmd}")
             out = self.execute(cmd)
             return self.parse_git_output(out)
 
@@ -447,7 +447,7 @@ class Git:
         # ct is committer date, it is the default for the research using --until and --since
         out = self.execute(f"git log -1 --format=%{ts_format}t {item}")
         logger.debug(
-            f"Got timestampe with `git log -1 --format=%{ts_format}t {item}`."
+            f"Got timestamp with `git log -1 --format=%{ts_format}t {item}`."
         )
         return int(out[0])
 

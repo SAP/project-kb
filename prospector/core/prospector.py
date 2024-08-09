@@ -1,5 +1,6 @@
 # flake8: noqa
 
+from datetime import datetime, timezone
 import logging
 import os
 import sys
@@ -137,6 +138,9 @@ def prospector(  # noqa: C901
         if len(candidates) > 0 and any(
             [c for c in candidates if c in commits_in_advisory_references]
         ):
+            logger.info(
+                f"Found commits referenced in advisory:{commits_in_advisory_references}."
+            )
             console.print("Fixing commit found in the advisory references\n")
             advisory_record.has_fixing_commit = True
 
@@ -512,6 +516,9 @@ def get_commits_from_tags(
             )
 
             if len(candidates) == 0:
+                logger.info(
+                    f"No commands found with tags, defaulting to commits within 60 days of advisory reserved date: {datetime.fromtimestamp(advisory_record.reserved_timestamp, tz=timezone.utc)}"
+                )
                 candidates = repository.create_commits(
                     since=advisory_record.reserved_timestamp
                     - time_limit_before,

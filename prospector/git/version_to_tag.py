@@ -20,7 +20,9 @@ def is_rc_or_date(tag: str) -> bool:
 
 
 def get_possible_missing_tag(
-    tags: list[str], prev_tag: Optional[str] = None, next_tag: Optional[str] = None
+    tags: list[str],
+    prev_tag: Optional[str] = None,
+    next_tag: Optional[str] = None,
 ):
     """Given the tag list and a tag, return either the previous or the next tag candidates."""
     if next_tag is None:
@@ -74,7 +76,9 @@ def ends_with_zero(version: str):
 
 
 # flake8: noqa: C901
-def get_possible_tags(tags: list[str], versions: str, unsupervised: bool = True):
+def get_possible_tags(
+    tags: list[str], versions: str, unsupervised: bool = True
+):
     """Given a list of tags and a version interval, return the possible tag interval that matches."""
     prev_version, next_version = versions.replace("None", "").split(":")
     prev_tag = handle_tag_or_substring(prev_version, tags)
@@ -98,20 +102,28 @@ def get_possible_tags(tags: list[str], versions: str, unsupervised: bool = True)
         return prev_tag[0], next_tag[0]
     elif len(prev_tag) == 1 and len(next_tag) > 1:
         next_tag = [
-            tag for tag in next_tag if tag != prev_tag[0] or tag not in prev_tag[0]
+            tag
+            for tag in next_tag
+            if tag != prev_tag[0] or tag not in prev_tag[0]
         ]  # this may lead to empty list
         logger.info(f"Possible tags are:{prev_tag}:{next_tag}")
         return (
             prev_tag[0],
-            next_tag[0],  # difflib.get_close_matches(prev_tag[0], next_tag, n=1)[0],
+            next_tag[
+                0
+            ],  # difflib.get_close_matches(prev_tag[0], next_tag, n=1)[0],
         )
     elif len(prev_tag) > 1 and len(next_tag) == 1:
         prev_tag = [
-            tag for tag in prev_tag if tag != next_tag[0] or next_tag[0] not in tag
+            tag
+            for tag in prev_tag
+            if tag != next_tag[0] or next_tag[0] not in tag
         ]
         logger.info(f"Possible tags are:{prev_tag}:{next_tag}")
         return (
-            prev_tag[-1],  # difflib.get_close_matches(next_tag[0], prev_tag, n=1)[0],
+            prev_tag[
+                -1
+            ],  # difflib.get_close_matches(next_tag[0], prev_tag, n=1)[0],
             next_tag[0],
         )
     # If there is one exact match but no candidates for the other tag, exit and hint the user with possible candidates
@@ -128,8 +140,12 @@ def get_possible_tags(tags: list[str], versions: str, unsupervised: bool = True)
     elif len(prev_tag) > 1 and len(next_tag) > 1:
         logger.info("Multiple tag candidates found.")
     else:
-        prev_tag = [tag for tag in tags if prev_version in clean_tag(tag, False)]
-        next_tag = [tag for tag in tags if next_version in clean_tag(tag, False)]
+        prev_tag = [
+            tag for tag in tags if prev_version in clean_tag(tag, False)
+        ]
+        next_tag = [
+            tag for tag in tags if next_version in clean_tag(tag, False)
+        ]
         # print(f"Possible tags are:\n\t{prev_tag}\n\t{next_tag}")
         if len(prev_tag) == 1 and len(next_tag) == 1:
             return prev_tag[0], next_tag[0]
