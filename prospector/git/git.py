@@ -311,6 +311,8 @@ class Git:
         return commits
 
     def find_commits_for_twin_lookups(self, commit_id):
+        """Finds all relevant commits around the given commit wihin a time
+        window of 10 days. Search is narrowed if too many commits are found."""
         # Using both author date and commit date we should cover all cases.
         try:
             commit_timestamp_a = self.get_timestamp(commit_id, "a")
@@ -329,8 +331,8 @@ class Git:
 
             return dict()
 
-        except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
+        except Exception as e:
+            logger.error(f"Git command failed, cannot get commits: {e}")
 
             return dict()
 
