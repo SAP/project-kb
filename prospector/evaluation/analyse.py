@@ -1,5 +1,4 @@
 from collections import defaultdict
-import csv
 from datetime import datetime
 import json
 import os
@@ -23,11 +22,13 @@ from evaluation.utils import (
 # The number of top commits to consider for 'high confidence' classification
 NUM_TOP_COMMITS = 10
 
-cc_rule_as_strong_rule = True
+cc_rule_as_strong_rule = False
 # Whether to use the old rule names (old: COMMIT_IN_REFERENCE,
 # CVE_ID_IN_MESSAGE, CVE_ID_IN_LINKED_ISSUE, CROSS_REFERENCED_JIRA_LINK,
 # CROSS_REFERENCED_GH_LINK)
-use_old_rule_names = True if "matteo" in PROSPECTOR_REPORT_PATH else False
+use_old_rule_names = (
+    True if "matteo_reports" in PROSPECTOR_REPORT_PATH else False
+)
 
 
 def _choose_strong_rules(
@@ -175,6 +176,7 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
 
         except Exception as e:
             logger.info(f"Error occured for {cve_id}: {e}")
+            continue
 
     #### Table Data (write to table)
     table_data = []
@@ -382,6 +384,7 @@ def count_existing_reports(data_filepath):
     dataset = load_dataset(file)
 
     missing_reports = []
+    generated_reports = []
 
     print(f"Counting reports in {PROSPECTOR_REPORT_PATH}")
 
@@ -389,13 +392,15 @@ def count_existing_reports(data_filepath):
         cve_id = record[0]
 
         if os.path.isfile(f"{PROSPECTOR_REPORT_PATH}/{cve_id}.json"):
-            continue
+            generated_reports.append(cve_id)
         else:
             missing_reports.append(cve_id)
 
     print(
         f"There are {len(dataset) - len(missing_reports)} reports. Reports are missing for {len(missing_reports)} CVEs: {missing_reports}"
     )
+
+    # print(*generated_reports, sep=",")
 
 
 def analyse_category_flows():
@@ -409,15 +414,21 @@ def analyse_category_flows():
     """
     data1 = load_json_file(COMPARE_DIRECTORY_1)
     data2 = load_json_file(COMPARE_DIRECTORY_2)
+    print(f"Comparing {COMPARE_DIRECTORY_1} with {COMPARE_DIRECTORY_2}")
 
     transitions = defaultdict(lambda: defaultdict(list))
 
     results1 = _create_cve_to_category_mapping(
         data1["summary_execution_details"][-1]["results"]
     )
+    # Add missing reports to results dict
+    for cve in data1["summary_execution_details"][-1]["missing"]:
+        results1[cve] = "missing"
     results2 = _create_cve_to_category_mapping(
         data2["summary_execution_details"][-1]["results"]
     )
+    for cve in data2["summary_execution_details"][-1]["missing"]:
+        results2[cve] = "missing"
 
     for cve, category in results1.items():
         new_category = results2.get(cve, None)
@@ -440,7 +451,20 @@ def analyse_category_flows():
 
 def _create_cve_to_category_mapping(results: dict) -> dict:
     res = {}
-    for category in results.keys():
+    categories = [
+        "high",
+        # "COMMIT_IN_REFERENCE",
+        # "VULN_ID_IN_MESSAGE",
+        # "VULN_ID_IN_LINKED_ISSUE",
+        # "XREF_BUG",
+        "medium",
+        "low",
+        "not_found",
+        "not_reported",
+        "false_positive",
+    ]
+
+    for category in categories:
         for cve in results[category]:
             res[cve] = category
 
@@ -494,8 +518,24 @@ def analyse_category_flows_no_mutual_exclusion():
         transitions[category]["data1"] = d1
         transitions[category]["data2"] = d2
 
+    # Append to the existing flow analysis results
+    printout = {
+        "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),
+        "results": transitions,
+    }
+
+    try:
+        with open(
+            f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json", "r"
+        ) as f:
+            existing_data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing_data = {"flow_analysis_details": []}
+
+    existing_data["flow_analysis_details"].append(printout)
+
     save_dict_to_json(
-        transitions,
+        existing_data,
         f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json",
     )
 
