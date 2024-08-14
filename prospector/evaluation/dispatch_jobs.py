@@ -19,17 +19,11 @@ from llm.llm_service import LLMService
 prospector_config = config.prospector_settings
 
 
-def to_latex_table():
-    data = load_dataset("results/scalco.csv")
-    for e in data:
-        print(f"{e[0]} & {e[1][19:]} & {e[5]} \\\\  \hline")  # noqa: W605
-
-
 def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    # dataset = dataset[100:200]
+    dataset = dataset[200:300]  # done 0-100,
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
