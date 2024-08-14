@@ -22,6 +22,8 @@ b219fd6219ed   adminer              "entrypoint.sh php -…"   47 minutes ago   
 them in a Redis Queue, from which the `prospector_worker` container fetches jobs and executes them. To visualise what is going on, run
 `docker attach prospector_worker_1` to see the usual console output. In order to change something inside the container, run `docker exec -it prospector_worker_1 bash` to open an interactive bash shell.
 
+You can set the number of workers in `docker/worker/etc_supervisor_confd_rqworker.conf.j2`.
+
 ## Command Line Options
 
 All scripts are called from `main.py`, depending on the CL flags that are set. The following flags can be set:
@@ -30,7 +32,8 @@ All scripts are called from `main.py`, depending on the CL flags that are set. T
 2. `-c`: Allows you to select a subset of CVEs, instead of all CVEs from the input data (eg. `-c CVE-2020-1925, CVE-2018-1234`)
 3. `-e`: For *execute*, dispatched jobs for all CVEs from the input data (or the subset if `-c` is set) to the Redis Queue (`dispatch_jobs.py`).
 4. `-a`: Analyses the reports created by Propsector (`analysis.py`)
-5. `-s`: Analyses the statistics part of the Prospector reports (eg. to analyse execution times, `analyse_statistics.py`)
+5. `-a -s`: Analyses the statistics part of the Prospector reports (eg. to analyse execution times, `analyse_statistics.py`)
+6. `-a --flow`: Creates a JSON file showing how the reports change categories between two different executions.
 6. `-eq`: For *empty queue*, to empty the jobs left on the queue.
 7. `-co`: For *count*, to count how many of the CVEs in the input data have a corresponding report.
 
@@ -40,10 +43,31 @@ The configuration file has two parts to it: a main part and a Prospector setting
 
 The main part at the top allows you to set the path to where the input data can be found, where Prospector reports should be saved to and where analysis results should be saved to.
 
-The Prospector part allows you to set the settings for Prospector (independent from the Prospector settings used when running Prospector with `./run_prospector`). **Watch out**: Since the `prospector_worker` container is created in the beginning with the current state of the `config.yaml`, simply saving any changes in `config.yaml` and dispatching new jobs will still run them with the old configuration. For new configuration parameters to take effect, either destroy the containers with `make docker-clean` and rebuild them with `make docker-setup` or open an interactive shell to the container and make your changes to `config.yaml` in there.
+The Prospector part allows you to set the settings for Prospector (independent from the Prospector settings used when running Prospector with `./run_prospector`). **Watch out**: Since the `prospector_worker` container is created in the beginning with the current state of the `config.yaml`, simply saving any changes in `config.yaml` and dispatching new jobs will still run them with the old configuration. For new configuration parameters to take effect, either destroy the containers with `make docker-clean` and rebuild them with `make docker-setup` or open an interactive shell to the container and make your changes to the code in there.
 
 ## Script Files explained
 
 ### Running Prospector on multiple CVEs (`dispatch_jobs.py`)
 
-The code for running Prospector is in `dispatch_jobs.py`. It exctracts CVE IDs from the data given in the path constructed as: `input_data_path` + the `-i` CL parameter. It then dispatches a job for each CVE ID to the queue, from where these jobs get executed.
+The code for running Prospector is in `dispatch_jobs.py`. It exctracts CVE IDs from the data given in the path constructed as: `input_data_path` + the `-i` CL parameter. It then dispatches a job for each CVE ID to the queue, from where these jobs get executed. The path to the input file is split into two components (`input_data_path` in `config.yaml` and the `-i` parameter) because you might have one folder in which you have several different input data files of the same format. This keeps you from typing the full path, but still allows you to switch between the files between different runs.
+
+The reports are generated in the worker container, and saved to `prospector_reports_path_container`. This folder is mounted into the container, so you can see any newly generated reports in the same folder on the host.
+
+Do not confuse this paramter with `prospector_reports_path_host`, which sets the path to a batch of reports on the host (used for analysis). Your workflow should be as follows:
+
+1. Dispatch reports
+2. When the report generation has finished, move the reports to any other folder (preferably outside of the `prospector/` folder to keep the build context for the container from getting too big).
+3. Analyse the reports by setting the `prospector_reports_path_host` to the folder where you moved the reports to.
+
+### Analysing the generated reports (`analyse.py`)
+
+Start an analysis with
+
+```bash
+python3 evaluation/main.py -i <your_input_data_csv_file> -a
+```
+
+This will start the `analyse_prospector_reports()` function in `analyse.py`, which re-creates the summary execution table from [AssureMOSS D6.3](https://assuremoss.eu/en/resources/Deliverables/D6.3):
+![D6.3 Summary Execution Table](images/summary_execution_table.png)
+
+It also creates a detailed JSON file (listing CVEs in each category) in `data/results/summary_execution/` to inspect which CVEs are in which category.
