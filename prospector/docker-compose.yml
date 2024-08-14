@@ -28,6 +28,7 @@ services:
       context: .
       dockerfile: docker/worker/Dockerfile
     volumes:
+      - ./:/app
       - ./data_sources/reports:/app/data_sources/reports
       - ./evaluation/data/reports/:/app/evaluation/data/reports
       - ./../../../data/gitcache:/tmp/gitcache

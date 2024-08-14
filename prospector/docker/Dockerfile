@@ -1,6 +1,7 @@
 FROM python:3.10-slim
 
-COPY . /app
+RUN mkdir -p /app
+COPY ./requirements.txt /app/
 WORKDIR /app
 RUN pip install --upgrade pip
 RUN apt update && apt install -y --no-install-recommends gcc g++ libffi-dev python3-dev libpq-dev git curl
