@@ -126,7 +126,7 @@ def get_from_xml(id: str):
             return ""
         relevant_data = [
             itm.text
-            for itm in item.findAll(["description", "summary", "comments"])
+            for itm in item.find_all(["description", "summary", "comments"])
         ]
 
         relevant_data = BeautifulSoup(
