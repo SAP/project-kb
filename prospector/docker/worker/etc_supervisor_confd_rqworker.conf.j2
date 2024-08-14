@@ -8,7 +8,7 @@ command=/usr/local/bin/python3 /usr/local/bin/rq worker {{env['RQ_QUEUE']}} -u r
 process_name=%(program_name)s%(process_num)01d
 
 ; If you want to run more than one worker instance, increase this
-numprocs=2
+numprocs=20
 redirect_stderr=true
 
 ; This is the directory from which RQ is ran. Be sure to point this to the

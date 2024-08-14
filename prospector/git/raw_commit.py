@@ -76,7 +76,9 @@ class RawCommit:
             return "", 0
         try:
             # We already filtered out in Git the "useless files, so we can exclude them from the diff also. Reduces false positives rules."
-            cmd = f"git diff --unified=1 {self.id}^! -- " + " ".join(self.changed_files)
+            cmd = f"git diff --unified=1 {self.id}^! -- " + " ".join(
+                self.changed_files
+            )
             diffs = self.execute(cmd)
             return diffs, self.get_hunks_count(diffs)
 
