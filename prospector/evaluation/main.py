@@ -120,7 +120,7 @@ def main(argv):
             analyse_category_flows_no_mutual_exclusion()
         # analysis of Prospector reports
         else:
-            analyse_prospector_reports(args.input)
+            analyse_prospector_reports(args.input, args.cve)
 
     # Remove all jobs from the queue
     elif args.empty_queue and not args.execute and not args.stats:

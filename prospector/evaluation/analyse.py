@@ -97,12 +97,14 @@ else:
     ]
 
 
-def analyse_prospector_reports(filename: str):
+def analyse_prospector_reports(filename: str, selected_cves: str):
     """Analyses Prospector reports. Creates the summary_execution_results table."""
     file = INPUT_DATA_PATH + filename + ".csv"
     dataset = load_dataset(file)
     # dataset = dataset[:100]  # Actual line number in D53.csv -2
     # dataset = dataset[198:199]  # Actual line number in D53.csv -2
+    if len(selected_cves) != 0:
+        dataset = [c for c in dataset if c[0] in selected_cves]
 
     # Keep track of how many reports were attempted to be analysed
     attempted_count = 0
@@ -170,6 +172,9 @@ def analyse_prospector_reports(filename: str):
             reports_not_found.append(cve_id)
             logger.debug(f"Couldn't find report for {cve_id}")
             continue
+
+        except Exception as e:
+            logger.info(f"Error occured for {cve_id}: {e}")
 
     #### Table Data (write to table)
     table_data = []
