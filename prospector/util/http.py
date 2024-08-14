@@ -106,17 +106,13 @@ def get_from_xml(id: str):
     try:
         params = {"field": {"description", "summary", "comments"}}
 
-        # response = requests.get(
-        #     f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
-        #     params=params,
-        # )
-        # xml_data = BeautifulSoup(response.text, features="html.parser")
         xml_data = fetch_url(
             f"https://issues.apache.org/jira/si/jira.issueviews:issue-xml/{id}/{id}.xml",
             params=params,
+            extract_text=False,
         )
         item = xml_data.find("item")
-        if item is None:
+        if item is None or item == -1:
             return ""
         relevant_data = [
             itm.text for itm in item.findAll(["description", "summary", "comments"])
