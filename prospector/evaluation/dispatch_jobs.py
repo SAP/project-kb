@@ -23,7 +23,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     """Dispatches jobs to the queue."""
 
     dataset = load_dataset(INPUT_DATA_PATH + filename + ".csv")
-    dataset = dataset[200:300]  # done 0-100,
+    # dataset = dataset[200:300]  # done 0-100,
 
     # Only run a subset of CVEs if the user supplied a selected set
     if len(selected_cves) != 0:
