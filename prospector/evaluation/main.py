@@ -6,7 +6,6 @@ import sys
 
 from evaluation.analyse import (
     analyse_category_flows,
-    analyse_category_flows_no_mutual_exclusion,
     analyse_prospector_reports,
     count_existing_reports,
     difference_ground_truth_datasets,
