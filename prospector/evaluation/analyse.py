@@ -364,8 +364,9 @@ def _save_summary_execution_details(
     printout = {
         "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),
         "results": results,
-        "missing": reports_not_found,
+        # "missing": reports_not_found,
     }
+    printout["results"]["missing"] = reports_not_found
     try:
         with open(detailed_results_output_path, "r") as f:
             existing_data = json.load(f)
@@ -416,79 +417,29 @@ def analyse_category_flows():
     data2 = load_json_file(COMPARE_DIRECTORY_2)
     print(f"Comparing {COMPARE_DIRECTORY_1} with {COMPARE_DIRECTORY_2}")
 
-    transitions = defaultdict(lambda: defaultdict(list))
+    # Get the results from both files
+    results1 = data1["summary_execution_details"][0]["results"]
+    results2 = data2["summary_execution_details"][0]["results"]
 
-    results1 = _create_cve_to_category_mapping(
-        data1["summary_execution_details"][-1]["results"]
-    )
-    # Add missing reports to results dict
-    for cve in data1["summary_execution_details"][-1]["missing"]:
-        results1[cve] = "missing"
-    results2 = _create_cve_to_category_mapping(
-        data2["summary_execution_details"][-1]["results"]
-    )
-    for cve in data2["summary_execution_details"][-1]["missing"]:
-        results2[cve] = "missing"
+    transitions, adjustments = _process_cve_transitions(results1, results2)
 
-    for cve, category in results1.items():
-        new_category = results2.get(cve, None)
-        if not new_category:
-            print(f"No report for {cve} in second batch.")
-            continue
-
-        if results2.get(cve, "") != category:
-            transitions[category][new_category].append(cve)
+    # Create the final output structure
+    output_data = {
+        "transitions": [{k: v} for k, v in transitions.items()],
+        "category_adjustments": {k: v for k, v in adjustments.items()},
+    }
 
     save_dict_to_json(
-        transitions,
+        output_data,
         f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json",
     )
 
-    # Create a sankey diagram
-    # source = transitions.keys()
-    # _create_sankey_diagram(source, target, value)
 
-
-def _create_cve_to_category_mapping(results: dict) -> dict:
-    res = {}
+def _process_cve_transitions(results1, results2):
+    transitions = defaultdict(list)
+    adjustments = defaultdict(int)
     categories = [
         "high",
-        # "COMMIT_IN_REFERENCE",
-        # "VULN_ID_IN_MESSAGE",
-        # "VULN_ID_IN_LINKED_ISSUE",
-        # "XREF_BUG",
-        "medium",
-        "low",
-        "not_found",
-        "not_reported",
-        "false_positive",
-    ]
-
-    for category in categories:
-        for cve in results[category]:
-            res[cve] = category
-
-    return res
-
-
-def analyse_category_flows_no_mutual_exclusion():
-    """Analyse which CVEs changed category in different executions given two
-    JSON files with the detailed summary execution results.
-
-    The detailed summary execution results are created when executing
-    `analyse_prospector_reports`. Uses the last entry in these files.
-
-    Saves the output to `summary_execution/flow-analysis.json`.
-    """
-    data1 = load_json_file(COMPARE_DIRECTORY_1)["summary_execution_details"][-1]
-    data2 = load_json_file(COMPARE_DIRECTORY_2)["summary_execution_details"][-1]
-
-    # Skip the `high` category
-    categories = [
-        "COMMIT_IN_REFERENCE",
-        "VULN_ID_IN_MESSAGE",
-        "VULN_ID_IN_LINKED_ISSUE",
-        "XREF_BUG",
         "medium",
         "low",
         "not_found",
@@ -497,47 +448,69 @@ def analyse_category_flows_no_mutual_exclusion():
         "missing",
     ]
 
-    # Create the dictionary structure
-    transitions = {}
+    for cat1 in categories:
+        for cat2 in categories:
+            if cat1 == cat2:
+                continue
 
-    for category in categories:
-        transitions[category] = {"data1": [], "data2": []}
+            cves_moving = set(results1[cat1]) & set(results2[cat2])
+            for cve in cves_moving:
+                if cat1 != "missing" and cat2 != "missing":
+                    report1 = load_json_file(
+                        f"../../../data/prospector_reports/reports_now_with_matteos_code/{cve}.json"
+                    )
+                    report2 = load_json_file(
+                        f"../../../data/prospector_reports/reports_without_llm_mvi/{cve}.json"
+                    )
 
-    # Whichever ones do not have a report in both sets (Matteo and me), do not consider them and just list them as missing.
-    transitions["missing"]["data1"] = data1["missing"]
-    transitions["missing"]["data2"] = data2["missing"]
+                    different_refs = _compare_references(
+                        report1["advisory_record"]["references"],
+                        report2["advisory_record"]["references"],
+                    )
 
-    missing = data1["missing"] + data2["missing"]
+                    cve_info = {"different references": different_refs}
 
-    categories.remove("missing")
-    # For each category, get which ones are in first, but not in second and in second but not in first
-    for category in categories:
-        d1, d2 = _get_symmetric_difference(
-            data1["results"][category], data2["results"][category], missing
+                    # If references are the same, check commits
+                    if not different_refs:
+                        commits1 = [
+                            commit["commit_id"] for commit in report1["commits"]
+                        ]
+                        commits2 = [
+                            commit["commit_id"] for commit in report2["commits"]
+                        ]
+                        same_commits_diff_order = _compare_commits(
+                            commits1, commits2
+                        )
+                        cve_info["same commits, ordered differently"] = (
+                            same_commits_diff_order
+                        )
+
+                        if not same_commits_diff_order:
+                            relevance_sum1 = _sum_relevance(report1["commits"])
+                            relevance_sum2 = _sum_relevance(report2["commits"])
+                            cve_info["same relevance sum"] = (
+                                relevance_sum1 == relevance_sum2
+                            )
+
+                transitions[f"{cat1} to {cat2}"].append({cve: cve_info})
+                adjustments[cat1] -= 1
+                adjustments[cat2] += 1
+
+    return transitions, adjustments
+
+
+def _sum_relevance(commits):
+    # Calculate the sum of relevance for rules in the first 10 commits
+    relevance_sum = 0
+    for commit in commits[:10]:
+        relevance_sum += sum(
+            rule["relevance"] for rule in commit["matched_rules"]
         )
-        transitions[category]["data1"] = d1
-        transitions[category]["data2"] = d2
+    return relevance_sum
 
-    # Append to the existing flow analysis results
-    printout = {
-        "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),
-        "results": transitions,
-    }
 
-    try:
-        with open(
-            f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json", "r"
-        ) as f:
-            existing_data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        existing_data = {"flow_analysis_details": []}
-
-    existing_data["flow_analysis_details"].append(printout)
-
-    save_dict_to_json(
-        existing_data,
-        f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json",
-    )
+def _compare_references(refs1, refs2):
+    return refs1 != refs2
 
 
 def _get_symmetric_difference(list1: list, list2: list, ignore: list):
@@ -547,6 +520,11 @@ def _get_symmetric_difference(list1: list, list2: list, ignore: list):
     return list(set(list1) - set(list2) - set(ignore)), list(
         set(list2) - set(list1) - set(ignore)
     )
+
+
+def _compare_commits(commits1, commits2):
+    # Check if the two lists of commits contain the same elements, but possibly in different order
+    return sorted(commits1) == sorted(commits2) and commits1 != commits2
 
 
 def difference_ground_truth_datasets():
