@@ -27,6 +27,7 @@ STRONG_RULES = [
     "XREF_BUG",
     "XREF_GH",
     "VULN_ID_IN_LINKED_ISSUE",
+    "COMMIT_IS_SECURITY_RELEVANT",
 ]
 
 WEAK_RULES = [
@@ -190,13 +191,6 @@ def _analyse_report(
                         results[strong_matched_rule].append(cve_id)
                     return
 
-                # # check for strong rules
-                # for rule in STRONG_RULES:
-                # mutually exclusive
-                # if rule in matched_rules:
-                #     results[rule].append(cve_id)
-                #     results["high"].append(cve_id)
-                #     return
 
             if i <= 0 and candidates_in_fixing_commits:
                 # check for weak rules
@@ -367,7 +361,7 @@ def _process_cve_transitions(results1, results2):
         "not_found",
         "not_reported",
         "false_positive",
-        "missing",
+        # "missing",
     ]
 
     for cat1 in categories:
@@ -394,25 +388,39 @@ def _process_cve_transitions(results1, results2):
 
                     # If references are the same, check commits
                     if not different_refs:
-                        commits1 = [
-                            commit["commit_id"] for commit in report1["commits"]
-                        ]
-                        commits2 = [
-                            commit["commit_id"] for commit in report2["commits"]
-                        ]
-                        same_commits_diff_order = _compare_commits(
-                            commits1, commits2
-                        )
-                        cve_info["same commits, ordered differently"] = (
-                            same_commits_diff_order
+                        different_keywords = _compare_keywords(
+                            report1["advisory_record"]["keywords"],
+                            report2["advisory_record"]["keywords"],
                         )
 
-                        if not same_commits_diff_order:
-                            relevance_sum1 = _sum_relevance(report1["commits"])
-                            relevance_sum2 = _sum_relevance(report2["commits"])
-                            cve_info["same relevance sum"] = (
-                                relevance_sum1 == relevance_sum2
+                        cve_info["different keywords"] = different_keywords
+
+                        if not different_keywords:
+                            commits1 = [
+                                commit["commit_id"]
+                                for commit in report1["commits"]
+                            ]
+                            commits2 = [
+                                commit["commit_id"]
+                                for commit in report2["commits"]
+                            ]
+                            same_commits_diff_order = _compare_commits(
+                                commits1, commits2
                             )
+                            cve_info["same commits, ordered differently"] = (
+                                same_commits_diff_order
+                            )
+
+                            if not same_commits_diff_order:
+                                relevance_sum1 = _sum_relevance(
+                                    report1["commits"]
+                                )
+                                relevance_sum2 = _sum_relevance(
+                                    report2["commits"]
+                                )
+                                cve_info["same relevance sum"] = (
+                                    relevance_sum1 == relevance_sum2
+                                )
 
                 transitions[f"{cat1} to {cat2}"].append({cve: cve_info})
                 adjustments[cat1] -= 1
@@ -433,6 +441,10 @@ def _sum_relevance(commits):
 
 def _compare_references(refs1, refs2):
     return refs1 != refs2
+
+
+def _compare_keywords(keyws1, keyws2):
+    return set(keyws1) != set(keyws2)
 
 
 def _get_symmetric_difference(list1: list, list2: list, ignore: list):
