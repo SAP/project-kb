@@ -7,95 +7,41 @@ from typing import List
 from tqdm import tqdm
 
 from evaluation.utils import (
-    COMPARE_DIRECTORY_1,
-    COMPARE_DIRECTORY_2,
+    COMPARISON_DIRECTORY,
     load_dataset,
     load_json_file,
     save_dict_to_json,
     update_summary_execution_table,
     logger,
     INPUT_DATA_PATH,
-    PROSPECTOR_REPORT_PATH,
+    PROSPECTOR_REPORTS_PATH_HOST,
     ANALYSIS_RESULTS_PATH,
 )
 
 # The number of top commits to consider for 'high confidence' classification
 NUM_TOP_COMMITS = 10
 
-cc_rule_as_strong_rule = False
-# Whether to use the old rule names (old: COMMIT_IN_REFERENCE,
-# CVE_ID_IN_MESSAGE, CVE_ID_IN_LINKED_ISSUE, CROSS_REFERENCED_JIRA_LINK,
-# CROSS_REFERENCED_GH_LINK)
-use_old_rule_names = (
-    True if "matteo_reports" in PROSPECTOR_REPORT_PATH else False
-)
+STRONG_RULES = [
+    "COMMIT_IN_REFERENCE",
+    "VULN_ID_IN_MESSAGE",
+    "XREF_BUG",
+    "XREF_GH",
+    "VULN_ID_IN_LINKED_ISSUE",
+]
 
-
-def _choose_strong_rules(
-    cc_rule_as_strong_rule: bool, use_old_rule_names: bool
-) -> List[str]:
-    """Return the list of strong rules, given the settings."""
-    if cc_rule_as_strong_rule and not use_old_rule_names:
-        STRONG_RULES = [
-            "COMMIT_IN_REFERENCE",
-            "VULN_ID_IN_MESSAGE",
-            "XREF_BUG",
-            "XREF_GH",
-            "VULN_ID_IN_LINKED_ISSUE",
-            "COMMIT_IS_SECURITY_RELEVANT",
-        ]
-    elif use_old_rule_names and not cc_rule_as_strong_rule:
-        STRONG_RULES = [
-            "COMMIT_IN_REFERENCE",
-            "CVE_ID_IN_MESSAGE",
-            "CROSS_REFERENCED_JIRA_LINK",
-            "CROSS_REFERENCED_GH_LINK",
-            "CVE_ID_IN_LINKED_ISSUE",
-        ]
-    else:
-        STRONG_RULES = [
-            "COMMIT_IN_REFERENCE",
-            "VULN_ID_IN_MESSAGE",
-            "XREF_BUG",
-            "XREF_GH",
-            "VULN_ID_IN_LINKED_ISSUE",
-        ]
-
-    return STRONG_RULES
-
-
-STRONG_RULES = _choose_strong_rules(cc_rule_as_strong_rule, use_old_rule_names)
-
-
-if not cc_rule_as_strong_rule and not use_old_rule_names:
-    WEAK_RULES = [
-        "CHANGES_RELEVANT_FILES",
-        "COMMIT_IS_SECURITY_RELEVANT",
-        "CHANGES_RELEVANT_CODE",
-        "RELEVANT_WORDS_IN_MESSAGE",
-        "ADV_KEYWORDS_IN_FILES",
-        "ADV_KEYWORDS_IN_MSG",
-        "SEC_KEYWORDS_IN_MESSAGE",
-        "SEC_KEYWORDS_IN_LINKED_GH",
-        "SEC_KEYWORDS_IN_LINKED_BUG",
-        "GITHUB_ISSUE_IN_MESSAGE",
-        "BUG_IN_MESSAGE",
-        "COMMIT_HAS_TWINS",
-    ]
-else:
-    WEAK_RULES = [
-        "CHANGES_RELEVANT_FILES",
-        "CHANGES_RELEVANT_CODE",
-        "RELEVANT_WORDS_IN_MESSAGE",
-        "ADV_KEYWORDS_IN_FILES",
-        "ADV_KEYWORDS_IN_MSG",
-        "SEC_KEYWORDS_IN_MESSAGE",
-        "SEC_KEYWORDS_IN_LINKED_GH",
-        "SEC_KEYWORDS_IN_LINKED_BUG",
-        "GITHUB_ISSUE_IN_MESSAGE",
-        "BUG_IN_MESSAGE",
-        "COMMIT_HAS_TWINS",
-    ]
+WEAK_RULES = [
+    "CHANGES_RELEVANT_FILES",
+    "CHANGES_RELEVANT_CODE",
+    "RELEVANT_WORDS_IN_MESSAGE",
+    "ADV_KEYWORDS_IN_FILES",
+    "ADV_KEYWORDS_IN_MSG",
+    "SEC_KEYWORDS_IN_MESSAGE",
+    "SEC_KEYWORDS_IN_LINKED_GH",
+    "SEC_KEYWORDS_IN_LINKED_BUG",
+    "GITHUB_ISSUE_IN_MESSAGE",
+    "BUG_IN_MESSAGE",
+    "COMMIT_HAS_TWINS",
+]
 
 
 def analyse_prospector_reports(filename: str, selected_cves: str):
@@ -115,37 +61,23 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
     reports_not_found = []
 
     #### Data to insert into table
-    if use_old_rule_names:
-        results = {
-            "high": [],
-            "COMMIT_IN_REFERENCE": [],
-            "CVE_ID_IN_MESSAGE": [],
-            "CVE_ID_IN_LINKED_ISSUE": [],
-            "CROSS_REFERENCED_JIRA_LINK": [],
-            "CROSS_REFERENCED_GH_LINK": [],
-            "medium": [],
-            "low": [],
-            "not_found": [],
-            "not_reported": [],
-            "false_positive": [],
-        }
-    else:
-        results = {
-            "high": [],
-            "COMMIT_IN_REFERENCE": [],
-            "VULN_ID_IN_MESSAGE": [],
-            "VULN_ID_IN_LINKED_ISSUE": [],
-            "XREF_BUG": [],
-            "XREF_GH": [],
-            "COMMIT_IS_SECURITY_RELEVANT": [],
-            "medium": [],
-            "low": [],
-            "not_found": [],
-            "not_reported": [],
-            "false_positive": [],
-        }
+    results = {
+        "high": [],
+        "COMMIT_IN_REFERENCE": [],
+        "VULN_ID_IN_MESSAGE": [],
+        "VULN_ID_IN_LINKED_ISSUE": [],
+        "XREF_BUG": [],
+        "XREF_GH": [],
+        "COMMIT_IS_SECURITY_RELEVANT": [],
+        "medium": [],
+        "low": [],
+        "not_found": [],
+        "not_reported": [],
+        "false_positive": [],
+        "aborted": [],
+    }
 
-    print(f"Analysing reports in {PROSPECTOR_REPORT_PATH}")
+    print(f"Analysing reports in {PROSPECTOR_REPORTS_PATH_HOST}")
     logger.info(f"Attempting to analyse {len(dataset)} CVEs.")
 
     for record in tqdm(dataset, total=len(dataset), desc="Analysing Records"):
@@ -156,7 +88,7 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
         attempted_count += 1
 
         try:
-            with open(f"{PROSPECTOR_REPORT_PATH}/{cve_id}.json") as file:
+            with open(f"{PROSPECTOR_REPORTS_PATH_HOST}/{cve_id}.json") as file:
                 # Get all commit IDs present in the report
                 report_data = json.load(file)
 
@@ -177,43 +109,16 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
         except Exception as e:
             logger.info(f"Error occured for {cve_id}: {e}")
             continue
+    # Append aborted reports to results object
+    results["aborted"] = reports_not_found
 
-    #### Table Data (write to table)
-    table_data = []
-
-    # Combine the two Cross Reference rules into one count
-    if use_old_rule_names:
-        results["CROSS_REFERENCED_JIRA_LINK"] += results[
-            "CROSS_REFERENCED_GH_LINK"
-        ]
-        results.pop("CROSS_REFERENCED_GH_LINK")
-    # Remove the cc rule count before writing to the table as the table doesn't include it
-    else:
-        if cc_rule_as_strong_rule:
-            logger.info(
-                f"CC Rule matched for {len(results['COMMIT_IS_SECURITY_RELEVANT'])}: {results['COMMIT_IS_SECURITY_RELEVANT']}"
-            )
-            results.pop("COMMIT_IS_SECURITY_RELEVANT")
-
-        results["XREF_BUG"] += results["XREF_GH"]
-        results.pop("XREF_GH")
-
-    logger.info(f"Ran analysis on {PROSPECTOR_REPORT_PATH}.")
-
-    for key, v in results.items():
-        if type(v) == list:
-            v = len(v)
-        logger.info(f"\t{v}\t{key}")
-        table_data.append([v, round(v / analysed_reports_count * 100, 2)])
-
-    # Generate the Latex table
     update_summary_execution_table(
-        mode="MVI",
-        data=table_data,
-        total=str(analysed_reports_count),
+        results=results,
+        total=analysed_reports_count,
         filepath=f"{ANALYSIS_RESULTS_PATH}summary_execution/table.tex",
     )
 
+    logger.info(f"Ran analysis on {PROSPECTOR_REPORTS_PATH_HOST}.")
     logger.info(
         f"Analysed {analysed_reports_count}, couldn't find reports for {len(reports_not_found)} out of {attempted_count} analysis attempts."
     )
@@ -357,7 +262,9 @@ def _save_summary_execution_details(
     Returns:
         The filepath where the details were saved to.
     """
-    batch_name = os.path.basename(os.path.normpath(PROSPECTOR_REPORT_PATH))
+    batch_name = os.path.basename(
+        os.path.normpath(PROSPECTOR_REPORTS_PATH_HOST)
+    )
     detailed_results_output_path = (
         f"{ANALYSIS_RESULTS_PATH}summary_execution/{batch_name}.json"
     )
@@ -387,12 +294,12 @@ def count_existing_reports(data_filepath):
     missing_reports = []
     generated_reports = []
 
-    print(f"Counting reports in {PROSPECTOR_REPORT_PATH}")
+    print(f"Counting reports in {PROSPECTOR_REPORTS_PATH_HOST}")
 
     for record in dataset:
         cve_id = record[0]
 
-        if os.path.isfile(f"{PROSPECTOR_REPORT_PATH}/{cve_id}.json"):
+        if os.path.isfile(f"{PROSPECTOR_REPORTS_PATH_HOST}/{cve_id}.json"):
             generated_reports.append(cve_id)
         else:
             missing_reports.append(cve_id)
@@ -413,9 +320,24 @@ def analyse_category_flows():
 
     Saves the output to `summary_execution/flow-analysis.json`.
     """
-    data1 = load_json_file(COMPARE_DIRECTORY_1)
-    data2 = load_json_file(COMPARE_DIRECTORY_2)
-    print(f"Comparing {COMPARE_DIRECTORY_1} with {COMPARE_DIRECTORY_2}")
+    summary_execution_file = (
+        ANALYSIS_RESULTS_PATH
+        + "summary_execution/"
+        + PROSPECTOR_REPORTS_PATH_HOST.split("/")[-2]
+        + ".json"
+    )
+    summary_execution_comparison_file = (
+        ANALYSIS_RESULTS_PATH
+        + "summary_execution/"
+        + COMPARISON_DIRECTORY.split("/")[-2]
+        + ".json"
+    )
+
+    data1 = load_json_file(summary_execution_file)
+    data2 = load_json_file(summary_execution_comparison_file)
+    print(
+        f"Comparing {PROSPECTOR_REPORTS_PATH_HOST} with {COMPARISON_DIRECTORY}"
+    )
 
     # Get the results from both files
     results1 = data1["summary_execution_details"][0]["results"]
@@ -457,10 +379,10 @@ def _process_cve_transitions(results1, results2):
             for cve in cves_moving:
                 if cat1 != "missing" and cat2 != "missing":
                     report1 = load_json_file(
-                        f"../../../data/prospector_reports/reports_now_with_matteos_code/{cve}.json"
+                        f"{PROSPECTOR_REPORTS_PATH_HOST}/{cve}.json"
                     )
                     report2 = load_json_file(
-                        f"../../../data/prospector_reports/reports_without_llm_mvi/{cve}.json"
+                        f"{COMPARISON_DIRECTORY}/{cve}.json"
                     )
 
                     different_refs = _compare_references(

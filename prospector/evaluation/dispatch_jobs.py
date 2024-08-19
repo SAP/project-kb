@@ -8,8 +8,8 @@ from core.prospector import prospector
 from core.report import generate_report
 from evaluation.utils import (
     INPUT_DATA_PATH,
-    PROSPECTOR_REPORT_PATH,
-    PROSPECTOR_REPORT_PATH_CONTAINER,
+    PROSPECTOR_REPORTS_PATH_HOST,
+    PROSPECTOR_REPORTS_PATH_CONTAINER,
     load_dataset,
     logger,
     config,
@@ -35,7 +35,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
     dispatched_jobs = 0
     for cve in dataset:
         # Skip already existing reports
-        if os.path.exists(f"{PROSPECTOR_REPORT_PATH}/{cve[0]}.json"):
+        if os.path.exists(f"{PROSPECTOR_REPORTS_PATH_HOST}/{cve[0]}.json"):
             continue
 
         dispatched_jobs += 1
@@ -50,7 +50,7 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
                     "cve_id": cve[0],
                     "version_interval": cve[2],
                     "report_type": "json",
-                    "output_file": f"{PROSPECTOR_REPORT_PATH_CONTAINER}{cve[0]}.json",
+                    "output_file": f"{PROSPECTOR_REPORTS_PATH_CONTAINER}{cve[0]}.json",
                     "repository_url": cve[1],
                 },
                 description="Prospector Job",

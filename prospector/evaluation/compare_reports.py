@@ -18,7 +18,7 @@ def process_cve(cve, from_category, to_category):
     # Find Matteo's code report and my report
     try:
         matteo_report = load_json_file(
-            f"../../../data/prospector_reports/matteo_reports/{cve}.json"
+            f"../../../data/prospector_reports/reports_now_with_matteos_code/{cve}.json"
         )
         my_report = load_json_file(
             f"../../../data/prospector_reports/reports_without_llm_mvi/{cve}.json"

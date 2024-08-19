@@ -7,7 +7,7 @@ from typing import Tuple
 from evaluation.utils import (
     ANALYSIS_RESULTS_PATH,
     INPUT_DATA_PATH,
-    PROSPECTOR_REPORT_PATH,
+    PROSPECTOR_REPORTS_PATH_HOST,
     load_dataset,
     load_json_file,
 )
@@ -36,7 +36,7 @@ def analyse_statistics(filename: str):  # noqa: C901
     # For each CSV in the input dataset, check its report
     for itm in dataset:
         # Each itm has ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
-        filepath = PROSPECTOR_REPORT_PATH + filename + f"/{itm[0]}.json"
+        filepath = PROSPECTOR_REPORTS_PATH_HOST + filename + f"/{itm[0]}.json"
         try:
             repo_time, avg_cc_time, total_cc_time = _process_llm_statistics(
                 filepath
@@ -65,7 +65,7 @@ def analyse_statistics(filename: str):  # noqa: C901
 
     # How many commits was the commit classification rule applied to?
     for itm in dataset:
-        filepath = PROSPECTOR_REPORT_PATH + filename + f"/{itm[0]}.json"
+        filepath = PROSPECTOR_REPORTS_PATH_HOST + filename + f"/{itm[0]}.json"
         try:
             cc_num_commits = _get_cc_num_commits(filepath)
             break
