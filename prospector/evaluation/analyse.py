@@ -447,55 +447,7 @@ def _compare_keywords(keyws1, keyws2):
     return set(keyws1) != set(keyws2)
 
 
-def _get_symmetric_difference(list1: list, list2: list, ignore: list):
-    """Returns two lists: the first containing elements that are only in list1
-    but not in list2 and the second one vice versa.
-    """
-    return list(set(list1) - set(list2) - set(ignore)), list(
-        set(list2) - set(list1) - set(ignore)
-    )
-
-
 def _compare_commits(commits1, commits2):
     # Check if the two lists of commits contain the same elements, but possibly in different order
     return sorted(commits1) == sorted(commits2) and commits1 != commits2
 
-
-def difference_ground_truth_datasets():
-    """To find out if two ground truth datasets contain the same CVEs."""
-    filepath1 = "evaluation/data/input/d63.csv"
-    filepath2 = "evaluation/data/input/d63_mvi.csv"
-
-    dataset1 = load_dataset(filepath1)
-    dataset2 = load_dataset(filepath2)
-
-    ids_dataset1 = set(record[0] for record in dataset1)
-    ids_dataset2 = set(record[0] for record in dataset2)
-
-    unique_to_file1 = ids_dataset1 - ids_dataset2
-    unique_to_file2 = ids_dataset2 - ids_dataset1
-
-    print(f"IDs in {filepath1} but not in {filepath2}:")
-    for id in sorted(unique_to_file1):
-        print(id)
-
-    print(f"\nIDs in {filepath2} but not in {filepath1}:")
-    for id in sorted(unique_to_file2):
-        print(id)
-
-    # Find differences in fixing commits
-    different_fixing_commits = []
-
-    ids_and_fixing1 = {}
-    for record in dataset1:
-        ids_and_fixing1[record[0]] = record[4]
-
-    ids_and_fixing2 = {}
-    for record in dataset2:
-        ids_and_fixing2[record[0]] = record[4]
-
-    for k, v in ids_and_fixing1.items():
-        if v != ids_and_fixing2.get(k, ""):
-            different_fixing_commits.append((k, v))
-
-    print(f"\nDifferent fixing commits: {len(different_fixing_commits)}")
