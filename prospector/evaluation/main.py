@@ -8,7 +8,7 @@ from evaluation.analyse import (
     analyse_category_flows,
     analyse_prospector_reports,
     count_existing_reports,
-    difference_ground_truth_datasets,
+    generate_checkmarks_table,
 )
 from evaluation.analyse_statistics import (
     analyse_statistics,
@@ -96,6 +96,12 @@ def parse_cli_args(args):
         action="store_true",
     )
 
+    parser.add_argument(
+        "-cm",
+        "--checkmarks",
+        action="store_true",
+    )
+
     return parser.parse_args()
 
 
@@ -118,6 +124,9 @@ def main(argv):
             analyse_category_flows()
             # analyse_category_flows_no_mutual_exclusion()
         # analysis of Prospector reports
+        elif args.checkmarks:
+            generate_checkmarks_table(args.input, args.cve)
+
         else:
             analyse_prospector_reports(args.input, args.cve)
 

@@ -191,7 +191,6 @@ def _analyse_report(
                         results[strong_matched_rule].append(cve_id)
                     return
 
-
             if i <= 0 and candidates_in_fixing_commits:
                 # check for weak rules
                 weak_matched_rules = set(matched_rules).intersection(WEAK_RULES)
@@ -451,3 +450,140 @@ def _compare_commits(commits1, commits2):
     # Check if the two lists of commits contain the same elements, but possibly in different order
     return sorted(commits1) == sorted(commits2) and commits1 != commits2
 
+
+def generate_checkmarks_table(input_dataset: str, selected_cves):
+    """
+    Generates a table containing matched rules for each fixing commit in the generated reports. The table also contains the total overall execution time and the total LLM execution time.
+
+    Args:
+        json_folder (str): The path to the folder containing the JSON reports.
+        output_file (str): The path to the output LaTeX file.
+
+    Returns:
+        None
+    """
+    # Define the list of all rules
+    all_rules = [
+        "VULN_ID_IN_MESSAGE",
+        "XREF_BUG",
+        "XREF_GH",
+        "COMMIT_IN_REFERENCE",
+        "COMMIT_IS_SECURITY_RELEVANT",
+        "VULN_ID_IN_LINKED_ISSUE",
+        "CHANGES_RELEVANT_FILES",
+        "CHANGES_RELEVANT_CODE",
+        "RELEVANT_WORDS_IN_MESSAGE",
+        "ADV_KEYWORDS_IN_FILES",
+        "ADV_KEYWORDS_IN_MSG",
+        "SEC_KEYWORDS_IN_MESSAGE",
+        "SEC_KEYWORDS_IN_LINKED_GH",
+        "SEC_KEYWORDS_IN_LINKED_BUG",
+        "GITHUB_ISSUE_IN_MESSAGE",
+        "BUG_IN_MESSAGE",
+        "COMMIT_HAS_TWINS",
+    ]
+
+    # Start the LaTeX table
+    latex_column_titles = [rule.replace("_", "\\_") for rule in all_rules]
+    latex_content = (
+        """\\begin{longtabu} to \\textwidth { c | """
+        + " | ".join(["c" for _ in all_rules])
+        + """ | c | c }
+\\caption{Matched rules for each fixing commit}\\\\
+    \\toprule
+    & """
+        + " & ".join([f"\\rot{{{rule}}}" for rule in latex_column_titles])
+        + """ & \\rot{Total Execution Time} & \\rot{LLM Execution Time} \\\\ \\midrule
+    """
+    )
+
+    # Go through every CVE-ID + fixing commit pair in the input dataset:
+    file = INPUT_DATA_PATH + input_dataset + ".csv"
+    dataset = load_dataset(file)
+
+    if len(selected_cves) != 0:
+        dataset = [c for c in dataset if c[0] in selected_cves]
+
+    for record in tqdm(dataset, total=len(dataset), desc="Analysing Records"):
+        cve_id = record[0]
+        fixing_commits = record[4].split(",")
+
+        # Open the report file, and get
+        # - the fixing candidate's matched rules
+        # - the overall execution time
+        # - the sum of the LLM execution times
+        try:
+            with open(f"{PROSPECTOR_REPORTS_PATH_HOST}/{cve_id}.json") as file:
+                report = json.load(file)
+
+        except FileNotFoundError:
+            logger.debug(f"Couldn't find report for {cve_id}")
+            continue
+
+        except Exception as e:
+            logger.info(f"Error occured for {cve_id}: {e}")
+            continue
+
+        matched_rules = []
+        # filter commits and calculate their total relevance
+        relevant_commits = [
+            {
+                "commit_id": commit["commit_id"],
+                "total_relevance": _calculate_total_relevance(commit),
+                "matched_rules": commit["matched_rules"],
+            }
+            for commit in report["commits"]
+            if commit["commit_id"] in fixing_commits
+        ]
+
+        if relevant_commits:
+            fixing_candidate = max(
+                relevant_commits, key=lambda x: x["total_relevance"]
+            )
+
+            matched_rules = [
+                rule["id"] for rule in fixing_candidate.get("matched_rules")
+            ]
+
+        else:
+            # Don't save?
+            print(f"Did not add {cve_id}.json to the table.")
+            continue
+
+        overall_exectime = round(
+            report["processing_statistics"]["core"]["execution time"][0], 2
+        )
+        llm_exectime = round(
+            sum(
+                report["processing_statistics"]["LLM"]["commit_classification"][
+                    "execution time"
+                ]
+            ),
+            2,
+        )
+
+        # Initialise a row with the CVE ID
+        row = [cve_id]
+
+        rule_checks = {rule: "" for rule in all_rules}
+        for r in matched_rules:
+            rule_checks[r] = "\checkmark"
+
+        row.extend([rule_checks[r] for r in all_rules])
+        row.extend([str(overall_exectime), str(llm_exectime)])
+
+        # Add the row to the latex content
+        latex_content += " & ".join(row) + "\\\\ \\midrule \n"
+
+    # End latex table
+    latex_content += "\\bottomrule\n\\end{longtabu}"
+
+    # Write the content to the output file
+    with open(
+        ANALYSIS_RESULTS_PATH + "summary_execution/checkmarks_table.tex", "w"
+    ) as file:
+        file.writelines(latex_content)
+
+
+def _calculate_total_relevance(commit):
+    return sum(rule["relevance"] for rule in commit["matched_rules"])
