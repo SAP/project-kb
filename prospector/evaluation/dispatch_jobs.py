@@ -48,7 +48,9 @@ def dispatch_prospector_jobs(filename: str, selected_cves: str):
                 _run_prospector_and_generate_report,
                 kwargs={
                     "cve_id": cve[0],
-                    "version_interval": cve[2],
+                    "version_interval": (
+                        cve[2] if config.version_interval else "None:None"
+                    ),
                     "report_type": "json",
                     "output_file": f"{PROSPECTOR_REPORTS_PATH_CONTAINER}{cve[0]}.json",
                     "repository_url": cve[1],
