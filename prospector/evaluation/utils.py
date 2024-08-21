@@ -1,6 +1,5 @@
 import csv
 import json
-from typing import List
 
 from omegaconf import OmegaConf
 from log.logger import create_logger
@@ -47,15 +46,35 @@ def update_summary_execution_table(
         The newly updated LaTeX table at `filepath`.
     """
     # Combine the two Cross Reference rules into one count
-    results["XREF_BUG"] += results["XREF_GH"]
-    results.pop("XREF_GH")
+    # results["XREF_BUG"] += results["XREF_GH"]
+    # results.pop("XREF_GH")
+    results["CROSS_REFERENCED_JIRA_LINK"] += results["CROSS_REFERENCED_GH_LINK"]
+    results.pop("CROSS_REFERENCED_GH_LINK")
 
     table_data = []
     for key, v in results.items():
-        if type(v) == list:
-            v = len(v)
+        v = len(v)
         logger.info(f"\t{v}\t{key}")
-        table_data.append([v, round(v / total * 100, 2)])
+        # if key in [
+        #     "COMMIT_IN_REFERENCE",
+        #     "VULN_ID_IN_MESSAGE",
+        #     "XREF_BUG",
+        #     "XREF_GH",
+        #     "VULN_ID_IN_LINKED_ISSUE",
+        #     "COMMIT_IS_SECURITY_RELEVANT",
+        # ]:
+        if key in [
+            "COMMIT_IN_REFERENCE",
+            "VULN_ID_IN_MESSAGE",
+            "CROSS_REFERENCED_JIRA_LINK",
+            "CROSS_REFERENCED_GH_LINK",
+            "VULN_ID_IN_LINKED_ISSUE",
+            "COMMIT_IS_SECURITY_RELEVANT",
+        ]:
+            total_high_confidence = len(results.get("high"))
+            table_data.append([v, round(v / total_high_confidence * 100, 2)])
+        else:
+            table_data.append([v, round(v / total * 100, 2)])
 
     # Choose which column to update:
     if config.use_comparison_reports:
@@ -78,17 +97,27 @@ def update_summary_execution_table(
 
         # Update the corresponding columns based on the mode
         try:
+            # For every index and line to edit
             for i, line_number in enumerate(lines_to_edit):
-                row_parts = table_lines[line_number].split("&")
+                # split the row into parts/sections (at every &)
+                columns = table_lines[line_number].split("&")
+                # for every index and column in this line (each part is a column, since it's split at &)
                 for j, col_index in enumerate(col_indices):
-                    row_parts[col_index] = f" {table_data[i][j]} "
+                    # make the text gray if it's the prior eval column
+                    if config.use_comparison_reports:
+                        columns[col_index] = (
+                            f"\\color{{gray}} {table_data[i][j]} "
+                        )
+                    # else just regular black
+                    else:
+                        columns[col_index] = f" {table_data[i][j]} "
 
                 # Preserve everything after the last column we're updating
                 last_updated_col = max(col_indices)
-                end_part = " & ".join(row_parts[last_updated_col + 1 :]).strip()
+                end_part = " & ".join(columns[last_updated_col + 1 :]).strip()
 
                 # Reconstruct the line, preserving formatting
-                updated_parts = row_parts[: last_updated_col + 1]
+                updated_parts = columns[: last_updated_col + 1]
                 if end_part:
                     updated_parts.append(end_part)
                 table_lines[line_number] = " & ".join(updated_parts)
@@ -109,7 +138,12 @@ def update_summary_execution_table(
         # Add the last row showing the total count
         last_row = table_lines[27]
         last_row_parts = last_row.split("&")
-        last_row_parts[col_indices[0]] = f" \\textbf{{{total}}} "
+        if config.use_comparison_reports:
+            last_row_parts[col_indices[0]] = (
+                f"\\color{{gray}} \\textbf{{{total}}} "
+            )
+        else:
+            last_row_parts[col_indices[0]] = f" \\textbf{{{total}}} "
         table_lines[27] = "&".join(last_row_parts)
 
         # Write the updated table back to the file
@@ -124,14 +158,16 @@ def select_reports_path_host(
 ):
     """Select where to store generated reports, or where to find reports for
     analysis."""
-    if use_comparison_reports:
-        return f"{config.reports_directory}old_code_reports/"
-
+    if version_interval and use_comparison_reports:
+        return f"{config.reports_directory}mvi_old_code_reports/"
+        # return f"{config.reports_directory}matteo_reports/"
     if version_interval and not llm_support:
         return f"{config.reports_directory}mvi_without_llm_reports/"
     if version_interval and llm_support:
         return f"{config.reports_directory}mvi_with_llm_reports/"
 
+    if not version_interval and use_comparison_reports:
+        return f"{config.reports_directory}nvi_old_code_reports/"
     if not version_interval and not llm_support:
         return f"{config.reports_directory}nvi_without_llm_reports/"
     if not version_interval and llm_support:

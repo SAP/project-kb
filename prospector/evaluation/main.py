@@ -9,6 +9,7 @@ from evaluation.analyse import (
     analyse_prospector_reports,
     count_existing_reports,
     generate_checkmarks_table,
+    generate_sankey_diagram,
 )
 from evaluation.analyse_statistics import (
     analyse_statistics,
@@ -139,7 +140,8 @@ def main(argv):
         count_existing_reports(args.input)
 
     elif not args.analyze and not args.execute and args.temporary:
-        difference_ground_truth_datasets()
+        # difference_ground_truth_datasets()
+        generate_sankey_diagram()
 
     # Cannot choose both analyse and execute, stop here.
     elif args.analyze and args.execute:

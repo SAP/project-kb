@@ -3,6 +3,8 @@ from datetime import datetime
 import json
 import os
 from typing import List
+import plotly.graph_objects as go
+from plotly.io import write_image
 
 from tqdm import tqdm
 
@@ -19,14 +21,22 @@ from evaluation.utils import (
 )
 
 # The number of top commits to consider for 'high confidence' classification
-NUM_TOP_COMMITS = 10
+NUM_TOP_COMMITS = 1
 
+# STRONG_RULES = [
+#     "COMMIT_IN_REFERENCE",
+#     "VULN_ID_IN_MESSAGE",
+#     "XREF_BUG",
+#     "XREF_GH",
+#     "VULN_ID_IN_LINKED_ISSUE",
+#     "COMMIT_IS_SECURITY_RELEVANT",
+#  ]
 STRONG_RULES = [
     "COMMIT_IN_REFERENCE",
-    "VULN_ID_IN_MESSAGE",
-    "XREF_BUG",
-    "XREF_GH",
-    "VULN_ID_IN_LINKED_ISSUE",
+    "CVE_ID_IN_MESSAGE",
+    "CROSS_REFERENCED_JIRA_LINK",
+    "CROSS_REFERENCED_GH_LINK",
+    "CVE_ID_IN_LINKED_ISSUE",
     "COMMIT_IS_SECURITY_RELEVANT",
 ]
 
@@ -62,13 +72,28 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
     reports_not_found = []
 
     #### Data to insert into table
+    # results = {
+    #     "high": [],
+    #     "COMMIT_IN_REFERENCE": [],
+    #     "VULN_ID_IN_MESSAGE": [],
+    #     "VULN_ID_IN_LINKED_ISSUE": [],
+    #     "XREF_BUG": [],
+    #     "XREF_GH": [],
+    #     "COMMIT_IS_SECURITY_RELEVANT": [],
+    #     "medium": [],
+    #     "low": [],
+    #     "not_found": [],
+    #     "not_reported": [],
+    #     "false_positive": [],
+    #     "aborted": [],
+    # }
     results = {
         "high": [],
         "COMMIT_IN_REFERENCE": [],
-        "VULN_ID_IN_MESSAGE": [],
-        "VULN_ID_IN_LINKED_ISSUE": [],
-        "XREF_BUG": [],
-        "XREF_GH": [],
+        "CVE_ID_IN_MESSAGE": [],
+        "CVE_ID_IN_LINKED_ISSUE": [],
+        "CROSS_REFERENCED_JIRA_LINK": [],
+        "CROSS_REFERENCED_GH_LINK": [],
         "COMMIT_IS_SECURITY_RELEVANT": [],
         "medium": [],
         "low": [],
@@ -587,3 +612,135 @@ def generate_checkmarks_table(input_dataset: str, selected_cves):
 
 def _calculate_total_relevance(commit):
     return sum(rule["relevance"] for rule in commit["matched_rules"])
+
+
+def generate_sankey_diagram():
+    # Load JSON data
+    summary_execution_file = (
+        ANALYSIS_RESULTS_PATH
+        + "summary_execution/"
+        + PROSPECTOR_REPORTS_PATH_HOST.split("/")[-2]
+        + ".json"
+    )
+    summary_execution_comparison_file = (
+        ANALYSIS_RESULTS_PATH
+        + "summary_execution/"
+        + COMPARISON_DIRECTORY.split("/")[-2]
+        + ".json"
+    )
+
+    summary1 = load_json_file(summary_execution_file)
+    summary2 = load_json_file(summary_execution_comparison_file)
+    print(
+        f"Comparing {summary_execution_file} with {summary_execution_comparison_file}"
+    )
+    # Ignore sub categories of "high"
+    categories_to_include = [
+        "high",
+        "medium",
+        "low",
+        "not_found",
+        "not_reported",
+        "false_positive",
+        "aborted",
+        "missing",
+    ]
+    # Extract results from both files
+    results1 = summary1["summary_execution_details"][-1]["results"]
+    results2 = summary2["summary_execution_details"][-1]["results"]
+
+    # Filter results to include only specified categories
+    results1 = {k: v for k, v in results1.items() if k in categories_to_include}
+    results2 = {k: v for k, v in results2.items() if k in categories_to_include}
+
+    # Create a mapping of CVEs to their categories for both files
+    cve_categories1 = {
+        cve: category for category, cves in results1.items() for cve in cves
+    }
+    cve_categories2 = {
+        cve: category for category, cves in results2.items() for cve in cves
+    }
+
+    # Get all unique CVEs and categories
+    all_cves = set(cve_categories1.keys())
+
+    # Create node labels
+    node_labels = categories_to_include + categories_to_include
+
+    # Create source, target, and value lists for Sankey diagram
+    source = []
+    target = []
+    value = []
+    link_colours = []
+
+    # Count movements between categories
+    movements = defaultdict(int)
+    for cve in all_cves:
+        cat1 = cve_categories1.get(cve, None)
+        cat2 = cve_categories2.get(cve, None)
+        if not cat1 or not cat2:
+            continue
+        movements[(cat1, cat2)] += 1
+
+    # Assign colors to categories
+    category_colors = {
+        "high": "steelblue",
+        "medium": "dodgerblue",
+        "low": "cornflowerblue",
+        "not_found": "teal",
+        "not_reported": "cadetblue",
+        "false_positive": "lightgreen",
+        "aborted": "palegreen",
+        "missing": "gray",
+    }
+
+    # Create node colors
+    node_colors = [category_colors[cat] for cat in categories_to_include] * 2
+    # Convert movements to source, target, and value lists
+    category_to_index = {cat: i for i, cat in enumerate(categories_to_include)}
+    for (cat1, cat2), count in movements.items():
+        source.append(category_to_index[cat1])
+        target.append(category_to_index[cat2] + len(categories_to_include))
+        value.append(count)
+        if cat1 == cat2:
+            link_colours.append("lightgray")
+        else:
+            link_colours.append(category_colors[cat1])
+
+    # Create the Sankey diagram
+    fig = go.Figure(
+        data=[
+            go.Sankey(
+                node=dict(
+                    pad=15,
+                    thickness=20,
+                    line=dict(color="black", width=0.5),
+                    label=node_labels,
+                    color=node_colors,
+                ),
+                link=dict(
+                    source=source,
+                    target=target,
+                    value=value,
+                    color=link_colours,
+                ),
+            )
+        ]
+    )
+
+    filename1 = PROSPECTOR_REPORTS_PATH_HOST.split("/")[-2]
+    filename2 = COMPARISON_DIRECTORY.split("/")[-2]
+
+    fig.update_layout(
+        title_text=f"CVE Category Changes between {filename1} and {filename2}",
+        font_size=10,
+        width=1200,
+        height=800,
+    )
+
+    output_file = (
+        ANALYSIS_RESULTS_PATH + "plots/" + f"sankey-{filename1}-{filename2}.png"
+    )
+    # Save as PNG
+    write_image(fig, output_file)
+    print(f"Sankey diagram saved to {output_file}")
