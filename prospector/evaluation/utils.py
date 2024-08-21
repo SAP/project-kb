@@ -46,38 +46,28 @@ def update_summary_execution_table(
         The newly updated LaTeX table at `filepath`.
     """
     # Combine the two Cross Reference rules into one count
-    # results["XREF_BUG"] += results["XREF_GH"]
-    # results.pop("XREF_GH")
-    results["CROSS_REFERENCED_JIRA_LINK"] += results["CROSS_REFERENCED_GH_LINK"]
-    results.pop("CROSS_REFERENCED_GH_LINK")
+    if config.batch in ["regular", "old_code"]:
+        results["XREF_BUG"] += results["XREF_GH"]
+        results.pop("XREF_GH")
+    else:
+        results["CROSS_REFERENCED_JIRA_LINK"] += results[
+            "CROSS_REFERENCED_GH_LINK"
+        ]
+        results.pop("CROSS_REFERENCED_GH_LINK")
 
     table_data = []
-    for key, v in results.items():
+    for i, (key, v) in enumerate(results.items()):
         v = len(v)
         logger.info(f"\t{v}\t{key}")
-        # if key in [
-        #     "COMMIT_IN_REFERENCE",
-        #     "VULN_ID_IN_MESSAGE",
-        #     "XREF_BUG",
-        #     "XREF_GH",
-        #     "VULN_ID_IN_LINKED_ISSUE",
-        #     "COMMIT_IS_SECURITY_RELEVANT",
-        # ]:
-        if key in [
-            "COMMIT_IN_REFERENCE",
-            "VULN_ID_IN_MESSAGE",
-            "CROSS_REFERENCED_JIRA_LINK",
-            "CROSS_REFERENCED_GH_LINK",
-            "VULN_ID_IN_LINKED_ISSUE",
-            "COMMIT_IS_SECURITY_RELEVANT",
-        ]:
+
+        if i > 0 and i < 5:
             total_high_confidence = len(results.get("high"))
             table_data.append([v, round(v / total_high_confidence * 100, 2)])
         else:
             table_data.append([v, round(v / total * 100, 2)])
 
     # Choose which column to update:
-    if config.use_comparison_reports:
+    if config.batch == "old_reports":
         filepath = ANALYSIS_RESULTS_PATH + "summary_execution/mvi_table.tex"
         col_indices = [1, 2]
 
@@ -104,7 +94,7 @@ def update_summary_execution_table(
                 # for every index and column in this line (each part is a column, since it's split at &)
                 for j, col_index in enumerate(col_indices):
                     # make the text gray if it's the prior eval column
-                    if config.use_comparison_reports:
+                    if config.batch == "old_reports":
                         columns[col_index] = (
                             f"\\color{{gray}} {table_data[i][j]} "
                         )
@@ -138,7 +128,7 @@ def update_summary_execution_table(
         # Add the last row showing the total count
         last_row = table_lines[27]
         last_row_parts = last_row.split("&")
-        if config.use_comparison_reports:
+        if config.batch == "old_reports":
             last_row_parts[col_indices[0]] = (
                 f"\\color{{gray}} \\textbf{{{total}}} "
             )
@@ -154,19 +144,20 @@ def update_summary_execution_table(
 
 
 def select_reports_path_host(
-    version_interval: bool, llm_support: bool, use_comparison_reports: bool
+    version_interval: bool, llm_support: bool, batch: str
 ):
     """Select where to store generated reports, or where to find reports for
     analysis."""
-    if version_interval and use_comparison_reports:
+    if version_interval and batch == "old_code":
         return f"{config.reports_directory}mvi_old_code_reports/"
-        # return f"{config.reports_directory}matteo_reports/"
+    if version_interval and batch == "old_reports":
+        return f"{config.reports_directory}matteo_reports/"
     if version_interval and not llm_support:
         return f"{config.reports_directory}mvi_without_llm_reports/"
     if version_interval and llm_support:
         return f"{config.reports_directory}mvi_with_llm_reports/"
 
-    if not version_interval and use_comparison_reports:
+    if not version_interval and batch == "old_code":
         return f"{config.reports_directory}nvi_old_code_reports/"
     if not version_interval and not llm_support:
         return f"{config.reports_directory}nvi_without_llm_reports/"
@@ -177,8 +168,9 @@ def select_reports_path_host(
 INPUT_DATA_PATH = config.input_data_path
 # Select the folder depending whether LLMs are used or not
 PROSPECTOR_REPORTS_PATH_HOST = select_reports_path_host(
-    config.version_interval, config.llm_support, config.use_comparison_reports
+    config.version_interval, config.llm_support, config.batch
 )
+BATCH = config.batch
 PROSPECTOR_REPORTS_PATH_CONTAINER = "/app/evaluation/data/reports/"
 ANALYSIS_RESULTS_PATH = "evaluation/data/results/"
 # Comparison dirs

@@ -141,7 +141,9 @@ def main(argv):
 
     elif not args.analyze and not args.execute and args.temporary:
         # difference_ground_truth_datasets()
-        generate_sankey_diagram()
+        # generate_sankey_diagram()
+        # candidates_execution_time(args.input)
+        overall_execution_time(args.input)
 
     # Cannot choose both analyse and execute, stop here.
     elif args.analyze and args.execute:

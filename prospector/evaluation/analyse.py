@@ -18,27 +18,30 @@ from evaluation.utils import (
     INPUT_DATA_PATH,
     PROSPECTOR_REPORTS_PATH_HOST,
     ANALYSIS_RESULTS_PATH,
+    BATCH,
 )
 
 # The number of top commits to consider for 'high confidence' classification
-NUM_TOP_COMMITS = 1
+NUM_TOP_COMMITS = 5
 
-# STRONG_RULES = [
-#     "COMMIT_IN_REFERENCE",
-#     "VULN_ID_IN_MESSAGE",
-#     "XREF_BUG",
-#     "XREF_GH",
-#     "VULN_ID_IN_LINKED_ISSUE",
-#     "COMMIT_IS_SECURITY_RELEVANT",
-#  ]
-STRONG_RULES = [
-    "COMMIT_IN_REFERENCE",
-    "CVE_ID_IN_MESSAGE",
-    "CROSS_REFERENCED_JIRA_LINK",
-    "CROSS_REFERENCED_GH_LINK",
-    "CVE_ID_IN_LINKED_ISSUE",
-    "COMMIT_IS_SECURITY_RELEVANT",
-]
+if BATCH in ["regular", "old_code"]:
+    STRONG_RULES = [
+        "COMMIT_IN_REFERENCE",
+        "VULN_ID_IN_MESSAGE",
+        "XREF_BUG",
+        "XREF_GH",
+        "VULN_ID_IN_LINKED_ISSUE",
+        "COMMIT_IS_SECURITY_RELEVANT",
+    ]
+else:
+    STRONG_RULES = [
+        "COMMIT_IN_REFERENCE",
+        "CVE_ID_IN_MESSAGE",
+        "CROSS_REFERENCED_JIRA_LINK",
+        "CROSS_REFERENCED_GH_LINK",
+        "CVE_ID_IN_LINKED_ISSUE",
+        "COMMIT_IS_SECURITY_RELEVANT",
+    ]
 
 WEAK_RULES = [
     "CHANGES_RELEVANT_FILES",
@@ -72,36 +75,38 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
     reports_not_found = []
 
     #### Data to insert into table
-    # results = {
-    #     "high": [],
-    #     "COMMIT_IN_REFERENCE": [],
-    #     "VULN_ID_IN_MESSAGE": [],
-    #     "VULN_ID_IN_LINKED_ISSUE": [],
-    #     "XREF_BUG": [],
-    #     "XREF_GH": [],
-    #     "COMMIT_IS_SECURITY_RELEVANT": [],
-    #     "medium": [],
-    #     "low": [],
-    #     "not_found": [],
-    #     "not_reported": [],
-    #     "false_positive": [],
-    #     "aborted": [],
-    # }
-    results = {
-        "high": [],
-        "COMMIT_IN_REFERENCE": [],
-        "CVE_ID_IN_MESSAGE": [],
-        "CVE_ID_IN_LINKED_ISSUE": [],
-        "CROSS_REFERENCED_JIRA_LINK": [],
-        "CROSS_REFERENCED_GH_LINK": [],
-        "COMMIT_IS_SECURITY_RELEVANT": [],
-        "medium": [],
-        "low": [],
-        "not_found": [],
-        "not_reported": [],
-        "false_positive": [],
-        "aborted": [],
-    }
+    if BATCH in ["regular", "old_code"]:
+        results = {
+            "high": [],
+            "COMMIT_IN_REFERENCE": [],
+            "VULN_ID_IN_MESSAGE": [],
+            "VULN_ID_IN_LINKED_ISSUE": [],
+            "XREF_BUG": [],
+            "XREF_GH": [],
+            "COMMIT_IS_SECURITY_RELEVANT": [],
+            "medium": [],
+            "low": [],
+            "not_found": [],
+            "not_reported": [],
+            "false_positive": [],
+            "aborted": [],
+        }
+    else:
+        results = {
+            "high": [],
+            "COMMIT_IN_REFERENCE": [],
+            "CVE_ID_IN_MESSAGE": [],
+            "CVE_ID_IN_LINKED_ISSUE": [],
+            "CROSS_REFERENCED_JIRA_LINK": [],
+            "CROSS_REFERENCED_GH_LINK": [],
+            "COMMIT_IS_SECURITY_RELEVANT": [],
+            "medium": [],
+            "low": [],
+            "not_found": [],
+            "not_reported": [],
+            "false_positive": [],
+            "aborted": [],
+        }
 
     print(f"Analysing reports in {PROSPECTOR_REPORTS_PATH_HOST}")
     logger.info(f"Attempting to analyse {len(dataset)} CVEs.")
@@ -216,7 +221,7 @@ def _analyse_report(
                         results[strong_matched_rule].append(cve_id)
                     return
 
-            if i <= 0 and candidates_in_fixing_commits:
+            if i <= NUM_TOP_COMMITS and candidates_in_fixing_commits:
                 # check for weak rules
                 weak_matched_rules = set(matched_rules).intersection(WEAK_RULES)
                 if weak_matched_rules:
