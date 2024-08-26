@@ -36,7 +36,7 @@ def analyse_statistics(filename: str):  # noqa: C901
     # For each CSV in the input dataset, check its report
     for itm in dataset:
         # Each itm has ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS
-        filepath = PROSPECTOR_REPORTS_PATH_HOST + filename + f"/{itm[0]}.json"
+        filepath = PROSPECTOR_REPORTS_PATH_HOST + f"{itm[0]}.json"
         try:
             repo_time, avg_cc_time, total_cc_time = _process_llm_statistics(
                 filepath
@@ -124,8 +124,11 @@ def _process_llm_statistics(filepath: str) -> Tuple[float, float, float]:
                 llm_stats["commit_classification"]["execution time"]
             )
 
+            # time_for_repo_url = llm_stats["repository_url"]["execution time"][0]
+
             return (
-                llm_stats["repository_url"]["execution time"][0],
+                # llm_stats["repository_url"]["execution time"][0],
+                0,
                 avg_cc_time,
                 total_cc_time,
             )
@@ -159,10 +162,10 @@ def overall_execution_time(input_file: str):
     dataset = dataset[:100]
 
     directories = {
-        "without LLM NVI": "evaluation/data/reports_without_llm",
-        "with LLM NVI": "evaluation/data/reports_with_llm",
-        "without LLM MVI": "evaluation/data/reports_without_llm_mvi",
-        "with LLM MVI": "evaluation/data/reports_with_llm_mvi",
+        "without LLM NVI": "../../../data/new_db_prospector_reports/mvi_with_llm_reports",
+        "with LLM NVI": "../../../data/prospector_reports/nvi_with_llm_reports",
+        "without LLM MVI": "../../../data/prospector_reports/mvi_without_llm_reports",
+        "with LLM MVI": "../../../data/prospector_reports/mvi_with_llm_reports",
     }
 
     for batch, path in directories.items():
@@ -251,7 +254,7 @@ def commit_classification_time(input_file: str):
     plt.yscale("log")
 
     # Customize the plot
-    plt.title("Overall Execution Time Comparison (Log Scale)")
+    plt.title("Commit Classification Time Comparison")
     plt.xlabel("Report Set")
     plt.ylabel("Execution Time (s)")
 
@@ -282,8 +285,8 @@ def candidates_execution_time(input_file: str):
     # dataset = dataset[:100]
 
     directories = {
-        "NVI": "evaluation/data/reports_without_llm_mvi",
-        # "MVI": "evaluation/data/reports_with_llm_mvi",
+        # "NVI": "evaluation/data/reports_without_llm_mvi",
+        "MVI": "../../../data/new_db_prospector_reports/mvi_with_llm_reports",
     }
 
     for batch, path in directories.items():
