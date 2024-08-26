@@ -27,9 +27,8 @@ def fetch_url(
     """
 
     try:
-        session = requests_cache.CachedSession(
-            "requests-cache", expire_after=604800
-        )
+        # session = requests_cache.CachedSession("requests-cache", expire_after=0)
+        session = requests.Session()
         if params is None:
             content = session.get(url).content
         else:

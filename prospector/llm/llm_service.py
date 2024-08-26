@@ -1,5 +1,6 @@
 import itertools
 import re
+import time
 
 import validators
 from langchain_core.language_models.llms import LLM
@@ -117,6 +118,8 @@ class LLMService(metaclass=Singleton):
                 }
             )
             logger.info(f"LLM returned is_relevant={is_relevant}")
+
+            time.sleep(1)
 
         except HTTPError as e:
             # if the diff is too big, a 400 error is returned -> silently ignore by returning False for this commit
