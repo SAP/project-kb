@@ -246,15 +246,26 @@ def prospector(  # noqa: C901
     ):
         save_or_update_processed_commits(backend_address, payload)
     else:
-        logger.warning("Preprocessed commits are not being sent to backend")
+        logger.warning(
+            "Preprocessed commits are not being sent to backend (after phase 1)"
+        )
 
     ranked_candidates = evaluate_commits(
-        preprocessed_commits, advisory_record, backend_address, enabled_rules
+        preprocessed_commits,
+        advisory_record,
+        use_backend,
+        backend_address,
+        enabled_rules,
     )
 
     # Save outcome of security relevance to DB (Phase 2 Rule)
     payload = [c.to_dict() for c in ranked_candidates[:NUM_COMMITS_PHASE_2]]
-    save_or_update_processed_commits(backend_address, payload)
+    if len(payload) > 0 and use_backend != USE_BACKEND_NEVER:
+        save_or_update_processed_commits(backend_address, payload)
+    else:
+        logger.warning(
+            "Preprocessed commits are not being sent to backend (after phase 2)"
+        )
 
     # ConsoleWriter.print("Commit ranking and aggregation...")
     ranked_candidates = remove_twins(ranked_candidates)
@@ -298,6 +309,7 @@ def filter(commits: Dict[str, RawCommit]) -> Dict[str, RawCommit]:
 def evaluate_commits(
     commits: List[Commit],
     advisory: AdvisoryRecord,
+    use_backend: str,
     backend_address: str,
     enabled_rules: List[str],
 ) -> List[Commit]:
@@ -318,8 +330,15 @@ def evaluate_commits(
     """
     with ExecutionTimer(core_statistics.sub_collection("candidates analysis")):
         with ConsoleWriter("Candidate analysis") as _:
+            # Pass True to the rules module if the backend is being used, False
+            # otherwise (needed to decide whether to update the database)
+            use_backend = use_backend != USE_BACKEND_NEVER
             ranked_commits = apply_rules(
-                commits, advisory, backend_address, enabled_rules=enabled_rules
+                commits,
+                advisory,
+                use_backend,
+                backend_address,
+                enabled_rules=enabled_rules,
             )
 
     return ranked_commits

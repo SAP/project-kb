@@ -57,6 +57,7 @@ class Rule:
 def apply_rules(
     candidates: List[Commit],
     advisory_record: AdvisoryRecord,
+    use_backend: bool,
     backend_address: str,
     enabled_rules: List[str] = [],
 ) -> List[Commit]:
@@ -95,7 +96,7 @@ def apply_rules(
 
         for candidate in candidates[:NUM_COMMITS_PHASE_2]:
             for rule in phase_2_rules:
-                if rule.apply(candidate, backend_address):
+                if rule.apply(candidate, use_backend, backend_address):
                     counter.increment("matches")
                     candidate.add_match(rule.as_dict())
             candidate.compute_relevance()
@@ -433,6 +434,7 @@ class CommitIsSecurityRelevant(Rule):
     def apply(
         self,
         candidate: Commit,
+        use_backend: bool,
         backend_address: str,
     ) -> bool:
 
@@ -441,24 +443,23 @@ class CommitIsSecurityRelevant(Rule):
         ):
             # Check if this commit is already in the database
             try:
-                r = requests.get(
-                    f"{backend_address}/commits/{candidate.repository}",
-                    params={"commit_id": candidate.commit_id},
-                    timeout=10,
-                )
-                r.raise_for_status()
-                commit_data = r.json()[0]
+                if use_backend:
+                    r = requests.get(
+                        f"{backend_address}/commits/{candidate.repository}",
+                        params={"commit_id": candidate.commit_id},
+                        timeout=10,
+                    )
+                    r.raise_for_status()
+                    commit_data = r.json()[0]
 
-                is_security_relevant = commit_data.get("security_relevant")
-                if is_security_relevant is not None:
-                    candidate.security_relevant = is_security_relevant
-                    return is_security_relevant
+                    is_security_relevant = commit_data.get("security_relevant")
+                    if is_security_relevant is not None:
+                        candidate.security_relevant = is_security_relevant
+                        return is_security_relevant
 
                 candidate.security_relevant = LLMService().classify_commit(
                     candidate.diff, candidate.repository, candidate.message
                 )
-
-                return candidate.security_relevant
 
                 return candidate.security_relevant
 
