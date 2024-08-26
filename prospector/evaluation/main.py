@@ -116,10 +116,10 @@ def main(argv):
     elif args.analyze and not args.execute:
         # analysis of execution statistics in report
         if args.stats:
-            # analyse_statistics(args.input)
+            analyse_statistics(args.input)
             # overall_execution_time(args.input)
             # commit_classification_time(args.input)
-            candidates_execution_time(args.input)
+            # candidates_execution_time(args.input)
 
         elif args.flow:
             analyse_category_flows()
@@ -141,9 +141,14 @@ def main(argv):
 
     elif not args.analyze and not args.execute and args.temporary:
         # difference_ground_truth_datasets()
-        # generate_sankey_diagram()
+        # generate_sankey_diagram("mvi_old_reports", "mvi_old_code", "mvi_without_llm")
+        generate_sankey_diagram(
+            "mvi_old_reports",
+            "mvi_old_reports(new_categories)",
+            "mvi_without_llm",
+        )
         # candidates_execution_time(args.input)
-        overall_execution_time(args.input)
+        # overall_execution_time(args.input)
 
     # Cannot choose both analyse and execute, stop here.
     elif args.analyze and args.execute:

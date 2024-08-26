@@ -23,6 +23,7 @@ from evaluation.utils import (
 
 # The number of top commits to consider for 'high confidence' classification
 NUM_TOP_COMMITS = 5
+# NUM_TOP_COMMITS = 10
 
 if BATCH in ["regular", "old_code"]:
     STRONG_RULES = [
@@ -143,11 +144,12 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
     # Append aborted reports to results object
     results["aborted"] = reports_not_found
 
-    update_summary_execution_table(
-        results=results,
-        total=analysed_reports_count,
-        filepath=f"{ANALYSIS_RESULTS_PATH}summary_execution/table.tex",
-    )
+    if BATCH == "regular":
+        update_summary_execution_table(
+            results=results,
+            total=analysed_reports_count,
+            filepath=f"{ANALYSIS_RESULTS_PATH}summary_execution/table.tex",
+        )
 
     logger.info(f"Ran analysis on {PROSPECTOR_REPORTS_PATH_HOST}.")
     logger.info(
@@ -222,6 +224,7 @@ def _analyse_report(
                     return
 
             if i <= NUM_TOP_COMMITS and candidates_in_fixing_commits:
+                # if i <= 0 and candidates_in_fixing_commits:
                 # check for weak rules
                 weak_matched_rules = set(matched_rules).intersection(WEAK_RULES)
                 if weak_matched_rules:
@@ -407,13 +410,28 @@ def _process_cve_transitions(results1, results2):
                     report2 = load_json_file(
                         f"{COMPARISON_DIRECTORY}/{cve}.json"
                     )
+                    # is the first commit different?
+                    if (
+                        len(report1["commits"]) > 0
+                        and len(report2["commits"]) > 0
+                    ):
+                        first_commit_same = (
+                            report1["commits"][0]["commit_id"]
+                            == report2["commits"][0]["commit_id"]
+                        )
+                        cve_info = {
+                            "different first commit": not first_commit_same
+                        }
+                    else:
+                        cve_info = {"different first commit": False}
 
                     different_refs = _compare_references(
                         report1["advisory_record"]["references"],
                         report2["advisory_record"]["references"],
                     )
 
-                    cve_info = {"different references": different_refs}
+                    # cve_info = {"different references": different_refs}
+                    cve_info["different references"] = different_refs
 
                     # If references are the same, check commits
                     if not different_refs:
@@ -619,26 +637,26 @@ def _calculate_total_relevance(commit):
     return sum(rule["relevance"] for rule in commit["matched_rules"])
 
 
-def generate_sankey_diagram():
+def generate_sankey_diagram(file1: str, file2: str, file3: str):
     # Load JSON data
-    summary_execution_file = (
-        ANALYSIS_RESULTS_PATH
-        + "summary_execution/"
-        + PROSPECTOR_REPORTS_PATH_HOST.split("/")[-2]
-        + ".json"
+    summary_execution_file_1 = (
+        ANALYSIS_RESULTS_PATH + "summary_execution/" + file1 + ".json"
     )
-    summary_execution_comparison_file = (
-        ANALYSIS_RESULTS_PATH
-        + "summary_execution/"
-        + COMPARISON_DIRECTORY.split("/")[-2]
-        + ".json"
+    summary_execution_file_2 = (
+        ANALYSIS_RESULTS_PATH + "summary_execution/" + file2 + ".json"
+    )
+    summary_execution_file_3 = (
+        ANALYSIS_RESULTS_PATH + "summary_execution/" + file3 + ".json"
     )
 
-    summary1 = load_json_file(summary_execution_file)
-    summary2 = load_json_file(summary_execution_comparison_file)
+    summary1 = load_json_file(summary_execution_file_1)
+    summary2 = load_json_file(summary_execution_file_2)
+    summary3 = load_json_file(summary_execution_file_3)
+
     print(
-        f"Comparing {summary_execution_file} with {summary_execution_comparison_file}"
+        f"Comparing {summary_execution_file_1}, {summary_execution_file_2}, and {summary_execution_file_3}"
     )
+
     # Ignore sub categories of "high"
     categories_to_include = [
         "high",
@@ -653,10 +671,12 @@ def generate_sankey_diagram():
     # Extract results from both files
     results1 = summary1["summary_execution_details"][-1]["results"]
     results2 = summary2["summary_execution_details"][-1]["results"]
+    results3 = summary3["summary_execution_details"][-1]["results"]
 
     # Filter results to include only specified categories
     results1 = {k: v for k, v in results1.items() if k in categories_to_include}
     results2 = {k: v for k, v in results2.items() if k in categories_to_include}
+    results3 = {k: v for k, v in results3.items() if k in categories_to_include}
 
     # Create a mapping of CVEs to their categories for both files
     cve_categories1 = {
@@ -665,12 +685,15 @@ def generate_sankey_diagram():
     cve_categories2 = {
         cve: category for category, cves in results2.items() for cve in cves
     }
+    cve_categories3 = {
+        cve: category for category, cves in results3.items() for cve in cves
+    }
 
     # Get all unique CVEs and categories
     all_cves = set(cve_categories1.keys())
 
     # Create node labels
-    node_labels = categories_to_include + categories_to_include
+    node_labels = categories_to_include * 3
 
     # Create source, target, and value lists for Sankey diagram
     source = []
@@ -679,13 +702,17 @@ def generate_sankey_diagram():
     link_colours = []
 
     # Count movements between categories
-    movements = defaultdict(int)
+    movements12 = defaultdict(int)
+    movements23 = defaultdict(int)
     for cve in all_cves:
         cat1 = cve_categories1.get(cve, None)
         cat2 = cve_categories2.get(cve, None)
-        if not cat1 or not cat2:
+        cat3 = cve_categories3.get(cve, None)
+        if not cat1 or not cat2 or not cat3:
+            print(f"No category for {cve}")
             continue
-        movements[(cat1, cat2)] += 1
+        movements12[(cat1, cat2)] += 1
+        movements23[(cat2, cat3)] += 1
 
     # Assign colors to categories
     category_colors = {
@@ -700,10 +727,13 @@ def generate_sankey_diagram():
     }
 
     # Create node colors
-    node_colors = [category_colors[cat] for cat in categories_to_include] * 2
+    node_colors = [category_colors[cat] for cat in categories_to_include] * 3
+
     # Convert movements to source, target, and value lists
     category_to_index = {cat: i for i, cat in enumerate(categories_to_include)}
-    for (cat1, cat2), count in movements.items():
+
+    # First half, movements from file1 to file2
+    for (cat1, cat2), count in movements12.items():
         source.append(category_to_index[cat1])
         target.append(category_to_index[cat2] + len(categories_to_include))
         value.append(count)
@@ -711,6 +741,16 @@ def generate_sankey_diagram():
             link_colours.append("lightgray")
         else:
             link_colours.append(category_colors[cat1])
+
+    # Second half: Movements from file2 to file3
+    for (cat2, cat3), count in movements23.items():
+        source.append(category_to_index[cat2] + len(categories_to_include))
+        target.append(category_to_index[cat3] + 2 * len(categories_to_include))
+        value.append(count)
+        if cat2 == cat3:
+            link_colours.append("lightgray")
+        else:
+            link_colours.append(category_colors[cat2])
 
     # Create the Sankey diagram
     fig = go.Figure(
@@ -733,18 +773,15 @@ def generate_sankey_diagram():
         ]
     )
 
-    filename1 = PROSPECTOR_REPORTS_PATH_HOST.split("/")[-2]
-    filename2 = COMPARISON_DIRECTORY.split("/")[-2]
-
     fig.update_layout(
-        title_text=f"CVE Category Changes between {filename1} and {filename2}",
-        font_size=10,
+        title_text=f"CVE Category Changes between {file1}, {file2}, and {file3}",
+        font_size=14,
         width=1200,
         height=800,
     )
 
     output_file = (
-        ANALYSIS_RESULTS_PATH + "plots/" + f"sankey-{filename1}-{filename2}.png"
+        ANALYSIS_RESULTS_PATH + "plots/" + f"sankey-{file1}-{file2}-{file3}.png"
     )
     # Save as PNG
     write_image(fig, output_file)

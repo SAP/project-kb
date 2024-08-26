@@ -4,40 +4,46 @@ debug_level: INFO
 # Input Data
 input_data_path: evaluation/data/input/ # datasets to run prospector on (CSV: ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS)
 
-# Prospector Reports
-prospector_reports_path: evaluation/data/reports_without_llm/
+# directory to where the batches of reports are to be found
+reports_directory: ../../../data/prospector_reports/
 
-# Analysis Results
-analysis_results_path: evaluation/data/results/
+# Prospector Batch Selection
+version_interval: true
+llm_support: true
+batch: regular # regular, old_code, old_reports
 
-# Report Comparison directories
-compare_directory1: evaluation/data/matteo_reports/d63/
-compare_directory2: evaluation/data/reports_without_llm_mvi/d63_correct_us/
+# compare reports selected above to
+compare_directory: ../../../data/prospector_reports/nvi_with_llm/
 
-# Prospector settings (from Prospector config.yaml)
+# Prospector settings (from the Prospector config.yaml)
 prospector_settings:
-  use_backend: always
+  # Maximum number of commits to process
+  max_candidates: 2000
 
-  backend: http://backend:8000
+  # Whether to use a backend or not: "always", "never", "optional"
+  use_backend: never
+
+  # backend: http://backend:8000
+  backend: http://localhost:8000
 
   database:
     user: postgres
     password: example
-    host: db
+    host: db # Database address; when in containerised version, use 'db', otherwise 'localhost'
     port: 5432
     dbname: postgres
 
   redis_url: redis://localhost:6379/0
 
-  # LLM Usage
+  # LLM Usage (check README for help)
   llm_service:
-    type: sap
-    model_name: gpt-4
-    temperature: 0.0
+    type: sap # sap or third_party
+    model_name: gpt-4 # gpt-4 or mistral-large-latest
+    temperature: 0.0 # optional, default is 0.0
     ai_core_sk: sk.json
 
-    # LLM support options
-    use_llm_repository_url: True
+    # LLM support options (check README for help)
+    use_llm_repository_url: True # True in order to instantiate the Singleton, but the URL will be passed in the evaluation
 
   enabled_rules:
     # Phase 1 Rules
@@ -58,4 +64,6 @@ prospector_settings:
     - BUG_IN_MESSAGE
     - COMMIT_HAS_TWINS
     # Phase 2 Rules (llm_service required!):
-    # - COMMIT_IS_SECURITY_RELEVANT
+    - COMMIT_IS_SECURITY_RELEVANT
+
+  git_cache: /tmp/gitcache # When running Prospector containerised

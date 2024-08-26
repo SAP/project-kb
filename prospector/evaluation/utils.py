@@ -67,13 +67,9 @@ def update_summary_execution_table(
             table_data.append([v, round(v / total * 100, 2)])
 
     # Choose which column to update:
-    if config.batch == "old_reports":
+    if config.version_interval:
         filepath = ANALYSIS_RESULTS_PATH + "summary_execution/mvi_table.tex"
-        col_indices = [1, 2]
-
-    elif config.version_interval:
-        filepath = ANALYSIS_RESULTS_PATH + "summary_execution/mvi_table.tex"
-        col_indices = [3, 4] if not config.llm_support else [5, 6]
+        col_indices = [1, 2] if not config.llm_support else [3, 4]
 
     else:
         filepath = ANALYSIS_RESULTS_PATH + "summary_execution/nvi_table.tex"
@@ -149,20 +145,20 @@ def select_reports_path_host(
     """Select where to store generated reports, or where to find reports for
     analysis."""
     if version_interval and batch == "old_code":
-        return f"{config.reports_directory}mvi_old_code_reports/"
+        return f"{config.reports_directory}mvi_old_code/"
     if version_interval and batch == "old_reports":
-        return f"{config.reports_directory}matteo_reports/"
+        return f"{config.reports_directory}mvi_old_reports/"
     if version_interval and not llm_support:
-        return f"{config.reports_directory}mvi_without_llm_reports/"
+        return f"{config.reports_directory}mvi_without_llm/"
     if version_interval and llm_support:
-        return f"{config.reports_directory}mvi_with_llm_reports/"
+        return f"{config.reports_directory}mvi_with_llm/"
 
     if not version_interval and batch == "old_code":
-        return f"{config.reports_directory}nvi_old_code_reports/"
+        return f"{config.reports_directory}nvi_old_code/"
     if not version_interval and not llm_support:
-        return f"{config.reports_directory}nvi_without_llm_reports/"
+        return f"{config.reports_directory}nvi_without_llm/"
     if not version_interval and llm_support:
-        return f"{config.reports_directory}nvi_with_llm_reports/"
+        return f"{config.reports_directory}nvi_with_llm/"
 
 
 INPUT_DATA_PATH = config.input_data_path
