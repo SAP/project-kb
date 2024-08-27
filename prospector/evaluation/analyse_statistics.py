@@ -153,21 +153,17 @@ def _get_cc_num_commits(filepath):
 
 
 def overall_execution_time(input_file: str):
-    """Create a boxplot to compare the overall execution time across four
+    """Create a violin plot with separate box plots to compare the overall execution time across three
     categories of reports."""
     data = []
-
     file = f"{INPUT_DATA_PATH}{input_file}.csv"
     dataset = load_dataset(file)
-    dataset = dataset[:100]
-
+    dataset = dataset[:100]  # Consider using the full dataset if possible
     directories = {
-        "without LLM NVI": "../../../data/new_db_prospector_reports/mvi_with_llm_reports",
-        "with LLM NVI": "../../../data/prospector_reports/nvi_with_llm_reports",
-        "without LLM MVI": "../../../data/prospector_reports/mvi_without_llm_reports",
-        "with LLM MVI": "../../../data/prospector_reports/mvi_with_llm_reports",
+        "No Database": "../../../data/no_db_prospector_reports/mvi_with_llm",
+        "New Database": "../../../data/new_db_prospector_reports/mvi_with_llm",
+        "Prepared Database": "../../../data/prospector_reports/mvi_with_llm",
     }
-
     for batch, path in directories.items():
         for record in dataset:
             try:
@@ -187,12 +183,60 @@ def overall_execution_time(input_file: str):
 
     df = pd.DataFrame(data)
 
-    sns.boxplot(x="set", y="core_execution_time", data=df)
-    plt.title("Overall Execution Time Comparison")
-    plt.xlabel("Report Set")
-    plt.ylabel("Execution Time (s)")
+    # Create a figure with two subplots
+    fig, (ax1, ax2, ax3) = plt.subplots(
+        3, 1, figsize=(12, 15), height_ratios=[2, 1, 1]
+    )
+    fig.suptitle("Overall Execution Time Comparison", fontsize=16)
 
-    plt.savefig(f"{ANALYSIS_RESULTS_PATH}plots/boxplot-execution-time.png")
+    # Violin plot with swarm plot
+    sns.violinplot(
+        x="set",
+        y="core_execution_time",
+        data=df,
+        ax=ax1,
+        cut=0,
+        scale="width",
+        width=0.8,
+    )
+    sns.swarmplot(
+        x="set", y="core_execution_time", data=df, color=".25", size=3, ax=ax1
+    )
+    ax1.set_yscale("log")
+    ax1.set_ylabel("Execution Time (s) - Log Scale")
+
+    # Box plot
+    sns.boxplot(x="set", y="core_execution_time", data=df, ax=ax2, width=0.6)
+    ax2.set_yscale("log")
+    ax2.set_ylabel("Execution Time (s) - Log Scale")
+
+    # Plot focusing on lower range (up to 95th percentile)
+    percentile_95 = df["core_execution_time"].quantile(0.95)
+    df_lower = df[df["core_execution_time"] <= percentile_95]
+    sns.boxplot(
+        x="set", y="core_execution_time", data=df_lower, ax=ax3, width=0.6
+    )
+    ax3.set_ylabel("Execution Time (s) - 95th Percentile")
+
+    for ax in [ax1, ax2, ax3]:
+        ax.set_xlabel("Report Set")
+
+    plt.tight_layout()
+    plt.savefig(f"{ANALYSIS_RESULTS_PATH}plots/execution_time_analysis.png")
+    plt.close()
+
+    # Print summary statistics
+    print(df.groupby("set")["core_execution_time"].describe())
+
+    # Additional analysis: print median and interquartile range
+    for batch in df["set"].unique():
+        batch_data = df[df["set"] == batch]["core_execution_time"]
+        median = batch_data.median()
+        q1, q3 = batch_data.quantile([0.25, 0.75])
+        iqr = q3 - q1
+        print(f"\n{batch}:")
+        print(f"Median: {median:.2f}")
+        print(f"Interquartile Range: {iqr:.2f}")
 
 
 def commit_classification_time(input_file: str):
