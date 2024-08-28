@@ -1,5 +1,6 @@
 # flake8: noqa
 import argparse
+import asyncio
 import os
 import signal
 import sys
@@ -18,8 +19,10 @@ from evaluation.analyse_statistics import (
     overall_execution_time,
 )
 from evaluation.dispatch_jobs import (
+    dispatch_jobs_with_api,
     dispatch_prospector_jobs,
     empty_queue,
+    start,
 )
 
 
@@ -106,18 +109,20 @@ def parse_cli_args(args):
     return parser.parse_args()
 
 
-def main(argv):
+async def main(argv):
     args = parse_cli_args(argv)
 
     # Run Prospector containerised
     if args.execute and not args.analyze:
         dispatch_prospector_jobs(args.input, args.cve)
+        # await dispatch_jobs_with_api(args.input, args.cve)
+        # start()
 
     elif args.analyze and not args.execute:
         # analysis of execution statistics in report
         if args.stats:
-            analyse_statistics(args.input)
-            # overall_execution_time(args.input)
+            # analyse_statistics(args.input)
+            overall_execution_time(args.input)
             # commit_classification_time(args.input)
             # candidates_execution_time(args.input)
 
@@ -183,4 +188,4 @@ def sig_handler(signum, frame):
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, sig_handler)
-    main(sys.argv[1:])
+    asyncio.run(main(sys.argv[1:]))
