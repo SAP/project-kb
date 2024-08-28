@@ -6,6 +6,16 @@ from rq.job import Job
 
 from core.prospector import prospector
 from core.report import generate_report
+from data_sources.nvd.filter_entries import (
+    process_entries,
+    retrieve_vulns,
+    save_vuln_to_db,
+)
+from data_sources.nvd.job_creation import (
+    create_prospector_job,
+    run_prospector,
+)
+from evaluation.create_jobs import _create_prospector_job, enqueue_jobs
 from evaluation.utils import (
     INPUT_DATA_PATH,
     PROSPECTOR_REPORTS_PATH_HOST,
@@ -127,3 +137,30 @@ def empty_queue():
         queue.empty()
 
         print("Emptied the queue.")
+
+
+async def dispatch_jobs_with_api(filename: str, selected_cves: str):
+    """Dispatches jobs to the queue."""
+    # Retrieve CVE data
+    cve_data = await retrieve_vulns(10)
+
+    # Save raw CVE data to the database
+    save_vuln_to_db(cve_data)
+
+    # Process and filter the new CVE data and save results to the database
+    processed_vulns = await process_entries()
+
+    print("CVEs ready to be enqueued.")
+
+    # Enqueue jobs for new processed CVEs
+    await enqueue_jobs()
+
+
+def start():
+    # vuln_id = "CVE-2018-14840"
+    # repo_url = "https://github.com/intelliants/subrion"
+    # v_int = "4.2.1:4.2.2"
+    vuln_id = "CVE-2010-0156"
+    repo_url = "https://github.com/puppetlabs/puppet"
+    v_int = "0.25.1:0.25.2"
+    _create_prospector_job(vuln_id, repo_url, v_int)
