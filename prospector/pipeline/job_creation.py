@@ -213,6 +213,6 @@ async def enqueue_jobs(reports_filepath: str, creator: str = "Auto"):
         db.disconnect()
 
         console.print(
-            f"\n\tEnqueueing finished",
+            "\n\tEnqueueing finished",
             status=MessageStatus.OK,
         )
