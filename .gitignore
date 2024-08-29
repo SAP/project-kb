@@ -64,3 +64,4 @@ prospector/*.html
 prospector/*.json
 prospector/evaluation
 .DS_Store
+prospector/pipeline/reports/*
