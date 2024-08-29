@@ -1,9 +1,23 @@
+# General
 site
 **/merge.log
-.kaybee
 */cpu.prof
 *.pyc
 *git-cache*
+*.log
+*.log.*
+**/cov_html
+.coverage
+similarities.csv
+
+# Virtual environment
+**/.venv/
+
+# VSCode Settings
+**/.vscode/
+
+# Regarding KB
+.kaybee
 kaybee/internal/repository/profile001.pdf
 kaybee/internal/repository/repository.test
 kaybee/internal/tasks/.kaybee
@@ -12,10 +26,9 @@ kaybee/internal/tasks/profile001.pdf
 kaybee/internal/tasks/tasks.test
 kaybee/internal/repository/cpu.prof
 kaybee/kaybee.code-workspace
-.vscode/launch.json
-.vscode/task.code-snippets
 kaybee/coverage.out
 kaybee/kaybee
+kaybee/internal/reconcile/debug.test
 kaybee/internal/.kaybee/**/*
 kaybee/dist/**
 kaybee/kaybeeconf.yaml
@@ -25,9 +38,9 @@ kaybee/steady.sh
 kaybee/kaybeeconf-custom.yaml
 kaybee/kaybee-new-statements
 kaybee/pkged.go
-*.log
-*.log.*
 kaybeeconf.yaml
+
+# Regarding Prospector
 prospector/.env
 prospector/workspace.code-workspace
 prospector/disabled_tests/skip_test-commits.db
@@ -35,40 +48,19 @@ prospector/disabled_tests/skip_test-vulnerabilities.db
 prospector/tracer_dataset_final_2
 prospector/results
 prospector/*.py
-prospector/.vscode/launch.json
-prospector/.vscode/settings.json
 prospector/install_fastext.sh
-prospector/nvd.ipynb
-prospector/data/nvd.pkl
-prospector/data/nvd.csv
-prospector/data_sources/reports
-.vscode/settings.json
 prospector/cov_html/*
-prospector/client/cli/cov_html/*
 prospector/config.yaml
-prospector/client/web/node-app/node_modules
 prospector/.coverage.*
 prospector/.coverage
-**/cov_html
 prospector/cov_html
-.coverage
-prospector/.venv
 prospector/prospector.code-workspace
 prospector/requests-cache.sqlite
 prospector/prospector-report.html
 prospector/test_report.html
 prospector/test_report.json
 prospector/.idea/*
-similarities.csv
 prospector/*.html
 prospector/*.json
-requests-cache.sqlite
-prospector/output.png
-prospector/output.pstats
-prospector/kaybee-new-statements
-prospector/run.sh
-prospector/cve_data
 prospector/evaluation
 .DS_Store
-kaybee/internal/reconcile/debug.test
-prospector/client/web/node-app/build
