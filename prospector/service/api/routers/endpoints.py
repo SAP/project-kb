@@ -60,7 +60,7 @@ async def get_report(job_id):
     # queue = Queue()
     # job = queue.fetch_job(job_id)
     # get and redirect to the html page of the generated report
-    report_path = f"/app/data_sources/reports/{job_id}.html"
+    report_path = f"/app/pipeline/reports/{job_id}.html"
     if os.path.exists(report_path):
         with open(
             report_path,
@@ -90,9 +90,9 @@ async def get_settings(job_id, request: Request):
 @router.get("/report_page", response_class=HTMLResponse)
 async def report_page(request: Request):
     report_list = []
-    for filename in os.listdir("/app/data_sources/reports"):
+    for filename in os.listdir("/app/pipeline/reports"):
         if filename.endswith(".html"):
-            file_path = os.path.join("/app/data_sources/reports", filename)
+            file_path = os.path.join("/app/pipeline/reports", filename)
             mtime = os.path.getmtime(file_path)
             mtime_dt = datetime.fromtimestamp(mtime)
             report_list.append((os.path.splitext(filename)[0], mtime_dt))

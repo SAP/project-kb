@@ -67,7 +67,7 @@ async def get_cve_data(d_time):
                     if response.status == 200:
                         data = await response.json()
                         console.print(
-                            "CVE data retrieved",
+                            "\n\tCVE data retrieved",
                             status=MessageStatus.OK,
                         )
                     else:
@@ -79,7 +79,7 @@ async def get_cve_data(d_time):
                     exc_info=True,
                 )
                 console.print(
-                    "Error while retrieving vulnerabilities from NVD",
+                    "\n\tError while retrieving vulnerabilities from NVD",
                     status=MessageStatus.OK,
                 )
 
@@ -108,7 +108,7 @@ def save_cves_to_db(raw_data_from_nvd):
             f"Saved {[record['cve']['id'] for record in raw_data_from_nvd['vulnerabilities']]} in database.",
         )
         console.print(
-            f"Saved {len(raw_data_from_nvd['vulnerabilities'])} records in database."
+            f"\n\tSaved {len(raw_data_from_nvd['vulnerabilities'])} records in database."
         )
         db.disconnect()
 
@@ -198,7 +198,7 @@ async def process_cve_data():
         db.disconnect()
 
         console.print(
-            f"{len(processed_vulns)} left after processing.",
+            f"\n\t{len(processed_vulns)} left after processing.",
             status=MessageStatus.OK,
         )
 
