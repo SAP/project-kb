@@ -28,7 +28,8 @@ services:
       context: .
       dockerfile: docker/worker/Dockerfile
     volumes:
-      - ./pipeline/reports:/app/pipeline/reports
+      - ./app:/app
+      # - ./pipeline/reports:/app/pipeline/reports
     depends_on:
       - redis
     environment:
