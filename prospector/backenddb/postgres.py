@@ -68,7 +68,7 @@ class PostgresBackendDB(BackendDB):
     def disconnect(self):
         if self.connection:
             self.connection.close()
-            print("Disconnected from the database")
+            # print("Disconnected from the database") # Sanity check
             self.connection = None
         else:
             print("No active database connection")
