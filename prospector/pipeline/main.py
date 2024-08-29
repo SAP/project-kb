@@ -22,14 +22,14 @@ async def dispatch_jobs():
     save_cves_to_db(cve_data)
 
     # get entry from db and process
-    processed_cves = await process_cve_data()
+    _ = await process_cve_data()
 
     await enqueue_jobs(reports_filepath="pipeline/reports/")
 
 
 async def main():
     """Starting point to enqueue jobs into the pipeline"""
-    ConsoleWriter.print(f"Starting pipeline\n", status=MessageStatus.OK)
+    ConsoleWriter.print("Starting pipeline\n", status=MessageStatus.OK)
     await dispatch_jobs()
 
 
