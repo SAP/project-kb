@@ -11,13 +11,9 @@ from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
 
 from backenddb.postgres import PostgresBackendDB
-from data_sources.nvd.versions_extraction import (
-    extract_version_range,
-    extract_version_ranges_cpe,
-    process_versions,
-)
 from datamodel.nlp import extract_products
 from log.logger import logger
+from pipeline.versions_extraction import extract_version_range
 from util.config_parser import parse_config_file
 
 config = parse_config_file()
@@ -43,7 +39,18 @@ def disconnect_from_database(db):
     db.disconnect()
 
 
-async def retrieve_vulns(d_time):
+async def get_cve_data(d_time):
+    """Obtains the raw CVE data from the NVD database and saves it to the
+    backend database.
+
+    Params:
+        d_time: The number of days in the past to take as the starting
+        time for getting CVEs
+
+    Returns:
+        JSON data returned by the NVD API
+
+    """
     start_date, end_date = get_time_range(d_time)
 
     data = ""
@@ -65,13 +72,10 @@ async def retrieve_vulns(d_time):
                 "Error while retrieving vulnerabilities from NVD", exc_info=True
             )
 
-    # save to db
-    save_vuln_to_db(data)
-
     return data
 
 
-def save_vuln_to_db(vulns):
+def save_cves_to_db(vulns):
     db = connect_to_db()
     for vuln in vulns["vulnerabilities"]:
         vuln_id = vuln["cve"]["id"]
@@ -79,7 +83,9 @@ def save_vuln_to_db(vulns):
         mod_date = vuln["cve"]["lastModified"]
         raw_record = json.dumps(vuln)
         source = "NVD"
-        url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveID={vuln_id}"
+        url = (
+            f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveID={vuln_id}"
+        )
 
         res = db.lookup_vuln_id(vuln_id, mod_date)
         if res[0] == 0:
@@ -100,13 +106,15 @@ async def get_cve_by_id(id):
                     print("Error while trying to retrieve entry")
         except aiohttp.ClientError as e:
             print(str(e))
-            logger.error("Error while retrieving vulnerability from NVD", exc_info=True)
+            logger.error(
+                "Error while retrieving vulnerability from NVD", exc_info=True
+            )
     return data
 
 
 async def add_single_cve(vuln_id: str):
     raw_json_cve = get_cve_by_id(vuln_id)
-    save_vuln_to_db(raw_json_cve)
+    save_cves_to_db(raw_json_cve)
 
 
 def write_list_to_file(lst, filename):
@@ -124,7 +132,11 @@ def csv_to_json(csv_file_path):
         # Loop through the rows of the file
         for row in csv_reader:
             # Create a dictionary for the row data
-            row_data = {"project": row[0], "service_name": row[1], "repository": row[2]}
+            row_data = {
+                "project": row[0],
+                "service_name": row[1],
+                "repository": row[2],
+            }
             data.append(row_data)
     # Convert to JSON object
     json_data = json.dumps(data)
@@ -141,7 +153,7 @@ def get_time_range(d_time):
     return start_date, end_date
 
 
-async def process_entries():
+async def process_cve_data():
     # start_date,end_date=get_time_range(d_time)
     db = connect_to_db()
 
@@ -158,7 +170,9 @@ async def process_entries():
         if processed_vuln is not None:
             processed_vulns.append(processed_vuln)
             db.save_processed_vuln(
-                entry_id, processed_vuln["repo_url"], processed_vuln["version_interval"]
+                entry_id,
+                processed_vuln["repo_url"],
+                processed_vuln["version_interval"],
             )
     db.disconnect()
     return processed_vulns
