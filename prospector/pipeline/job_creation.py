@@ -9,7 +9,7 @@ import requests
 from rq import Connection, Queue, get_current_job
 
 from backenddb.postgres import PostgresBackendDB
-from cli.console import ConsoleWriter
+from cli.console import ConsoleWriter, MessageStatus
 from core.prospector import prospector
 from core.report import generate_report
 from llm.llm_service import LLMService
@@ -169,46 +169,52 @@ async def enqueue_jobs(reports_filepath: str, creator: str = "Auto"):
         creator (str): The creator of the jobs, eg. Auto
 
     """
-    db = connect_to_db()
-    processed_cves = db.get_processed_vulns_not_in_job()
+    with ConsoleWriter("Enqueueing Jobs") as console:
+        db = connect_to_db()
+        processed_cves = db.get_processed_vulns_not_in_job()
 
-    print(
-        f"Enqueueing {len(processed_cves)} jobs for {[cve_entry['vuln_id'] for cve_entry in processed_cves]}"
-    )
-    print(processed_cves)
+        console.print(
+            f"Enqueueing {len(processed_cves)} jobs for {[cve_entry['vuln_id'] for cve_entry in processed_cves]}",
+            status=MessageStatus.OK,
+        )
 
-    for processed_vuln in processed_cves:
-        pv_id = processed_vuln["_id"]
-        pv_repository = processed_vuln["repository"]
-        pv_versions = processed_vuln["versions"]
-        v_vuln_id = processed_vuln["vuln_id"]
+        for processed_vuln in processed_cves:
+            pv_id = processed_vuln["_id"]
+            pv_repository = processed_vuln["repository"]
+            pv_versions = processed_vuln["versions"]
+            v_vuln_id = processed_vuln["vuln_id"]
 
-        try:
-            job = create_prospector_job(
-                v_vuln_id, pv_repository, pv_versions, reports_filepath
-            )
-        except Exception:
-            logger.error(
-                "Error when creating jobs for processed vulnerabilities",
-                exc_info=True,
-            )
+            try:
+                job = create_prospector_job(
+                    v_vuln_id, pv_repository, pv_versions, reports_filepath
+                )
+            except Exception:
+                logger.error(
+                    "Error when creating jobs for processed vulnerabilities",
+                    exc_info=True,
+                )
 
-        try:
-            db.save_job(
-                job.get_id(),
-                pv_id,
-                job.args,
-                job.created_at,
-                job.started_at,
-                job.ended_at,
-                job.result,
-                creator,
-                job.get_status(refresh=True),
-            )
-        except Exception:
-            logger.error(
-                "Error when saving the created job to the database.",
-                exc_info=True,
-            )
+            try:
+                db.save_job(
+                    job.get_id(),
+                    pv_id,
+                    job.args,
+                    job.created_at,
+                    job.started_at,
+                    job.ended_at,
+                    job.result,
+                    creator,
+                    job.get_status(refresh=True),
+                )
+            except Exception:
+                logger.error(
+                    "Error when saving the created job to the database.",
+                    exc_info=True,
+                )
 
-    db.disconnect()
+        db.disconnect()
+
+        console.print(
+            f"\n\t\tEnqueueing finished",
+            status=MessageStatus.OK,
+        )

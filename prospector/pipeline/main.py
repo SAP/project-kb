@@ -1,4 +1,5 @@
 import asyncio
+from cli.console import ConsoleWriter, MessageStatus
 from pipeline.filter_entries import (
     get_cve_data,
     process_cve_data,
@@ -7,7 +8,7 @@ from pipeline.filter_entries import (
 from pipeline.job_creation import enqueue_jobs
 
 
-DAYS_AGO = 10  # Time period from DAYS_AGO to now to retrieve CVEs from NVD
+DAYS_AGO = 1  # Time period from DAYS_AGO to now to retrieve CVEs from NVD
 
 
 async def dispatch_jobs():
@@ -28,6 +29,7 @@ async def dispatch_jobs():
 
 async def main():
     """Starting point to enqueue jobs into the pipeline"""
+    ConsoleWriter.print(f"Starting pipeline\n", status=MessageStatus.OK)
     await dispatch_jobs()
 
 
