@@ -11,7 +11,7 @@ from rq import Connection, Queue
 from rq.job import Job
 from starlette.responses import RedirectResponse
 
-from data_sources.nvd.job_creation import run_prospector
+from pipeline.job_creation import _run_prospector
 from util.config_parser import parse_config_file
 
 # from core.report import generate_report
@@ -130,7 +130,7 @@ async def enqueue_job(cve: str, repo: str, version: str):
     with Connection(redis.from_url(redis_url)):
         queue = Queue()
         job = Job.create(
-            run_prospector,
+            _run_prospector,
             args=(cve, repo, version),
             description="prospector",
             id=cve,

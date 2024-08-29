@@ -7,8 +7,8 @@ from fastapi.templating import Jinja2Templates
 from starlette.responses import RedirectResponse
 
 from backenddb.postgres import PostgresBackendDB
-from data_sources.nvd import filter_entries, job_creation
 from log.logger import logger
+from pipeline import filter_entries, job_creation
 from util.config_parser import parse_config_file
 
 router = APIRouter(
@@ -92,7 +92,9 @@ async def get_vulns(d_time: int):
         await filter_entries.retrieve_vulns(d_time)
         response_object = {"message": "success"}
     except Exception:
-        response_object = {"message": "error while retrieving new vulnerabilities"}
+        response_object = {
+            "message": "error while retrieving new vulnerabilities"
+        }
     return response_object
 
 

@@ -1,20 +1,11 @@
-import redis
-from fastapi import APIRouter, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from rq import Connection, Queue
-from rq.job import Job
 
 from backenddb.postgres import PostgresBackendDB
-from data_sources.nvd.filter_entries import add_single_cve, process_entries
-from data_sources.nvd.job_creation import (
-    create_prospector_job,
-    enqueue_jobs,
-    run_prospector,
-)
 from log.logger import logger
-from service.api.routers.nvd_feed_update import main
+from pipeline.filter_entries import add_single_cve, process_cve_data
+from pipeline.job_creation import create_prospector_job, enqueue_jobs
 from util.config_parser import parse_config_file
 
 config = parse_config_file()
@@ -96,11 +87,15 @@ async def enqueue(job: DbJob):
             # If the user pass only the vuln-id, make an API request to the NVD retrieving the info
             if job.repo is None or job.version is None:
                 add_single_cve(job.vuln_id)
-                process_entries()
+                process_cve_data()
                 enqueue_jobs()
             else:  # all job info in request body, enqueue job with priority and save to db
                 rq_job = create_prospector_job(
-                    job.vuln_id, job.repo, job.version, at_front=True
+                    job.vuln_id,
+                    job.repo,
+                    job.version,
+                    report_filepath="pipeline/reports/",
+                    at_front=True,
                 )
                 logger.info("saving manual job in db", exc_info=True)
                 db.save_manual_job(
