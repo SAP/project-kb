@@ -98,7 +98,7 @@ def _run_prospector(
         "backend_address": config.backend,
         "git_cache": config.git_cache,
         "limit_candidates": config.max_candidates,
-        "use_llm_repository_url": config.use_llm_repository_url,
+        "use_llm_repository_url": config.llm_service.use_llm_repository_url,
         "enabled_rules": config.enabled_rules,
     }
 
@@ -114,10 +114,11 @@ def _run_prospector(
         results, advisory_record = prospector(**params)
 
         generate_report(
-            results,
-            advisory_record,
-            "html",
-            f"{report_filepath}{cve_id}_{job_id}",
+            results=results,
+            advisory_record=advisory_record,
+            report_type=config.report.format,
+            report_filename=f"{report_filepath}{cve_id}_{job_id}",
+            prospector_params=params,
         )
         status = "finished"
         results = (f"{report_filepath}{cve_id}_{job_id}",)

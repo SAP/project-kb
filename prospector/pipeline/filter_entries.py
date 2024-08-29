@@ -9,6 +9,7 @@ import psycopg2
 import requests
 from psycopg2.extensions import parse_dsn
 from psycopg2.extras import DictCursor, DictRow, Json
+from tqdm import tqdm
 
 from backenddb.postgres import PostgresBackendDB
 from cli.console import ConsoleWriter, MessageStatus  # noqa: E402
@@ -182,8 +183,13 @@ async def process_cve_data():
         unprocessed_vulns = db.get_unprocessed_vulns()
 
         # Process each entry
+        pbar = tqdm(
+            unprocessed_vulns,
+            desc="Processing raw CVE data",
+            unit="CVE record",
+        )
         processed_vulns = []
-        for unprocessed_vuln in unprocessed_vulns:
+        for unprocessed_vuln in pbar:
             entry_id = unprocessed_vuln[0]
             raw_record = unprocessed_vuln[1]
 
@@ -224,7 +230,7 @@ async def map_entry(vuln):
                     "repo_url": data["git"],
                     "version_interval": version,
                 }
-                print(vuln["cve"]["id"])
+                # print(vuln["cve"]["id"]) # Sanity Check
                 return filtered_vuln
 
     return None

@@ -28,14 +28,14 @@ services:
       context: .
       dockerfile: docker/worker/Dockerfile
     volumes:
-      - ./app:/app
+      - ./:/app
       # - ./pipeline/reports:/app/pipeline/reports
     depends_on:
       - redis
     environment:
       LOG_LEVEL: debug
       PIP_REQUIREMENTS: requirements.txt
-      GIT_CACHE: /tmp
+      GIT_CACHE: /tmp/gitcache
 
   db:
     image: postgres

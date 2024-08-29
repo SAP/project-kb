@@ -8,7 +8,7 @@ from pipeline.filter_entries import (
 from pipeline.job_creation import enqueue_jobs
 
 
-DAYS_AGO = 1  # Time period from DAYS_AGO to now to retrieve CVEs from NVD
+DAYS_AGO = 5  # Time period from DAYS_AGO to now to retrieve CVEs from NVD
 
 
 async def dispatch_jobs():
