@@ -42,7 +42,9 @@ app.include_router(feeds.router)
 app.include_router(jobs.router)
 
 app.mount("/static", StaticFiles(directory="service/static"), name="static")
-app.mount("/reports", StaticFiles(directory="./data_sources/reports"), name="reports")
+app.mount(
+    "/reports", StaticFiles(directory="./pipeline/reports"), name="reports"
+)
 
 
 # -----------------------------------------------------------------------------

@@ -38,9 +38,9 @@ def connect_to_db():
 @router.get("/reports")
 async def get_reports(request: Request):
     report_list = []
-    for filename in os.listdir("/app/data_sources/reports"):
+    for filename in os.listdir("/app/pipeline/reports"):
         if filename.endswith(".html"):
-            file_path = os.path.join("/app/data_sources/reports", filename)
+            file_path = os.path.join("/app/pipeline/reports", filename)
             mtime = os.path.getmtime(file_path)
             mtime_dt = datetime.fromtimestamp(mtime)
             report_list.append((os.path.splitext(filename)[0], mtime_dt))

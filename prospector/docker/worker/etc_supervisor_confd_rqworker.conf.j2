@@ -4,7 +4,7 @@
 ; (possibly with minor modifications)
 
 [program:rqworker]
-command=/usr/local/bin/python3 /usr/local/bin/rq worker {{env['RQ_QUEUE']}} -u redis://{{env['REDIS_HOST']}}:{{env['REDIS_PORT']}}/{{env['REDIS_DB']}} --logging_level {{env['LOG_LEVEL']}} --path /app/data_sources/nvd  --path /app/service/api/routers
+command=/usr/local/bin/python3 /usr/local/bin/rq worker {{env['RQ_QUEUE']}} -u redis://{{env['REDIS_HOST']}}:{{env['REDIS_PORT']}}/{{env['REDIS_DB']}} --logging_level {{env['LOG_LEVEL']}} --path /app/pipeline/nvd  --path /app/service/api/routers
 process_name=%(program_name)s%(process_num)01d
 
 ; If you want to run more than one worker instance, increase this

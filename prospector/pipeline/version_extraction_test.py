@@ -1,6 +1,6 @@
 import pytest
 
-from data_sources.nvd.versions_extraction import (
+from pipeline.versions_extraction import (
     extract_version_range,
     extract_version_ranges_cpe,
     extract_version_ranges_description,

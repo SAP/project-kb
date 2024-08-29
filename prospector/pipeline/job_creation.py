@@ -174,7 +174,7 @@ async def enqueue_jobs(reports_filepath: str, creator: str = "Auto"):
         processed_cves = db.get_processed_vulns_not_in_job()
 
         console.print(
-            f"Enqueueing {len(processed_cves)} jobs for {[cve_entry['vuln_id'] for cve_entry in processed_cves]}",
+            f"\n\tEnqueueing {len(processed_cves)} jobs for {[cve_entry['vuln_id'] for cve_entry in processed_cves]}",
             status=MessageStatus.OK,
         )
 
@@ -215,6 +215,6 @@ async def enqueue_jobs(reports_filepath: str, creator: str = "Auto"):
         db.disconnect()
 
         console.print(
-            f"\n\t\tEnqueueing finished",
+            f"\n\tEnqueueing finished",
             status=MessageStatus.OK,
         )
