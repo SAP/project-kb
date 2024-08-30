@@ -1,0 +1,32 @@
+\begin{table}
+  \centering
+  % \tiny
+  \begin{tabular}{| l c c c c|}
+    \rowcolor{gray!50} \textbf{Result} & \textbf{Without LLM}  & \textbf{\%} & \textbf{With LLM}  & \textbf{\%}  \\ \hline
+    High confidence              &   899   &   69.58   &  977  &  75.62  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad Commit in reference* \\
+    \end{tabular}              &   835   &   92.88   &  835  &  85.47  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad CVE ID in message* \\
+    \end{tabular}              &   122   &   13.57   &  123  &  12.59  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad CVE ID in Issue* \\
+    \end{tabular}              &   32   &   3.56   &  32  &  3.28  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad Cross Reference* \\
+    \end{tabular}              &   322   &   35.82   &  319  &  32.65  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad Commit is Security Relevant* \\
+    \end{tabular}               &   0   &   0.0   &  857  &  66.33  \\
+    Medium confidence              &   82   &   6.35   &  10  &  0.77  \\
+    Low confidence              &   14   &   1.08   &  8  &  0.62  \\
+    Not found (rank $> 10$)              &   31   &   2.4   &  30  &  2.32  \\
+    Not reported                 &   243   &   18.81   &  85  &  6.58  \\
+    False Positive              &   23   &   1.78   &  182  &  14.09  \\
+    Aborted (candidate and time limit exceeded) &   27   &   2.09   &  27  &  2.09  \\
+    \textbf{Total}    & \textbf{1292} &       & \textbf{1292} &   \\ \hline
+  \end{tabular}
+  \caption{Evaluation Results without version interval (* percentage of high confidence category)}
+  \label{tab:tracer_dataset_results_nvi}
+\end{table}

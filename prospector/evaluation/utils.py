@@ -33,10 +33,9 @@ def save_dict_to_json(dictionary: dict, path: str):
         return json.dump(dictionary, file, indent=4)
 
 
-def update_summary_execution_table(
-    results: dict, total: str, filepath: str
-) -> None:
-    """Updates the LaTeX table at {ANALYSIS_RESULTS_PATH}/`filepath`.
+def update_summary_execution_table(results: dict, total: str) -> None:
+    """Updates the LaTeX table at {ANALYSIS_RESULTS_PATH}/summary_execution_
+    [mvi|nvi]_table.tex.
 
     Params:
         results (dict): Dictionary with result counts.
@@ -68,11 +67,11 @@ def update_summary_execution_table(
 
     # Choose which column to update:
     if config.version_interval:
-        filepath = ANALYSIS_RESULTS_PATH + "summary_execution/mvi_table.tex"
+        filepath = ANALYSIS_RESULTS_PATH + "summary_execution_mvi_table.tex"
         col_indices = [1, 2] if not config.llm_support else [3, 4]
 
     else:
-        filepath = ANALYSIS_RESULTS_PATH + "summary_execution/nvi_table.tex"
+        filepath = ANALYSIS_RESULTS_PATH + "summary_execution_nvi_table.tex"
         col_indices = [1, 2] if not config.llm_support else [3, 4]
 
     with open(filepath, "r") as file:

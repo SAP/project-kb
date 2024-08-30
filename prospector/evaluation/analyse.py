@@ -148,7 +148,6 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
         update_summary_execution_table(
             results=results,
             total=analysed_reports_count,
-            filepath=f"{ANALYSIS_RESULTS_PATH}summary_execution/table.tex",
         )
 
     logger.info(f"Ran analysis on {PROSPECTOR_REPORTS_PATH_HOST}.")
@@ -292,7 +291,7 @@ def _save_summary_execution_details(
         os.path.normpath(PROSPECTOR_REPORTS_PATH_HOST)
     )
     detailed_results_output_path = (
-        f"{ANALYSIS_RESULTS_PATH}summary_execution/{batch_name}.json"
+        f"{ANALYSIS_RESULTS_PATH}summary_execution_{batch_name}.json"
     )
     printout = {
         "timestamp": datetime.now().strftime("%d-%m-%Y, %H:%M"),

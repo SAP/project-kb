@@ -1,0 +1,32 @@
+\begin{table}
+  \centering
+  % \tiny
+  \begin{tabular}{| l c c c c |}
+    \rowcolor{gray!50} \textbf{Result} & \textbf{Without LLM}  & \textbf{\%} & \textbf{With LLM}  & \textbf{\%}  \\ \hline
+    High confidence              &      960      &      73.56      &  548  &  41.99  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad Commit in reference* \\
+    \end{tabular}              &      847      &      88.23      &  413  &  75.36  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad CVE ID in message* \\
+    \end{tabular}              &      162      &      16.88      &  69  &  12.59  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad CVE ID in Issue* \\
+    \end{tabular}              &      37      &      3.85      &  12  &  2.19  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad Cross Reference* \\
+    \end{tabular}              &      339      &      35.31      &  135  &  24.64  \\
+    \rowcolor{gray!20} \begin{tabular}{l}
+      \quad Commit is Security Relevant* \\
+    \end{tabular}               &      0      &      0.0      &  488  &  37.39  \\
+    Medium confidence              &      179      &      13.72      &  18  &  1.38  \\
+    Low confidence              &      9      &      0.69      &  6  &  0.46  \\
+    Not found (rank $> 10$)              &      31      &      2.38      &  11  &  0.84  \\
+    Not reported                 &      103      &      7.89      &  44  &  3.37  \\
+    False Positive              &      23      &      1.76      &  678  &  51.95  \\
+    Aborted (due to exceeding candidate limit)              &      14      &      1.07      &  14  &  1.07  \\
+    \textbf{Total}    & \textbf{1305} &       & \textbf{1305} &   \\ \hline
+  \end{tabular}
+  \caption{Prospector Evaluation Results (* percentage of high confidence category)}
+  \label{tab:tracer_dataset_results_mvi}
+\end{table}

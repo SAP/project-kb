@@ -62,6 +62,8 @@ prospector/test_report.json
 prospector/.idea/*
 prospector/*.html
 prospector/*.json
-prospector/evaluation
+prospector/evaluation/data/input/*
+prospector/evaluation/data/reports/*
+prospector/evaluation/config.yaml
 .DS_Store
 prospector/pipeline/reports/*
