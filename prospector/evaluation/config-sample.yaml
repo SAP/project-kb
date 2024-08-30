@@ -6,11 +6,14 @@ input_data_path: evaluation/data/input/ # datasets to run prospector on (CSV: ID
 
 # directory to where the batches of reports are to be found
 reports_directory: ../../../data/prospector_reports/
+# filename of the ground truth dataset file
+input: tracer
 
 # Prospector Batch Selection
 version_interval: true
 llm_support: true
 batch: regular # regular, old_code, old_reports
+cves: all # optionally select a subset of CVEs, eg. CVE-2020-1925 to only execute on this CVE
 
 # compare reports selected above to
 compare_directory: ../../../data/prospector_reports/nvi_with_llm/
