@@ -1,10 +1,7 @@
-# flake8: noqa
-import argparse
-import asyncio
-import os
 import signal
 import sys
-
+from typing import Callable, Dict
+from omegaconf import OmegaConf
 from evaluation.analyse import (
     analyse_category_flows,
     analyse_prospector_reports,
@@ -14,178 +11,100 @@ from evaluation.analyse import (
 )
 from evaluation.analyse_statistics import (
     analyse_statistics,
-    candidates_execution_time,
-    commit_classification_time,
     overall_execution_time,
 )
-from evaluation.dispatch_jobs import (
-    dispatch_jobs_with_api,
-    dispatch_prospector_jobs,
-    empty_queue,
-    start,
-)
+from evaluation.dispatch_jobs import dispatch_prospector_jobs, empty_queue
+from evaluation.utils import config
 
 
-def parse_cli_args(args):
-    parser = argparse.ArgumentParser(description="Prospector scripts")
+class CommandRegistry:
+    def __init__(self):
+        self.commands: Dict[str, Callable] = {}
 
-    parser.add_argument(
-        "-i",
-        "--input",
-        type=str,
-        help="Input file",
+    def register(self, name: str):
+        def decorator(func: Callable):
+            self.commands[name] = func
+            return func
+
+        return decorator
+
+    def execute(self, name: str, *args, **kwargs):
+        if name not in self.commands:
+            raise ValueError(f"Command '{name}' not found")
+        return self.commands[name](*args, **kwargs)
+
+
+registry = CommandRegistry()
+
+
+@registry.register("execute")
+def execute_command(config):
+    dispatch_prospector_jobs(config.input, config.cve)
+
+
+@registry.register("analyse_reports")
+def analyze_reports_command(config):
+    analyse_prospector_reports(config.input, config.cve)
+
+
+@registry.register("analyse_statistics")
+def analyze_stats_command(config):
+    analyse_statistics(config.input)
+
+
+@registry.register("execution_time")
+def execution_time_command(config):
+    overall_execution_time(config.input)
+
+
+@registry.register("category_flows")
+def category_flows_command(config):
+    analyse_category_flows()
+
+
+@registry.register("checkmarks")
+def checkmarks_command(config):
+    generate_checkmarks_table(config.input, config.cve)
+
+
+@registry.register("empty_queue")
+def empty_queue_command(config):
+    empty_queue()
+
+
+@registry.register("count_reports")
+def count_reports_command(config):
+    count_existing_reports(config.input)
+
+
+@registry.register("sankey_diagram")
+def sankey_diagram_command(config):
+    generate_sankey_diagram(
+        "mvi_old_reports",
+        "mvi_old_reports(new_categories)",
+        "mvi_without_llm",
     )
 
-    parser.add_argument(
-        "-e",
-        "--execute",
-        action="store_true",
-        help="Input file",
-    )
 
-    parser.add_argument(
-        "-a",
-        "--analyze",
-        action="store_true",
-        help="Input file",
-    )
-
-    parser.add_argument(
-        "-s",
-        "--stats",
-        action="store_true",
-        help="Analyse the statistics field saved in each Prospector report.",
-    )
-
-    parser.add_argument(
-        "-f",
-        "--folder",
-        type=str,
-        help="Folder to analyze",
-    )
-
-    parser.add_argument(
-        "-c",
-        "--cve",
-        type=str,
-        default="",
-        help="CVE to analyze",
-    )
-
-    parser.add_argument(
-        "-eq",
-        "--empty-queue",
-        help="Empty the Redis Queue",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "-co",
-        "--count",
-        help="Count which CVEs from the input data have a corresponding Prospector report.",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "-fl",
-        "--flow",
-        help="Analyse which CVEs changed from one category to another given two detailed summary execution JSON files.",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "-t",
-        "--temporary",
-        help="Run whichever temporary function is set to temporary. This allows you to write use-once function and run it easily.",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "-cm",
-        "--checkmarks",
-        action="store_true",
-    )
-
-    return parser.parse_args()
-
-
-async def main(argv):
-    args = parse_cli_args(argv)
-
-    # Run Prospector containerised
-    if args.execute and not args.analyze:
-        dispatch_prospector_jobs(args.input, args.cve)
-        # await dispatch_jobs_with_api(args.input, args.cve)
-        # start()
-
-    elif args.analyze and not args.execute:
-        # analysis of execution statistics in report
-        if args.stats:
-            # analyse_statistics(args.input)
-            overall_execution_time(args.input)
-            # commit_classification_time(args.input)
-            # candidates_execution_time(args.input)
-
-        elif args.flow:
-            analyse_category_flows()
-            # analyse_category_flows_no_mutual_exclusion()
-        # analysis of Prospector reports
-        elif args.checkmarks:
-            generate_checkmarks_table(args.input, args.cve)
-
-        else:
-            analyse_prospector_reports(args.input, args.cve)
-
-    # Remove all jobs from the queue
-    elif args.empty_queue and not args.execute and not args.stats:
-        empty_queue()
-
-    # Count how many reports there are or there are missing
-    elif not args.analyze and not args.execute and args.count:
-        count_existing_reports(args.input)
-
-    elif not args.analyze and not args.execute and args.temporary:
-        # difference_ground_truth_datasets()
-        # generate_sankey_diagram("mvi_old_reports", "mvi_old_code", "mvi_without_llm")
-        generate_sankey_diagram(
-            "mvi_old_reports",
-            "mvi_old_reports(new_categories)",
-            "mvi_without_llm",
-        )
-        # candidates_execution_time(args.input)
-        # overall_execution_time(args.input)
-
-    # Cannot choose both analyse and execute, stop here.
-    elif args.analyze and args.execute:
-        sys.exit("Choose either to execute or analyze")
-
-
-def mute():
-    sys.stdout = open(os.devnull, "w")
-
-
-def list_dir_and_select_folder():
-    files = [file for file in os.listdir("datasets/") if "." not in file]
-    for i, file in enumerate(files):
-        print(i, ")", file)
-    choice = int(input("Choose a dataset: "))
-    return files[choice]
-
-
-def list_dir_and_select_dataset():
-    files = [file for file in os.listdir("datasets/") if file.endswith(".csv")]
-    for i, file in enumerate(files):
-        print(i, ")", file)
-    choice = int(input("Choose a dataset: "))
-    return files[choice]
-
-
-# this method handls ctrl+c from the keyboard to stop execution
 def sig_handler(signum, frame):
     print("You pressed Ctrl+C!")
     sys.exit(0)
 
 
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python script.py <command>")
+        sys.exit(1)
+
+    command = sys.argv[1]
+
+    try:
+        registry.execute(command, config)
+    except ValueError as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, sig_handler)
-    asyncio.run(main(sys.argv[1:]))
+    main()

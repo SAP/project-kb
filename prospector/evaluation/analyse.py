@@ -65,7 +65,7 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
     dataset = load_dataset(file)
     # dataset = dataset[:100]  # Actual line number in D53.csv -2
     # dataset = dataset[198:199]  # Actual line number in D53.csv -2
-    if len(selected_cves) != 0:
+    if selected_cves != "all" and len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
 
     # Keep track of how many reports were attempted to be analysed
