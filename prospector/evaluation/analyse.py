@@ -60,11 +60,16 @@ WEAK_RULES = [
 
 
 def analyse_prospector_reports(filename: str, selected_cves: str):
-    """Analyses Prospector reports. Creates the summary_execution_results table."""
+    """Analyses Prospector reports and categorises them into high, medium,
+    low ... categories given a ground truth.
+
+    Creates the summary_execution_[mvi|nvi]_table.tex table.
+    Creates a JSON file with a list of CVE IDs for each category of the table. These files are used for the flow analysis (`analyse_category_flows()`).
+
+    """
     file = INPUT_DATA_PATH + filename + ".csv"
     dataset = load_dataset(file)
-    # dataset = dataset[:100]  # Actual line number in D53.csv -2
-    # dataset = dataset[198:199]  # Actual line number in D53.csv -2
+
     if selected_cves != "all" and len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
 
@@ -312,7 +317,8 @@ def _save_summary_execution_details(
 
 
 def count_existing_reports(data_filepath):
-    """Prints which CVEs reports are missing for to the console."""
+    """Prints which CVEs reports are missing for given the ground truth dataset
+    to the console."""
     file = INPUT_DATA_PATH + data_filepath + ".csv"
     dataset = load_dataset(file)
 
@@ -347,13 +353,13 @@ def analyse_category_flows():
     """
     summary_execution_file = (
         ANALYSIS_RESULTS_PATH
-        + "summary_execution/"
+        + "summary_execution_"
         + PROSPECTOR_REPORTS_PATH_HOST.split("/")[-2]
         + ".json"
     )
     summary_execution_comparison_file = (
         ANALYSIS_RESULTS_PATH
-        + "summary_execution/"
+        + "summary_execution_"
         + COMPARISON_DIRECTORY.split("/")[-2]
         + ".json"
     )
@@ -378,7 +384,7 @@ def analyse_category_flows():
 
     save_dict_to_json(
         output_data,
-        f"{ANALYSIS_RESULTS_PATH}summary_execution/flow-analysis.json",
+        f"{ANALYSIS_RESULTS_PATH}summary_execution_flow-analysis.json",
     )
 
 
@@ -548,7 +554,7 @@ def generate_checkmarks_table(input_dataset: str, selected_cves):
     file = INPUT_DATA_PATH + input_dataset + ".csv"
     dataset = load_dataset(file)
 
-    if len(selected_cves) != 0:
+    if selected_cves != "all" and len(selected_cves) != 0:
         dataset = [c for c in dataset if c[0] in selected_cves]
 
     for record in tqdm(dataset, total=len(dataset), desc="Analysing Records"):
@@ -627,7 +633,7 @@ def generate_checkmarks_table(input_dataset: str, selected_cves):
 
     # Write the content to the output file
     with open(
-        ANALYSIS_RESULTS_PATH + "summary_execution/checkmarks_table.tex", "w"
+        ANALYSIS_RESULTS_PATH + "summary_execution_checkmarks_table.tex", "w"
     ) as file:
         file.writelines(latex_content)
 
@@ -639,13 +645,13 @@ def _calculate_total_relevance(commit):
 def generate_sankey_diagram(file1: str, file2: str, file3: str):
     # Load JSON data
     summary_execution_file_1 = (
-        ANALYSIS_RESULTS_PATH + "summary_execution/" + file1 + ".json"
+        ANALYSIS_RESULTS_PATH + "summary_execution_" + file1 + ".json"
     )
     summary_execution_file_2 = (
-        ANALYSIS_RESULTS_PATH + "summary_execution/" + file2 + ".json"
+        ANALYSIS_RESULTS_PATH + "summary_execution_" + file2 + ".json"
     )
     summary_execution_file_3 = (
-        ANALYSIS_RESULTS_PATH + "summary_execution/" + file3 + ".json"
+        ANALYSIS_RESULTS_PATH + "summary_execution_" + file3 + ".json"
     )
 
     summary1 = load_json_file(summary_execution_file_1)
@@ -780,7 +786,7 @@ def generate_sankey_diagram(file1: str, file2: str, file3: str):
     )
 
     output_file = (
-        ANALYSIS_RESULTS_PATH + "plots/" + f"sankey-{file1}-{file2}-{file3}.png"
+        ANALYSIS_RESULTS_PATH + f"sankey-{file1}-{file2}-{file3}.png"
     )
     # Save as PNG
     write_image(fig, output_file)

@@ -29,7 +29,7 @@ def load_json_file(path: str) -> dict:
 
 
 def save_dict_to_json(dictionary: dict, path: str):
-    with open(path, "w") as file:
+    with open(path, "w+") as file:
         return json.dump(dictionary, file, indent=4)
 
 

@@ -1,0 +1,2007 @@
+{
+    "transitions": [
+        {
+            "medium to high": [
+                {
+                    "CVE-2019-11767": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10558": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2011-3923": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10797": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-9970": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2020-8125": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-7674": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10780": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-10575": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-2525": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10778": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-4977": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10529": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-12616": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-13209": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1263": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10240": {
+                        "different first commit": false,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2017-9796": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-8331": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-5641": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2011-1950": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-9844": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2018-14637": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10750": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10694": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-10735": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2012-2378": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2018-3731": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-10611": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1000013": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10760": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2015-6524": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-9212": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-11467": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-10528": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-5858": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2013-4111": {
+                        "different first commit": false,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2015-1772": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10559": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-18889": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2013-2172": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10745": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2014-3576": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10591": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-2617": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-3714": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2018-1260": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2018-1000014": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-4000": {
+                        "different first commit": false,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2016-8738": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-16490": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10764": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-16007": {
+                        "different first commit": false,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2019-1010266": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10904": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-5812": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-4973": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10748": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-1000389": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-12407": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-8862": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-12620": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-16197": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-2667": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-12404": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10560": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2013-4316": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-16459": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-15657": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2012-3536": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-19212": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-7617": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1261": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-3250": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-17197": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                }
+            ]
+        },
+        {
+            "low to high": [
+                {
+                    "CVE-2013-1607": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-7809": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-3577": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-2652": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-16462": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                }
+            ]
+        },
+        {
+            "not_reported to false_positive": [
+                {
+                    "CVE-2016-3959": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-6652": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-4465": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10354": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-0953": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-19316": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-1986": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-1000282": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1304": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-9155": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-0762": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-4972": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-3630": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-9214": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-1054": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-1099": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10770": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-6793": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-14642": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2013-4152": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-11758": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2013-4428": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-8629": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-19919": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-3894": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-3709": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-17554": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-7660": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2011-2732": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-3808": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-8359": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10766": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2010-2076": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-2068": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-3728": {
+                        "different first commit": true,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2018-13790": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-7675": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-17359": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-11087": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-10582": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-0293": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10557": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10158": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2012-1098": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-5954": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-5250": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-12203": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2015-5207": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2013-2115": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-12748": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-6519": {
+                        "different first commit": false,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2019-3810": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-14280": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2013-0285": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2014-0116": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-8473": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-5241": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2020-1938": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-10071": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-0097": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2013-1654": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-10542": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-8745": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-1829": {
+                        "different first commit": true,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2019-17223": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-3451": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-12159": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-7666": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1193": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-8008": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-0208": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-4952": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-0224": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-3743": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2012-1987": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-1000042": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-1001": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-12423": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-11503": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-7957": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2015-3192": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-7537": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2010-4535": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1339": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10174": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-12158": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-0086": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-10912": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-19787": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2013-2254": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-10579": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-9265": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2010-0156": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-6817": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-5018": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2013-4761": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-8541": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2013-7315": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2016-6797": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10550": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-9096": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-3081": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-3867": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2012-1906": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-10862": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-0035": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-2649": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-8315": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-14683": {
+                        "different first commit": false,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2019-11269": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2014-0228": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-6794": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-7661": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-15608": {
+                        "different first commit": false,
+                        "different references": true
+                    }
+                },
+                {
+                    "CVE-2017-12160": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-4449": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-0226": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-3799": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-11289": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1314": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-8861": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2012-5055": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-11328": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-12245": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-3847": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-7662": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-0289": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-3850": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-10750": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-15758": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-11016": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2020-7596": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-5211": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-6796": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-2379": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-12631": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-12617": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2017-2592": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-14838": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-11777": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2012-0392": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-8510": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-15720": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-3774": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2010-4534": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2011-3848": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10763": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-7644": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2016-5388": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2020-1937": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2015-1830": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2017-17835": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2019-12419": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2019-10754": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2010-5142": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-3758": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1000854": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2020-8134": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-8465": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                },
+                {
+                    "CVE-2018-1259": {
+                        "different first commit": false,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": false,
+                        "same relevance sum": false
+                    }
+                },
+                {
+                    "CVE-2011-1772": {
+                        "different first commit": true,
+                        "different references": false,
+                        "different keywords": false,
+                        "same commits, ordered differently": true
+                    }
+                }
+            ]
+        }
+    ],
+    "category_adjustments": {
+        "medium": -75,
+        "high": 80,
+        "low": -5,
+        "not_reported": -161,
+        "false_positive": 161
+    }
+}
