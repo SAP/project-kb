@@ -1,6 +1,6 @@
 # Evaluate Prospector
 
-This folder contains the scripts used for evaluating Prospector's reports (created and used in Summer 2024). The folder is structured as follows:
+This folder contains the scripts used for evaluating Prospector's reports and data needed for it (created and used in Summer 2024). The folder is structured as follows:
 
 1. **Data** folder: contains input data, Prospector reports and results of the analysis of the Prospector reports.
 2. **Scripts**: The scripts used for running Prospector on a batch of CVEs, and for analysing the created reports.
@@ -23,19 +23,6 @@ them in a Redis Queue, from which the `prospector_worker` container fetches jobs
 `docker attach prospector_worker_1` to see the usual console output. In order to change something inside the container, run `docker exec -it prospector_worker_1 bash` to open an interactive bash shell.
 
 You can set the number of workers in `docker/worker/etc_supervisor_confd_rqworker.conf.j2`.
-
-## Command Line Options
-
-All scripts are called from `main.py`, depending on the CL flags that are set. The following flags can be set:
-
-1. `-i`: Sets the filename of the file in the input data path.
-2. `-c`: Allows you to select a subset of CVEs, instead of all CVEs from the input data (eg. `-c CVE-2020-1925, CVE-2018-1234`)
-3. `-e`: For *execute*, dispatched jobs for all CVEs from the input data (or the subset if `-c` is set) to the Redis Queue (`dispatch_jobs.py`).
-4. `-a`: Analyses the reports created by Propsector (`analysis.py`)
-5. `-a -s`: Analyses the statistics part of the Prospector reports (eg. to analyse execution times, `analyse_statistics.py`)
-6. `-a --flow`: Creates a JSON file showing how the reports change categories between two different executions.
-6. `-eq`: For *empty queue*, to empty the jobs left on the queue.
-7. `-co`: For *count*, to count how many of the CVEs in the input data have a corresponding report.
 
 ## Configuration File
 

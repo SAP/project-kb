@@ -452,10 +452,10 @@ class CommitIsSecurityRelevant(Rule):
                     r.raise_for_status()
                     commit_data = r.json()[0]
 
-                # is_security_relevant = commit_data.get("security_relevant")
-                # if is_security_relevant is not None:
-                #     candidate.security_relevant = is_security_relevant
-                #     return is_security_relevant
+                    is_security_relevant = commit_data.get("security_relevant")
+                    if is_security_relevant is not None:
+                        candidate.security_relevant = is_security_relevant
+                        return is_security_relevant
 
                 candidate.security_relevant = LLMService().classify_commit(
                     candidate.diff, candidate.repository, candidate.message

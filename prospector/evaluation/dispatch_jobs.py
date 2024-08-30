@@ -6,7 +6,6 @@ from rq.job import Job
 
 from core.prospector import prospector
 from core.report import generate_report
-from evaluation.create_jobs import _create_prospector_job, enqueue_jobs
 from evaluation.utils import (
     INPUT_DATA_PATH,
     PROSPECTOR_REPORTS_PATH_HOST,
@@ -101,7 +100,7 @@ def _run_prospector_and_generate_report(
         logger.error(f"prospector() crashed at {cve_id}: {e}")
         raise e
 
-    logger.info(f"prospector() returned. Generating report now.")
+    logger.info("prospector() returned. Generating report now.")
 
     try:
         generate_report(

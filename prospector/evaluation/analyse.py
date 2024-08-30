@@ -80,7 +80,7 @@ def analyse_prospector_reports(filename: str, selected_cves: str):
     # Keep track of the CVEs where there is no report file
     reports_not_found = []
 
-    #### Data to insert into table
+    # Data to insert into table
     if BATCH in ["regular", "old_code"]:
         results = {
             "high": [],
@@ -620,7 +620,7 @@ def generate_checkmarks_table(input_dataset: str, selected_cves):
 
         rule_checks = {rule: "" for rule in all_rules}
         for r in matched_rules:
-            rule_checks[r] = "\checkmark"
+            rule_checks[r] = "\checkmark"  # noqa: W605
 
         row.extend([rule_checks[r] for r in all_rules])
         row.extend([str(overall_exectime), str(llm_exectime)])
@@ -785,9 +785,7 @@ def generate_sankey_diagram(file1: str, file2: str, file3: str):
         height=800,
     )
 
-    output_file = (
-        ANALYSIS_RESULTS_PATH + f"sankey-{file1}-{file2}-{file3}.png"
-    )
+    output_file = ANALYSIS_RESULTS_PATH + f"sankey-{file1}-{file2}-{file3}.png"
     # Save as PNG
     write_image(fig, output_file)
     print(f"Sankey diagram saved to {output_file}")

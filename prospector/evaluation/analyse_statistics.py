@@ -63,16 +63,6 @@ def analyse_statistics(filename: str):  # noqa: C901
     avg_cc_time = sum(cc_times) / len(cc_times)
     avg_total_cc_time = sum(total_cc_times) / len(total_cc_times)
 
-    # How many commits was the commit classification rule applied to?
-    for itm in dataset:
-        filepath = PROSPECTOR_REPORTS_PATH_HOST + filename + f"/{itm[0]}.json"
-        try:
-            cc_num_commits = _get_cc_num_commits(filepath)
-            break
-
-        except FileNotFoundError:
-            continue
-
     execution_data = {
         "timestamp": datetime.now().strftime("%H:%M:%S"),
         "total_files_found": len(repo_times),
