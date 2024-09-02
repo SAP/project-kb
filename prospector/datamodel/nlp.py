@@ -50,10 +50,14 @@ def extract_words_from_text(text: str) -> List[str]:
     ]
 
 
-def find_similar_words(adv_words: Set[str], commit_msg: str, exclude: str) -> Set[str]:
+def find_similar_words(
+    adv_words: Set[str], commit_msg: str, exclude: str
+) -> Set[str]:
     """Extract nouns from commit message that appears in the advisory text"""
     commit_words = {
-        word for word in extract_words_from_text(commit_msg) if word not in exclude
+        word
+        for word in extract_words_from_text(commit_msg)
+        if word not in exclude
     }
     return commit_words.intersection(adv_words)
     # return [word for word in extract_words_from_text(commit_msg) if word in adv_words]
@@ -63,7 +67,9 @@ def extract_versions(text: str) -> List[str]:
     """
     Extract all versions mentioned in the text
     """
-    return list(set(re.findall(r"(\d+(?:\.\d+)+)", text)))  # Should be more accurate
+    return list(
+        set(re.findall(r"(\d+(?:\.\d+)+)", text))
+    )  # Should be more accurate
     # return re.findall(r"[0-9]+\.[0-9]+[0-9a-z.]*", text)
 
 
@@ -134,7 +140,8 @@ def extract_filename(text: str, relevant_extensions: List[str]) -> List[str]:
     # This regex covers cases with various camelcase filenames and underscore, dash names
     if bool(
         re.search(
-            r"(?:[a-z]|[A-Z])[a-zA-Z]+[A-Z]\w*|(?:[a-zA-Z]{2,}[_-])+[a-zA-Z]{2,}", text
+            r"(?:[a-z]|[A-Z])[a-zA-Z]+[A-Z]\w*|(?:[a-zA-Z]{2,}[_-])+[a-zA-Z]{2,}",
+            text,
         )
     ):
         return [text], None
@@ -195,7 +202,12 @@ def extract_cve_references(text: str) -> List[str]:
     Extract CVE identifiers
     """
     return list(
-        set([result.group(0) for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)])
+        set(
+            [
+                result.group(0)
+                for result in re.finditer(r"CVE-\d{4}-\d{4,8}", text)
+            ]
+        )
     )
 
 

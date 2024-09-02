@@ -491,5 +491,5 @@ RULES_PHASE_1: List[Rule] = [
 ]
 
 RULES_PHASE_2: List[Rule] = [
-    CommitIsSecurityRelevant("COMMIT_IS_SECURITY_RELEVANT", 32)
+    CommitIsSecurityRelevant("COMMIT_IS_SECURITY_RELEVANT", 16)
 ]

@@ -13,8 +13,12 @@ import sys
 from typing import Dict, List
 from urllib.parse import urlparse
 
+from tqdm import tqdm
+
+import multiprocessing.pool as mpp
 from git.exec import Exec
 from git.raw_commit import RawCommit
+from git.version_to_tag import get_possible_tags
 from log.logger import logger
 from stats.execution import execution_statistics, measure_execution_time
 
@@ -25,32 +29,77 @@ ONE_MONTH_TIME_DELTA = 30 * 24 * 60 * 60
 HALF_MONTH_TIME_DELTA = 15 * 24 * 60 * 60
 
 
-# def do_clone(url, output_folder, shallow=False, skip_existing=False):
-#     git = Git(url, cache_path=output_folder, shallow=shallow)
-#     git.clone(shallow=shallow, skip_existing=skip_existing)
-#     return str(len(git.get_commits()))
+def istarmap(self, func, iterable, chunksize=1):
+    """Credit: https://stackoverflow.com/questions/57354700/starmap-combined-with-tqdm"""
+    self._check_running()
+    if chunksize < 1:
+        raise ValueError("Chunksize must be 1+, not {0:n}".format(chunksize))
+
+    task_batches = mpp.Pool._get_tasks(func, iterable, chunksize)
+    result = mpp.IMapIterator(self)
+    self._taskqueue.put(
+        (
+            self._guarded_task_generation(
+                result._job, mpp.starmapstar, task_batches
+            ),
+            result._set_length,
+        )
+    )
+    return (item for chunk in result for item in chunk)
 
 
-def do_clone():
-    pass
+mpp.Pool.istarmap = istarmap
+
+
+def do_clone(url: str, output_folder, shallow=False, skip_existing=False):
+    """
+    This function clones a git repository from the given URL to the specified
+    output folder. It can perform a shallow clone and skip existing repositories if specified.
+
+    Args:
+        url (str): The URL of the git repository to clone.
+        output_folder (str): The path to the folder where the repository should
+        be cloned to.
+        shallow (bool, optional): If True, perform a shallow clone.
+        skip_existing (bool, optional): If True skip cloning if already exists.
+
+    Returns:
+        str: The number of commits in the cloned repository as a string.
+    """
+    git = Git(url, cache_path=output_folder, shallow=shallow)
+    git.clone(shallow=shallow, skip_existing=skip_existing)
+
+    return
 
 
 def clone_repo_multiple(
     url_list,
     output_folder,
-    proxy="",
     shallow=False,
     skip_existing=False,
     concurrent=multiprocessing.cpu_count(),
 ):
     """
-    This is the parallelized version of clone_repo (works with a list of repositories).
+    This is the parallelized version of clone_repo (works with a list of
+    repositories). This uses a tqdm progress bar to show how many repos
+    have been cloned.
     """
+    logger.setLevel(
+        "DEBUG"
+    )  # Need to manually set as this method is called without using `main.py`
     logger.debug(f"Using {concurrent} parallel workers")
-    with multiprocessing.Pool(concurrent) as pool:
-        args = ((url, output_folder, proxy, shallow, skip_existing) for url in url_list)
-        results = pool.starmap(do_clone, args)
 
+    with multiprocessing.Pool(concurrent) as pool:
+        args = [
+            (url, output_folder, shallow, skip_existing) for url in url_list
+        ]
+        results = list(
+            tqdm(
+                pool.istarmap(do_clone, args),
+                total=len(url_list),
+                desc="Cloning repositories",
+            )
+        )
     return results
 
 
@@ -159,7 +208,9 @@ class Git:
             if skip_existing:
                 logger.debug(f"Skipping fetch of {self.url} in {self.path}")
             else:
-                logger.debug(f"Found repo {self.url} in {self.path}.\nFetching....")
+                logger.debug(
+                    f"Found repo {self.url} in {self.path}.\nFetching with `git fetch --progress --all --tags --force`."
+                )
 
                 self.execute("git fetch --progress --all --tags --force")
             return
@@ -170,7 +221,9 @@ class Git:
 
         os.makedirs(self.path)
 
-        logger.debug(f"Cloning {self.url} (shallow={self.shallow_clone})")
+        logger.debug(
+            f"Cloning {self.url} (shallow={self.shallow_clone}) in folder {self.path}"
+        )
 
         if not self.execute("git init", silent=False):
             logger.error(f"Failed to initialize repository in {self.path}")
@@ -181,7 +234,9 @@ class Git:
                 silent=True,
             )
         except Exception as e:
-            logger.error(f"Could not update remote in {self.path}", exc_info=True)
+            logger.error(
+                f"Could not update remote in {self.path}", exc_info=True
+            )
             shutil.rmtree(self.path)
             raise e
 
@@ -206,27 +261,45 @@ class Git:
         until=None,
         filter_extension=None,
     ) -> Dict[str, RawCommit]:
+        """Retrieves git commits: executes `git log` and parses the output to
+        return a dictionary of commits.
+
+        Args:
+            next_tag (str, optional): The later tag to bound the commit range.
+            prev_tag (str, optional): The earlier tag to bound the commit range.
+            since (str, optional): The start date for filtering commits.
+            until (str, optional): The end date for filtering commits.
+            filter_extension (list, optional): List of file extensions to filter commits by.
+
+        Returns:
+            Dict[str, RawCommit]: A dictionary where keys are commit hashes and values are
+            RawCommit objects containing commit details.
+        """
         cmd = f"git log --all --name-only --full-index --format=%n{GIT_SEPARATOR}%n%H:%at:%P%n{GIT_SEPARATOR}%n%B%n{GIT_SEPARATOR}%n"
+
         if next_tag and prev_tag:
-            cmd += f"{prev_tag}..{next_tag}"
+            cmd += f" {prev_tag}..{next_tag}"
         elif next_tag and not prev_tag:
             ts = self.get_timestamp(next_tag, "c")
-            cmd += f"--until={ts}"
+            cmd += f" --until={ts}"
         elif not next_tag and prev_tag:
             ts = self.get_timestamp(prev_tag, "a")
-            cmd += f"--since={ts}"
+            cmd += f" --since={ts}"
         else:
-            cmd += f"--since={since} --until={until}"
+            cmd += f" --since={since} --until={until}"
 
         if filter_extension:
             cmd += " *." + " *.".join(filter_extension)
         try:
-            logger.debug(cmd)
+            logger.debug(f"Retrieving commits with: {cmd}")
             out = self.execute(cmd)
+            logger.debug(f"Commit Logs (truncated): {out[:50]}")
             return self.parse_git_output(out)
 
         except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
+            logger.error(
+                "Git command failed, cannot get commits", exc_info=True
+            )
             return dict()
 
     @measure_execution_time(execution_statistics.sub_collection("core"))
@@ -261,12 +334,14 @@ class Git:
             cmd += " *." + " *.".join(filter_extension)
 
         try:
-            logger.debug(cmd)
+            logger.debug(f"Executing git command: {cmd}")
             out = self.execute(cmd)
             return self.parse_git_output(out)
 
         except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
+            logger.error(
+                "Git command failed, cannot get commits", exc_info=True
+            )
             return dict()
 
     def create_commit(self, commit_id: str) -> RawCommit:
@@ -277,7 +352,9 @@ class Git:
             return self.parse_git_output(out)[commit_id]
 
         except Exception:
-            logger.error("Git command failed, cannot get commits", exc_info=True)
+            logger.error(
+                "Git command failed, cannot get commits", exc_info=True
+            )
             return None
 
     def parse_git_output(self, raw: List[str]) -> Dict[str, RawCommit]:
@@ -357,7 +434,9 @@ class Git:
         best_match = ("", 0.0)
         for tag in tags:
             t_strip = re.sub("[^0-9]", "", tag)
-            match_score = difflib.SequenceMatcher(None, t_strip, version).ratio()
+            match_score = difflib.SequenceMatcher(
+                None, t_strip, version
+            ).ratio()
             # print(t, match_score)
             if match_score > best_match[1]:
                 best_match = (tag, match_score)
@@ -367,12 +446,19 @@ class Git:
     def get_timestamp(self, item: str, ts_format: str) -> int:
         # ct is committer date, it is the default for the research using --until and --since
         out = self.execute(f"git log -1 --format=%{ts_format}t {item}")
+        logger.debug(
+            f"Got timestamp with `git log -1 --format=%{ts_format}t {item}`."
+        )
         return int(out[0])
 
     def get_tags(self):
         try:
             # Committer date to have the proper tag ordering
-            return self.execute("git tag --sort=committerdate")
+            results = self.execute("git tag --sort=committerdate")
+            logger.debug(
+                "Git command `git tag --sort=committerdate` successfully executed."
+            )
+            return results
         except subprocess.CalledProcessError as exc:
             logger.error("Git command failed." + str(exc.output), exc_info=True)
             return []

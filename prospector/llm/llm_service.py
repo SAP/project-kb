@@ -1,5 +1,6 @@
 import itertools
 import re
+import time
 
 import validators
 from langchain_core.language_models.llms import LLM
@@ -59,6 +60,17 @@ class LLMService(metaclass=Singleton):
         try:
             chain = prompt_best_guess | self.model | StrOutputParser()
 
+            # Shorten the dictionary of references to avoid exceeding the token limit
+            if len(advisory_references) >= 300:
+                sorted_references = dict(
+                    sorted(
+                        advisory_references.items(), key=lambda item: item[1]
+                    )
+                )
+                advisory_references = dict(
+                    itertools.islice(sorted_references.items(), 200)
+                )
+
             url = chain.invoke(
                 {
                     "description": advisory_description,
@@ -106,6 +118,8 @@ class LLMService(metaclass=Singleton):
                 }
             )
             logger.info(f"LLM returned is_relevant={is_relevant}")
+
+            time.sleep(1)
 
         except HTTPError as e:
             # if the diff is too big, a 400 error is returned -> silently ignore by returning False for this commit

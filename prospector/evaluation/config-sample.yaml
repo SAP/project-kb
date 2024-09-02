@@ -1,0 +1,72 @@
+# Debug Level
+debug_level: INFO
+
+# Input Data
+input_data_path: evaluation/data/input/ # datasets to run prospector on (CSV: ID;URL;VERSIONS;FLAG;COMMITS;COMMENTS)
+
+# directory to where the batches of reports are to be found
+reports_directory: ../../../data/prospector_reports/
+# filename of the ground truth dataset file
+input: tracer
+
+# Prospector Batch Selection
+version_interval: true
+llm_support: true
+batch: regular # regular, old_code, old_reports
+cves: all # optionally select a subset of CVEs, eg. CVE-2020-1925 to only execute on this CVE
+
+# compare reports selected above to
+compare_directory: ../../../data/prospector_reports/nvi_with_llm/
+
+# Prospector settings (from the Prospector config.yaml)
+prospector_settings:
+  # Maximum number of commits to process
+  max_candidates: 2000
+
+  # Whether to use a backend or not: "always", "never", "optional"
+  use_backend: never
+
+  # backend: http://backend:8000
+  backend: http://localhost:8000
+
+  database:
+    user: postgres
+    password: example
+    host: db # Database address; when in containerised version, use 'db', otherwise 'localhost'
+    port: 5432
+    dbname: postgres
+
+  redis_url: redis://localhost:6379/0
+
+  # LLM Usage (check README for help)
+  llm_service:
+    type: sap # sap or third_party
+    model_name: gpt-4 # gpt-4 or mistral-large-latest
+    temperature: 0.0 # optional, default is 0.0
+    ai_core_sk: sk.json
+
+    # LLM support options (check README for help)
+    use_llm_repository_url: True # True in order to instantiate the Singleton, but the URL will be passed in the evaluation
+
+  enabled_rules:
+    # Phase 1 Rules
+    - VULN_ID_IN_MESSAGE
+    - XREF_BUG
+    - XREF_GH
+    - COMMIT_IN_REFERENCE
+    - VULN_ID_IN_LINKED_ISSUE
+    - CHANGES_RELEVANT_FILES
+    - CHANGES_RELEVANT_CODE
+    - RELEVANT_WORDS_IN_MESSAGE
+    - ADV_KEYWORDS_IN_FILES
+    - ADV_KEYWORDS_IN_MSG
+    - SEC_KEYWORDS_IN_MESSAGE
+    - SEC_KEYWORDS_IN_LINKED_GH
+    - SEC_KEYWORDS_IN_LINKED_BUG
+    - GITHUB_ISSUE_IN_MESSAGE
+    - BUG_IN_MESSAGE
+    - COMMIT_HAS_TWINS
+    # Phase 2 Rules (llm_service required!):
+    - COMMIT_IS_SECURITY_RELEVANT
+
+  git_cache: /tmp/gitcache # When running Prospector containerised

@@ -1,0 +1,568 @@
+\begin{longtabu} to \textwidth { c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c }
+\caption{Matched rules for each fixing commit}\\
+    \toprule
+    & \rot{VULN\_ID\_IN\_MESSAGE} & \rot{XREF\_BUG} & \rot{XREF\_GH} & \rot{COMMIT\_IN\_REFERENCE} & \rot{COMMIT\_IS\_SECURITY\_RELEVANT} & \rot{VULN\_ID\_IN\_LINKED\_ISSUE} & \rot{CHANGES\_RELEVANT\_FILES} & \rot{CHANGES\_RELEVANT\_CODE} & \rot{RELEVANT\_WORDS\_IN\_MESSAGE} & \rot{ADV\_KEYWORDS\_IN\_FILES} & \rot{ADV\_KEYWORDS\_IN\_MSG} & \rot{SEC\_KEYWORDS\_IN\_MESSAGE} & \rot{SEC\_KEYWORDS\_IN\_LINKED\_GH} & \rot{SEC\_KEYWORDS\_IN\_LINKED\_BUG} & \rot{GITHUB\_ISSUE\_IN\_MESSAGE} & \rot{BUG\_IN\_MESSAGE} & \rot{COMMIT\_HAS\_TWINS} & \rot{Total Execution Time} & \rot{LLM Execution Time} \\ \midrule
+    CVE-2010-5312 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 7.71 & 0.15\\ \midrule 
+CVE-2011-1950 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 24.3 & 21.09\\ \midrule 
+CVE-2011-2765 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.9 & 0.12\\ \midrule 
+CVE-2011-3186 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 7.05 & 0.16\\ \midrule 
+CVE-2011-3923 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 26.98 & 23.07\\ \midrule 
+CVE-2011-4030 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 3.92 & 0.13\\ \midrule 
+CVE-2011-4461 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 4.05 & 0.17\\ \midrule 
+CVE-2012-1109 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 2.05 & 0.13\\ \midrule 
+CVE-2012-1176 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  & 15.12 & 0.08\\ \midrule 
+CVE-2012-2417 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 9.48 & 0.58\\ \midrule 
+CVE-2012-3366 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 4.92 & 0.49\\ \midrule 
+CVE-2012-3408 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  & 2.82 & 0.16\\ \midrule 
+CVE-2012-3458 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 3.45 & 0.17\\ \midrule 
+CVE-2012-3536 &  &  &  &  & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 20.36 & 17.69\\ \midrule 
+CVE-2012-5812 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.76 & 0.17\\ \midrule 
+CVE-2012-6550 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.19 & 0.18\\ \midrule 
+CVE-2013-0256 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 4.2 & 0.3\\ \midrule 
+CVE-2013-0294 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  &  &  &  & 8.21 & 0.02\\ \midrule 
+CVE-2013-1607 &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 2.29 & 0.16\\ \midrule 
+CVE-2013-1800 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 3.73 & 0.05\\ \midrule 
+CVE-2013-1801 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 2.42 & 0.17\\ \midrule 
+CVE-2013-1879 &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  & 7.22 & 4.67\\ \midrule 
+CVE-2013-1880 &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  & 24.23 & 20.83\\ \midrule 
+CVE-2013-2013 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 4.07 & 0.16\\ \midrule 
+CVE-2013-2035 &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 3.21 & 0.08\\ \midrule 
+CVE-2013-2191 & \checkmark &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 4.48 & 0.17\\ \midrule 
+CVE-2013-3300 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 1.74 & 0.16\\ \midrule 
+CVE-2013-3567 &  &  &  &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & 29.82 & 14.57\\ \midrule 
+CVE-2013-4111 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 17.94 & 5.04\\ \midrule 
+CVE-2013-4116 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 13.95 & 0.16\\ \midrule 
+CVE-2013-4316 &  &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 21.61 & 18.05\\ \midrule 
+CVE-2013-4413 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 1.6 & 0.15\\ \midrule 
+CVE-2013-4562 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.7 & 0.15\\ \midrule 
+CVE-2013-4701 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 3.71 & 0.05\\ \midrule 
+CVE-2013-6465 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.67 & 0.17\\ \midrule 
+CVE-2013-7378 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.62 & 0.16\\ \midrule 
+CVE-2013-7459 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 8.92 & 0.15\\ \midrule 
+CVE-2014-0072 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.48 & 0.23\\ \midrule 
+CVE-2014-0073 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.1 & 0.24\\ \midrule 
+CVE-2014-0120 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.14 & 0.18\\ \midrule 
+CVE-2014-0121 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.34 & 0.18\\ \midrule 
+CVE-2014-0160 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 57.04 & 25.44\\ \midrule 
+CVE-2014-0177 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  & 1.58 & 0.16\\ \midrule 
+CVE-2014-1202 &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.69 & 0.16\\ \midrule 
+CVE-2014-1403 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 1.86 & 0.05\\ \midrule 
+CVE-2014-1604 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 4.37 & 0.21\\ \midrule 
+CVE-2014-1904 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.6 & 0.16\\ \midrule 
+CVE-2014-2525 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 9.24 & 4.45\\ \midrule 
+CVE-2014-3250 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 18.81 & 16.43\\ \midrule 
+CVE-2014-3488 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 17.29 & 0.31\\ \midrule 
+CVE-2014-3576 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 17.11 & 0.34\\ \midrule 
+CVE-2014-3579 &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark &  & 2.4 & 0.03\\ \midrule 
+CVE-2014-3599 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 4.52 & 0.18\\ \midrule 
+CVE-2014-3612 &  &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark & 27.11 & 24.09\\ \midrule 
+CVE-2014-3741 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.41 & 0.03\\ \midrule 
+CVE-2014-3995 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & 2.23 & 0.17\\ \midrule 
+CVE-2014-4657 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  & \checkmark & 12.29 & 10.18\\ \midrule 
+CVE-2014-5277 &  &  &  &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 21.94 & 18.45\\ \midrule 
+CVE-2014-6394 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 25.46 & 14.68\\ \midrule 
+CVE-2014-7143 &  &  &  &  &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 24.52 & 21.97\\ \midrule 
+CVE-2014-7189 &  &  &  &  &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 24.35 & 20.83\\ \midrule 
+CVE-2014-7192 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.44 & 0.08\\ \midrule 
+CVE-2014-7193 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 1.66 & 0.18\\ \midrule 
+CVE-2014-7809 &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 2.85 & 0.11\\ \midrule 
+CVE-2014-8115 &  &  &  & \checkmark &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 3.38 & 0.18\\ \midrule 
+CVE-2014-8152 & \checkmark &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 9.24 & 6.5\\ \midrule 
+CVE-2014-8681 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 1.77 & 0.16\\ \midrule 
+CVE-2014-8682 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  &  & 1.72 & 0.17\\ \midrule 
+CVE-2014-9130 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.52 & 0.05\\ \midrule 
+CVE-2014-9489 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  & \checkmark &  &  &  &  &  & 2.67 & 0.09\\ \midrule 
+CVE-2014-9682 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  & 2.41 & 0.02\\ \midrule 
+CVE-2014-9721 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 7.68 & 0.03\\ \midrule 
+CVE-2014-9970 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 31.47 & 26.7\\ \midrule 
+CVE-2015-0250 &  &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 24.93 & 18.37\\ \midrule 
+CVE-2015-0276 & \checkmark &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 28.58 & 26.71\\ \midrule 
+CVE-2015-0838 & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.98 & 0.02\\ \midrule 
+CVE-2015-0846 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 1.99 & 0.17\\ \midrule 
+CVE-2015-1326 & \checkmark &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 2.57 & 0.17\\ \midrule 
+CVE-2015-1772 &  &  &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  & 23.19 & 17.26\\ \midrule 
+CVE-2015-1782 & \checkmark &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 18.35 & 12.59\\ \midrule 
+CVE-2015-1838 &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark & 12.22 & 0.17\\ \midrule 
+CVE-2015-3206 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  & 14.52 & 0.07\\ \midrule 
+CVE-2015-3220 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 12.76 & 0.16\\ \midrule 
+CVE-2015-3627 &  &  &  &  &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.87 & 0.17\\ \midrule 
+CVE-2015-4082 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 2.17 & 0.13\\ \midrule 
+CVE-2015-4410 &  &  &  & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 12.23 & 9.38\\ \midrule 
+CVE-2015-4412 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  & 15.03 & 12.49\\ \midrule 
+CVE-2015-4619 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 17.49 & 16.07\\ \midrule 
+CVE-2015-5081 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 3.2 & 0.17\\ \midrule 
+CVE-2015-5147 &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  &  & 14.0 & 11.59\\ \midrule 
+CVE-2015-6524 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark & 7.44 & 2.58\\ \midrule 
+CVE-2015-6584 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 1.84 & 0.15\\ \midrule 
+CVE-2015-7294 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  & 2.7 & 0.03\\ \midrule 
+CVE-2015-7337 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 3.09 & 0.17\\ \midrule 
+CVE-2015-7541 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 1.48 & 0.05\\ \midrule 
+CVE-2015-7809 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 3.37 & 0.16\\ \midrule 
+CVE-2015-8309 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 2.68 & 0.2\\ \midrule 
+CVE-2015-8310 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.26 & 0.27\\ \midrule 
+CVE-2015-8747 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 5.4 & 0.16\\ \midrule 
+CVE-2015-8814 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 41.76 & 0.17\\ \midrule 
+CVE-2015-8854 &  &  & \checkmark &  & \checkmark &  &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 23.38 & 17.27\\ \midrule 
+CVE-2015-8862 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 26.24 & 24.36\\ \midrule 
+CVE-2015-9235 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 2.81 & 0.17\\ \midrule 
+CVE-2015-9241 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 2.19 & 0.17\\ \midrule 
+CVE-2016-0750 &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 6.34 & 0.16\\ \midrule 
+CVE-2016-1505 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.96 & 0.16\\ \midrule 
+CVE-2016-2166 &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  & 5.46 & 0.22\\ \midrule 
+CVE-2016-2537 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 17.85 & 0.03\\ \midrule 
+CVE-2016-3114 & \checkmark &  &  &  & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 11.42 & 4.52\\ \midrule 
+CVE-2016-3693 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 5.37 & 0.03\\ \midrule 
+CVE-2016-3720 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  & \checkmark &  & \checkmark &  &  & 4.29 & 0.19\\ \midrule 
+CVE-2016-4000 &  &  &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 36.15 & 29.29\\ \midrule 
+CVE-2016-4442 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.82 & 0.04\\ \midrule 
+CVE-2016-4562 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.18 & 0.19\\ \midrule 
+CVE-2016-4563 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.81 & 0.53\\ \midrule 
+CVE-2016-4564 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.48 & 0.18\\ \midrule 
+CVE-2016-4974 & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  & 3.94 & 0.17\\ \midrule 
+CVE-2016-4977 &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 32.16 & 27.23\\ \midrule 
+CVE-2016-5007 &  &  & \checkmark &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 4.8 & 0.17\\ \midrule 
+CVE-2016-5104 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 3.91 & 0.04\\ \midrule 
+CVE-2016-5180 & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 26.76 & 24.35\\ \midrule 
+CVE-2016-5431 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  &  &  &  & 1.55 & 0.15\\ \midrule 
+CVE-2016-5697 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.6 & 0.03\\ \midrule 
+CVE-2016-5841 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 3.07 & 0.17\\ \midrule 
+CVE-2016-5842 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  & 2.83 & 0.17\\ \midrule 
+CVE-2016-5851 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 7.13 & 0.12\\ \midrule 
+CVE-2016-6298 & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & 3.53 & 0.18\\ \midrule 
+CVE-2016-7528 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.99 & 0.19\\ \midrule 
+CVE-2016-8738 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 24.34 & 21.03\\ \midrule 
+CVE-2016-9298 &  &  &  & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 3.66 & 0.16\\ \midrule 
+CVE-2016-9909 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 4.12 & 0.23\\ \midrule 
+CVE-2016-9910 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 2.7 & 0.18\\ \midrule 
+CVE-2016-9962 &  &  &  &  &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 11.3 & 0.17\\ \midrule 
+CVE-2016-10100 &  &  &  &  &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 23.68 & 20.86\\ \midrule 
+CVE-2016-10149 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  & 3.85 & 0.14\\ \midrule 
+CVE-2016-10173 & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 3.03 & 0.17\\ \midrule 
+CVE-2016-10345 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 3.36 & 0.16\\ \midrule 
+CVE-2016-10522 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 4.81 & 2.4\\ \midrule 
+CVE-2016-10524 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.66 & 0.06\\ \midrule 
+CVE-2016-10528 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 8.81 & 7.1\\ \midrule 
+CVE-2016-10529 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 13.92 & 12.33\\ \midrule 
+CVE-2016-10531 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 3.64 & 0.17\\ \midrule 
+CVE-2016-10536 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 1.53 & 0.02\\ \midrule 
+CVE-2016-10540 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 1.64 & 0.03\\ \midrule 
+CVE-2016-10543 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  & 13.57 & 11.58\\ \midrule 
+CVE-2016-10544 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 16.43 & 14.95\\ \midrule 
+CVE-2016-10554 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 1.93 & 0.31\\ \midrule 
+CVE-2016-10556 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.78 & 0.17\\ \midrule 
+CVE-2016-10558 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 24.55 & 23.07\\ \midrule 
+CVE-2016-10559 &  &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 10.29 & 8.81\\ \midrule 
+CVE-2016-10560 &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  & \checkmark &  &  & 25.3 & 23.8\\ \midrule 
+CVE-2016-10564 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  & 10.45 & 9.01\\ \midrule 
+CVE-2016-10569 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  & 15.46 & 14.07\\ \midrule 
+CVE-2016-10574 &  &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 21.36 & 19.66\\ \midrule 
+CVE-2016-10575 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 26.95 & 25.28\\ \midrule 
+CVE-2016-10577 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  & 1.51 & 0.11\\ \midrule 
+CVE-2016-10591 &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  & \checkmark &  &  & 4.14 & 2.66\\ \midrule 
+CVE-2016-10611 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 17.29 & 15.65\\ \midrule 
+CVE-2016-10694 &  &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 11.64 & 8.99\\ \midrule 
+CVE-2016-10703 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  &  &  &  & 1.62 & 0.18\\ \midrule 
+CVE-2016-10735 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 16.56 & 0.76\\ \midrule 
+CVE-2016-1000236 &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  &  & 3.51 & 0.08\\ \midrule 
+CVE-2016-1000338 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 3.98 & 0.16\\ \midrule 
+CVE-2016-1000340 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 3.24 & 0.51\\ \midrule 
+CVE-2016-1000343 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.78 & 0.17\\ \midrule 
+CVE-2016-1000344 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.61 & 0.17\\ \midrule 
+CVE-2017-0904 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.96 & 0.12\\ \midrule 
+CVE-2017-2617 &  &  &  &  & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 28.86 & 26.14\\ \midrule 
+CVE-2017-2638 &  &  &  &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 33.5 & 15.82\\ \midrule 
+CVE-2017-2652 &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 17.97 & 12.85\\ \midrule 
+CVE-2017-2667 &  &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 24.28 & 22.08\\ \midrule 
+CVE-2017-2809 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 2.64 & 0.02\\ \midrule 
+CVE-2017-3204 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.82 & 0.16\\ \midrule 
+CVE-2017-4973 &  &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 28.63 & 26.95\\ \midrule 
+CVE-2017-5209 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 2.67 & 0.22\\ \midrule 
+CVE-2017-5545 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  & 3.03 & 0.18\\ \midrule 
+CVE-2017-5591 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.04 & 0.07\\ \midrule 
+CVE-2017-5641 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 13.59 & 11.09\\ \midrule 
+CVE-2017-5645 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 33.72 & 0.17\\ \midrule 
+CVE-2017-5858 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  & \checkmark & 24.26 & 21.74\\ \midrule 
+CVE-2017-5934 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 5.24 & 0.56\\ \midrule 
+CVE-2017-5936 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 1.62 & 0.11\\ \midrule 
+CVE-2017-5946 &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 4.99 & 0.31\\ \midrule 
+CVE-2017-7540 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  & \checkmark &  &  & 2.43 & 0.05\\ \midrule 
+CVE-2017-7654 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.98 & 0.17\\ \midrule 
+CVE-2017-7656 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 4.29 & 0.16\\ \midrule 
+CVE-2017-8028 &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 3.81 & 0.17\\ \midrule 
+CVE-2017-8418 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 3.38 & 0.32\\ \midrule 
+CVE-2017-8932 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & 23.38 & 0.19\\ \midrule 
+CVE-2017-9796 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & 32.87 & 23.7\\ \midrule 
+CVE-2017-11173 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  & \checkmark &  &  & 3.01 & 0.07\\ \midrule 
+CVE-2017-11427 & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  &  &  &  & 24.08 & 22.63\\ \midrule 
+CVE-2017-11467 &  &  &  &  & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 24.43 & 22.08\\ \midrule 
+CVE-2017-11905 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 20.24 & 16.39\\ \midrule 
+CVE-2017-11910 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 20.2 & 16.52\\ \midrule 
+CVE-2017-12098 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 2.37 & 0.16\\ \midrule 
+CVE-2017-12616 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 16.08 & 11.16\\ \midrule 
+CVE-2017-12620 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  & 24.18 & 22.14\\ \midrule 
+CVE-2017-12622 &  &  &  &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  & \checkmark & \checkmark &  & 13.11 & 2.83\\ \midrule 
+CVE-2017-12867 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & 2.92 & 0.17\\ \midrule 
+CVE-2017-12871 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.19 & 0.16\\ \midrule 
+CVE-2017-13098 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & \checkmark & 3.43 & 0.16\\ \midrule 
+CVE-2017-14619 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  & 1.63 & 0.03\\ \midrule 
+CVE-2017-14735 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 2.22 & 0.02\\ \midrule 
+CVE-2017-15051 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 2.2 & 0.31\\ \midrule 
+CVE-2017-15052 &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.09 & 0.28\\ \midrule 
+CVE-2017-15053 &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.07 & 0.33\\ \midrule 
+CVE-2017-15054 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.1 & 0.36\\ \midrule 
+CVE-2017-15055 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 1.98 & 0.23\\ \midrule 
+CVE-2017-15133 & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.35 & 0.15\\ \midrule 
+CVE-2017-15278 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  & 2.59 & 0.17\\ \midrule 
+CVE-2017-15703 &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & 22.63 & 17.75\\ \midrule 
+CVE-2017-15728 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  & 1.67 & 0.17\\ \midrule 
+CVE-2017-15729 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.82 & 0.29\\ \midrule 
+CVE-2017-15730 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 1.99 & 0.25\\ \midrule 
+CVE-2017-15731 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 1.88 & 0.31\\ \midrule 
+CVE-2017-15733 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 1.88 & 0.17\\ \midrule 
+CVE-2017-15734 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.19 & 0.25\\ \midrule 
+CVE-2017-15735 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 2.25 & 0.28\\ \midrule 
+CVE-2017-15808 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 1.7 & 0.19\\ \midrule 
+CVE-2017-15809 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  & 1.66 & 0.17\\ \midrule 
+CVE-2017-15879 &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  & \checkmark &  &  & 3.56 & 0.17\\ \midrule 
+CVE-2017-15928 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.46 & 0.08\\ \midrule 
+CVE-2017-16003 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.61 & 0.17\\ \midrule 
+CVE-2017-16007 &  &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 10.64 & 8.26\\ \midrule 
+CVE-2017-16008 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.79 & 0.24\\ \midrule 
+CVE-2017-16013 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 2.06 & 0.03\\ \midrule 
+CVE-2017-16014 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  &  &  & \checkmark & 7.74 & 4.74\\ \midrule 
+CVE-2017-16015 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 1.87 & 0.13\\ \midrule 
+CVE-2017-16016 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 2.26 & 0.07\\ \midrule 
+CVE-2017-16017 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 23.42 & 20.6\\ \midrule 
+CVE-2017-16023 &  &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 22.88 & 20.45\\ \midrule 
+CVE-2017-16025 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 8.72 & 6.89\\ \midrule 
+CVE-2017-16042 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 3.6 & 0.18\\ \midrule 
+CVE-2017-16136 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.85 & 0.15\\ \midrule 
+CVE-2017-16228 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 6.06 & 0.16\\ \midrule 
+CVE-2017-16244 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.97 & 0.46\\ \midrule 
+CVE-2017-16613 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 3.71 & 0.05\\ \midrule 
+CVE-2017-16615 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & \checkmark &  &  & 2.01 & 0.04\\ \midrule 
+CVE-2017-16616 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 2.88 & 0.04\\ \midrule 
+CVE-2017-16618 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 2.38 & 0.04\\ \midrule 
+CVE-2017-16876 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 3.37 & 0.07\\ \midrule 
+CVE-2017-16877 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 5.23 & 0.24\\ \midrule 
+CVE-2017-16880 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 1.8 & 0.16\\ \midrule 
+CVE-2017-17042 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.08 & 0.19\\ \midrule 
+CVE-2017-18239 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 22.78 & 0.08\\ \midrule 
+CVE-2017-18367 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 5.5 & 0.05\\ \midrule 
+CVE-2017-1000188 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  & 2.63 & 0.23\\ \midrule 
+CVE-2017-1000189 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  & 2.18 & 0.19\\ \midrule 
+CVE-2017-1000228 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.62 & 0.17\\ \midrule 
+CVE-2017-1000389 &  &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 5.95 & 4.53\\ \midrule 
+CVE-2017-1000451 &  &  &  &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 6.85 & 5.45\\ \midrule 
+CVE-2017-1000486 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 2.96 & 0.17\\ \midrule 
+CVE-2017-1000487 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 3.95 & 0.02\\ \midrule 
+CVE-2017-1000491 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark & 4.82 & 2.45\\ \midrule 
+CVE-2017-1001002 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 3.8 & 0.53\\ \midrule 
+CVE-2017-1001003 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.98 & 0.67\\ \midrule 
+CVE-2017-1001004 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 1.82 & 0.04\\ \midrule 
+CVE-2017-1002150 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.76 & 0.15\\ \midrule 
+CVE-2018-1098 &  &  & \checkmark &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.35 & 0.21\\ \midrule 
+CVE-2018-1099 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 21.57 & 16.61\\ \midrule 
+CVE-2018-1196 &  &  &  &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 6.25 & 1.05\\ \midrule 
+CVE-2018-1261 &  &  &  &  & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  & 26.65 & 25.01\\ \midrule 
+CVE-2018-1263 &  &  &  &  & \checkmark &  & \checkmark &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 15.42 & 13.67\\ \midrule 
+CVE-2018-1309 &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark &  & 26.19 & 21.24\\ \midrule 
+CVE-2018-1320 &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark &  & 28.76 & 16.5\\ \midrule 
+CVE-2018-3712 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 2.22 & 0.15\\ \midrule 
+CVE-2018-3714 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 1.38 & 0.05\\ \midrule 
+CVE-2018-3715 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.57 & 0.19\\ \midrule 
+CVE-2018-3721 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 4.04 & 0.18\\ \midrule 
+CVE-2018-3726 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.47 & 0.1\\ \midrule 
+CVE-2018-3731 &  &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 1.9 & 0.05\\ \midrule 
+CVE-2018-3732 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.65 & 0.08\\ \midrule 
+CVE-2018-3733 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.46 & 0.1\\ \midrule 
+CVE-2018-3738 &  &  &  &  &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 4.26 & 2.49\\ \midrule 
+CVE-2018-3740 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 4.0 & 0.16\\ \midrule 
+CVE-2018-3741 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.34 & 0.09\\ \midrule 
+CVE-2018-3750 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 2.83 & 0.09\\ \midrule 
+CVE-2018-3759 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 1.37 & 0.07\\ \midrule 
+CVE-2018-3769 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 2.81 & 0.03\\ \midrule 
+CVE-2018-3774 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  & 2.64 & 0.07\\ \midrule 
+CVE-2018-3778 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 3.85 & 0.08\\ \midrule 
+CVE-2018-3786 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  &  & \checkmark &  &  & 2.68 & 0.19\\ \midrule 
+CVE-2018-5968 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 5.87 & 0.17\\ \midrule 
+CVE-2018-6333 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.46 & 0.16\\ \midrule 
+CVE-2018-6591 &  &  &  &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 3.95 & 0.45\\ \midrule 
+CVE-2018-7260 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 3.46 & 0.16\\ \midrule 
+CVE-2018-7408 &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & 4.22 & 0.17\\ \midrule 
+CVE-2018-7560 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  &  &  &  & 1.73 & 0.02\\ \midrule 
+CVE-2018-7576 &  &  &  &  &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 360.42 & 31.43\\ \midrule 
+CVE-2018-7651 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 2.61 & 0.3\\ \midrule 
+CVE-2018-7753 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  & \checkmark &  &  & 4.46 & 0.17\\ \midrule 
+CVE-2018-8013 &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  & \checkmark &  & 22.69 & 17.85\\ \midrule 
+CVE-2018-8016 &  & \checkmark &  & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  & 4.77 & 0.17\\ \midrule 
+CVE-2018-8128 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 7.64 & 0.18\\ \midrule 
+CVE-2018-8177 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 8.43 & 0.42\\ \midrule 
+CVE-2018-8178 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 24.18 & 0.28\\ \midrule 
+CVE-2018-8381 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 27.66 & 25.47\\ \midrule 
+CVE-2018-8390 & \checkmark &  &  &  & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 24.52 & 22.32\\ \midrule 
+CVE-2018-9109 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 5.12 & 0.28\\ \midrule 
+CVE-2018-9110 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 4.16 & 0.31\\ \midrule 
+CVE-2018-9206 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & 5.34 & 1.43\\ \midrule 
+CVE-2018-10092 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 4.95 & 0.17\\ \midrule 
+CVE-2018-10094 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 4.99 & 0.2\\ \midrule 
+CVE-2018-10095 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  & 6.14 & 0.25\\ \midrule 
+CVE-2018-10188 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 2.03 & 0.16\\ \midrule 
+CVE-2018-10366 &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  &  & 1.4 & 0.05\\ \midrule 
+CVE-2018-10903 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  & 3.7 & 0.17\\ \midrule 
+CVE-2018-10936 & \checkmark &  &  & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.16 & 0.15\\ \midrule 
+CVE-2018-11093 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 8.58 & 6.55\\ \midrule 
+CVE-2018-11771 &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  & \checkmark &  & 12.81 & 0.17\\ \midrule 
+CVE-2018-11798 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 4.76 & 0.19\\ \midrule 
+CVE-2018-12043 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 1.43 & 0.08\\ \midrule 
+CVE-2018-12418 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  & 3.16 & 0.15\\ \midrule 
+CVE-2018-12541 & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  & 9.95 & 0.16\\ \midrule 
+CVE-2018-12557 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 3.21 & 0.17\\ \midrule 
+CVE-2018-12615 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.11 & 0.16\\ \midrule 
+CVE-2018-12976 & \checkmark &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 1.51 & 0.06\\ \midrule 
+CVE-2018-13447 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.66 & 0.16\\ \midrule 
+CVE-2018-13448 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.65 & 0.27\\ \midrule 
+CVE-2018-13449 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.81 & 0.28\\ \midrule 
+CVE-2018-13450 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.87 & 0.28\\ \midrule 
+CVE-2018-13797 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 4.63 & 0.22\\ \midrule 
+CVE-2018-13818 &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  &  & 3.21 & 0.19\\ \midrule 
+CVE-2018-14041 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 5.64 & 0.17\\ \midrule 
+CVE-2018-14718 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 20.78 & 0.17\\ \midrule 
+CVE-2018-14719 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 17.2 & 0.28\\ \midrule 
+CVE-2018-14720 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 15.12 & 0.26\\ \midrule 
+CVE-2018-14721 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 3.84 & 0.18\\ \midrule 
+CVE-2018-14840 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 2.12 & 0.21\\ \midrule 
+CVE-2018-15178 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 2.75 & 0.05\\ \midrule 
+CVE-2018-15531 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  &  &  &  & 2.04 & 0.08\\ \midrule 
+CVE-2018-16329 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 5.37 & 2.6\\ \midrule 
+CVE-2018-16459 &  &  &  &  & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 7.33 & 5.9\\ \midrule 
+CVE-2018-16462 &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 16.71 & 15.01\\ \midrule 
+CVE-2018-16470 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 3.06 & 0.17\\ \midrule 
+CVE-2018-16472 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 3.54 & 0.03\\ \midrule 
+CVE-2018-16490 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.26 & 0.06\\ \midrule 
+CVE-2018-16492 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 3.28 & 0.07\\ \midrule 
+CVE-2018-17104 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & 3.14 & 0.18\\ \midrule 
+CVE-2018-17187 &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark &  & 4.64 & 0.17\\ \midrule 
+CVE-2018-17193 &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark &  & 3.09 & 0.13\\ \midrule 
+CVE-2018-17194 &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark &  & 7.66 & 2.87\\ \midrule 
+CVE-2018-17195 &  & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  & \checkmark & \checkmark &  & 5.47 & 0.2\\ \midrule 
+CVE-2018-17419 &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  & \checkmark &  &  & 5.78 & 0.2\\ \midrule 
+CVE-2018-18389 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 3.3 & 0.17\\ \midrule 
+CVE-2018-18476 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 2.18 & 0.05\\ \midrule 
+CVE-2018-19048 &  &  &  & \checkmark &  &  &  & \checkmark &  &  &  & \checkmark &  &  &  &  &  & 3.05 & 0.05\\ \midrule 
+CVE-2018-19184 &  &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  & \checkmark &  &  & 2.8 & 0.18\\ \midrule 
+CVE-2018-19360 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 11.67 & 5.23\\ \midrule 
+CVE-2018-19361 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 10.33 & 4.94\\ \midrule 
+CVE-2018-19362 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 9.89 & 4.86\\ \midrule 
+CVE-2018-19992 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 26.12 & 23.89\\ \midrule 
+CVE-2018-19993 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  & 18.17 & 14.11\\ \midrule 
+CVE-2018-19994 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 28.2 & 26.81\\ \midrule 
+CVE-2018-20028 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 25.86 & 24.18\\ \midrule 
+CVE-2018-20059 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 2.04 & 0.05\\ \midrule 
+CVE-2018-20433 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  &  &  &  & 4.28 & 0.08\\ \midrule 
+CVE-2018-20594 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  & 1.64 & 0.16\\ \midrule 
+CVE-2018-20595 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 2.28 & 0.17\\ \midrule 
+CVE-2018-20677 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & 8.0 & 0.31\\ \midrule 
+CVE-2018-20801 &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 11.88 & 8.83\\ \midrule 
+CVE-2018-20835 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.08 & 0.08\\ \midrule 
+CVE-2018-20962 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.81 & 0.17\\ \midrule 
+CVE-2018-1000013 &  &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 1.86 & 0.16\\ \midrule 
+CVE-2018-1000014 &  &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 10.66 & 9.3\\ \midrule 
+CVE-2018-1000089 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 2.14 & 0.3\\ \midrule 
+CVE-2018-1000119 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 8.93 & 4.86\\ \midrule 
+CVE-2018-1000129 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  & 9.92 & 7.96\\ \midrule 
+CVE-2018-1000134 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 16.44 & 12.73\\ \midrule 
+CVE-2018-1000164 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  & \checkmark &  &  & 3.53 & 0.16\\ \midrule 
+CVE-2018-1000518 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  & 2.6 & 0.16\\ \midrule 
+CVE-2018-1000525 &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 6.56 & 4.59\\ \midrule 
+CVE-2018-1000531 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  &  & 2.33 & 0.09\\ \midrule 
+CVE-2018-1000538 &  &  & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.54 & 0.33\\ \midrule 
+CVE-2018-1000620 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  & 6.79 & 2.43\\ \midrule 
+CVE-2018-1000632 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 38.57 & 23.25\\ \midrule 
+CVE-2018-1000805 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  &  & \checkmark &  & \checkmark &  &  & 7.07 & 0.19\\ \midrule 
+CVE-2018-1000807 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 4.52 & 0.25\\ \midrule 
+CVE-2018-1000808 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  & \checkmark &  &  & 5.0 & 0.29\\ \midrule 
+CVE-2018-1000814 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  & 3.82 & 0.15\\ \midrule 
+CVE-2018-1000843 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 10.42 & 6.43\\ \midrule 
+CVE-2018-1000850 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 3.27 & 0.06\\ \midrule 
+CVE-2018-1000888 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 25.98 & 21.16\\ \midrule 
+CVE-2018-1002201 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 2.94 & 0.16\\ \midrule 
+CVE-2018-1002207 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 2.81 & 0.02\\ \midrule 
+CVE-2018-1002208 &  &  & \checkmark &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 3.29 & 0.18\\ \midrule 
+CVE-2018-1999024 &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  &  & 2.03 & 0.16\\ \midrule 
+CVE-2019-0219 &  &  &  &  &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 2.75 & 0.16\\ \midrule 
+CVE-2019-0911 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.92 & 0.41\\ \midrule 
+CVE-2019-0912 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 2.0 & 0.16\\ \midrule 
+CVE-2019-0917 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.81 & 0.16\\ \midrule 
+CVE-2019-0922 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.69 & 0.16\\ \midrule 
+CVE-2019-0924 & \checkmark &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 1.62 & 0.16\\ \midrule 
+CVE-2019-0925 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.71 & 0.18\\ \midrule 
+CVE-2019-0933 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.65 & 0.16\\ \midrule 
+CVE-2019-1052 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 2.03 & 0.16\\ \midrule 
+CVE-2019-1062 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.77 & 0.2\\ \midrule 
+CVE-2019-1092 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 1.66 & 0.17\\ \midrule 
+CVE-2019-1103 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 2.06 & 0.53\\ \midrule 
+CVE-2019-1106 & \checkmark &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  &  &  &  &  &  & 1.72 & 0.17\\ \midrule 
+CVE-2019-1107 & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 10.62 & 0.17\\ \midrule 
+CVE-2019-1139 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.98 & 0.16\\ \midrule 
+CVE-2019-1195 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 2.01 & 0.17\\ \midrule 
+CVE-2019-1196 & \checkmark &  &  &  &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.14 & 0.17\\ \midrule 
+CVE-2019-1197 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.06 & 0.17\\ \midrule 
+CVE-2019-3564 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 2.25 & 0.2\\ \midrule 
+CVE-2019-3826 &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & \checkmark &  & \checkmark &  &  & 10.41 & 0.65\\ \midrule 
+CVE-2019-5413 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.24 & 0.09\\ \midrule 
+CVE-2019-5484 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.65 & 0.1\\ \midrule 
+CVE-2019-5884 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 4.68 & 0.2\\ \midrule 
+CVE-2019-6798 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & 9.68 & 0.18\\ \midrule 
+CVE-2019-7164 &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  & 4.53 & 0.17\\ \midrule 
+CVE-2019-7548 &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  & 11.69 & 0.26\\ \midrule 
+CVE-2019-7617 &  &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  & \checkmark &  &  & 1.82 & 0.16\\ \midrule 
+CVE-2019-7722 &  &  & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 3.87 & 0.21\\ \midrule 
+CVE-2019-8331 &  &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 12.46 & 0.76\\ \midrule 
+CVE-2019-8457 &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 7.52 & 0.19\\ \midrule 
+CVE-2019-9212 &  &  &  &  & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 2.26 & 0.1\\ \midrule 
+CVE-2019-9658 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & 11.82 & 0.16\\ \midrule 
+CVE-2019-9844 &  &  &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 5.26 & 0.11\\ \midrule 
+CVE-2019-10077 &  &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  & 2.82 & 0.19\\ \midrule 
+CVE-2019-10089 &  &  &  &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  & 15.2 & 13.13\\ \midrule 
+CVE-2019-10090 &  &  &  &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 14.22 & 12.18\\ \midrule 
+CVE-2019-10131 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & \checkmark & 4.0 & 0.17\\ \midrule 
+CVE-2019-10157 &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  &  & 2.99 & 0.13\\ \midrule 
+CVE-2019-10217 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  & 9.84 & 0.18\\ \midrule 
+CVE-2019-10240 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 2.0 & 0.17\\ \midrule 
+CVE-2019-10241 &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 7.79 & 0.16\\ \midrule 
+CVE-2019-10248 &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  &  &  &  & \checkmark &  &  & 2.52 & 0.18\\ \midrule 
+CVE-2019-10642 & \checkmark &  &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 1.65 & 0.17\\ \midrule 
+CVE-2019-10643 & \checkmark &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.74 & 0.17\\ \midrule 
+CVE-2019-10682 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.72 & 0.09\\ \midrule 
+CVE-2019-10745 &  &  &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 1.59 & 0.17\\ \midrule 
+CVE-2019-10748 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & 1.94 & 0.17\\ \midrule 
+CVE-2019-10749 &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 1.75 & 0.18\\ \midrule 
+CVE-2019-10750 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  &  &  &  & 1.65 & 0.18\\ \midrule 
+CVE-2019-10751 &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 4.21 & 0.18\\ \midrule 
+CVE-2019-10752 &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark &  &  & 1.78 & 0.18\\ \midrule 
+CVE-2019-10756 &  &  &  &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.22 & 0.27\\ \midrule 
+CVE-2019-10757 &  &  &  &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 1.82 & 0.18\\ \midrule 
+CVE-2019-10760 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 1.46 & 0.09\\ \midrule 
+CVE-2019-10762 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 1.47 & 0.08\\ \midrule 
+CVE-2019-10764 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.92 & 0.03\\ \midrule 
+CVE-2019-10767 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  & 1.77 & 0.17\\ \midrule 
+CVE-2019-10776 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 1.73 & 0.16\\ \midrule 
+CVE-2019-10778 &  &  &  &  & \checkmark &  &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.64 & 0.12\\ \midrule 
+CVE-2019-10780 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.61 & 0.17\\ \midrule 
+CVE-2019-10781 &  &  &  & \checkmark &  &  &  &  &  &  &  &  & \checkmark &  & \checkmark &  &  & 1.47 & 0.07\\ \midrule 
+CVE-2019-10787 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 1.39 & 0.02\\ \midrule 
+CVE-2019-10792 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  & 1.65 & 0.13\\ \midrule 
+CVE-2019-10793 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.52 & 0.07\\ \midrule 
+CVE-2019-10795 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.5 & 0.04\\ \midrule 
+CVE-2019-10797 &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 26.93 & 25.42\\ \midrule 
+CVE-2019-10799 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  &  &  &  & 1.56 & 0.04\\ \midrule 
+CVE-2019-10867 &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.07 & 0.17\\ \midrule 
+CVE-2019-11272 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 3.08 & 0.17\\ \midrule 
+CVE-2019-11358 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 25.26 & 0.3\\ \midrule 
+CVE-2019-11512 & \checkmark &  &  &  & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 1.76 & 0.19\\ \midrule 
+CVE-2019-11514 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 3.75 & 1.36\\ \midrule 
+CVE-2019-11767 &  &  &  &  & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 4.03 & 0.74\\ \midrule 
+CVE-2019-11768 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 11.04 & 1.83\\ \midrule 
+CVE-2019-11777 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 4.67 & 0.16\\ \midrule 
+CVE-2019-12277 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  & 1.67 & 0.19\\ \midrule 
+CVE-2019-12402 &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 15.68 & 0.17\\ \midrule 
+CVE-2019-12404 &  &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  & 8.68 & 6.73\\ \midrule 
+CVE-2019-12407 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 9.24 & 7.09\\ \midrule 
+CVE-2019-12616 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 5.83 & 0.19\\ \midrule 
+CVE-2019-12741 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 3.16 & 0.18\\ \midrule 
+CVE-2019-12814 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 21.34 & 0.16\\ \midrule 
+CVE-2019-13127 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 1.78 & 0.03\\ \midrule 
+CVE-2019-13135 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 4.06 & 0.17\\ \midrule 
+CVE-2019-13173 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 3.35 & 0.04\\ \midrule 
+CVE-2019-13295 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 5.6 & 0.16\\ \midrule 
+CVE-2019-13574 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 3.54 & 0.2\\ \midrule 
+CVE-2019-13644 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 3.56 & 0.19\\ \midrule 
+CVE-2019-14537 &  &  &  &  &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 23.13 & 19.0\\ \midrule 
+CVE-2019-14540 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 14.47 & 0.16\\ \midrule 
+CVE-2019-14668 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 3.09 & 0.18\\ \midrule 
+CVE-2019-14669 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 3.37 & 0.4\\ \midrule 
+CVE-2019-14671 &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  & 3.62 & 0.45\\ \midrule 
+CVE-2019-14672 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  & 3.76 & 0.28\\ \midrule 
+CVE-2019-14751 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 6.99 & 0.16\\ \midrule 
+CVE-2019-14806 &  &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 4.35 & 0.16\\ \midrule 
+CVE-2019-14837 &  &  &  & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 6.85 & 0.16\\ \midrule 
+CVE-2019-14862 &  &  & \checkmark & \checkmark &  &  &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 5.59 & 0.13\\ \midrule 
+CVE-2019-14863 &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & 5.47 & 0.16\\ \midrule 
+CVE-2019-14893 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 5.18 & 0.16\\ \midrule 
+CVE-2019-14980 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  & \checkmark & 5.53 & 0.16\\ \midrule 
+CVE-2019-15481 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 3.17 & 0.19\\ \midrule 
+CVE-2019-15532 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & 3.2 & 0.16\\ \midrule 
+CVE-2019-15657 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 2.85 & 0.16\\ \midrule 
+CVE-2019-15658 &  &  & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  & 1.58 & 0.17\\ \midrule 
+CVE-2019-16197 &  &  &  &  & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 5.57 & 0.17\\ \midrule 
+CVE-2019-16317 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.04 & 0.28\\ \midrule 
+CVE-2019-16318 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.22 & 0.33\\ \midrule 
+CVE-2019-16335 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 5.46 & 0.17\\ \midrule 
+CVE-2019-16676 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 2.01 & 0.16\\ \midrule 
+CVE-2019-16761 &  &  &  & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.0 & 0.17\\ \midrule 
+CVE-2019-16762 &  &  &  & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 1.83 & 0.09\\ \midrule 
+CVE-2019-16763 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  & 2.08 & 0.27\\ \midrule 
+CVE-2019-16766 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.26 & 0.31\\ \midrule 
+CVE-2019-16769 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 3.22 & 0.08\\ \midrule 
+CVE-2019-16771 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.54 & 0.2\\ \midrule 
+CVE-2019-16778 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 10.48 & 0.92\\ \midrule 
+CVE-2019-16779 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 3.87 & 0.1\\ \midrule 
+CVE-2019-16784 & \checkmark &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & 2.42 & 0.4\\ \midrule 
+CVE-2019-16785 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 3.26 & 0.17\\ \midrule 
+CVE-2019-16786 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 4.76 & 0.42\\ \midrule 
+CVE-2019-16789 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 5.15 & 0.4\\ \midrule 
+CVE-2019-16792 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.62 & 0.44\\ \midrule 
+CVE-2019-17267 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  & 6.64 & 0.17\\ \midrule 
+CVE-2019-17496 &  &  &  & \checkmark &  &  &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  & 4.09 & 0.23\\ \midrule 
+CVE-2019-17513 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.65 & 0.16\\ \midrule 
+CVE-2019-17531 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 6.44 & 0.17\\ \midrule 
+CVE-2019-17541 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & 7.24 & 0.86\\ \midrule 
+CVE-2019-17592 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 7.91 & 0.52\\ \midrule 
+CVE-2019-18622 & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark & \checkmark &  &  & \checkmark &  &  & 15.17 & 0.2\\ \midrule 
+CVE-2019-18656 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.13 & 0.18\\ \midrule 
+CVE-2019-18848 & \checkmark &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.86 & 0.26\\ \midrule 
+CVE-2019-18857 &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  & 2.39 & 0.17\\ \midrule 
+CVE-2019-18874 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 10.0 & 0.17\\ \midrule 
+CVE-2019-18889 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 3.29 & 0.17\\ \midrule 
+CVE-2019-18978 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  & 3.48 & 0.19\\ \midrule 
+CVE-2019-18981 &  &  &  & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.02 & 0.16\\ \midrule 
+CVE-2019-18982 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.37 & 0.17\\ \midrule 
+CVE-2019-18985 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  & 2.61 & 0.28\\ \midrule 
+CVE-2019-18986 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  &  & 2.68 & 0.29\\ \midrule 
+CVE-2019-19010 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 5.31 & 0.16\\ \midrule 
+CVE-2019-19212 &  &  &  &  & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  &  &  &  & 6.21 & 0.16\\ \midrule 
+CVE-2019-19275 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  & \checkmark &  &  & 3.22 & 0.32\\ \midrule 
+CVE-2019-19507 &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  & 2.16 & 0.09\\ \midrule 
+CVE-2019-19576 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  &  &  &  & 3.45 & 0.17\\ \midrule 
+CVE-2019-19619 &  &  &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 5.8 & 0.74\\ \midrule 
+CVE-2019-19703 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 2.37 & 0.17\\ \midrule 
+CVE-2019-19794 &  &  & \checkmark & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  & \checkmark &  & \checkmark &  &  & 6.69 & 0.17\\ \midrule 
+CVE-2019-20330 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark &  & \checkmark &  &  & 18.46 & 0.16\\ \midrule 
+CVE-2019-1000005 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  & 2.45 & 0.13\\ \midrule 
+CVE-2019-1000021 &  &  &  & \checkmark & \checkmark &  &  &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 4.19 & 0.13\\ \midrule 
+CVE-2019-1010266 &  &  &  &  & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 26.56 & 23.32\\ \midrule 
+CVE-2019-1020012 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 2.47 & 0.18\\ \midrule 
+CVE-2020-1928 &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  &  &  & \checkmark & \checkmark &  & 4.35 & 0.18\\ \midrule 
+CVE-2020-5219 & \checkmark &  &  & \checkmark &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  & 2.04 & 0.11\\ \midrule 
+CVE-2020-5224 &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  & \checkmark & \checkmark &  &  &  &  &  &  & 2.14 & 0.24\\ \midrule 
+CVE-2020-5227 &  &  &  & \checkmark & \checkmark &  &  &  & \checkmark &  & \checkmark &  &  &  &  &  &  & 2.91 & 0.18\\ \midrule 
+CVE-2020-5229 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  &  & 2.47 & 0.17\\ \midrule 
+CVE-2020-5232 &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  &  &  &  &  & 1.8 & 0.1\\ \midrule 
+CVE-2020-5236 &  &  &  & \checkmark & \checkmark &  &  &  &  &  & \checkmark &  &  &  &  &  &  & 2.34 & 0.16\\ \midrule 
+CVE-2020-5249 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  & \checkmark &  & \checkmark & 4.25 & 0.23\\ \midrule 
+CVE-2020-5390 & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  & 3.46 & 0.16\\ \midrule 
+CVE-2020-5529 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 3.45 & 0.16\\ \midrule 
+CVE-2020-6836 &  &  &  & \checkmark &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 1.7 & 0.1\\ \midrule 
+CVE-2020-7597 &  &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  &  & \checkmark &  &  & 1.55 & 0.16\\ \midrule 
+CVE-2020-7981 &  &  &  & \checkmark & \checkmark &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  &  &  &  & 2.36 & 0.16\\ \midrule 
+CVE-2020-8125 &  &  &  &  & \checkmark &  &  &  &  &  &  &  &  &  & \checkmark &  &  & 1.63 & 0.15\\ \midrule 
+CVE-2020-8131 &  &  & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  &  & \checkmark &  &  &  & \checkmark &  &  & 4.31 & 0.16\\ \midrule 
+CVE-2020-9281 &  &  &  &  &  &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  &  &  &  & 23.27 & 15.7\\ \midrule 
+CVE-2020-9283 & \checkmark &  &  & \checkmark & \checkmark &  &  & \checkmark &  &  & \checkmark &  &  &  &  &  &  & 13.04 & 0.16\\ \midrule 
+CVE-2020-10236 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark & \checkmark &  &  &  &  &  &  & 12.0 & 0.27\\ \midrule 
+CVE-2020-10591 &  &  &  & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  &  & \checkmark &  &  & 3.25 & 0.16\\ \midrule 
+CVE-2020-10672 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  & 10.99 & 0.41\\ \midrule 
+CVE-2020-10673 &  &  & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark &  & \checkmark &  &  &  &  & \checkmark &  &  & 10.25 & 0.16\\ \midrule 
+\bottomrule
+\end{longtabu}
