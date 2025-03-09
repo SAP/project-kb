@@ -16,3 +16,47 @@ testpaths = [
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.poetry]
+name = "prospector"
+version = "1.0.0"
+description = "Prospector is a tool to reduce the effort needed to find security fixes for known vulnerabilities in open source software repositories."
+authors = ["Antonino Sabetta (i064196) <antonino.sabetta@sap.com>"]
+license = "Given an advisory expressed in natural language, Prospector processes the commits found in the target source code repository, ranks them based on a set of predefined rules, and produces a report that the user can inspect to determine which commits to retain as the actual fix."
+readme = "README.md"
+packages = [{include = ".", from = "prospector"}]  # Root package
+
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+langchain = "^0.3.19"
+requests = "^2.32.3"
+tqdm = "^4.67.1"
+fastapi = "^0.115.10"
+beautifulsoup4 = "^4.13.3"
+colorama = "^0.4.6"
+validators = "^0.34.0"
+python-dateutil = "^2.9.0.post0"
+dotenv = "^0.9.9"
+langchain-anthropic = "^0.3.8"
+langchain-community = "^0.3.18"
+langchain-google-vertexai = "^2.0.14"
+langchain-core = "^0.3.40"
+langchain-mistralai = "^0.2.7"
+langchain-openai = "^0.3.7"
+omegaconf = "^2.3.0"
+dataclasses-json = "^0.6.7"
+requests-cache = "^1.2.1"
+spacy = "^3.8.4"
+datasketch = "^1.6.5"
+pandas = "^2.2.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+coverage = "^7.6.12"
+black = "^25.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
