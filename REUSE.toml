@@ -1,0 +1,16 @@
+version = 1
+SPDX-PackageName = "project \"KB\""
+SPDX-PackageSupplier = "Antonino Sabetta <antonino.sabetta@sap.com>"
+SPDX-PackageDownloadLocation = "https://github.com/sap/project-kb"
+
+[[annotations]]
+path = ["prospector/**", "kaybee/**", "docs/**", "scripts/**", "vulnerability-data/**", "MSR2019/**", "NOTICE.txt", "README.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2019-2020 SAP SE or an SAP affiliate company and project \"KB\" contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["**.bib", "mkdocs.yml", ".chglog/**", ".github/**", "CHANGELOG.md", "CONTRIBUTING.md", "Makefile", "go.mod", "go.sum", ".pre-commit-config.yaml", ".gitignore", "**/**.yaml", "Pipfile"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2019-2020 SAP SE or an SAP affiliate company and project \"KB\" contributors"
+SPDX-License-Identifier = "CC0-1.0"
