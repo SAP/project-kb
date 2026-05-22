@@ -74,7 +74,7 @@ CVE-2018-8009,https://github.com/apache/hadoop,fc4c20fc3469674cb584a4fb98bac7e3c
 PDFBOX-3341,https://github.com/apache/pdfbox,f0c0fb1af3c0419bdea2fe3d0ab1fe36a6d9dc2c,pos
 CVE-2018-1000613,https://github.com/bcgit/bc-java,4092ede58da51af9a21e4825fbad0d9a3ef5a223,pos
 CVE-2015-5345,https://github.com/apache/tomcat80,c15c2aba8eb42425f9ebcfcaef579dada38ad3a2,pos
-CVE-2016-3092-FU,https://github.com/apache/commons-fileupload,774ef160d591b579f703c694002e080f99bcd28b,pos
+CVE-2016-3092,https://github.com/apache/commons-fileupload,774ef160d591b579f703c694002e080f99bcd28b,pos
 CVE-2012-0022,https://github.com/apache/tomcat70,9649a2147ce04753bb0bbe2be8e66444670c6db5,pos
 CVE-2008-5518,https://github.com/apache/geronimo,f8a612df7b06729bfd6c826e1a110d4bb40dc1f5,pos
 CVE-2018-1270,https://github.com/spring-projects/spring-framework,1db7e02de3eb0c011ee6681f5a12eb9d166fea8,pos
