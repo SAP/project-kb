@@ -363,7 +363,7 @@ def build_advisory_record(
     use_nvd: bool = True,
     publication_date: Optional[str] = None,
     advisory_keywords: Set[str] = set(),
-    modified_files: Optional[str] = None,
+    modified_files: Optional[Set[str]] = None,
 ) -> AdvisoryRecord:
     advisory_record = AdvisoryRecord(
         cve_id=cve_id,
@@ -393,7 +393,7 @@ def build_advisory_record(
         advisory_record.keywords = advisory_keywords
 
     if modified_files and len(modified_files) > 0:
-        advisory_record.files.update(set(modified_files.split(",")))
+        advisory_record.files.update(modified_files)
 
     logger.debug(f"{advisory_record.keywords=}")
     logger.debug(f"{advisory_record.files=}")
