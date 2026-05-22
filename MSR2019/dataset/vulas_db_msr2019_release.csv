@@ -146,7 +146,7 @@ CVE-2014-2066,https://github.com/jenkinsci/jenkins,8ac74c350779921598f9d5edfed39
 CVE-2017-5647,https://github.com/apache/tomcat70,a4efd3ca1ccbdfc398136d76c0d8b7ad5a1e4905,pos
 CVE-2016-5641,https://github.com/swagger-api/swagger-codegen,90857e898884238d61dbfbd3ede5c7cc57de483f,pos
 CVE-2017-12611,https://github.com/apache/struts,2306f5f7fad7f0157f216f34331238feb0539fa,pos
-CVE-2016-5007-SEC,https://github.com/spring-projects/spring-security,e4c13e3c0ee7f06f59d3b43ca6734215ad7d8974,pos
+CVE-2016-5007,https://github.com/spring-projects/spring-security,e4c13e3c0ee7f06f59d3b43ca6734215ad7d8974,pos
 CVE-2013-4330,https://github.com/apache/camel,2281b1f365c50ee1a470fb9990b753eadee9095,pos
 COLLECTIONS-580,https://github.com/apache/commons-collections,da1a5fe00d79e1840b7e52317933e9eb56e88246,pos
 CVE-2015-5175,https://github.com/apache/cxf-fediz,90c898335786211d253c0503453e2f8b93e0d3fe,pos
